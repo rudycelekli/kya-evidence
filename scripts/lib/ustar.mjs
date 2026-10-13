@@ -1,10 +1,11 @@
 import { gunzipSync } from 'node:zlib';
-import { digest,hashBytes,insist,exactKeys } from '../../src/shared/canonical.mjs';
+import { canonical,digest,hashBytes,insist,exactKeys } from '../../src/shared/canonical.mjs';
 
 const zeros=b=>b.every(x=>x===0);
 function field(h,start,size){const b=h.subarray(start,start+size),end=b.indexOf(0);insist(end>=0&&zeros(b.subarray(end)),'Tar text field is not NUL padded');return b.subarray(0,end).toString('utf8');}
 function octal(h,start,size){const s=h.subarray(start,start+size).toString('ascii');insist(new RegExp(`^[0-7]{${size-1}}\\x00$`).test(s),'Noncanonical tar octal field');const n=parseInt(s,8);insist(Number.isSafeInteger(n),'Tar integer overflow');return n;}
 export function verifyReleaseReceipt(receipt,archive){
+  receipt=JSON.parse(canonical(receipt));
   exactKeys(receipt,['schema','package','version','sourceCommit','archive','archiveSha256','inventoryDigest','inventory','build','status','assurance'],'Release receipt');
   insist(receipt.schema==='kya.release-receipt/v1','Unsupported release receipt');
   insist(typeof receipt.archive==='string'&&/^[A-Za-z0-9][A-Za-z0-9._-]{0,127}\.tgz$/.test(receipt.archive),'Unsafe archive filename');

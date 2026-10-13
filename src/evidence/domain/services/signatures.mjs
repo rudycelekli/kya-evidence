@@ -26,7 +26,7 @@ export function verifyEvidence(envelope) {
 }
 
 export function verifyArtifact(payload, bytes) {
-  validateEvidence(payload);
+  payload=validateEvidence(payload);
   // Artifact contents are private by default; verification is explicit and never fetches a URL.
   const expected = payload.artifactDigest;
   return hashBytes(bytes) === expected;

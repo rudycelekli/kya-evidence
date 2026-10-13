@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { generateKeyPairSync } from 'node:crypto';
-import { assess, signEvidence, verifyEvidence, verifyArtifact, verifyAssessment, compareAssessments, digest, keyId, validateManifest, validatePolicy, validateProfile, validateEvidence } from '../src/index.mjs';
+import { assess, signEvidence, verifyEvidence, verifyArtifact, verifyAssessment, compareAssessments, digest, hashBytes, keyId, validateManifest, validatePolicy, validateProfile, validateEvidence } from '../src/index.mjs';
 import { inputs, manifest, profile, policy, payload, bundle, keys, signerId, NOW, FUTURE, clone } from './helpers.mjs';
 
 test('complete synthetic run qualifies only its local policy with explicit fixture provenance',()=>{
@@ -126,6 +126,21 @@ test('public validators return captured plain JSON data instead of executable Pr
 test('artifact bytes are explicitly verified; signatures alone cannot validate the artifact',()=>{
   const p=payload();assert.equal(verifyArtifact(p,'trace-0'),true);assert.equal(verifyArtifact(p,'invented'),false);
 });
+test('artifact verification consumes the validated digest rather than a Proxy GET substitution',()=>{
+  const p=payload();const proxy=new Proxy(p,{get(t,k){return k==='artifactDigest'?hashBytes('substituted-artifact'):Reflect.get(t,k);}});
+  assert.equal(verifyArtifact(proxy,'trace-0'),true);assert.equal(verifyArtifact(proxy,'substituted-artifact'),false);
+});
+test('evidence container descriptors bind the same receipts for scoring and bundle hashing',()=>{
+  const x=inputs(),original=x.evidence.slice();original[0]=signEvidence({...original[0].payload,outcome:'fail'},keys.privateKey);
+  const pass=x.evidence[0];x.evidence=new Proxy(original,{get(t,k){return k==='0'?pass:Reflect.get(t,k);}});
+  const report=assess(x);assert.equal(report.decision,'blocked');assert.equal(report.evidenceBundleDigest,digest(original.map(e=>digest(e))));
+});
+test('invalid evidence values are rejected once and represented by null digest markers',()=>{
+  const x=inputs();const invalid={};Object.defineProperty(invalid,'payload',{enumerable:true,get(){throw Error('getter must not execute');}});x.evidence[0]=invalid;
+  const report=assess(x);assert.equal(report.decision,'insufficient-evidence');assert.match(report.rejectedEvidence[0].reason,/accessors/);
+  assert.equal(report.evidenceBundleDigest,digest(x.evidence.map((e,i)=>i?digest(e):null)));
+  const sparse=inputs();delete sparse.evidence[0];assert.throws(()=>assess(sparse),/sparse/);
+});
 test('only public Ed25519 SPKI keys are admissible trust anchors',()=>{
   const x=policy();x.trustedKeys[0].publicKey=keys.privateKey.export({format:'pem',type:'pkcs8'}).toString();assert.throws(()=>validatePolicy(x),/public/);
   const rsa=generateKeyPairSync('rsa',{modulusLength:2048});assert.throws(()=>keyId(rsa.publicKey),/Ed25519/);
@@ -138,6 +153,10 @@ test('comparisons require the same policy, profile, evaluator and complete popul
   const x=inputs(),a=assess(x);x.evidence[5]=signEvidence(payload(x.manifest,x.profile,5,{outcome:'fail'}),keys.privateKey);const b=assess(x);assert.equal(compareAssessments(a,b).scoreDelta,-167);
   const y=inputs();y.policy.minScore=0;assert.throws(()=>compareAssessments(a,assess(y)),/policyDigest/);
   y.policy.minScore=800;y.evidence.pop();assert.throws(()=>compareAssessments(a,assess(y)),/incomplete/);
+});
+test('report verification and comparison consume the same captured data as their checksums',()=>{
+  const report=assess(inputs());const proxy=new Proxy(report,{get(t,k){return k==='score'?{...t.score,earned:0}:k==='reportDigest'?'0'.repeat(64):Reflect.get(t,k);}});
+  assert.equal(verifyAssessment(proxy).reportDigest,report.reportDigest);assert.equal(compareAssessments(report,proxy).scoreDelta,0);
 });
 for(const [label,make,validate] of [['manifest',manifest,validateManifest],['profile',profile,validateProfile],['policy',policy,validatePolicy],['evidence',payload,validateEvidence]]){
   for(const field of Object.keys(make()))test(`${label} rejects missing ${field}`,()=>{const v=make();delete v[field];assert.throws(()=>validate(v));});

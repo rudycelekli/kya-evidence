@@ -1,4 +1,4 @@
-import { canonical, digest, insist } from '../../shared/canonical.mjs';
+import { canonical, digest, insist, captureArrayItems } from '../../shared/canonical.mjs';
 import { validateManifest, validateProfile, validatePolicy, timestamp, hash, DIMENSIONS } from '../../identity/domain/services/validation.mjs';
 import { verifyEvidence } from '../../evidence/index.mjs';
 
@@ -12,7 +12,10 @@ export function assess({manifest,profile,evidence,policy,evaluatorDigest,now = n
   manifest=JSON.parse(canonical(manifest));profile=JSON.parse(canonical(profile));policy=JSON.parse(canonical(policy));
   validateManifest(manifest); validateProfile(profile); validatePolicy(policy); hash(evaluatorDigest,'Evaluator digest');
   const at = timestamp(now,'Assessment time');
-  insist(Array.isArray(evidence) && evidence.length <= 4096,'Evidence bundle exceeds limit');
+  const capturedEvidence=captureArrayItems(evidence,4096,'Evidence bundle').map(value=>{
+    try { const data=JSON.parse(canonical(value));return {data,digest:digest(data),error:null}; }
+    catch (error) { return {data:null,digest:null,error:error.message}; }
+  });
   const subjectDigest = digest(manifest), profileDigest = digest(profile);
   insist(policy.profileDigest === profileDigest,'Policy does not bind this profile');
   insist(policy.scopeId === manifest.scope.id,'Policy does not bind this scope');
@@ -23,10 +26,11 @@ export function assess({manifest,profile,evidence,policy,evaluatorDigest,now = n
   const subjectRevoked = policy.revokedSubjectDigests.includes(subjectDigest);
   const subjectExpired = Date.parse(manifest.expiresAt) <= at;
   const subjectFuture = Date.parse(manifest.issuedAt) > at;
-  for (let index = 0; index < evidence.length; index++) {
+  for (let index = 0; index < capturedEvidence.length; index++) {
     let p;
     try {
-      const e = verifyEvidence(evidence[index]); p = e.payload;
+      insist(!capturedEvidence[index].error,capturedEvidence[index].error);
+      const e = verifyEvidence(capturedEvidence[index].data); p = e.payload;
       const k = trusted.get(e.keyId);
       insist(k,'Signer is not a relying-party trust anchor');
       insist(!subjectRevoked,'Subject is revoked'); insist(!subjectExpired,'Subject is expired'); insist(!subjectFuture,'Subject is not yet issued');
@@ -131,7 +135,7 @@ export function assess({manifest,profile,evidence,policy,evaluatorDigest,now = n
   const evidenceMode = modes.size===0 ? 'none' : modes.size>1 ? 'mixed' : [...modes][0];
   const report = {
     schema:'kya.assessment/v1',subjectDigest,agentId:manifest.agent.id,agentName:manifest.agent.name,principalId:manifest.principal.id,scopeId:manifest.scope.id,
-    profileDigest,profileId:profile.id,evaluatorDigest,policyDigest:digest(policy),evidenceBundleDigest:digest(evidence.map(e=>{try{return digest(e);}catch{return null;}})),
+    profileDigest,profileId:profile.id,evaluatorDigest,policyDigest:digest(policy),evidenceBundleDigest:digest(capturedEvidence.map(e=>e.digest)),
     assessedAt:now,validUntil:new Date(Math.min(Date.parse(manifest.expiresAt),...chosen.map(e=>e.validUntil))).toISOString(),
     selectedRunId:selectedRun?.id ?? null,ambiguousRuns,decision,evidenceMode,score,coverage,independentCoverage,dimensions,checks,blockers,
     rejectedEvidence:rejectedEvidence.sort((a,b)=>a.index-b.index),acceptedEvidenceDigests:chosen.map(e=>e.envelopeDigest).sort(),
@@ -141,7 +145,7 @@ export function assess({manifest,profile,evidence,policy,evaluatorDigest,now = n
 }
 
 export function verifyAssessment(report) {
-  canonical(report);
+  report=JSON.parse(canonical(report));
   const {reportDigest,...body} = report;
   hash(reportDigest,'Report digest');
   insist(body.schema==='kya.assessment/v1' && digest(body)===reportDigest,'Assessment digest differs');
@@ -149,6 +153,7 @@ export function verifyAssessment(report) {
 }
 
 export function compareAssessments(left,right) {
+  left=JSON.parse(canonical(left));right=JSON.parse(canonical(right));
   verifyAssessment(left); verifyAssessment(right);
   for (const k of ['scopeId','profileDigest','evaluatorDigest','policyDigest','evidenceMode']) insist(left[k]===right[k],`Cannot compare different ${k}`);
   insist(left.checks.length===right.checks.length && left.checks.every((c,i)=>c.id===right.checks[i].id && c.weight===right.checks[i].weight && ['pass','fail'].includes(c.status) && ['pass','fail'].includes(right.checks[i].status)),'Cannot compare incomplete or different check populations');

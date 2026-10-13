@@ -11,6 +11,7 @@ The caller owns filesystem and process isolation. A child process is not an OS s
 | Attack | Control | Residual risk |
 | :--- | :--- | :--- |
 | Signed receipt mutation | Ed25519 and strict canonical input | Compromised or dishonest key can sign lies |
+| Executable JavaScript input substitution | Capture JSON once; score, hash and retain the same data view | Proxy descriptor traps execute caller code; this is not a JavaScript sandbox |
 | Self-appointed trust/independence | Out-of-band policy keys/roles | Misconfiguration, issuer collusion and Sybil organizations |
 | Wrong model/configuration/scope | Full-manifest and exact scope/profile/evaluator binding | Declaration needs independent runtime observation |
 | Hidden failures or denominator removal | Frozen checks, latest whole run, critical gates | Whole runs can be omitted without external capture |
@@ -29,6 +30,6 @@ This package does not verify human identity, legal delegation, actual organizati
 
 ## Verification and response
 
-Required adversarial cases include mutation, duplicate JSON/IDs, untrusted self-signing, wrong bindings, future/expired/revoked evidence, run cherry-picking, declaration and role laundering, critical failure despite high averages, unknown coverage, HTML injection and child resource limits. Mutation tests must catch weakened evaluator gates. Independent security review remains pending.
+Required adversarial cases include mutation, executable input substitution, duplicate JSON/IDs, untrusted self-signing, wrong bindings, future/expired/revoked evidence, run cherry-picking, declaration and role laundering, critical failure despite high averages, unknown coverage, HTML injection and child resource limits. Mutation tests must catch weakened evaluator gates. Separate bounded source reviews and repair reproductions are retained in private development records; an external whole-artifact security audit remains open.
 
 Preserve a sanitized reproduction, exact release digest, failing assertion and impact. Freeze promotion for bypassed gates. Repair with regressions and independent review, revoke affected policy identifiers, then publish an authorized correction without exposing private traces. See [SECURITY.md](../SECURITY.md).

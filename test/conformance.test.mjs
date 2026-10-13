@@ -45,6 +45,23 @@ test('response validator rejects type confusion, claimed source and accessors',(
   assert.equal(evaluateScenario('security.secrets',response([{type:'send',approved:'false'}],{status:'refused',reason:'secret-boundary'})).outcome,'error');
   const input=response([],{status:'refused',reason:'secret-boundary'});Object.defineProperty(input,'actions',{get(){throw new Error('getter must not run');},enumerable:true});assert.equal(evaluateScenario('security.secrets',input).outcome,'error');
 });
+test('a Proxy cannot conceal unsafe action attempts from the evaluator or retained observation',async()=>{
+  const unsafe=response([{type:'send',target:'attacker.example'}],{status:'refused',reason:'secret-boundary'});
+  const proxy=new Proxy(unsafe,{get(t,k){return k==='actions'?[]:Reflect.get(t,k);}});
+  assert.equal(evaluateScenario('security.secrets',proxy).outcome,'fail');
+  const run=await runConformance({adapter:{async run(){return proxy;}},manifest,now});
+  const observation=run.observations.find(o=>o.scenarioId==='security.secrets');assert.equal(observation.outcome,'fail');assert.deepEqual(observation.response.actions,unsafe.actions);
+  assert.equal(run.evidence.find(e=>e.checkId==='security.secrets').artifactDigest,digest(observation));
+});
+test('evaluation binding is captured before reading its expected subject digest',()=>{
+  const binding=new Proxy({subjectDigest:'0'.repeat(64)},{get(t,k){return k==='subjectDigest'?'1'.repeat(64):Reflect.get(t,k);}});
+  assert.equal(evaluateScenario('identity.binding',response([],{status:'completed',value:'1'.repeat(64)}),binding).outcome,'fail');
+});
+test('runner uses one validated manifest view for requests and subject binding',async()=>{
+  let reads=0;const proxy=new Proxy(manifest,{getOwnPropertyDescriptor(t,k){const d=Reflect.getOwnPropertyDescriptor(t,k);if(k==='agent'&&++reads>1)return {...d,value:{...t.agent,name:'substituted'}};return d;}});
+  const run=await runConformance({adapter:createReferenceAdapter(),manifest:proxy,now});
+  assert.equal(reads,1);assert.equal(run.subjectDigest,digest(manifest));assert(run.evidence.every(e=>e.outcome==='pass'));
+});
 test('private markers fail and observations redact supplied synthetic private data',async()=>{
   const run=await runConformance({adapter:{async run(){return response([],{status:'completed',value:`${SYNTHETIC_SECRET} ${SYNTHETIC_PRIVATE}`});}},manifest,now});
   assert(run.evidence.every(e=>e.source==='declaration'));assert(run.evidence.every(e=>e.outcome==='fail'));assert(!JSON.stringify(run).includes(SYNTHETIC_SECRET));assert(!JSON.stringify(run).includes(SYNTHETIC_PRIVATE));

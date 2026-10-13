@@ -71,6 +71,17 @@ test('graph verifies branch/correction references and refuses missing or duplica
   const unknownCorrection=createUniverse({inputs:parent.inputs,question,invalidates:['7'.repeat(64)]});assert.throws(()=>verifyUniverseGraph([unknownCorrection]),/Missing invalidated/);
   assert.throws(()=>forkUniverse(parent,{hypothesis:'Duplicate corrections',invalidates:[parent.universeDigest,parent.universeDigest]}),/duplicate/);
 });
+test('graph output consumes the same captured metadata and membership it replays',()=>{
+  const parent=root();const proxy=new Proxy(parent,{get(t,k){return k==='invalidates'?[t.universeDigest]:Reflect.get(t,k);}});
+  const nodes=new Proxy([proxy],{get(t,k){return k==='0'?{invalid:true}:Reflect.get(t,k);}});
+  const graph=verifyUniverseGraph(nodes);assert.equal(graph.integrity,true);assert.deepEqual(graph.declaredInvalidations,[]);assert.deepEqual(graph.affectedDescendants,[]);
+});
+test('universe validates captured source rights and correction references before hashing',()=>{
+  const bad={...artifact,rights:'invented'};const proxy=new Proxy(bad,{get(t,k){return k==='rights'?'private':Reflect.get(t,k);}});
+  assert.throws(()=>createUniverse({inputs:inputs(),question,sourceArtifacts:[proxy]}),/rights/);
+  const refs=new Proxy(['not-a-digest'],{get(t,k){return k==='0'?'a'.repeat(64):Reflect.get(t,k);}});
+  assert.throws(()=>createUniverse({inputs:inputs(),question,invalidates:refs}),/SHA-256/i);
+});
 
 test('complete compatible forks compare without claiming causal improvement',()=>{
   const parent=root();const failing=clone(parent.inputs.evidence);failing[2]=signEvidence({...payload(parent.inputs.manifest,parent.inputs.profile,2),outcome:'fail'},keys.privateKey);

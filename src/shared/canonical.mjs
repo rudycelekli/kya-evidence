@@ -64,6 +64,23 @@ export function hashBytes(bytes) {
 
 export function digest(value) { return hashBytes(canonical(value)); }
 
+/** Capture dense array membership without invoking element getters or Proxy GET views. */
+export function captureArrayItems(value, max, label = 'JSON array') {
+  insist(Array.isArray(value), `${label}: expected array`);
+  const descriptors = Object.getOwnPropertyDescriptors(value);
+  const length = descriptors.length?.value;
+  insist(Number.isSafeInteger(length) && length >= 0 && length <= max, `${label}: exceeds limit`);
+  const keys = Reflect.ownKeys(descriptors);
+  insist(keys.length === length + 1 && keys.includes('length'), `${label}: sparse or extended array`);
+  const items = [];
+  for (let i = 0; i < length; i++) {
+    const d = descriptors[String(i)];
+    insist(d && 'value' in d && d.enumerable, `${label}: accessors are forbidden`);
+    items.push(d.value);
+  }
+  return items;
+}
+
 /** Strict JSON parser: rejects duplicates before JSON.parse can erase them. */
 export function parseJson(text) {
   insist(typeof text === 'string' && Buffer.byteLength(text, 'utf8') <= MAX_BYTES, 'JSON byte limit');

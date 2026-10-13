@@ -15,6 +15,10 @@ function fixture({name='package/bin/kya.mjs',body=Buffer.from('fixture'),change=
 test('frozen regular-file archive subset verifies with explicit unsigned source limits',()=>{
   const {receipt,archive}=fixture(),r=verifyReleaseReceipt(receipt,archive);assert.equal(r.files,1);assert.equal(r.archiveIntegrity,'verified');assert.equal(r.authenticatedPublisher,false);assert.equal(r.sourceCommitVerified,false);
 });
+test('verified receipt output uses captured metadata rather than unverified Proxy GET values',()=>{
+  const {receipt,archive}=fixture();const proxy=new Proxy(receipt,{get(t,k){return k==='sourceCommit'?'substituted':Reflect.get(t,k);}});
+  assert.equal(verifyReleaseReceipt(proxy,archive).sourceCommit,receipt.sourceCommit);
+});
 for(const [name,change]of [
   ['symlink',h=>{h[156]=50;h.write('/etc/shadow',157);}],['hardlink',h=>h[156]=49],['directory',h=>h[156]=53],['pax override',h=>h[156]=120],['linkname on regular',h=>h.write('elsewhere',157)],['prefix',h=>h.write('private',345)],['owner name',h=>h.write('person',265)],['uid',h=>h.write('0000001\0',108)],['mtime',h=>h.write('00000000001\0',136)],['executable mode wrong',h=>h.write('0000644\0',100)],['magic',h=>h.write('notar\0',257)],['version',h=>h.write('01',263)],['noncanonical numeric',h=>h.write('    755\0',100)]
 ])test(`verifier rejects ${name} despite matching unsigned byte inventory`,()=>{const x=fixture({change});assert.throws(()=>verifyReleaseReceipt(x.receipt,x.archive));});

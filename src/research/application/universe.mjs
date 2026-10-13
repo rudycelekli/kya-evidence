@@ -1,6 +1,6 @@
 import { readFileSync,readdirSync } from 'node:fs';
 import { assess,compareAssessments } from '../../assessment/index.mjs';
-import { canonical,digest,hashBytes,exactKeys,insist } from '../../shared/canonical.mjs';
+import { canonical,digest,hashBytes,exactKeys,insist,captureArrayItems } from '../../shared/canonical.mjs';
 import { identifier,hash,text,timestamp,list } from '../../identity/domain/services/validation.mjs';
 
 // Hash actual implementation bytes, not just a mutable version string.
@@ -22,6 +22,7 @@ function validateArtifacts(items){
   for(const a of items){exactKeys(a,['id','digest','kind','rights'],'Source artifact');identifier(a.id,'Source artifact ID');hash(a.digest,'Source artifact digest');insist(['original','derived','hypothesis'].includes(a.kind),'Unknown source kind');insist(['private','redistributable'].includes(a.rights),'Unknown artifact rights');insist(!ids.has(a.id),'Duplicate source artifact');ids.add(a.id);}
 }
 export function createUniverse({inputs,question,sourceArtifacts=[],parentDigest=null,hypothesis=null,invalidates=[]}){
+  sourceArtifacts=snapshot(sourceArtifacts);invalidates=snapshot(invalidates);
   const frozen=snapshot(inputs);exactKeys(frozen,['manifest','profile','policy','evidence','evaluatorDigest','now'],'Frozen universe inputs');timestamp(frozen.now,'Frozen assessment time');text(question,'Research question',2048);validateArtifacts(sourceArtifacts);
   if(parentDigest!==null){hash(parentDigest,'Parent universe');text(hypothesis,'Fork hypothesis',2048);}else insist(hypothesis===null,'A root universe has no fork hypothesis');
   list(invalidates,'Invalidated universe references',128,hash);
@@ -46,7 +47,8 @@ export function forkUniverse(parent,patch){
   return createUniverse({inputs,question:p.question??frozenParent.question,sourceArtifacts:p.sourceArtifacts??frozenParent.sourceArtifacts,parentDigest:frozenParent.universeDigest,hypothesis:p.hypothesis,invalidates:p.invalidates??[]});
 }
 export function verifyUniverseGraph(universes){
-  insist(Array.isArray(universes)&&universes.length>0&&universes.length<=256,'Invalid universe graph');const nodes=new Map();
+  universes=captureArrayItems(universes,256,'Invalid universe graph').map(snapshot);
+  insist(universes.length>0,'Invalid universe graph');const nodes=new Map();
   for(const u of universes){verifyUniverse(u);insist(!nodes.has(u.universeDigest),'Duplicate universe node');nodes.set(u.universeDigest,u);}
   for(const u of universes){if(u.parentDigest!==null)insist(nodes.has(u.parentDigest),'Missing parent universe');for(const id of u.invalidates)insist(nodes.has(id),'Missing invalidated universe');}
   const visited=new Set(),active=new Set();function visit(u){insist(!active.has(u.universeDigest),'Universe graph cycle');if(visited.has(u.universeDigest))return;active.add(u.universeDigest);if(u.parentDigest)visit(nodes.get(u.parentDigest));active.delete(u.universeDigest);visited.add(u.universeDigest);}for(const u of universes)visit(u);

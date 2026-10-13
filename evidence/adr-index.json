@@ -46,15 +46,28 @@
       "title": "Content-addressed research universes and immutable package inputs",
       "status": "Implemented",
       "file": "docs/adr/0005-content-addressed-research-universes.md",
-      "contentDigest": "402e92c9c94059a42713a22e61f4af6be0c4bc363aedd91837c684fd1ffb1157",
+      "contentDigest": "97f3495b723226fbd0d9e58597528348632612fafdfc0395f54a5cc43b352246",
       "related": [
         "ADR-0001",
         "ADR-0002",
         "ADR-0003",
-        "ADR-0004"
+        "ADR-0004",
+        "ADR-0006"
+      ]
+    },
+    {
+      "id": "ADR-0006",
+      "title": "Consume the same captured data that is verified",
+      "status": "Implemented",
+      "file": "docs/adr/0006-captured-json-consumption.md",
+      "contentDigest": "822b70b9562afa725c048d0824f2e65455cd6016962dbd15301a8b96e2afcf0c",
+      "related": [
+        "ADR-0002",
+        "ADR-0003",
+        "ADR-0005"
       ]
     }
   ],
-  "digest": "e7bf3ebb1001ebdb821e31978fcebd80e9193d8d9860f3d0ad2b034c3e42adb3",
+  "digest": "3a60bdc00b6d380a9a08688ceab8218af2aca79089b35ceec4ca1969d8925bb7",
   "store": "portable local file; not a claim of AgentDB graph persistence"
 }
