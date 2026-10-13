@@ -1,0 +1,96 @@
+{
+  "schema": "kya.golden-vectors/v1",
+  "canonicalSubset": "Strict sorted-key JSON subset; not RFC 8785 conformance",
+  "cases": [
+    {
+      "input": null,
+      "canonical": "null",
+      "sha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+    },
+    {
+      "input": {
+        "b": 2,
+        "a": 1
+      },
+      "canonical": "{\"a\":1,\"b\":2}",
+      "sha256": "43258cff783fe7036d8a43033f830adfc60ec037382473548ac742b888292777"
+    },
+    {
+      "input": {
+        "array": [
+          false,
+          true,
+          null,
+          0,
+          0,
+          0.25,
+          1e-10
+        ]
+      },
+      "canonical": "{\"array\":[false,true,null,0,0,0.25,1e-10]}",
+      "sha256": "4a1713da6376541480df982857e02332340c2d069e45929622ba7ff328a904b8"
+    },
+    {
+      "input": {
+        "unicode": "🧭 café",
+        "escaped": "quote\" slash\\ newline\n"
+      },
+      "canonical": "{\"escaped\":\"quote\\\" slash\\\\ newline\\n\",\"unicode\":\"🧭 café\"}",
+      "sha256": "4d81f83821d78ad1f2368c177d509bb9e0ffe34841309627c73b5c098ec71c6d"
+    },
+    {
+      "input": {
+        "nested": {
+          "z": {
+            "b": 2,
+            "a": 1
+          },
+          "a": [
+            3,
+            2,
+            1
+          ]
+        }
+      },
+      "canonical": "{\"nested\":{\"a\":[3,2,1],\"z\":{\"a\":1,\"b\":2}}}",
+      "sha256": "4b5b16c7493084e8a9fc704a52ab24f0319adc11dc8c2afa6169394fe95de252"
+    },
+    {
+      "input": {
+        "é": "composed",
+        "é": "decomposed"
+      },
+      "canonical": "{\"é\":\"decomposed\",\"é\":\"composed\"}",
+      "sha256": "8117f7eb721338d1c046fc7a3905d1f77b7a920abc82436194992a55af52f571"
+    }
+  ],
+  "signature": {
+    "warning": "Public toy key and fixture receipt; never a production trust anchor",
+    "publicSyntheticSeedHex": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+    "signingInput": "kya.evidence/v1\n{\"artifactDigest\":\"f968501257ce20d3b31bef5f6542fa9da1ef3ff1024523a6a67a35c700746cca\",\"checkId\":\"identity.binding\",\"evaluatorDigest\":\"b330e8c335c20486752bcfbd5c996a68dad03d50668fbe64b5ebd4e12d6e206a\",\"expiresAt\":\"2026-10-14T12:00:00.000Z\",\"id\":\"public-vector:identity\",\"observedAt\":\"2026-10-13T12:00:00.000Z\",\"outcome\":\"pass\",\"profileDigest\":\"d11e81bc8942960c211bce52582136c6852e1131625828cefe5c9b5412062d07\",\"runId\":\"public-vector-run\",\"schema\":\"kya.evidence/v1\",\"scopeId\":\"public-vector\",\"source\":\"fixture\",\"subjectDigest\":\"512a57edcbac1c144eb03f54297513f41b6d7a71b0d40c160cb80e37daaba712\"}",
+    "envelope": {
+      "payload": {
+        "artifactDigest": "f968501257ce20d3b31bef5f6542fa9da1ef3ff1024523a6a67a35c700746cca",
+        "checkId": "identity.binding",
+        "evaluatorDigest": "b330e8c335c20486752bcfbd5c996a68dad03d50668fbe64b5ebd4e12d6e206a",
+        "expiresAt": "2026-10-14T12:00:00.000Z",
+        "id": "public-vector:identity",
+        "observedAt": "2026-10-13T12:00:00.000Z",
+        "outcome": "pass",
+        "profileDigest": "d11e81bc8942960c211bce52582136c6852e1131625828cefe5c9b5412062d07",
+        "runId": "public-vector-run",
+        "schema": "kya.evidence/v1",
+        "scopeId": "public-vector",
+        "source": "fixture",
+        "subjectDigest": "512a57edcbac1c144eb03f54297513f41b6d7a71b0d40c160cb80e37daaba712"
+      },
+      "proof": {
+        "algorithm": "Ed25519",
+        "keyId": "a050837d85070582ccf7394b0988847cc312cb88259b894899f6f239cf1791a5",
+        "publicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAA6EHv/POEL4dcN0Y50vAmWfk1jCbpQ1fHdyGZBJVMbg=\n-----END PUBLIC KEY-----\n",
+        "signature": "QE39P2baRj9KWlVtuHviLZP7jC96upQQLpm3A_JLmSUe_P2Ad060k7ZlEG6oLyk21eXmMDWg5QfpalMAQz_LBg"
+      }
+    },
+    "envelopeDigest": "8e66802ddcf652a2d8bb5cdbd37b8d2d7c795b590c75411ef45c79ac87a354d4"
+  }
+}
