@@ -1,0 +1,135 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:kya-evidence:policy:v1",
+  "title": "KYA Evidence policy v1",
+  "description": "Structural schema only. Runtime validator additionally enforces key fingerprint, temporal ordering, uniqueness by ID, scope relations and canonical JSON resource limits.",
+  "type": "object",
+  "properties": {
+    "schema": {
+      "const": "kya.policy/v1"
+    },
+    "id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9:._/-]*$"
+    },
+    "profileDigest": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "scopeId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9:._/-]*$"
+    },
+    "minCoverage": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    },
+    "minScore": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 1000
+    },
+    "minIndependentCoverage": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    },
+    "allowedSources": {
+      "type": "array",
+      "items": {
+        "enum": [
+          "runtime",
+          "fixture",
+          "declaration"
+        ]
+      },
+      "maxItems": 3,
+      "uniqueItems": true
+    },
+    "maxEvidenceAgeSeconds": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 31536000
+    },
+    "trustedKeys": {
+      "type": "array",
+      "maxItems": 256,
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "publicKey": {
+            "type": "string",
+            "maxLength": 2000,
+            "pattern": "^-----BEGIN PUBLIC KEY-----\\r?\\n[A-Za-z0-9+/=\\r\\n]+\\r?\\n-----END PUBLIC KEY-----\\r?\\n?$"
+          },
+          "role": {
+            "enum": [
+              "self",
+              "independent"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "publicKey",
+          "role"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "revokedKeyIds": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[a-f0-9]{64}$"
+      },
+      "maxItems": 4096,
+      "uniqueItems": true
+    },
+    "revokedEvidenceIds": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 128,
+        "pattern": "^[A-Za-z0-9][A-Za-z0-9:._/-]*$"
+      },
+      "maxItems": 4096,
+      "uniqueItems": true
+    },
+    "revokedSubjectDigests": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[a-f0-9]{64}$"
+      },
+      "maxItems": 4096,
+      "uniqueItems": true
+    }
+  },
+  "required": [
+    "schema",
+    "id",
+    "profileDigest",
+    "scopeId",
+    "minCoverage",
+    "minScore",
+    "minIndependentCoverage",
+    "allowedSources",
+    "maxEvidenceAgeSeconds",
+    "trustedKeys",
+    "revokedKeyIds",
+    "revokedEvidenceIds",
+    "revokedSubjectDigests"
+  ],
+  "additionalProperties": false
+}

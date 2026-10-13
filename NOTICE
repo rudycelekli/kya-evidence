@@ -1,0 +1,12 @@
+KYA Evidence
+Copyright 2026 Rudy Celekli and contributors.
+
+This is an independent, clean-room reference implementation and experimental
+protocol proposal. It does not claim affiliation, certification or adoption by
+Open-KYA, W3C, A2A, MCP, Anthropic, OpenAI or any standards body.
+
+Conceptual lineage includes evidence/refusal and controlled-evaluation work in
+Gradia and publicly documented signed-receipt approaches. No private Gradia
+implementation, data, credentials or client evidence is included.
+
+Third-party product names belong to their respective owners.
