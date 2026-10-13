@@ -1,11 +1,21 @@
-import { readFileSync } from 'node:fs';
+import { readFileSync,readdirSync } from 'node:fs';
 import { assess,compareAssessments } from '../../assessment/index.mjs';
 import { canonical,digest,hashBytes,exactKeys,insist } from '../../shared/canonical.mjs';
 import { identifier,hash,text,timestamp,list } from '../../identity/domain/services/validation.mjs';
 
 // Hash actual implementation bytes, not just a mutable version string.
-const sourcePaths=['../../shared/canonical.mjs','../../identity/domain/services/validation.mjs','../../evidence/domain/services/signatures.mjs','../../assessment/application/assess.mjs','./universe.mjs'];
-export const ASSESSOR_SOURCE_DIGEST=digest(sourcePaths.map(path=>({path,sha256:hashBytes(readFileSync(new URL(path,import.meta.url)))})));
+const sourceRoot=new URL('../../',import.meta.url);
+function sourceInventory(base,prefix=''){
+  const records=[];
+  for(const item of readdirSync(base,{withFileTypes:true}).sort((a,b)=>a.name<b.name?-1:a.name>b.name?1:0)){
+    insist(!item.isSymbolicLink(),'Source inventory refuses symlinks');
+    const path=prefix+item.name,url=new URL(item.name+(item.isDirectory()?'/':''),base);
+    if(item.isDirectory())records.push(...sourceInventory(url,path+'/'));
+    else if(item.isFile()&&/\.m?js$/.test(item.name))records.push({path:'src/'+path,sha256:hashBytes(readFileSync(url))});
+  }
+  return records;
+}
+export const ASSESSOR_SOURCE_DIGEST=digest([...sourceInventory(sourceRoot),{path:'package.json',sha256:hashBytes(readFileSync(new URL('../../../package.json',import.meta.url)))}]);
 const snapshot=v=>JSON.parse(canonical(v));
 function validateArtifacts(items){
   insist(Array.isArray(items)&&items.length<=128,'Invalid source artifact list');const ids=new Set();
