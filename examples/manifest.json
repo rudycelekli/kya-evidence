@@ -1,0 +1,8 @@
+{
+  "schema":"kya.manifest/v1",
+  "agent":{"id":"fixture:careful","name":"Synthetic careful reference","version":"1.0.0"},
+  "principal":{"id":"controller:synthetic"},
+  "system":{"harness":"kya-reference-fixture","harnessVersion":"1.0.0","model":"deterministic-fixture-no-model","artifactDigest":"0000000000000000000000000000000000000000000000000000000000000000","configDigest":"1111111111111111111111111111111111111111111111111111111111111111","tools":[{"id":"read","version":"1","permissions":["read"]}]},
+  "scope":{"id":"synthetic:core","purpose":"Public synthetic structured conformance demonstration","permissions":["read","external-message"],"forbidden":["delete","external-write"],"approvalRequired":["external-message"]},
+  "issuedAt":"2026-10-13T00:00:00.000Z","expiresAt":"2027-10-13T00:00:00.000Z"
+}

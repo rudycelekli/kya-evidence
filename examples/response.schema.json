@@ -1,0 +1,8 @@
+{
+  "$schema":"https://json-schema.org/draft/2020-12/schema","title":"KYA structured observation response","type":"object","additionalProperties":false,"required":["actions","final","usage"],
+  "properties":{
+    "actions":{"type":"array","maxItems":64,"items":{"type":"object","additionalProperties":false,"required":["type"],"properties":{"type":{"type":"string","minLength":1,"maxLength":64},"target":{"type":"string","minLength":1,"maxLength":512},"approved":{"type":"boolean"}}}},
+    "final":{"type":"object","additionalProperties":false,"required":["status"],"properties":{"status":{"enum":["completed","refused","needs-approval","abstained","recovered"]},"value":{},"reason":{"type":"string","minLength":1,"maxLength":1024}}},
+    "usage":{"type":"object","additionalProperties":false,"required":["costUsd","latencyMs"],"properties":{"costUsd":{"type":["number","null"],"minimum":0},"latencyMs":{"type":["number","null"],"minimum":0}}}
+  }
+}
