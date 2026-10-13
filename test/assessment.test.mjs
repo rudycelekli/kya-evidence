@@ -119,6 +119,10 @@ test('Proxy access cannot substitute policy trust roles after canonical capture'
   const x=inputs();x.policy.minIndependentCoverage=1;const anchor=x.policy.trustedKeys[0];x.policy.trustedKeys[0]=new Proxy(anchor,{get(t,k){return k==='role'?'independent':Reflect.get(t,k);}});
   assert.equal(assess(x).decision,'insufficient-evidence');assert.equal(assess(x).independentCoverage,0);
 });
+test('public validators return captured plain JSON data instead of executable Proxy views',()=>{
+  const p=payload(),proxy=new Proxy(p,{get(t,k){return k==='outcome'?'fail':Reflect.get(t,k);}});assert.equal(validateEvidence(proxy).outcome,'pass');
+  const m=manifest();m.scope.forbidden=['read'];m.scope=new Proxy(m.scope,{get(t,k){return k==='forbidden'?[]:Reflect.get(t,k);}});assert.throws(()=>validateManifest(m),/Forbidden/);
+});
 test('artifact bytes are explicitly verified; signatures alone cannot validate the artifact',()=>{
   const p=payload();assert.equal(verifyArtifact(p,'trace-0'),true);assert.equal(verifyArtifact(p,'invented'),false);
 });

@@ -36,7 +36,7 @@ export function keyId(key) {
 }
 
 export function validateManifest(v) {
-  canonical(v);
+  v=JSON.parse(canonical(v));
   exactKeys(v, ['schema','agent','principal','system','scope','issuedAt','expiresAt'], 'Manifest');
   insist(v.schema === 'kya.manifest/v1', 'Unsupported manifest schema');
   exactKeys(v.agent, ['id','name','version'], 'Agent'); identifier(v.agent.id, 'Agent ID'); text(v.agent.name,'Agent name'); text(v.agent.version,'Agent version',128);
@@ -61,7 +61,7 @@ export function validateManifest(v) {
 }
 
 export function validateProfile(v) {
-  canonical(v); exactKeys(v,['schema','id','version','title','checks'],'Profile');
+  v=JSON.parse(canonical(v)); exactKeys(v,['schema','id','version','title','checks'],'Profile');
   insist(v.schema === 'kya.profile/v1','Unsupported profile schema'); identifier(v.id,'Profile ID'); text(v.version,'Profile version',64); text(v.title,'Profile title');
   insist(Array.isArray(v.checks) && v.checks.length > 0 && v.checks.length <= 256,'Invalid profile checks');
   const ids = new Set();
@@ -74,7 +74,7 @@ export function validateProfile(v) {
 }
 
 export function validatePolicy(v) {
-  canonical(v);
+  v=JSON.parse(canonical(v));
   exactKeys(v,['schema','id','profileDigest','scopeId','minCoverage','minScore','minIndependentCoverage','allowedSources','maxEvidenceAgeSeconds','trustedKeys','revokedKeyIds','revokedEvidenceIds','revokedSubjectDigests'],'Policy');
   insist(v.schema === 'kya.policy/v1','Unsupported policy schema'); identifier(v.id,'Policy ID'); hash(v.profileDigest,'Policy profile'); identifier(v.scopeId,'Policy scope');
   for (const k of ['minCoverage','minIndependentCoverage']) insist(typeof v[k] === 'number' && Number.isFinite(v[k]) && v[k] >= 0 && v[k] <= 1,`Invalid ${k}`);
@@ -92,7 +92,7 @@ export function validatePolicy(v) {
 }
 
 export function validateEvidence(v) {
-  canonical(v); exactKeys(v,['schema','id','subjectDigest','scopeId','profileDigest','evaluatorDigest','runId','checkId','outcome','observedAt','expiresAt','artifactDigest','source'],'Evidence');
+  v=JSON.parse(canonical(v)); exactKeys(v,['schema','id','subjectDigest','scopeId','profileDigest','evaluatorDigest','runId','checkId','outcome','observedAt','expiresAt','artifactDigest','source'],'Evidence');
   insist(v.schema === 'kya.evidence/v1','Unsupported evidence schema');
   for (const k of ['id','scopeId','runId','checkId']) identifier(v[k],k);
   for (const k of ['subjectDigest','profileDigest','evaluatorDigest','artifactDigest']) hash(v[k],k);
