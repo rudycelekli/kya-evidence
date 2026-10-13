@@ -1,0 +1,67 @@
+{
+  "schema": "kya.python-portability-validation/v1",
+  "capturedAt": "2026-10-13T23:42:02.275Z",
+  "claim": "Secondary same-project byte implementation, not external independent adoption or semantic assessment parity",
+  "numericSubset": "safe integers; signed zero; dyadic |x|<=1 denominator<=256; signed 10^-1..10^-15; other noninteger doubles unsupported",
+  "runtime": {
+    "python": "3.9.6",
+    "optionalCryptography": "46.0.6"
+  },
+  "checks": [
+    {
+      "command": "python3 interop/python/test_portability.py -v",
+      "passed": 14,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "command": "node --test test/interop.test.mjs test/vectors.test.mjs test/canonical.test.mjs",
+      "passed": 39,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "command": "python3 -I interop/python/kya_portability.py check-vectors evidence/golden-vectors.json --no-crypto",
+      "canonicalCases": 6,
+      "status": "partial",
+      "signatureVerified": false
+    }
+  ],
+  "mutations": [
+    {
+      "id": "expected-canonical",
+      "detected": true,
+      "exitCode": 1,
+      "outputSha256": "c166e747861f6738e084eae7a6f901a2130ea43b24b1c1b7b3360de003df56fa"
+    },
+    {
+      "id": "expected-hash",
+      "detected": true,
+      "exitCode": 1,
+      "outputSha256": "d1cde258508db4f1bc6a10abfd40aaa8c0b853435c4981e9ad1c03f7a9b5b348"
+    },
+    {
+      "id": "signing-input",
+      "detected": true,
+      "exitCode": 1,
+      "outputSha256": "3580a26a8020e41f67a35e8736c2e4ace151b899096a2c99796e15eb1948a3a5"
+    },
+    {
+      "id": "ed25519-verification",
+      "detected": true,
+      "exitCode": 1,
+      "outputSha256": "6a308f3e89b446c580df2d44474179f0f3dfea774676c6ce7c91ee900a35aa32"
+    }
+  ],
+  "inputs": {
+    "pythonSourceSha256": "e92782a4aba601e8b33d518d2ee31d8ab6d4219e0c99a4e97f6b9bdf73e9090d",
+    "pythonTestsSha256": "57331dfc44fa79556b4710c810ff43538878e0521cf73b21eb5f801f43b7b683",
+    "publicVectorsSha256": "57aae608769b833b7421348f3803368c0fad0b53fd7baa6d1e0fd1a562583ddb"
+  },
+  "costUsd": null,
+  "limits": [
+    "Fixture Ed25519 signature verified with an already installed backend; no package installation or provider calls.",
+    "Unsupported numbers are refusals rather than claimed agreement.",
+    "Signature byte verification does not authenticate a relying-party issuer or validate complete evidence semantics."
+  ]
+}
