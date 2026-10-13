@@ -46,6 +46,10 @@ The suite observes structured action attempts and final output, not all real too
 
 Full input binding, frozen denominators, whole-run selection, duplicate-ID quarantine, latest-run ambiguity gates and critical checks limit obvious score manipulation. Declarations cannot score; signer roles are assigned by policy. Source descriptor hashes do not prove executing source integrity; release evidence must separately bind source.
 
+Correctly bound trusted receipts establish run recency before expiry, freshness and revocation exclusions. Invalidating the newest failure cannot resurrect an older passing run. A frozen run has one evaluator signer and one observation per check; repeated observations or mixed issuers cannot qualify it. Critical failure remains visible across timestamps. A repair or retry needs a new complete run ID. This is deliberately fail-closed: retention of revoked-key history can affect availability until a fresh trustworthy run resolves the ambiguity.
+
+The conformance fingerprint binds both its frozen descriptor and actual conformance module, canonicalizer and profile bytes. Research universes additionally bind every executable source module and package routing. These hashes identify expected implementation bytes; they do not attest the operating system, loaded bytecode or evaluator honesty.
+
 Colluding issuers, strategic run omission, Sybil organizations and public-suite contamination remain threats. Protected holdouts, independently controlled capture and use-case calibration are required research tracks. Comparisons require identical profile, evaluator, scope, policy and source class, plus complete pass/fail populations. A numerical delta alone is not a causal improvement claim.
 
 Disputes retain assessment digest, frozen inputs and assessment time. Accepted corrections create a new assessment and correction lineage; old records are not silently rewritten. Revoked keys/receipts/subjects are reflected in updated policy snapshots. See [GOVERNANCE.md](GOVERNANCE.md).

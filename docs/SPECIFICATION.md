@@ -17,6 +17,7 @@ The manifest declares; the profile freezes checks; receipts record outcomes; pol
 | Policy | `kya.policy/v1` | Profile digest, scope, coverage/score/independence thresholds, source classes, freshness, trust anchors and revocations |
 | Evidence | `kya.evidence/v1` | Subject, scope, profile, evaluator, run, check, artifact digest, outcome, source and validity interval |
 | Assessment | `kya.assessment/v1` | Input digests, time, source mode, decision, score, dimensions, checks, rejections and limitations |
+| Research universe | `kya.universe/v1` | All executable source bytes, package routing, frozen inputs/time, replayed assessment, source references, parent hypothesis and correction references |
 
 Strict JSON rejects duplicate members, unsupported values, prototype keys, excessive resources and unknown schema fields. Canonicalization uses a bounded sorted-key JSON subset, not a claimed RFC 8785 implementation. SHA-256 digests are 64 lowercase hexadecimal characters. Timestamps are canonical UTC ISO strings.
 
@@ -32,7 +33,7 @@ Eligibility requires a valid proof, trusted non-revoked key, matching subject/sc
 
 ## Run selection and qualification
 
-Only the latest whole run is selected. Checks cannot be mixed from several runs. Duplicate quarantined evidence still establishes run recency so an old passing run cannot revive. Tied latest runs create ambiguity and cannot qualify; a selected critical failure still blocks. Within one selected run, latest observation wins and failure wins equal-time conflicts. This limits obvious cherry-picking; independent capture is still needed to detect omitted entire runs.
+Only the latest whole run is selected. Checks cannot be mixed from several runs. Correctly bound trusted receipts establish recency before duplicate quarantine, expiry, freshness and revocation exclusions; invalidating a newer failure cannot revive an older pass. Tied latest runs create ambiguity and cannot qualify; a selected critical failure still blocks. A frozen run has one evaluator key and one observation per check. Repeated checks or mixed issuers cannot qualify it. Critical failure remains visible across observation timestamps. Successful retries require a fresh complete run ID. Independent capture is still needed to detect omitted entire runs.
 
 Every frozen check stays in the denominator. Unknown, abstained and errored checks earn zero points and no observed coverage. Pass and fail count as observed; only pass earns points. Critical failure blocks; critical unresolved checks withhold qualification. Revoked or invalid-time subjects cannot qualify. At least one known pass/fail is required even when thresholds are zero. Coverage, independence and score thresholds then apply. See [SCORING.md](SCORING.md).
 
@@ -43,6 +44,10 @@ Every frozen check stays in the denominator. Unknown, abstained and errored chec
 The report includes input digests, `selectedRunId`, `ambiguousRuns`, every check, `acceptedEvidenceDigests`, rejection reasons and explicit limitations. `reportDigest` is an unsigned checksum. `verify` returns checksum integrity with `authenticated:false`; an attacker can checksum false claims. Recompute from trusted original inputs to assess assurance.
 
 The dashboard displays imported files as unverified claimed reports. Its presets use `kya.viewer-fixture/v1` and cannot masquerade as signed assessments. Raw observations and signed receipts are not embedded in the check list. Preserve authorized raw evidence privately, and redact before hashing public observation artifacts.
+
+## Research replay and branching
+
+[Universes](UNIVERSES.md) freeze all six assessment inputs including explicit time, current implementation inventory, computed report, question and source references. Forks clone inputs and name their parent and hypothesis. Verification recomputes the complete assessment under the matching archived implementation. Parent/correction graphs detect missing references and expose affected descendants; correction references remain declarations separate from revocation authority. Hash equality proves matching bytes, not who issued them, when they existed or whether observations were truthful. Comparisons require compatible complete populations and make no causal improvement claim.
 
 ## Interoperability and versioning
 

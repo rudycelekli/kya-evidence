@@ -8,7 +8,7 @@ KYA Evidence is local-first open infrastructure for **Know Your Agent**: portabl
 
 Every person may eventually delegate to an agent. Every relying party will need a better answer than “trust the prompt.” Start with an exact question: **does this configuration meet this party's policy for this scope, on this evidence?** Keep the result portable, the decision explainable and the correction process open.
 
-[Specification](docs/SPECIFICATION.md) · [Scoring](docs/SCORING.md) · [Threat model](docs/THREAT-MODEL.md) · [Adapters](docs/ADAPTERS.md) · [Roadmap](docs/ROADMAP.md) · [Contribute](CONTRIBUTING.md)
+[Specification](docs/SPECIFICATION.md) · [Scoring](docs/SCORING.md) · [Research universes](docs/UNIVERSES.md) · [Threat model](docs/THREAT-MODEL.md) · [Adapters](docs/ADAPTERS.md) · [Roadmap](docs/ROADMAP.md) · [Contribute](CONTRIBUTING.md)
 
 ## Run from a checkout
 
@@ -32,8 +32,8 @@ node bin/kya.mjs assess \
   --now 2026-10-13T12:00:00.000Z \
   --out ./artifacts/assessment
 
-node bin/kya.mjs inspect ./artifacts/assessment
-node bin/kya.mjs verify ./artifacts/assessment/report.json
+node bin/kya.mjs inspect .
+node bin/kya.mjs verify ./artifacts/assessment/assessment.json
 node bin/kya.mjs probe --out ./artifacts/runtime-probes.json
 node bin/kya.mjs benchmark --out ./artifacts/benchmark
 ```
@@ -52,6 +52,7 @@ Use generated demo inputs and the [adapter protocol](docs/ADAPTERS.md) to connec
 | Can a high average hide harm? | Critical failures block qualification. Missing, errored and abstained checks stay unresolved. |
 | Is the evidence relevant now? | Exact profile/evaluator/system/scope binding, expiry, freshness and revocation are enforced. |
 | Can someone challenge the result? | Per-check references, rejection reasons and exact digests support replay, correction, appeal and revocation. |
+| Can the research branch? | Content-addressed universes freeze inputs, time and implementation bytes; explicit-hypothesis forks preserve parents, replay and correction lineage. |
 
 Six dimensions: **identity, authority, security, reliability, accountability and operations**. The reference profile has 18 equal-weight checks. That is an auditable starting choice, not a statistically validated universal weighting. Scores run 0–1000; every result also exposes coverage, optimistic upper bound, dimensions and critical gates. Decisions are `qualified`, `blocked`, `insufficient-evidence`, `expired` or `revoked`.
 
@@ -70,6 +71,20 @@ To become a useful standard, the protocol needs independent implementations, pub
 This clean-room implementation applies evidence-first engineering: exact revisions, replayable tests, visible uncertainty, independently reviewed promotion and reversible change. Private product code, client records, credentials and operational logs are excluded.
 
 Tests exercise tampering, malformed and duplicate JSON, untrusted signing, wrong bindings, expiry/revocation, run cherry-picking, unknown coverage, declaration laundering, critical failures, HTML injection and bounded command transport. Evaluator mutation tests must detect weakened gates. Passing public cases alone cannot establish general safety; colluding issuers, strategic run omission and suite contamination remain threats.
+
+Research can fork without rewriting its past. [Universes](docs/UNIVERSES.md) hash every bundled executable module, package routing, exact input evidence and assessment time. Replay recomputes the result under that implementation. Comparisons refuse changed decision contracts and incomplete case populations. Correction references expose affected descendants, while actual revocation stays in relying policy.
+
+```sh
+node scripts/golden-vectors.mjs --check
+node scripts/mutation-check.mjs
+node bin/kya.mjs universe --inputs frozen-inputs.json --question "Frozen baseline" --out baseline.json
+node bin/kya.mjs fork --parent baseline.json --patch candidate-patch.json --out candidate.json
+node bin/kya.mjs replay candidate.json
+node scripts/pack.mjs
+node scripts/verify-release.mjs
+```
+
+The package builder reads immutable Git blobs from a clean committed revision, fixes archive metadata, and records every file's SHA-256. Golden vectors expose canonical bytes and domain-separated Ed25519 signatures for independent implementations. A valid hash is integrity evidence; authenticated issuance, truthful execution and full incident disclosure need separate evidence.
 
 Contribute reproducible failures, evaluator challenges, transport adapters or specification criticism. Read [CONTRIBUTING.md](CONTRIBUTING.md), [governance](docs/GOVERNANCE.md) and [SECURITY.md](SECURITY.md). Ongoing development uses bounded hypotheses, frozen comparisons, independent review and explicit `ACCEPT`, `REJECT` or `INCONCLUSIVE` outcomes. A roadmap does not imply a running scheduler. Public releases, cost-incurring agent executions and deployments need explicit authorization.
 

@@ -10,7 +10,7 @@ Averages can conceal severe failures. Removing missing checks inflates scores. S
 
 ## Decision
 
-Keep every frozen check in the denominator. Unknown, abstained and errored checks earn no points/coverage. Critical failures block independently of averages. Select only the latest whole run. Quarantined duplicate receipts still establish run recency. Tied latest runs cannot qualify. At least one known pass/fail is required even if policy thresholds are zero. Publish dimension weights, coverage and an optimistic upper bound.
+Keep every frozen check in the denominator. Unknown, abstained and errored checks earn no points/coverage. Critical failures block independently of averages. Select only the latest whole run. Authentic bound receipts establish recency before expiry, revocation and duplicate quarantine; invalidating a newer failure cannot resurrect an older passing run. Tied latest runs, mixed evaluator issuers and repeated frozen checks cannot qualify. Failure remains visible across timestamps; retry with a fresh complete run. At least one known pass/fail is required even if policy thresholds are zero. Publish dimension weights, coverage and an optimistic upper bound.
 
 ## Alternatives
 
