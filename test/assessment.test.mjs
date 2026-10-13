@@ -66,6 +66,24 @@ test('zero policy thresholds still require at least one scored observation',()=>
     x.evidence=[signEvidence(payload(x.manifest,x.profile,0,{outcome}),keys.privateKey)];assert.equal(assess(x).decision,'insufficient-evidence');
   }
 });
+test('revocation or expiry of a newer bound failure never revives an older successful run',()=>{
+  for(const invalidation of ['revoked-evidence','revoked-key','expiry','freshness']){
+    const x=inputs();x.now='2026-10-13T12:00:02.000Z';
+    const newer=signEvidence(payload(x.manifest,x.profile,0,{id:'latest-failure',runId:'new-fail',observedAt:'2026-10-13T12:00:01.000Z',expiresAt:invalidation==='expiry'?'2026-10-13T12:00:02.000Z':FUTURE,outcome:'fail'}),keys.privateKey);x.evidence.push(newer);
+    if(invalidation==='revoked-evidence')x.policy.revokedEvidenceIds=['latest-failure'];if(invalidation==='revoked-key')x.policy.revokedKeyIds=[signerId];if(invalidation==='freshness'){x.policy.maxEvidenceAgeSeconds=1;x.now='2026-10-13T12:00:03.000Z';}
+    const r=assess(x);assert.equal(r.selectedRunId,'new-fail');assert.notEqual(r.decision,'qualified');assert.equal(r.score.earned,0);
+  }
+});
+test('a later self-signed pass in an independent run cannot erase a critical failure',()=>{
+  const x=inputs();x.policy.trustedKeys[0].role='independent';x.policy.minIndependentCoverage=0.8;x.now='2026-10-13T12:00:02.000Z';
+  const self=generateKeyPairSync('ed25519'),pem=self.publicKey.export({format:'pem',type:'spki'}).toString();x.policy.trustedKeys.push({id:keyId(pem),publicKey:pem,role:'self'});
+  x.evidence[0]=signEvidence(payload(x.manifest,x.profile,0,{outcome:'fail'}),keys.privateKey);
+  x.evidence.push(signEvidence(payload(x.manifest,x.profile,0,{id:'late-self-pass',observedAt:'2026-10-13T12:00:01.000Z'}),self.privateKey));assert.equal(assess(x).decision,'blocked');
+});
+test('repeated frozen checks cannot refresh validity or repair a failure without a new run',()=>{
+  const x=inputs();x.now='2026-10-13T12:00:02.000Z';x.evidence.push(signEvidence(payload(x.manifest,x.profile,3,{id:'late-pass',observedAt:'2026-10-13T12:00:01.000Z'}),keys.privateKey));assert.equal(assess(x).decision,'insufficient-evidence');
+  x.evidence[0]=signEvidence(payload(x.manifest,x.profile,0,{outcome:'fail'}),keys.privateKey);x.evidence.push(signEvidence(payload(x.manifest,x.profile,0,{id:'late-pass-critical',observedAt:'2026-10-13T12:00:01.000Z'}),keys.privateKey));assert.equal(assess(x).decision,'blocked');
+});
 test('same-timestamp failure wins same-check conflict independent of input order',()=>{
   const x=inputs();const f=signEvidence(payload(x.manifest,x.profile,0,{id:'conflicting-fail',outcome:'fail'}),keys.privateKey);x.evidence.push(f);
   assert.equal(assess(x).decision,'blocked');x.evidence.reverse();assert.equal(assess(x).decision,'blocked');

@@ -13,7 +13,7 @@ const mutants=[
   ['declaration laundering',"insist(p.source !== 'declaration','A declaration cannot satisfy an observed check');","/* mutation: allow declaration */"],
   ['critical-gate removal',"const criticalFailures = checks.filter(c=>c.critical && c.status==='fail');","const criticalFailures = [];"],
   ['ambiguity-gate removal',"const ambiguousRuns = tiedRuns.length>1;","const ambiguousRuns = false;"],
-  ['duplicate fallback laundering',"for (const e of eligible) {\n    const id = e.payload.runId;","for (const e of unique) {\n    const id = e.payload.runId;"]
+  ['duplicate fallback laundering',"for (const e of bound) {\n    const id = e.payload.runId;","for (const e of unique) {\n    const id = e.payload.runId;"]
 ];
 const results=[];
 for(const [name,from,to]of mutants){
