@@ -1,0 +1,10 @@
+node_modules/
+.claude-flow/
+.swarm/
+.private/
+.kya/
+dist/
+*.tgz
+*.pem
+!test/fixtures/*.pem
+.DS_Store
