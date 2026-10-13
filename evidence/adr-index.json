@@ -1,0 +1,60 @@
+{
+  "schema": "kya.adr-index/v1",
+  "records": [
+    {
+      "id": "ADR-0001",
+      "title": "Exact configuration and scope are the assessed subject",
+      "status": "Implemented",
+      "file": "docs/adr/0001-scope-bound-passports.md",
+      "contentDigest": "8fda4d39a2aa6f83a253a9ea0d6ecda38cac68ec9c841ae024f728e47fb2cc46",
+      "related": []
+    },
+    {
+      "id": "ADR-0002",
+      "title": "Trust comes from relying policy, not receipt self-claims",
+      "status": "Implemented",
+      "file": "docs/adr/0002-receipts-and-relying-policy.md",
+      "contentDigest": "a298a6044c01be06c051db1c44afddaa4ed81e65e2cd6f2a76fc4708394ebc82",
+      "related": [
+        "ADR-0001"
+      ]
+    },
+    {
+      "id": "ADR-0003",
+      "title": "Fixed denominators, critical gates and whole runs",
+      "status": "Implemented",
+      "file": "docs/adr/0003-fixed-denominator-and-run-integrity.md",
+      "contentDigest": "cf62fd954da863e40c7d0ede88a9806dac27b642cb7c90bb4ccbd7c0d16b2af2",
+      "related": [
+        "ADR-0001",
+        "ADR-0002"
+      ]
+    },
+    {
+      "id": "ADR-0004",
+      "title": "Local-first evidence, bounded adapters and independent promotion",
+      "status": "Implemented",
+      "file": "docs/adr/0004-local-first-and-independent-promotion.md",
+      "contentDigest": "7bbd899500f647f4242ffde96285fc2ef37aab017f80c9b0dbceb8114d382e2b",
+      "related": [
+        "ADR-0002",
+        "ADR-0003"
+      ]
+    },
+    {
+      "id": "ADR-0005",
+      "title": "Content-addressed research universes and immutable package inputs",
+      "status": "Implemented",
+      "file": "docs/adr/0005-content-addressed-research-universes.md",
+      "contentDigest": "402e92c9c94059a42713a22e61f4af6be0c4bc363aedd91837c684fd1ffb1157",
+      "related": [
+        "ADR-0001",
+        "ADR-0002",
+        "ADR-0003",
+        "ADR-0004"
+      ]
+    }
+  ],
+  "digest": "e7bf3ebb1001ebdb821e31978fcebd80e9193d8d9860f3d0ad2b034c3e42adb3",
+  "store": "portable local file; not a claim of AgentDB graph persistence"
+}

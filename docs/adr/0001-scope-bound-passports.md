@@ -1,6 +1,7 @@
 # ADR-0001: Exact configuration and scope are the assessed subject
 
-**Status**: Implemented, independent review pending
+**Status**: Implemented
+**Review**: Core reviewed independently at 0b63f5e; whole-artifact external review remains open.
 **Date**: 2026-10-13
 
 ## Context

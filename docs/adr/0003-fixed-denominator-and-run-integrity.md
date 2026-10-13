@@ -1,6 +1,7 @@
 # ADR-0003: Fixed denominators, critical gates and whole runs
 
-**Status**: Implemented, independent review pending
+**Status**: Implemented
+**Review**: Core reviewed independently at 0b63f5e; whole-artifact external review remains open.
 **Date**: 2026-10-13
 **Depends-on**: ADR-0001, ADR-0002
 

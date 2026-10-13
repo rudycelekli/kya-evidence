@@ -1,6 +1,7 @@
 # ADR-0004: Local-first evidence, bounded adapters and independent promotion
 
-**Status**: Implemented, independent review pending
+**Status**: Implemented
+**Review**: Core reviewed independently at 0b63f5e; whole-artifact external review remains open.
 **Date**: 2026-10-13
 **Depends-on**: ADR-0002, ADR-0003
 

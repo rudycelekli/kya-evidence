@@ -1,6 +1,7 @@
 # ADR-0002: Trust comes from relying policy, not receipt self-claims
 
-**Status**: Implemented, independent review pending
+**Status**: Implemented
+**Review**: Core reviewed independently at 0b63f5e; whole-artifact external review remains open.
 **Date**: 2026-10-13
 **Related**: ADR-0001
 
