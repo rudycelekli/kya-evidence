@@ -7,7 +7,7 @@
   "license": "Apache-2.0",
   "bin": { "kya": "bin/kya.mjs" },
   "exports": { ".": { "types": "./src/index.d.ts", "import": "./src/index.mjs" }, "./conformance": "./src/conformance/index.mjs", "./schemas/*": "./schemas/*" },
-  "files": ["bin/", "src/", "schemas/", "profiles/", "examples/", "README.md", "LICENSE", "NOTICE", "docs/SPECIFICATION.md", "docs/SCORING.md", "docs/THREAT-MODEL.md"],
+  "files": ["bin/", "src/", "schemas/", "profiles/", "examples/", "scripts/", "test/", "dashboard/", "assets/", "docs/", "evidence/", "AGENTS.md", "README.md", "CONTRIBUTING.md", "SECURITY.md", "LICENSE", "NOTICE"],
   "scripts": {
     "test": "node --test test/*.test.mjs",
     "check": "node scripts/check.mjs",
@@ -17,6 +17,7 @@
     "dashboard": "node scripts/serve.mjs",
     "pack": "node scripts/pack.mjs",
     "verify:release": "node scripts/verify-release.mjs",
+    "test:mutations": "node scripts/mutation-check.mjs",
     "adr:index": "node scripts/adr-index.mjs"
   }
 }

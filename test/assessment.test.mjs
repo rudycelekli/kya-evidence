@@ -14,6 +14,9 @@ test('proof verifies signature bytes but trust is checked separately',()=>{
 test('empty evidence remains unknown with fixed 0..1000 range',()=>{
   const x=inputs();x.evidence=[];const r=assess(x);assert.equal(r.decision,'insufficient-evidence');assert.deepEqual(r.score,{earned:0,possible:1000,upperBound:1000});assert.ok(r.checks.every(c=>c.status==='unknown'));
 });
+test('declared claims cannot become scored observations even when policy allows their ingestion',()=>{
+  const x=inputs();x.policy.allowedSources.push('declaration');x.evidence=x.evidence.map(e=>signEvidence({...e.payload,source:'declaration'},keys.privateKey));const r=assess(x);assert.equal(r.decision,'insufficient-evidence');assert.equal(r.coverage,0);assert.equal(r.score.earned,0);
+});
 test('removing a failed check cannot improve earned score or denominator',()=>{
   const x=inputs();x.evidence[5]=signEvidence(payload(x.manifest,x.profile,5,{outcome:'fail'}),keys.privateKey);const r=assess(x);
   x.evidence.pop();const removed=assess(x);assert.equal(removed.score.earned,r.score.earned);assert.equal(removed.score.possible,r.score.possible);assert.equal(removed.decision,'insufficient-evidence');
