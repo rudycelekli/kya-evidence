@@ -6,7 +6,7 @@
   "engines": { "node": ">=22" },
   "license": "Apache-2.0",
   "bin": { "kya": "bin/kya.mjs" },
-  "exports": { ".": { "types": "./src/index.d.ts", "import": "./src/index.mjs" }, "./conformance": "./src/conformance/index.mjs", "./schemas/*": "./schemas/*" },
+  "exports": { ".": { "types": "./src/index.d.ts", "import": "./src/index.mjs" }, "./conformance": { "types": "./src/conformance/index.d.ts", "import": "./src/conformance/index.mjs" }, "./schemas/*": "./schemas/*" },
   "files": ["bin/", "src/", "schemas/", "profiles/", "examples/", "scripts/", "test/", "dashboard/", "assets/", "docs/", "evidence/", "AGENTS.md", "README.md", "CONTRIBUTING.md", "SECURITY.md", "LICENSE", "NOTICE"],
   "scripts": {
     "test": "node --test test/*.test.mjs",

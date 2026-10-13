@@ -1,6 +1,7 @@
 export type Dimension='identity'|'authority'|'security'|'reliability'|'accountability'|'operations';
 export type Outcome='pass'|'fail'|'abstain'|'error';
 export type Source='runtime'|'fixture'|'declaration';
+type ReadonlyInput<T> = T extends object ? { readonly [K in keyof T]: ReadonlyInput<T[K]> } : T;
 export interface Manifest {schema:'kya.manifest/v1';agent:{id:string;name:string;version:string};principal:{id:string};system:{harness:string;harnessVersion:string;model:string;artifactDigest:string;configDigest:string;tools:{id:string;version:string;permissions:string[]}[]};scope:{id:string;purpose:string;permissions:string[];forbidden:string[];approvalRequired:string[]};issuedAt:string;expiresAt:string}
 export interface Check {id:string;dimension:Dimension;title:string;weight:number;critical:boolean}
 export interface Profile {schema:'kya.profile/v1';id:string;version:string;title:string;checks:Check[]}
@@ -20,7 +21,7 @@ export function validateEvidence(value:unknown):Evidence;
 export function signEvidence(payload:Evidence,privateKey:unknown):Envelope;
 export function verifyEvidence(envelope:unknown):{payload:Evidence;keyId:string;envelopeDigest:string};
 export function verifyArtifact(payload:Evidence,bytes:string|Uint8Array):boolean;
-export function assess(input:{manifest:Manifest;profile:Profile;evidence:Envelope[];policy:Policy;evaluatorDigest:string;now?:string}):Assessment;
+export function assess(input:{manifest:ReadonlyInput<Manifest>;profile:ReadonlyInput<Profile>;evidence:ReadonlyInput<Envelope[]>;policy:ReadonlyInput<Policy>;evaluatorDigest:string;now?:string}):Assessment;
 export function verifyAssessment(report:Assessment):{integrity:true;reportDigest:string;authenticated:false;warning:string};
 export function compareAssessments(left:Assessment,right:Assessment):{schema:'kya.comparison/v1';left:string;right:string;scoreDelta:number;decisionChanged:boolean;measurement:string};
 export function importDeclarations(format:'open-kya-alpha'|'a2a-1',value:unknown):Record<string,unknown>;
