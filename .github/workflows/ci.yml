@@ -1,0 +1,30 @@
+name: conformance-and-integrity
+on:
+  push:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  verify:
+    strategy:
+      matrix:
+        node: [22, 24]
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+      - run: node scripts/check.mjs
+      - run: node --test test/*.test.mjs
+      - run: node scripts/mutation-check.mjs
+      - run: node scripts/adr-index.mjs
+      - run: node scripts/pack.mjs
+      - run: node scripts/verify-release.mjs
+      - name: Verify reproducible package bytes
+        shell: bash
+        run: |
+          cp dist/release-receipt.json dist/first-receipt.json
+          node scripts/pack.mjs
+          node --input-type=module -e 'import {readFileSync} from "node:fs";const a=JSON.parse(readFileSync("dist/first-receipt.json"));const b=JSON.parse(readFileSync("dist/release-receipt.json"));if(a.archiveSha256!==b.archiveSha256)throw Error("non-reproducible archive");'

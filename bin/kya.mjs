@@ -3,7 +3,7 @@ import { readFile, writeFile, mkdir, lstat } from 'node:fs/promises';
 import { resolve, join } from 'node:path';
 import { generateKeyPairSync } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
-import { assess, digest, hashBytes, keyId, signEvidence, parseJson, canonical, verifyEvidence, verifyAssessment, importDeclarations, validateManifest } from '../src/index.mjs';
+import { assess, digest, hashBytes, keyId, signEvidence, parseJson, verifyEvidence, verifyAssessment, importDeclarations, createUniverse, forkUniverse, verifyUniverse, compareUniverses } from '../src/index.mjs';
 import { inspectConfiguration } from '../src/identity/infrastructure/inspect.mjs';
 import { renderAssessment } from '../src/assessment/infrastructure/render.mjs';
 import { CORE_PROFILE, EVALUATOR_DIGEST, createReferenceAdapter, runConformance, probeRuntimes } from '../src/conformance/index.mjs';
@@ -20,6 +20,10 @@ const HELP=`KYA Evidence 0.1.0-alpha.1 — Know Your Agent
   kya verify FILE
   kya sign --input PAYLOAD --key PRIVATE_PEM [--out FILE]
   kya keygen DIRECTORY
+  kya universe --inputs FILE --question TEXT [--out FILE]
+  kya fork --parent FILE --patch FILE [--out FILE]
+  kya replay FILE
+  kya compare --left FILE --right FILE
 
 Local policy qualification is not an authorization grant.
 Demo/benchmark use synthetic fixtures; no commercial product score is measured.
@@ -100,6 +104,14 @@ export async function main(argv=process.argv.slice(2)){
   }else if(command==='keygen'){
     allow(flags,[]);if(positional.length!==1)throw Error('keygen requires DIRECTORY');const out=resolve(positional[0]);await mkdir(out,{recursive:true,mode:0o700});const keys=generateKeyPairSync('ed25519');
     const publicPem=keys.publicKey.export({format:'pem',type:'spki'}).toString();await writeFile(join(out,'private.pem'),keys.privateKey.export({format:'pem',type:'pkcs8'}),{flag:'wx',mode:0o600});await writeFile(join(out,'public.pem'),publicPem,{flag:'wx',mode:0o600});console.log(JSON.stringify({keyId:keyId(publicPem),out,warning:'Keep private.pem private; trust role is assigned by the relying party'}));
+  }else if(command==='universe'){
+    allow(flags,['inputs','question','out']);need(flags,['inputs','question']);if(positional.length)throw Error('Unexpected positional argument');await emit(createUniverse({inputs:await jsonFile(flags.inputs),question:flags.question}),flags.out);
+  }else if(command==='fork'){
+    allow(flags,['parent','patch','out']);need(flags,['parent','patch']);if(positional.length)throw Error('Unexpected positional argument');await emit(forkUniverse(await jsonFile(flags.parent),await jsonFile(flags.patch)),flags.out);
+  }else if(command==='replay'){
+    allow(flags,[]);if(positional.length!==1)throw Error('replay requires FILE');await emit(verifyUniverse(await jsonFile(positional[0])));
+  }else if(command==='compare'){
+    allow(flags,['left','right']);need(flags,['left','right']);if(positional.length)throw Error('Unexpected positional argument');await emit(compareUniverses(await jsonFile(flags.left),await jsonFile(flags.right)));
   }else if(command==='sign'){
     allow(flags,['input','key','out']);need(flags,['input','key']);if(positional.length)throw Error('Unexpected positional argument');
     const st=await lstat(flags.key);if(!st.isFile()||st.isSymbolicLink()||st.size>2000)throw Error('Private key must be a bounded regular PEM file');await emit(signEvidence(await jsonFile(flags.input),await readFile(flags.key)),flags.out);

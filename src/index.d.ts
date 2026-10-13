@@ -26,3 +26,12 @@ export function compareAssessments(left:Assessment,right:Assessment):{schema:'ky
 export function importDeclarations(format:'open-kya-alpha'|'a2a-1',value:unknown):Record<string,unknown>;
 export const DIMENSIONS:readonly Dimension[];
 export const SOURCES:readonly Source[];
+export interface SourceArtifact {id:string;digest:string;kind:'original'|'derived'|'hypothesis';rights:'private'|'redistributable'}
+export interface FrozenInputs {manifest:Manifest;profile:Profile;policy:Policy;evidence:Envelope[];evaluatorDigest:string;now:string}
+export interface Universe {schema:'kya.universe/v1';assessorSourceDigest:string;parentDigest:string|null;hypothesis:string|null;question:string;sourceArtifacts:SourceArtifact[];invalidates:string[];inputs:FrozenInputs;assessment:Assessment;limitations:string[];universeDigest:string}
+export function createUniverse(value:{inputs:FrozenInputs;question:string;sourceArtifacts?:SourceArtifact[];parentDigest?:string|null;hypothesis?:string|null;invalidates?:string[]}):Universe;
+export function verifyUniverse(universe:Universe):{integrity:true;replayMatched:true;universeDigest:string;assessorSourceDigest:string;authenticated:false};
+export function forkUniverse(parent:Universe,patch:Partial<FrozenInputs>&{hypothesis:string;question?:string;sourceArtifacts?:SourceArtifact[];invalidates?:string[]}):Universe;
+export function verifyUniverseGraph(universes:Universe[]):{nodes:number;roots:string[];integrity:true;replayMatched:true;authenticated:false};
+export function compareUniverses(left:Universe,right:Universe):Record<string,unknown>;
+export const ASSESSOR_SOURCE_DIGEST:string;
