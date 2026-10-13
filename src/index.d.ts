@@ -32,6 +32,6 @@ export interface Universe {schema:'kya.universe/v1';assessorSourceDigest:string;
 export function createUniverse(value:{inputs:FrozenInputs;question:string;sourceArtifacts?:SourceArtifact[];parentDigest?:string|null;hypothesis?:string|null;invalidates?:string[]}):Universe;
 export function verifyUniverse(universe:Universe):{integrity:true;replayMatched:true;universeDigest:string;assessorSourceDigest:string;authenticated:false};
 export function forkUniverse(parent:Universe,patch:Partial<FrozenInputs>&{hypothesis:string;question?:string;sourceArtifacts?:SourceArtifact[];invalidates?:string[]}):Universe;
-export function verifyUniverseGraph(universes:Universe[]):{nodes:number;roots:string[];integrity:true;replayMatched:true;authenticated:false};
+export function verifyUniverseGraph(universes:Universe[]):{nodes:number;roots:string[];declaredInvalidations:string[];affectedDescendants:string[];integrity:true;replayMatched:true;authenticated:false;limitation:string};
 export function compareUniverses(left:Universe,right:Universe):Record<string,unknown>;
 export const ASSESSOR_SOURCE_DIGEST:string;

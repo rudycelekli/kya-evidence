@@ -29,17 +29,19 @@ export function verifyUniverse(value){
   return {integrity:true,replayMatched:true,universeDigest,assessorSourceDigest:ASSESSOR_SOURCE_DIGEST,authenticated:false};
 }
 export function forkUniverse(parent,patch){
-  verifyUniverse(parent);const p=snapshot(patch);
+  const frozenParent=snapshot(parent);verifyUniverse(frozenParent);const p=snapshot(patch);
   const allowed=['hypothesis','question','sourceArtifacts','invalidates','manifest','profile','policy','evidence','evaluatorDigest','now'];
   insist(p&&typeof p==='object'&&!Array.isArray(p)&&Object.keys(p).every(k=>allowed.includes(k)),'Unknown fork patch field');text(p.hypothesis,'Fork hypothesis',2048);
-  const inputs=snapshot(parent.inputs);for(const k of ['manifest','profile','policy','evidence','evaluatorDigest','now'])if(Object.hasOwn(p,k))inputs[k]=p[k];
-  return createUniverse({inputs,question:p.question??parent.question,sourceArtifacts:p.sourceArtifacts??parent.sourceArtifacts,parentDigest:parent.universeDigest,hypothesis:p.hypothesis,invalidates:p.invalidates??[]});
+  const inputs=snapshot(frozenParent.inputs);for(const k of ['manifest','profile','policy','evidence','evaluatorDigest','now'])if(Object.hasOwn(p,k))inputs[k]=p[k];
+  return createUniverse({inputs,question:p.question??frozenParent.question,sourceArtifacts:p.sourceArtifacts??frozenParent.sourceArtifacts,parentDigest:frozenParent.universeDigest,hypothesis:p.hypothesis,invalidates:p.invalidates??[]});
 }
 export function verifyUniverseGraph(universes){
   insist(Array.isArray(universes)&&universes.length>0&&universes.length<=256,'Invalid universe graph');const nodes=new Map();
   for(const u of universes){verifyUniverse(u);insist(!nodes.has(u.universeDigest),'Duplicate universe node');nodes.set(u.universeDigest,u);}
   for(const u of universes){if(u.parentDigest!==null)insist(nodes.has(u.parentDigest),'Missing parent universe');for(const id of u.invalidates)insist(nodes.has(id),'Missing invalidated universe');}
   const visited=new Set(),active=new Set();function visit(u){insist(!active.has(u.universeDigest),'Universe graph cycle');if(visited.has(u.universeDigest))return;active.add(u.universeDigest);if(u.parentDigest)visit(nodes.get(u.parentDigest));active.delete(u.universeDigest);visited.add(u.universeDigest);}for(const u of universes)visit(u);
-  return {nodes:nodes.size,roots:universes.filter(u=>u.parentDigest===null).map(u=>u.universeDigest).sort(),integrity:true,replayMatched:true,authenticated:false};
+  const invalidated=new Set(universes.flatMap(u=>u.invalidates)),affected=new Set(invalidated);
+  let changed=true;while(changed){changed=false;for(const u of universes)if(u.parentDigest&&affected.has(u.parentDigest)&&!affected.has(u.universeDigest)){affected.add(u.universeDigest);changed=true;}}
+  return {nodes:nodes.size,roots:universes.filter(u=>u.parentDigest===null).map(u=>u.universeDigest).sort(),declaredInvalidations:[...invalidated].sort(),affectedDescendants:[...affected].filter(id=>!invalidated.has(id)).sort(),integrity:true,replayMatched:true,authenticated:false,limitation:'Correction references are declarations; replay integrity is distinct from authority to revoke an assessment'};
 }
-export function compareUniverses(left,right){verifyUniverse(left);verifyUniverse(right);return {...compareAssessments(left.assessment,right.assessment),leftUniverse:left.universeDigest,rightUniverse:right.universeDigest,parentRelationship:right.parentDigest===left.universeDigest?'direct-fork':'other',causalClaim:false};}
+export function compareUniverses(left,right){const l=snapshot(left),r=snapshot(right);verifyUniverse(l);verifyUniverse(r);return {...compareAssessments(l.assessment,r.assessment),leftUniverse:l.universeDigest,rightUniverse:r.universeDigest,parentRelationship:r.parentDigest===l.universeDigest?'direct-fork':'other',causalClaim:false};}
