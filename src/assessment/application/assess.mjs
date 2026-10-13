@@ -50,22 +50,28 @@ export function assess({manifest,profile,evidence,policy,evaluatorDigest,now = n
   });
   // Assess one whole run. Combining best cases from several runs would permit cherry-picking.
   const runs = new Map();
-  for (const e of unique) {
+  // Conflicted receipts still establish a run's recency. Quarantine must never
+  // resurrect an older successful run by deleting the newer failure's timestamp.
+  for (const e of eligible) {
     const id = e.payload.runId;
     if (!runs.has(id)) runs.set(id,[]);
     runs.get(id).push(e);
   }
   const candidates = [...runs].map(([id,items]) => ({id,items,at:Math.max(...items.map(e => e.observed))}));
-  candidates.sort((a,b) => b.at-a.at || a.id.localeCompare(b.id,'en'));
+  const failedCritical = items => items.some(e => e.payload.outcome==='fail' && profile.checks.find(c=>c.id===e.payload.checkId)?.critical);
+  candidates.sort((a,b) => b.at-a.at || Number(failedCritical(b.items))-Number(failedCritical(a.items)) || (a.id<b.id?-1:a.id>b.id?1:0));
   const selectedRun = candidates[0] ?? null;
+  const tiedRuns = candidates.filter(r=>r.at===selectedRun?.at);
+  const ambiguousRuns = tiedRuns.length>1;
+  const selectedRunConflict = selectedRun?.items.some(e=>counts.get(e.payload.id)>1) ?? false;
   const selected = new Map();
-  for (const e of selectedRun?.items ?? []) {
+  for (const e of selectedRun?.items.filter(e=>counts.get(e.payload.id)===1) ?? []) {
     const prior = selected.get(e.payload.checkId);
     // A failure wins same-time conflicts; later events replace earlier events within one run.
     if (!prior || e.observed > prior.observed || e.observed === prior.observed && outcomeOrder[e.payload.outcome] > outcomeOrder[prior.payload.outcome]) selected.set(e.payload.checkId,e);
   }
   for (const e of unique) {
-    if (e.payload.runId !== selectedRun?.id) reject(e.index,e.payload.id,'Older run excluded; checks cannot be mixed across runs');
+    if (e.payload.runId !== selectedRun?.id) reject(e.index,e.payload.id,ambiguousRuns && e.observed===selectedRun.at ? 'Equally recent run excluded; ambiguous runs cannot qualify' : 'Older run excluded; checks cannot be mixed across runs');
     else if (selected.get(e.payload.checkId) !== e) reject(e.index,e.payload.id,'Superseded observation within selected run');
   }
   const checks = profile.checks.map(c => {
@@ -92,11 +98,14 @@ export function assess({manifest,profile,evidence,policy,evaluatorDigest,now = n
   if (subjectRevoked) { decision='revoked'; blockers.push('Subject digest is revoked by relying policy'); }
   else if (subjectExpired || subjectFuture) { decision='expired'; blockers.push(subjectFuture ? 'Manifest is not yet valid' : 'Manifest has expired'); }
   else if (criticalFailures.length) { decision='blocked'; blockers.push(...criticalFailures.map(c=>`Critical check failed: ${c.id}`)); }
-  else if (criticalUnknowns.length || known/total < policy.minCoverage || independent/total < policy.minIndependentCoverage) {
+  else if (ambiguousRuns || selectedRunConflict || known===0 || criticalUnknowns.length || known/total < policy.minCoverage || independent/total < policy.minIndependentCoverage) {
     decision='insufficient-evidence';
     blockers.push(...criticalUnknowns.map(c=>`Critical check unproven: ${c.id}`));
     if (known/total < policy.minCoverage) blockers.push('Evidence coverage below relying policy');
     if (independent/total < policy.minIndependentCoverage) blockers.push('Independent coverage below relying policy');
+    if (ambiguousRuns) blockers.push('Ambiguous equally recent runs');
+    if (selectedRunConflict) blockers.push('Selected run contains quarantined conflicting evidence IDs');
+    if (known===0) blockers.push('No scored observations');
   } else if (score.earned < policy.minScore) { decision='blocked'; blockers.push('Score below relying policy'); }
   else { decision='qualified'; }
   if (!selected.size && decision==='qualified') { decision='insufficient-evidence'; blockers.push('No observed checks'); }
@@ -107,7 +116,7 @@ export function assess({manifest,profile,evidence,policy,evaluatorDigest,now = n
     schema:'kya.assessment/v1',subjectDigest,agentId:manifest.agent.id,agentName:manifest.agent.name,principalId:manifest.principal.id,scopeId:manifest.scope.id,
     profileDigest,profileId:profile.id,evaluatorDigest,policyDigest:digest(policy),evidenceBundleDigest:digest(evidence.map(e=>{try{return digest(e);}catch{return null;}})),
     assessedAt:now,validUntil:new Date(Math.min(Date.parse(manifest.expiresAt),...chosen.map(e=>e.validUntil))).toISOString(),
-    selectedRunId:selectedRun?.id ?? null,decision,evidenceMode,score,coverage,independentCoverage,dimensions,checks,blockers,
+    selectedRunId:selectedRun?.id ?? null,ambiguousRuns,decision,evidenceMode,score,coverage,independentCoverage,dimensions,checks,blockers,
     rejectedEvidence:rejectedEvidence.sort((a,b)=>a.index-b.index),acceptedEvidenceDigests:chosen.map(e=>e.envelopeDigest).sort(),
     limitations:['Local policy result; not an authorization grant','Signatures attest bytes and key possession, not truthful execution','No universal predictive validation; public suites can be gamed',...(evidenceMode==='fixture'||evidenceMode==='mixed'?['Includes synthetic fixture evidence; not a real product benchmark']:[])]
   };
@@ -125,6 +134,6 @@ export function verifyAssessment(report) {
 export function compareAssessments(left,right) {
   verifyAssessment(left); verifyAssessment(right);
   for (const k of ['scopeId','profileDigest','evaluatorDigest','policyDigest','evidenceMode']) insist(left[k]===right[k],`Cannot compare different ${k}`);
-  insist(left.checks.length===right.checks.length && left.checks.every((c,i)=>c.id===right.checks[i].id && c.weight===right.checks[i].weight && c.status!=='unknown' && right.checks[i].status!=='unknown'),'Cannot compare incomplete or different check populations');
+  insist(left.checks.length===right.checks.length && left.checks.every((c,i)=>c.id===right.checks[i].id && c.weight===right.checks[i].weight && ['pass','fail'].includes(c.status) && ['pass','fail'].includes(right.checks[i].status)),'Cannot compare incomplete or different check populations');
   return {schema:'kya.comparison/v1',left:left.reportDigest,right:right.reportDigest,scoreDelta:right.score.earned-left.score.earned,decisionChanged:left.decision!==right.decision,measurement:'same-policy evidence comparison; not a causal improvement claim'};
 }
