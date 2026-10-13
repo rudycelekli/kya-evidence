@@ -7,6 +7,9 @@ const points = (n,d) => d ? Math.floor(n/d*1000) : 0;
 const outcomeOrder = {fail:4,error:3,abstain:2,pass:1};
 
 export function assess({manifest,profile,evidence,policy,evaluatorDigest,now = new Date().toISOString()}) {
+  // Work only with captured JSON data, so a Proxy cannot present one signed
+  // value to canonicalization and a different outcome or role to the scorer.
+  manifest=JSON.parse(canonical(manifest));profile=JSON.parse(canonical(profile));policy=JSON.parse(canonical(policy));
   validateManifest(manifest); validateProfile(profile); validatePolicy(policy); hash(evaluatorDigest,'Evaluator digest');
   const at = timestamp(now,'Assessment time');
   insist(Array.isArray(evidence) && evidence.length <= 4096,'Evidence bundle exceeds limit');

@@ -3,6 +3,7 @@ import { canonical, digest, exactKeys, hashBytes, insist } from '../../../shared
 import { validateEvidence, keyId, publicKeyObject, validatePublicPem, hash } from '../../../identity/domain/services/validation.mjs';
 
 export function signEvidence(payload, privateKey) {
+  payload=JSON.parse(canonical(payload));
   validateEvidence(payload);
   const key = privateKey instanceof KeyObject ? privateKey : createPrivateKey(privateKey);
   insist(key.type === 'private' && key.asymmetricKeyType === 'ed25519','Expected Ed25519 private key');
@@ -13,7 +14,7 @@ export function signEvidence(payload, privateKey) {
 }
 
 export function verifyEvidence(envelope) {
-  canonical(envelope); exactKeys(envelope,['payload','proof'],'Envelope'); validateEvidence(envelope.payload);
+  envelope=JSON.parse(canonical(envelope)); exactKeys(envelope,['payload','proof'],'Envelope'); validateEvidence(envelope.payload);
   exactKeys(envelope.proof,['algorithm','keyId','publicKey','signature'],'Proof');
   const p = envelope.proof; insist(p.algorithm === 'Ed25519','Unsupported proof algorithm'); hash(p.keyId,'Proof key'); validatePublicPem(p.publicKey);
   insist(keyId(p.publicKey) === p.keyId,'Proof key fingerprint differs');

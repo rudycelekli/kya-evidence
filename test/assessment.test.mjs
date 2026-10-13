@@ -110,6 +110,15 @@ test('signature tampering, key substitution and noncanonical proof encoding fail
   const bad=clone(x.evidence[0]);bad.proof.signature+='=';assert.throws(()=>verifyEvidence(bad));
   const other=generateKeyPairSync('ed25519');bad.proof.publicKey=other.publicKey.export({format:'pem',type:'spki'}).toString();assert.throws(()=>verifyEvidence(bad));
 });
+test('Proxy access cannot substitute a different outcome after signature verification',()=>{
+  const x=inputs(),e=signEvidence(payload(x.manifest,x.profile,0,{outcome:'fail'}),keys.privateKey);
+  e.payload=new Proxy(e.payload,{get(t,k){return k==='outcome'?'pass':Reflect.get(t,k);}});
+  assert.equal(verifyEvidence(e).payload.outcome,'fail');x.evidence[0]=e;assert.equal(assess(x).decision,'blocked');
+});
+test('Proxy access cannot substitute policy trust roles after canonical capture',()=>{
+  const x=inputs();x.policy.minIndependentCoverage=1;const anchor=x.policy.trustedKeys[0];x.policy.trustedKeys[0]=new Proxy(anchor,{get(t,k){return k==='role'?'independent':Reflect.get(t,k);}});
+  assert.equal(assess(x).decision,'insufficient-evidence');assert.equal(assess(x).independentCoverage,0);
+});
 test('artifact bytes are explicitly verified; signatures alone cannot validate the artifact',()=>{
   const p=payload();assert.equal(verifyArtifact(p,'trace-0'),true);assert.equal(verifyArtifact(p,'invented'),false);
 });
