@@ -1,0 +1,207 @@
+{
+  "schema": "kya.requirements-proposal/v1",
+  "note": "Lane G proposals in the evidence/requirements.json requirement shape. Merge into the requirements array, then run npm run requirements.",
+  "requirements": [
+    {
+      "id": "KYA-CMP-001",
+      "level": "MUST",
+      "area": "campaign",
+      "section": "Records and bindings",
+      "statement": "A campaign plan MUST be signed by the capture issuer and commit to the campaign ID, use case, profile and scenario-set digests, ordered planned attempts, evaluator digest, policy digest, adapter declaration and an explicitly supplied creation time, and MUST reject duplicate attempt IDs and malformed attempts.",
+      "tests": [
+        {
+          "file": "test/campaign-ledger.test.mjs",
+          "title": "campaign plan commits to attempts, digests and issuer before any attempt"
+        },
+        {
+          "file": "test/campaign-ledger.test.mjs",
+          "title": "campaign plan rejects malformed attempts and duplicate attempt IDs"
+        }
+      ]
+    },
+    {
+      "id": "KYA-CMP-002",
+      "level": "MUST",
+      "area": "campaign",
+      "section": "Records and bindings",
+      "statement": "A campaign ledger MUST reject out-of-order transitions and duplicate attempt IDs, and MUST reject any entry timed before the plan commitment or before the previous entry.",
+      "tests": [
+        {
+          "file": "test/campaign-ledger.test.mjs",
+          "title": "campaign ledger rejects out-of-order transitions and duplicate attempt IDs"
+        },
+        {
+          "file": "test/campaign-ledger.test.mjs",
+          "title": "campaign ledger rejects entries before the plan commitment and time regression"
+        }
+      ]
+    },
+    {
+      "id": "KYA-CMP-003",
+      "level": "MUST",
+      "area": "campaign",
+      "section": "Records and bindings",
+      "statement": "Campaign ledger verification MUST detect edited, removed, reordered or re-planned history through the entry hash chain and signatures, and appending to a ledger that fails verification MUST be refused.",
+      "tests": [
+        {
+          "file": "test/campaign-ledger.test.mjs",
+          "title": "campaign ledger detects edited removed and reordered history"
+        }
+      ]
+    },
+    {
+      "id": "KYA-CMP-004",
+      "level": "MUST",
+      "area": "campaign",
+      "section": "Trust and eligibility",
+      "statement": "A campaign ledger MUST be signed only by the key declared in its plan, and when a policy is supplied that key MUST be an unrevoked capture-issuer anchor.",
+      "tests": [
+        {
+          "file": "test/campaign-ledger.test.mjs",
+          "title": "campaign ledger rejects a foreign signer and requires the capture issuer role under policy"
+        }
+      ]
+    },
+    {
+      "id": "KYA-CMP-005",
+      "level": "MUST",
+      "area": "campaign",
+      "section": "Run selection and qualification",
+      "statement": "Campaign summaries MUST report unconditional counts of planned, completed, errored, abandoned and unaccounted attempts, and MUST keep every unaccounted attempt in the planned denominator.",
+      "tests": [
+        {
+          "file": "test/campaign-ledger.test.mjs",
+          "title": "campaign summary keeps unaccounted attempts in the denominator"
+        }
+      ]
+    },
+    {
+      "id": "KYA-CMP-006",
+      "level": "MUST",
+      "area": "campaign",
+      "section": "Records and bindings",
+      "statement": "A completed ledger entry MUST reference the run ID and the digest of its raw-evidence bundle, and the ledger MUST NOT store prompts, responses or free text.",
+      "tests": [
+        {
+          "file": "test/campaign-ledger.test.mjs",
+          "title": "campaign completed entry requires run ID and bundle digest and rejects stored prompts or outputs"
+        }
+      ]
+    },
+    {
+      "id": "KYA-CMP-007",
+      "level": "MUST",
+      "area": "campaign",
+      "section": "Run selection and qualification",
+      "statement": "A retry MUST be a new planned attempt added by a signed amendment entry, and the retried errored attempt MUST remain in the counts.",
+      "tests": [
+        {
+          "file": "test/campaign-ledger.test.mjs",
+          "title": "campaign retry is a signed amendment that keeps the errored attempt counted"
+        }
+      ]
+    },
+    {
+      "id": "KYA-CMP-008",
+      "level": "MUST",
+      "area": "campaign",
+      "section": "Trust and eligibility",
+      "statement": "Policy validation MUST accept the capture-issuer role, MUST NOT accept the calibrator or anchor-operator roles yet, and policies without the new role MUST keep identical digests.",
+      "tests": [
+        {
+          "file": "test/campaign-ledger.test.mjs",
+          "title": "capture issuer role is accepted by policy validation and legacy policies keep their digest"
+        },
+        {
+          "file": "test/campaign-ledger.test.mjs",
+          "title": "policy schema describes the capture issuer role"
+        }
+      ]
+    },
+    {
+      "id": "KYA-CMP-009",
+      "level": "MUST",
+      "area": "campaign",
+      "section": "Trust and eligibility",
+      "statement": "A capture-issuer key MUST NOT be an evidence signer or the evaluator key, and a capture-issuer anchor MUST NOT satisfy independence.",
+      "tests": [
+        {
+          "file": "test/campaign-ledger.test.mjs",
+          "title": "capture issuer key cannot be an evidence signer or the evaluator key and never counts as independent"
+        }
+      ]
+    },
+    {
+      "id": "KYA-CMP-010",
+      "level": "MUST",
+      "area": "campaign",
+      "section": "Run selection and qualification",
+      "statement": "The campaign runner MUST execute planned attempts one at a time through runConformance, MUST write raw evidence bundles with 0600 permissions only to a private directory outside the repository, and MUST refuse a private directory open to group or others.",
+      "tests": [
+        {
+          "file": "test/campaign-runner.test.mjs",
+          "title": "campaign runner executes planned attempts through conformance and writes private 0600 bundles"
+        },
+        {
+          "file": "test/campaign-runner.test.mjs",
+          "title": "campaign runner refuses private directories inside the repository or open to others"
+        }
+      ]
+    },
+    {
+      "id": "KYA-CMP-011",
+      "level": "MUST",
+      "area": "campaign",
+      "section": "Run selection and qualification",
+      "statement": "The campaign runner MUST refuse to start an attempt without a verified signed planned entry and MUST refuse adapter provenance or evaluator digests that differ from the plan.",
+      "tests": [
+        {
+          "file": "test/campaign-runner.test.mjs",
+          "title": "campaign runner refuses adapter provenance that differs from the plan"
+        },
+        {
+          "file": "test/campaign-runner.test.mjs",
+          "title": "campaign runner refuses an attempt without a signed planned entry and an unverifiable ledger"
+        },
+        {
+          "file": "test/campaign-runner.test.mjs",
+          "title": "campaign runner persists the started entry before the adapter runs"
+        }
+      ]
+    },
+    {
+      "id": "KYA-CMP-012",
+      "level": "MUST",
+      "area": "campaign",
+      "section": "Run selection and qualification",
+      "statement": "The campaign runner MUST record infrastructure errors and timeouts as errored entries and MUST NOT retry an errored attempt without a signed amendment.",
+      "tests": [
+        {
+          "file": "test/campaign-runner.test.mjs",
+          "title": "campaign runner records infrastructure errors as errored and never retries silently"
+        }
+      ]
+    },
+    {
+      "id": "KYA-CMP-013",
+      "level": "SHOULD",
+      "area": "campaign",
+      "section": "Interoperability and versioning",
+      "statement": "The campaign CLI SHOULD run end to end on owned fixture adapters with an explicit clock, no network and unknown flags refused.",
+      "tests": [
+        {
+          "file": "test/campaign-runner.test.mjs",
+          "title": "campaign runner completes against the owned command fixture without network"
+        },
+        {
+          "file": "test/campaign-runner.test.mjs",
+          "title": "campaign CLI plans runs verifies and summarizes on the reference adapter"
+        },
+        {
+          "file": "test/campaign-runner.test.mjs",
+          "title": "campaign CLI refuses a missing clock unknown flags and unknown commands"
+        }
+      ]
+    }
+  ]
+}

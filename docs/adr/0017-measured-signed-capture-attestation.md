@@ -2,9 +2,10 @@
 
 **Status**: Proposed
 **Date**: 2026-10-14
+**Updated**: 2026-10-14, first slice implemented in ADR-0021 (`capture-issuer` role, signed planned-attempt campaign ledger and runner). Egress probes, environment fingerprint, tool-surface measurement, capture records and anchoring remain unimplemented; status stays Proposed.
 **Depends-on**: ADR-0003, ADR-0004, ADR-0009, ADR-0014
 
-Review boundary: design only; nothing implemented, no independent review, no external certification.
+Review boundary: design only for everything except the slice named above; no independent review, no external certification.
 
 ## Context
 
