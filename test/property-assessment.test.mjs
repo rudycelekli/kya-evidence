@@ -52,6 +52,8 @@ function oracle(records, subject, roles, revoked) {
   for (const g of groups.values()) {
     if (g.length > 1) continue;
     const e = g[0]; if (e.future) continue;
+    // F-1 (fixed): a reference is ambiguous when more than one eligible report, live or not, carries the ID.
+    if (eligible.filter(r => r.kind === 'report' && r.id === e.refId).length > 1) continue;
     const targets = live.filter(r => r.id === e.refId); if (targets.length !== 1) continue;
     const t = targets[0];
     if (e.kind === 'appeal') appealed.add(t.id);
@@ -99,8 +101,8 @@ property('checkCurrency matches the documented incident rules and the stated inv
 
   // an unresolved trusted blocking report with a unique ID and no valid independent resolution is always open
   for (const e of o.eligible.filter(x => x.kind === 'report' && ['high', 'critical'].includes(x.severity))) {
-    // F-1 (docs/lane-d-findings.md): a future-dated non-blocking copy of the ID is dropped before ambiguity is judged, so only copies that are live count here.
-    const sameId = o.eligible.filter(x => x.kind === 'report' && x.id === e.id && (!x.future || ['high', 'critical'].includes(x.severity))).length;
+    // F-1 (fixed): ambiguity counts every eligible copy of the ID, including future-dated non-blocking ones.
+    const sameId = o.eligible.filter(x => x.kind === 'report' && x.id === e.id).length;
     const candidates = o.eligible.filter(x => x.kind === 'resolution' && x.refId === e.id && x.role === 'independent' && x.keyId !== e.keyId && Date.parse(x.reportedAt) > Date.parse(e.reportedAt) && !x.future);
     if (sameId > 1 || !candidates.length) assert.ok(r.incidents.open.includes(e.id), `report ${e.id} must stay open (copies=${sameId}, candidates=${candidates.length})`);
   }
@@ -110,6 +112,7 @@ property('checkCurrency matches the documented incident rules and the stated inv
   assert.deepEqual(view(shuffled), view(r));
   assert.equal(shuffled.incidents.considered, r.incidents.considered);
   assert.deepEqual(sortedIgnored(shuffled), sortedIgnored(r));
+  assert.deepEqual(shuffled.incidents.ignored, r.incidents.ignored);
 
   // adding records that must be inert: untrusted key, other subject, malformed
   const strangers = [];

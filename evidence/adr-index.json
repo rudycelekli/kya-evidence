@@ -158,7 +158,7 @@
       "title": "Signed incident, resolution and appeal records",
       "status": "Implemented",
       "file": "docs/adr/0014-signed-incident-and-appeal-records.md",
-      "contentDigest": "5ea570c62fd21a4c8fd30e5f7db9fe53842d743df6b73830eed0e241a7d0a29e",
+      "contentDigest": "ee01737f553310d2099a18cd125b393657f2e499ebe95a7a98c6b98aa8b4271f",
       "related": [
         "ADR-0004",
         "ADR-0011",
@@ -246,6 +246,6 @@
       ]
     }
   ],
-  "digest": "328285f759d96a62a762d87ea75322b7b72d7c9ae3bdce36e7a70ddf581cdd18",
+  "digest": "33ee47bb20c3cc76e14254dd20bc69271731369ca5ec1bd361016640fe26a4c2",
   "store": "portable local file; not a claim of AgentDB graph persistence"
 }

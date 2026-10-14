@@ -4,7 +4,7 @@ Scope: dependency free seeded property tests for canonicalization, the validator
 
 ## Result
 
-One real defect was found (F-1, low to medium severity, incident evaluation). It only appeared at 20x the default run count (seed 12648430, case 163 of 1000), which is why the default run is green: the property that exposes it is narrowed with a comment citing F-1. Four further behaviours worth a maintainer decision are recorded as observations (O-1 to O-4). No source file was changed and no failing test is committed.
+One real defect was found (F-1, low to medium severity, incident evaluation). **Status: fixed after this write-up** (see Resolution below). It only appeared at 20x the default run count (seed 12648430, case 163 of 1000), which is why the default run is green: the property that exposes it is narrowed with a comment citing F-1. Four further behaviours worth a maintainer decision are recorded as observations (O-1 to O-4). No source file was changed and no failing test is committed.
 
 ## F-1 A future-dated low copy of a report ID is ignored when judging ambiguity, so a resolved report reopens as time passes
 
@@ -26,6 +26,12 @@ for (const now of ['2026-10-13T12:30:00.000Z', '2026-10-13T12:50:00.000Z']) { co
 ```
 
 Prints `current true open [] resolved [ 'inc:1' ]` at 12:30 and `current false open [ 'inc:1' ] resolved []` at 12:50. Suggested fix: judge ambiguity over the same set that `targets` uses (or over all eligible reports) so both views agree; then a future-dated duplicate also fails closed. Impact is bounded: it needs a trusted key to emit the duplicate and an independent resolver to have resolved the report; it can only make a legitimately resolved report look resolved earlier than the fail-closed rule says, and the time flip is surprising for a reliance check.
+
+## Resolution (added at integration)
+
+- **F-1 fixed.** `evaluateIncidents` now judges ambiguity over every eligible report, so a future-dated copy of an ID can no longer make a reference look unique now and ambiguous later. The reproduction above now prints `current false open [ 'inc:1' ]` at both times. Regression test: `ambiguity is judged over every eligible report so the result cannot flip as the clock passes`. The narrowed property was restored to full strength and its oracle updated; the failing seed (`KYA_FUZZ_SEED=12648430 KYA_FUZZ_RUNS=2000`) passes, and seeds `101,202,303,404` at `KYA_FUZZ_RUNS=1000` pass over all four property files.
+- **O-3 fixed.** `incidents.ignored` is now sorted deterministically, so the whole `checkCurrency` result is identical under permutation of the input. Regression test: `the ignored list is order independent so the whole currency result is stable under permutation`.
+- **O-1, O-2, O-4 remain open observations.** They need a maintainer decision and are not changed.
 
 ## How the suite runs
 
