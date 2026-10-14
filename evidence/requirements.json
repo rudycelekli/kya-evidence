@@ -12,7 +12,7 @@
       "tests": [
         {
           "file": "test/canonical.test.mjs",
-          "title": "canonical ordering and hash are deterministic"
+          "title": "canonical ordering and hash are deterministic across member insertion order"
         },
         {
           "file": "test/canonical.test.mjs",
@@ -33,7 +33,7 @@
       "tests": [
         {
           "file": "test/canonical.test.mjs",
-          "title": "strict parser preserves strings"
+          "title": "strict parser preserves strings, escapes, numeric values and JSON whitespace"
         },
         {
           "file": "test/interop.test.mjs",
@@ -50,7 +50,7 @@
       "tests": [
         {
           "file": "test/vectors.test.mjs",
-          "title": "portable canonical and domain-separated Ed25519 vectors"
+          "title": "portable canonical and domain-separated Ed25519 vectors reproduce exact bytes"
         },
         {
           "file": "test/canonical.test.mjs",
@@ -67,11 +67,11 @@
       "tests": [
         {
           "file": "test/interop.test.mjs",
-          "title": "Python reconstructs every published vector"
+          "title": "Python reconstructs every published vector and records optional signature availability"
         },
         {
           "file": "test/interop.test.mjs",
-          "title": "Python explicitly refuses unsupported JS doubles"
+          "title": "Python explicitly refuses unsupported JS doubles rather than claiming agreement"
         },
         {
           "file": "test/interop.test.mjs",
@@ -165,7 +165,7 @@
       "tests": [
         {
           "file": "test/assessment.test.mjs",
-          "title": "declared claims cannot become scored observations"
+          "title": "declared claims cannot become scored observations even when policy allows their ingestion"
         },
         {
           "file": "test/conformance.test.mjs",
@@ -242,11 +242,11 @@
       "tests": [
         {
           "file": "test/assessment.test.mjs",
-          "title": "equally recent successful runs are explicitly ambiguous"
+          "title": "equally recent successful runs are explicitly ambiguous rather than arbitrarily qualifying"
         },
         {
           "file": "test/assessment.test.mjs",
-          "title": "equally recent independent runs cannot bury a critical failure"
+          "title": "equally recent independent runs cannot bury a critical failure behind a lexicographic ID"
         }
       ]
     },
@@ -441,7 +441,7 @@
         },
         {
           "file": "test/benchmarks.test.mjs",
-          "title": "error remains in population and never passes"
+          "title": "error remains in population and never passes; relabeling or summary laundering is rejected"
         }
       ]
     },
@@ -454,7 +454,7 @@
       "tests": [
         {
           "file": "test/benchmarks.test.mjs",
-          "title": "frozen controls detect six actual assessor gate mutations"
+          "title": "frozen controls detect six actual assessor gate mutations, with identical complete populations"
         },
         {
           "file": "test/benchmarks.test.mjs",
@@ -505,11 +505,15 @@
       "level": "MUST",
       "area": "principal",
       "section": "Records and bindings",
-      "statement": "A declared accountable party MUST be a pseudonymous natural-person or legal-entity reference with no extra fields, and an agent MUST NOT be its own accountable party.",
+      "statement": "A declared accountable party MUST be a pseudonymous natural-person or legal-entity reference with no extra fields, and an agent MUST NOT be its own accountable party under case variation.",
       "tests": [
         {
           "file": "test/assessment.test.mjs",
-          "title": "principal binding: an agent cannot be its own accountable party"
+          "title": "principal binding: an agent cannot be its own accountable party, and the declaration is optional but strict"
+        },
+        {
+          "file": "test/assessment.test.mjs",
+          "title": "an agent cannot be its own accountable party under case or whitespace variation"
         }
       ]
     },
@@ -522,11 +526,11 @@
       "tests": [
         {
           "file": "test/assessment.test.mjs",
-          "title": "policy can require a declared accountable party"
+          "title": "policy can require a declared accountable party; absence withholds qualification and the declaration is part of the subject"
         },
         {
           "file": "test/assessment.test.mjs",
-          "title": "policies and reports without the optional flag keep their previous digests"
+          "title": "policies and reports without the optional flag keep their previous digests and decisions"
         }
       ]
     },
@@ -552,7 +556,7 @@
       "tests": [
         {
           "file": "test/assessment.test.mjs",
-          "title": "currency: a non-qualified decision is never reported as reliable"
+          "title": "currency: a non-qualified decision is never reported as reliable, and malformed or forged input is rejected"
         }
       ]
     },
@@ -574,7 +578,7 @@
       "level": "MUST",
       "area": "incidents",
       "section": "Reports and viewers",
-      "statement": "A trusted unresolved high or critical incident MUST trigger reassessment, while untrusted, revoked, misdirected, future and duplicate records MUST NOT trigger and MUST be listed as ignored.",
+      "statement": "A trusted unresolved high or critical incident MUST trigger reassessment, a future-dated trusted blocking report MUST stay open, and untrusted, revoked, misdirected or malformed records MUST NOT trigger and MUST be listed as ignored.",
       "tests": [
         {
           "file": "test/incidents.test.mjs",
@@ -582,7 +586,11 @@
         },
         {
           "file": "test/incidents.test.mjs",
-          "title": "untrusted, revoked, other-subject, future and duplicate incidents cannot trigger or silently disappear"
+          "title": "untrusted, revoked, other-subject and malformed-time incidents cannot trigger or silently disappear"
+        },
+        {
+          "file": "test/incidents.test.mjs",
+          "title": "a high severity report blocks and a future-dated trusted blocking report fails closed"
         }
       ]
     },
@@ -591,11 +599,37 @@
       "level": "MUST",
       "area": "incidents",
       "section": "Reports and viewers",
-      "statement": "Only an independent trusted key MAY resolve an incident, a resolution MUST NOT predate its incident, and an appeal MUST be recorded without clearing the trigger.",
+      "statement": "Only an independent trusted key MAY resolve an incident, never its own report, and only with a resolution dated strictly after the incident; an appeal MUST be recorded without clearing the trigger.",
       "tests": [
         {
           "file": "test/incidents.test.mjs",
-          "title": "only an independent trusted key can resolve"
+          "title": "only an independent trusted key can resolve; self resolution and appeals cannot clear an incident"
+        }
+      ]
+    },
+    {
+      "id": "KYA-INC-004",
+      "level": "MUST",
+      "area": "incidents",
+      "section": "Reports and viewers",
+      "statement": "Incident records MUST be namespaced by signing key; duplicate or conflicting IDs MUST fail closed, so one key MUST NOT erase, downgrade or reopen another key's record, and an identical envelope delivered twice MUST NOT quarantine itself.",
+      "tests": [
+        {
+          "file": "test/incidents.test.mjs",
+          "title": "duplicate and conflicting IDs fail closed: they can never erase or downgrade a trusted blocking report"
+        }
+      ]
+    },
+    {
+      "id": "KYA-MON-003",
+      "level": "MUST",
+      "area": "monitoring",
+      "section": "Reports and viewers",
+      "statement": "A currency check MUST reject an assessment whose validity, subject, policy or decision fields are missing or malformed rather than treating it as current.",
+      "tests": [
+        {
+          "file": "test/assessment.test.mjs",
+          "title": "currency rejects a resealed assessment with missing or malformed validity fields instead of treating it as current"
         }
       ]
     }

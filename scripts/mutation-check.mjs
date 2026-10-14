@@ -19,9 +19,13 @@ const mutants=[
   ['expiry trigger removal',"if (at > validUntil) fire(","if (false) fire(",'src/assessment/application/currency.mjs'],
   ['subject-change trigger removal',"if (digest(manifest) !== assessment.subjectDigest) fire(","if (false) fire(",'src/assessment/application/currency.mjs'],
   ['independent-resolution requirement removal',"else if (e.role!=='independent') ignored.push","else if (false) ignored.push",'src/assessment/application/currency.mjs'],
-  ['incident trust-anchor bypass',"if (!roles.has(keyId)) skip(","if (false) skip(",'src/assessment/application/currency.mjs']
+  ['incident trust-anchor bypass',"if (!roles.has(keyId)) skip(","if (false) skip(",'src/assessment/application/currency.mjs'],
+  ['blocking-severity downgrade',"const BLOCKING = ['high','critical'];","const BLOCKING = ['critical'];",'src/assessment/application/currency.mjs'],
+  ['reporter self-resolution allowed',"if (t.keyId===e.keyId) ignored.push","if (false) ignored.push",'src/assessment/application/currency.mjs'],
+  ['malformed validity accepted',"timestamp(assessment.validUntil,'Assessment validity');","",'src/assessment/application/currency.mjs']
 ];
 const results=[];
+function failedNames(output){return [...output.matchAll(/^not ok \d+ - (.+)$/gm)].map(m=>m[1]).slice(0,5);}
 function counts(output){const get=name=>Number(new RegExp(`^# ${name} (\\d+)$`,'m').exec(output)?.[1]??NaN);return{tests:get('tests'),pass:get('pass'),fail:get('fail'),cancelled:get('cancelled'),skipped:get('skipped')};}
 function runTests(dir){const p=spawnSync(process.execPath,['--test','--test-reporter=tap','test/assessment.test.mjs','test/incidents.test.mjs'],{cwd:dir,encoding:'utf8',timeout:20000,maxBuffer:200000});if(p.error||p.signal)throw Error('Mutation test execution failed');return{process:p,counts:counts(p.stdout)};}
 for(const [name,from,to,target=source]of mutants){
@@ -32,8 +36,8 @@ for(const [name,from,to,target=source]of mutants){
     const baseline=runTests(dir);if(baseline.process.status!==0||!Number.isSafeInteger(baseline.counts.tests)||baseline.counts.tests<1||baseline.counts.fail!==0||baseline.counts.cancelled!==0||baseline.counts.skipped!==0)throw Error('Mutation baseline did not run cleanly: '+name);
     const mutated=base.replace(from,to);await writeFile(join(dir,target),mutated);const candidate=runTests(dir);
     if(candidate.counts.tests!==baseline.counts.tests||candidate.counts.cancelled!==0||candidate.counts.skipped!==0)throw Error('Mutant did not exercise identical complete test population: '+name);
-    const killed=candidate.process.status!==0&&candidate.counts.fail>0;results.push({name,killed,baselineTests:baseline.counts.tests,mutantTests:candidate.counts.tests,failedAssertions:candidate.counts.fail,mutantSourceDigest:hashBytes(mutated),exitCode:candidate.process.status});
+    const killed=candidate.process.status!==0&&candidate.counts.fail>0;results.push({name,killed,killedBy:failedNames(candidate.process.stdout),baselineTests:baseline.counts.tests,mutantTests:candidate.counts.tests,failedAssertions:candidate.counts.fail,mutantSourceDigest:hashBytes(mutated),exitCode:candidate.process.status});
     if(!killed)throw Error('SURVIVING evaluator mutant: '+name);
   }finally{await rm(dir,{recursive:true,force:true});}
 }
-console.log(JSON.stringify({schema:'kya.mutation-controls/v1',baselineSourceDigest:hashBytes(original),controls:results,allKilled:true,limits:'Eleven targeted gate mutations; not exhaustive security verification'},null,2));
+console.log(JSON.stringify({schema:'kya.mutation-controls/v1',baselineSourceDigest:hashBytes(original),controls:results,allKilled:true,limits:'Fourteen targeted gate mutations; not exhaustive security verification'},null,2));

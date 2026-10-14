@@ -31,6 +31,19 @@ test('an untested, duplicated, misleveled or unanchored requirement is detected'
   await rejects(reg=>{reg.requirements[0].level='SHOULD';reg.requirements[0].section='Nonexistent section';},/missing section/);
   await rejects(reg=>{reg.requirements[0].statement=reg.requirements[0].statement.replaceAll('MUST','will');},/must state its level/);
 });
-test('a title matching several tests is ambiguous rather than silently accepted',async()=>{
-  await rejects(reg=>{reg.requirements[0].tests[0].file='test/assessment.test.mjs';reg.requirements[0].tests[0].title='proof';},/ambiguous/);
+test('a title declared twice in one file is ambiguous rather than silently accepted',async()=>{
+  const title='canonical ordering and hash are deterministic across member insertion order';
+  await rejects(async(reg,dir)=>{reg.requirements[0].tests=[{file:'test/canonical.test.mjs',title}];const f=join(dir,'test/canonical.test.mjs');await writeFile(f,(await readFile(f,'utf8'))+`\ntest('${title}',()=>{});\n`);},/ambiguous/);
+});
+test('the gate rejects traces to skipped, todo, commented-out or non-exact test titles',async()=>{
+  const edit=(transform)=>async(reg,dir)=>{
+    const file=join(dir,'test/canonical.test.mjs'),src=await readFile(file,'utf8');await writeFile(file,transform(src));
+  };
+  const title='canonical ordering and hash are deterministic across member insertion order';
+  const first=reg=>{reg.requirements[0].tests=[{file:'test/canonical.test.mjs',title}];};
+  const run=async(transform,pattern)=>rejects(async(reg,dir)=>{first(reg);await edit(transform)(reg,dir);},pattern);
+  await run(src=>src.replace(`test('${title}',`,`test('${title}',{skip:true},`),/trace missing/);
+  await run(src=>src.replace(`test('${title}',`,`test('${title}',{todo:true},`),/trace missing/);
+  await run(src=>src.replace(`test('${title}',`,`/* test('${title}',`).replace('\n});\n','\n}); */\n'),/trace missing/);
+  await rejects(reg=>{reg.requirements[0].tests=[{file:'test/canonical.test.mjs',title:'canonical ordering'}];},/trace missing/);
 });

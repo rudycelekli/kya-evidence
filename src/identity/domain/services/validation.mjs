@@ -45,7 +45,7 @@ export function validateManifest(v) {
     // Pseudonymous declaration of who answers for the agent. An agent can never be its own accountable party; no personal data fields are admitted.
     const a = v.principal.accountableParty; exactKeys(a, ['kind','ref'], 'Accountable party');
     insist(['natural-person','legal-entity'].includes(a.kind), 'Accountable party must be a natural person or legal entity'); identifier(a.ref,'Accountable party reference');
-    insist(a.ref !== v.agent.id, 'An agent cannot be its own accountable party');
+    insist(a.ref.toLowerCase() !== v.agent.id.toLowerCase(), 'An agent cannot be its own accountable party');
   }
   exactKeys(v.system, ['harness','harnessVersion','model','artifactDigest','configDigest','tools'], 'System');
   text(v.system.harness,'Harness',128); text(v.system.harnessVersion,'Harness version',128); text(v.system.model,'Model',128);

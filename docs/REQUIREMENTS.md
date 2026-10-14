@@ -35,12 +35,14 @@ Each requirement is traced to at least one test that must exist exactly once; th
 | KYA-BEN-002 | MUST | Controls MUST detect weakened assessor gates with identical complete populations, and MUST NOT measure commercial-agent competence. | `benchmarks.test.mjs` |
 | KYA-CON-001 | MUST | The core suite MUST be complete and immutable; reducing, reweighting or redirecting it MUST be refused, and gaming or silence MUST NOT yield passes. | `conformance.test.mjs` |
 | KYA-REL-001 | SHOULD | Release archives SHOULD be verified against a frozen regular-file subset, rejecting duplicate paths, checksum changes, padding and path traversal. | `release.test.mjs` |
-| KYA-PRN-001 | MUST | A declared accountable party MUST be a pseudonymous natural-person or legal-entity reference with no extra fields, and an agent MUST NOT be its own accountable party. | `assessment.test.mjs` |
+| KYA-PRN-001 | MUST | A declared accountable party MUST be a pseudonymous natural-person or legal-entity reference with no extra fields, and an agent MUST NOT be its own accountable party under case variation. | `assessment.test.mjs` |
 | KYA-PRN-002 | MUST | When policy requires principal binding, a manifest without a declared accountable party MUST NOT qualify; the declaration MUST be part of the subject digest, and absence of the policy flag MUST preserve prior behavior. | `assessment.test.mjs` |
 | KYA-MON-001 | MUST | A currency check MUST report each fired monitoring trigger (subject change, policy change, revocation, expiry, age limit, clock regression) and MUST direct reassessment when any fires. | `assessment.test.mjs` |
 | KYA-MON-002 | MUST | A currency check MUST reject a forged or malformed assessment, missing or invalid time, and invalid inputs, and MUST NOT report a non-qualified decision as reliable. | `assessment.test.mjs` |
 | KYA-INC-001 | MUST | Incident records MUST be strict, signed under a domain-separated Ed25519 context and MUST carry only a details digest, never narrative text. | `incidents.test.mjs` |
-| KYA-INC-002 | MUST | A trusted unresolved high or critical incident MUST trigger reassessment, while untrusted, revoked, misdirected, future and duplicate records MUST NOT trigger and MUST be listed as ignored. | `incidents.test.mjs` |
-| KYA-INC-003 | MUST | Only an independent trusted key MAY resolve an incident, a resolution MUST NOT predate its incident, and an appeal MUST be recorded without clearing the trigger. | `incidents.test.mjs` |
+| KYA-INC-002 | MUST | A trusted unresolved high or critical incident MUST trigger reassessment, a future-dated trusted blocking report MUST stay open, and untrusted, revoked, misdirected or malformed records MUST NOT trigger and MUST be listed as ignored. | `incidents.test.mjs` |
+| KYA-INC-003 | MUST | Only an independent trusted key MAY resolve an incident, never its own report, and only with a resolution dated strictly after the incident; an appeal MUST be recorded without clearing the trigger. | `incidents.test.mjs` |
+| KYA-INC-004 | MUST | Incident records MUST be namespaced by signing key; duplicate or conflicting IDs MUST fail closed, so one key MUST NOT erase, downgrade or reopen another key's record, and an identical envelope delivered twice MUST NOT quarantine itself. | `incidents.test.mjs` |
+| KYA-MON-003 | MUST | A currency check MUST reject an assessment whose validity, subject, policy or decision fields are missing or malformed rather than treating it as current. | `assessment.test.mjs` |
 
-Registry digest: `9008308f0ea8aeec5df2707a821d3087e2fa7ac050ffd1a70da7702bc096a817`
+Registry digest: `01ad619133a7624dfb689b85a338e1a2346cf9d09f9fda2ba451f04b45cd084b`

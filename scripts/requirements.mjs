@@ -9,14 +9,16 @@ export async function loadRequirements(base=root){
   const reg=JSON.parse(await readFile(join(base,'evidence/requirements.json'),'utf8'));
   if(reg.schema!=='kya.requirements/v1'||!Array.isArray(reg.requirements)||!reg.requirements.length)throw Error('Requirement registry malformed');
   const titles=new Map(),ids=new Set(),areas={};
-  const listed=async file=>{if(!titles.has(file))titles.set(file,[...(await readFile(join(base,file),'utf8')).matchAll(/^test\((['"`])(.*?)\1\s*,/gm)].map(m=>m[2]));return titles.get(file);};
+  // Textual gate: comments are stripped and tests declared with an unconditional skip/todo option are not listed (host-conditional skips such as `skip: !hasPython` remain listed).
+  // A passing trace shows a live, non-skipped declaration exists; CI's `npm test` proves it passes.
+  const listed=async file=>{if(!titles.has(file)){const src=(await readFile(join(base,file),'utf8')).replace(/\/\*[\s\S]*?\*\//g,'').replace(/^[ \t]*\/\/.*$/gm,'');titles.set(file,[...src.matchAll(/^test\((['"`])(.*?)\1\s*,\s*(\{[^}]*\})?/gm)].filter(m=>!/\b(skip|todo)\s*:\s*(true|1|['"`])/.test(m[3]??'')).map(m=>m[2]));}return titles.get(file);};
   for(const r of reg.requirements){
     if(!/^KYA-[A-Z]{3}-\d{3}$/.test(r.id)||ids.has(r.id))throw Error('Bad or duplicate requirement ID '+r.id);ids.add(r.id);
     if(!['MUST','MUST NOT','SHOULD','MAY'].includes(r.level))throw Error('Bad level '+r.id);
     if(!r.statement||!r.section||!r.area)throw Error('Incomplete requirement '+r.id);
     if(r.level.startsWith('MUST')&&!r.statement.includes(r.level))throw Error('Statement must state its level: '+r.id);
     if(!Array.isArray(r.tests)||!r.tests.length)throw Error('Requirement without verifying test '+r.id);
-    for(const t of r.tests){const found=(await listed(t.file)).filter(x=>x.includes(t.title));if(found.length!==1)throw Error(`Requirement ${r.id} trace ${found.length?'ambiguous':'missing'}: ${t.file} :: ${t.title}`);}
+    for(const t of r.tests){const found=(await listed(t.file)).filter(x=>x===t.title);if(found.length!==1)throw Error(`Requirement ${r.id} trace ${found.length?'ambiguous':'missing'} (exact title required): ${t.file} :: ${t.title}`);}
     areas[r.area]=(areas[r.area]??0)+1;
   }
   const spec=await readFile(join(base,reg.specification),'utf8');

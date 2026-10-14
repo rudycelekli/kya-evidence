@@ -1,43 +1,65 @@
 import { canonical, digest, insist } from '../../shared/canonical.mjs';
-import { validateManifest, validatePolicy, timestamp } from '../../identity/domain/services/validation.mjs';
+import { validateManifest, validatePolicy, timestamp, hash } from '../../identity/domain/services/validation.mjs';
 import { verifyAssessment } from './assess.mjs';
 import { verifyIncident } from '../../evidence/domain/services/incidents.mjs';
 
 // Monitoring triggers. An assessment is a point-in-time result; reliance later needs
 // evidence that nothing it depended on has changed. Any fired trigger means: reassess.
 const BLOCKING = ['high','critical'];
-// Evaluate signed incident records. Untrusted, revoked, misdirected, future and duplicate records
-// are listed as ignored, never silently dropped. Only an independent trusted key can resolve.
+const SEVERITY = {low:0,medium:1,high:2,critical:3};
+const DECISIONS = ['qualified','insufficient-evidence','blocked','expired','revoked'];
+// Evaluate signed incident records. Untrusted, revoked and misdirected records are listed as
+// ignored, never silently dropped. Records are namespaced by signing key, so one key cannot erase
+// or rewrite another key's record by reusing its ID. Conflicting records from the same key fail
+// closed: the most severe report is kept and a resolution is never honoured. Only an independent
+// trusted key can resolve, and never its own report. Future-dated blocking reports stay open.
 function evaluateIncidents(envelopes, assessment, policy, at) {
   insist(Array.isArray(envelopes) && envelopes.length <= 1024,'Incidents must be an array of at most 1024 records');
-  const ignored=[], eligible=[], roles=new Map(policy.trustedKeys.map(k=>[k.id,k.role]));
+  const ignored=[], eligible=[], roles=new Map(policy.trustedKeys.map(k=>[k.id,k.role])), seen=new Set();
   for (const raw of envelopes) {
     let v; try { v=verifyIncident(raw); } catch (e) { ignored.push({id:null,reason:'Invalid incident record: '+e.message}); continue; }
-    const {payload,keyId}=v, skip=reason=>ignored.push({id:payload.id,reason});
+    const {payload,keyId,envelopeDigest}=v, skip=reason=>ignored.push({id:payload.id,reason});
+    if (seen.has(envelopeDigest)) continue; seen.add(envelopeDigest);
     if (!roles.has(keyId)) skip('Signing key is not a trusted anchor');
     else if (policy.revokedKeyIds.includes(keyId)) skip('Signing key is revoked');
     else if (payload.subjectDigest !== assessment.subjectDigest) skip('Incident concerns a different subject');
-    else if (Date.parse(payload.reportedAt) > at) skip('Incident is dated in the future');
-    else eligible.push({...payload,role:roles.get(keyId)});
+    else eligible.push({...payload,keyId,role:roles.get(keyId),future:Date.parse(payload.reportedAt) > at});
   }
-  const counts=new Map(); for (const e of eligible) counts.set(e.id,(counts.get(e.id)??0)+1);
-  const unique=eligible.filter(e=>counts.get(e.id)===1);
-  for (const e of eligible) if (counts.get(e.id)>1) ignored.push({id:e.id,reason:'Duplicate incident ID quarantined'});
-  const reports=new Map(unique.filter(e=>e.kind==='report').map(e=>[e.id,e])), resolved=new Set(), appealed=new Set();
-  for (const e of unique.filter(e=>e.kind!=='report')) {
-    const target=reports.get(e.refId);
-    if (!target) ignored.push({id:e.id,reason:'References unknown incident'});
-    else if (e.kind==='appeal') appealed.add(target.id);
+  const groups=new Map(); for (const e of eligible) { const k=e.keyId+'|'+e.id; groups.set(k,[...(groups.get(k)??[]),e]); }
+  const reports=[], others=[];
+  for (const g of groups.values()) {
+    if (g.length>1) for (const e of g) ignored.push({id:e.id,reason:'Conflicting records share one key and ID; most severe report kept, resolutions not honoured'});
+    const rs=g.filter(e=>e.kind==='report').sort((x,y)=>SEVERITY[y.severity]-SEVERITY[x.severity]);
+    if (rs.length) reports.push(rs[0]); else if (g.length===1) others.push(g[0]);
+  }
+  const live=[]; for (const e of reports) {
+    if (e.future && !BLOCKING.includes(e.severity)) ignored.push({id:e.id,reason:'Incident is dated in the future'});
+    else { if (e.future) ignored.push({id:e.id,reason:'Blocking incident is dated in the future (clock skew or misdated); kept open'}); live.push(e); }
+  }
+  const resolved=new Set(), appealed=new Set();
+  for (const e of others) {
+    if (e.future) { ignored.push({id:e.id,reason:'Incident is dated in the future'}); continue; }
+    const targets=live.filter(r=>r.id===e.refId);
+    if (!targets.length) ignored.push({id:e.id,reason:'References unknown incident'});
+    else if (e.kind==='appeal') targets.forEach(t=>appealed.add(t.id));
     else if (e.role!=='independent') ignored.push({id:e.id,reason:'Resolution requires an independent trusted key'});
-    else if (Date.parse(e.reportedAt) < Date.parse(target.reportedAt)) ignored.push({id:e.id,reason:'Resolution predates the incident'});
-    else resolved.add(target.id);
+    else for (const t of targets) {
+      if (t.keyId===e.keyId) ignored.push({id:e.id,reason:'Reporter cannot resolve its own report'});
+      else if (Date.parse(e.reportedAt) <= Date.parse(t.reportedAt)) ignored.push({id:e.id,reason:'Resolution must be dated after the incident'});
+      else resolved.add(t.keyId+'|'+t.id);
+    }
   }
-  const ids=[...reports.keys()].sort(), blocking=ids.filter(id=>BLOCKING.includes(reports.get(id).severity));
-  return {considered:envelopes.length,open:blocking.filter(id=>!resolved.has(id)),resolved:blocking.filter(id=>resolved.has(id)),appealed:[...appealed].sort(),observed:ids.filter(id=>!BLOCKING.includes(reports.get(id).severity)),ignored};
+  const blocking=live.filter(r=>BLOCKING.includes(r.severity)), isResolved=r=>resolved.has(r.keyId+'|'+r.id);
+  const idsOf=list=>[...new Set(list.map(r=>r.id))].sort();
+  const open=idsOf(blocking.filter(r=>!isResolved(r)));
+  return {considered:envelopes.length,open,resolved:idsOf(blocking.filter(isResolved)).filter(id=>!open.includes(id)),appealed:[...appealed].sort(),observed:idsOf(live.filter(r=>!BLOCKING.includes(r.severity))),ignored};
 }
 
 export function checkCurrency(assessment, {manifest, policy, now, incidents = []} = {}) {
   assessment=JSON.parse(canonical(assessment)); verifyAssessment(assessment);
+  // A resealed or truncated report must not read as current: NaN comparisons would silently never fire.
+  timestamp(assessment.assessedAt,'Assessment time'); timestamp(assessment.validUntil,'Assessment validity'); hash(assessment.subjectDigest,'Assessment subject'); hash(assessment.policyDigest,'Assessment policy');
+  insist(DECISIONS.includes(assessment.decision),'Unknown assessment decision');
   manifest=validateManifest(manifest); policy=validatePolicy(policy);
   const at=timestamp(now,'Currency check time'), assessedAt=Date.parse(assessment.assessedAt), validUntil=Date.parse(assessment.validUntil);
   const triggers=[], fire=(id,detail)=>triggers.push({id,detail});
