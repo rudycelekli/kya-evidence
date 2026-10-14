@@ -267,7 +267,7 @@
       "title": "W3C VC 2.0 export bridge for assessment results",
       "status": "Implemented",
       "file": "docs/adr/0022-vc-export-bridge.md",
-      "contentDigest": "a3b604c9b49cd6ee99a341b6df5a2653f4758da543bb02d809dae856ae67773b",
+      "contentDigest": "06e1a3e9e8794220b61b2732f5ace24fad5e9101a89361d23de3da5c305eb9ba",
       "related": [
         "ADR-0002",
         "ADR-0003",
@@ -300,8 +300,22 @@
         "ADR-0011",
         "ADR-0021"
       ]
+    },
+    {
+      "id": "ADR-0025",
+      "title": "Cryptographic agility and algorithm identifiers",
+      "status": "Proposed",
+      "file": "docs/adr/0025-crypto-agility-and-algorithm-identifiers.md",
+      "contentDigest": "2c55f3138eb4665029897621707d63bd17aaa11350b9f41b2816440320b7fce5",
+      "related": [
+        "ADR-0014",
+        "ADR-0017",
+        "ADR-0020",
+        "ADR-0021",
+        "ADR-0022"
+      ]
     }
   ],
-  "digest": "d8c1cad146ed7ff9254aeb74e915c64044a96f578f74cb8aa2b4ea0c6f4a43e7",
+  "digest": "369a8f701bba3a50512fdcfe6c9afc5b5c7ed69a9340a1aa202761f0aea97986",
   "store": "portable local file; not a claim of AgentDB graph persistence"
 }

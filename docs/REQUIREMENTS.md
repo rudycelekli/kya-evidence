@@ -119,5 +119,9 @@ Each requirement is traced to at least one test that must exist exactly once; th
 | KYA-GOV-001 | MUST | Every governance document and the code of conduct MUST open with the draft-counsel notice until counsel has reviewed it and a body has adopted it. | `governance-docs.test.mjs` |
 | KYA-GOV-002 | MUST | CONTRIBUTING MUST state that each proposed commit carries a Developer Certificate of Origin sign-off, and a proposal without that sign-off MUST NOT be merged. | `governance-docs.test.mjs` |
 | KYA-GOV-003 | MUST | Every ADR MUST carry a Status line and the five required sections Context, Decision, Alternatives, Consequences and Validation. | `governance-docs.test.mjs` |
+| KYA-SUP-001 | MUST | The SBOM generator MUST be deterministic for a given commit, MUST read no clock and no network, and MUST include a metadata timestamp only when one is supplied explicitly. | `sbom.test.mjs` |
+| KYA-SUP-002 | MUST | The SBOM generator MUST refuse a dirty tree (modified, staged or untracked files) and a package that declares dependencies it cannot enumerate, and MUST read committed blobs rather than the working tree. | `sbom.test.mjs` |
+| KYA-SUP-003 | MUST | The SBOM MUST list exactly the frozen release file list in code-unit order with the SHA-256 digest and Git blob identifier of each committed file, and the Node.js engine requirement of the package. | `sbom.test.mjs` |
+| KYA-CRY-001 | MUST | Every signing domain prefix, hash or HMAC algorithm, holdout hash label and signing site without a KYA domain prefix used in src MUST be documented in docs/CRYPTO-AGILITY.md, and Ed25519 MUST remain the only accepted proof algorithm until an ADR-governed change. | `crypto-inventory.test.mjs` |
 
-Registry digest: `88c0916183466c080f9a41395c26c2fc511d15959734f25dbb68c97c98a6be1a`
+Registry digest: `2d094fda6af69797c8b938c39ffce8a140ac4f2c7bd6a0b64f9d0022fa01993b`
