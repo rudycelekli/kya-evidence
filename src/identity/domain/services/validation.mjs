@@ -105,7 +105,7 @@ export function validatePolicy(v) {
   const ids = new Set();
   for (const k of v.trustedKeys) {
     exactKeys(k,['id','publicKey','role'],'Trust anchor'); hash(k.id,'Key ID'); validatePublicPem(k.publicKey);
-    insist(keyId(k.publicKey) === k.id,'Trust anchor fingerprint differs'); insist(['self','independent'].includes(k.role),'Unknown issuer role'); insist(!ids.has(k.id),'Duplicate trust anchor'); ids.add(k.id);
+    insist(keyId(k.publicKey) === k.id,'Trust anchor fingerprint differs'); insist(['self','independent','capture-issuer'].includes(k.role),'Unknown issuer role'); insist(!ids.has(k.id),'Duplicate trust anchor'); ids.add(k.id);
   }
   return v;
 }
