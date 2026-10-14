@@ -179,6 +179,19 @@
       ]
     },
     {
+      "id": "ADR-0016",
+      "title": "Named blocker codes and mandatory minimums",
+      "status": "Implemented",
+      "file": "docs/adr/0016-named-blocker-codes-and-mandatory-minimums.md",
+      "contentDigest": "ddc973a39c00bfa97370d103edcc6d97fe3ab84449e9eec7ada9bcdc2e1d4ee3",
+      "related": [
+        "ADR-0003",
+        "ADR-0011",
+        "ADR-0012",
+        "ADR-0013"
+      ]
+    },
+    {
       "id": "ADR-0017",
       "title": "Measured, signed capture attestation (`kya.capture/v1`)",
       "status": "Proposed",
@@ -233,6 +246,6 @@
       ]
     }
   ],
-  "digest": "2d4cfd3122ed4fa5b7506662462f28afc9e2e4ac12e417905a7f809fb6b32be4",
+  "digest": "328285f759d96a62a762d87ea75322b7b72d7c9ae3bdce36e7a70ddf581cdd18",
   "store": "portable local file; not a claim of AgentDB graph persistence"
 }
