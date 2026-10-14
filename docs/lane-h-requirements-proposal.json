@@ -1,0 +1,105 @@
+{
+  "requirements": [
+    {
+      "id": "KYA-ACT-001",
+      "level": "MUST",
+      "area": "adoption",
+      "section": "Reports and viewers",
+      "statement": "The CI gate MUST exit 0 only for a qualified assessment with no fired reassessment trigger, 2 for a not qualified result or a required reassessment, and 1 for usage or input errors, and a relaxed fail-on mode MUST NOT change the printed summary.",
+      "tests": [
+        { "file": "test/kya-check.test.mjs", "title": "qualified and current inputs exit 0 and print a compact summary" },
+        { "file": "test/kya-check.test.mjs", "title": "a failed critical check exits 2 with the blocker code" },
+        { "file": "test/kya-check.test.mjs", "title": "missing evidence exits 2 as insufficient evidence" },
+        { "file": "test/kya-check.test.mjs", "title": "currency only mode exits 2 with trigger codes when the subject changed or the assessment expired" },
+        { "file": "test/kya-check.test.mjs", "title": "an open high severity incident makes a qualified assessment require reassessment" },
+        { "file": "test/kya-check.test.mjs", "title": "usage and input errors exit 1 with a message on stderr" },
+        { "file": "test/kya-check.test.mjs", "title": "fail-on controls the exit code without changing the summary" }
+      ]
+    },
+    {
+      "id": "KYA-ACT-002",
+      "level": "MUST",
+      "area": "adoption",
+      "section": "Reports and viewers",
+      "statement": "The CI gate MUST produce byte-identical output for identical inputs when a time is supplied, and when no time is supplied it MUST read the system clock and state that in its summary.",
+      "tests": [
+        { "file": "test/kya-check.test.mjs", "title": "the same arguments with now produce byte identical output" },
+        { "file": "test/kya-check.test.mjs", "title": "omitting now uses the system clock and says so" },
+        { "file": "test/kya-check.test.mjs", "title": "system clock use in GitHub Actions raises a warning annotation" }
+      ]
+    },
+    {
+      "id": "KYA-ACT-003",
+      "level": "MUST",
+      "area": "adoption",
+      "section": "Reports and viewers",
+      "statement": "The CI gate MUST escape every untrusted string it places in workflow annotations, the Markdown step summary and step outputs so that agent names, check identifiers and forged report text cannot start workflow commands, inject Markdown or HTML, or add output keys, and it MUST NOT print environment secrets.",
+      "tests": [
+        { "file": "test/kya-check.test.mjs", "title": "annotation text from untrusted names is escaped and cannot start a new command" },
+        { "file": "test/kya-check.test.mjs", "title": "a forged assessment with newlines in text fields cannot inject workflow commands or markdown" },
+        { "file": "test/kya-check.test.mjs", "title": "GITHUB_OUTPUT and GITHUB_STEP_SUMMARY are appended to and carry no secrets" },
+        { "file": "test/kya-check.test.mjs", "title": "GitHub annotations appear only when GITHUB_ACTIONS is true" }
+      ]
+    },
+    {
+      "id": "KYA-ACT-004",
+      "level": "MUST",
+      "area": "adoption",
+      "section": "Reports and viewers",
+      "statement": "The CI gate MUST write its step outputs before a failing exit, MUST treat an unwritable output path as an input error, MUST refuse unknown members in an inputs file, and SHOULD warn when the result rests on fixture evidence.",
+      "tests": [
+        { "file": "test/kya-check.test.mjs", "title": "outputs are written before a failing exit so the workflow can read them" },
+        { "file": "test/kya-check.test.mjs", "title": "an unwritable GITHUB_OUTPUT path is an input error" },
+        { "file": "test/kya-check.test.mjs", "title": "an inputs file with unknown members is refused" },
+        { "file": "test/kya-check.test.mjs", "title": "individual input flags give the same result as an inputs file" },
+        { "file": "test/kya-check.test.mjs", "title": "currency only mode exits 0 when the stored assessment is still current" },
+        { "file": "test/kya-check.test.mjs", "title": "fixture only evidence raises a warning even when the policy qualifies it" }
+      ]
+    },
+    {
+      "id": "KYA-ACT-005",
+      "level": "MUST",
+      "area": "adoption",
+      "section": "Trust and eligibility",
+      "statement": "Each policy template MUST be a valid preset that states a rationale, explicit limits and that its thresholds are not validated, and a policy generated from it MUST pass policy validation and bind the digest of the supplied profile deterministically.",
+      "tests": [
+        { "file": "test/policy-templates.test.mjs", "title": "every template file is valid JSON with a rationale explicit limits and a not validated flag" },
+        { "file": "test/policy-templates.test.mjs", "title": "each template generates a policy that passes validatePolicy and binds the real profile digest" },
+        { "file": "test/policy-templates.test.mjs", "title": "output is deterministic and carries no clock or key material" },
+        { "file": "test/policy-templates.test.mjs", "title": "the template documentation states these are starting points and no template makes an agent safe" }
+      ]
+    },
+    {
+      "id": "KYA-ACT-006",
+      "level": "MUST NOT",
+      "area": "adoption",
+      "section": "Trust and eligibility",
+      "statement": "A policy template MUST NOT accept fixture or declaration evidence, so fixture evidence MUST NOT qualify an agent under any template, and the strict templates MUST withhold results lacking independent evidence, an accountable party or fresh evidence.",
+      "tests": [
+        { "file": "test/policy-templates.test.mjs", "title": "templates are conservative and never accept fixture or declaration evidence" },
+        { "file": "test/policy-templates.test.mjs", "title": "fixture evidence never qualifies any template even when its signer is trusted" },
+        { "file": "test/policy-templates.test.mjs", "title": "self signed runtime evidence qualifies the read only template and nothing stricter" },
+        { "file": "test/policy-templates.test.mjs", "title": "independent runtime evidence with a declared accountable party qualifies code agent and payments" },
+        { "file": "test/policy-templates.test.mjs", "title": "an undeclared accountable party withholds the code agent and payments templates" },
+        { "file": "test/policy-templates.test.mjs", "title": "stale runtime evidence is refused by the payments template within its short window" },
+        { "file": "test/policy-templates.test.mjs", "title": "a failed non critical mandatory check blocks the payments template with a named code" },
+        { "file": "test/policy-templates.test.mjs", "title": "a failed critical check blocks every template" }
+      ]
+    },
+    {
+      "id": "KYA-ACT-007",
+      "level": "MUST",
+      "area": "adoption",
+      "section": "Trust and eligibility",
+      "statement": "The policy generator MUST refuse unknown templates, malformed or private key material and missing independent keys where required, MUST NOT echo key material, and options MUST only tighten a template.",
+      "tests": [
+        { "file": "test/policy-templates.test.mjs", "title": "unknown templates and path tricks are refused" },
+        { "file": "test/policy-templates.test.mjs", "title": "trust key problems are refused without echoing key material" },
+        { "file": "test/policy-templates.test.mjs", "title": "templates that need independent evidence are refused without an independent key" },
+        { "file": "test/policy-templates.test.mjs", "title": "weakening a template or naming unknown checks is refused" },
+        { "file": "test/policy-templates.test.mjs", "title": "a profile missing the template checks or an existing output file is refused" },
+        { "file": "test/policy-templates.test.mjs", "title": "overrides can tighten a template and the flags are honoured" }
+      ]
+    }
+  ]
+}
