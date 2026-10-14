@@ -18,7 +18,7 @@ export function createPlan({ privateKey, ...fields } = {}) {
  * Replay a ledger. Collects problems rather than throwing so verification can report every defect.
  * Returns the per-attempt state; planned/started attempts are "unaccounted" until a terminal entry exists.
  */
-function replay(ledger, { policy, requireClosed = false } = {}) {
+function replay(ledger, { policy, requireClosed = false, expectHead, expectEntries } = {}) {
   const problems = [], attempts = new Map();
   let plan, issuer, planDigest;
   try {
@@ -32,12 +32,14 @@ function replay(ledger, { policy, requireClosed = false } = {}) {
 
   if (policy !== undefined) {
     try {
-      const p = validatePolicy(policy), anchor = p.trustedKeys.find(k => k.id === issuer.keyId);
+      const p = validatePolicy(policy);
+      if (digest(p) !== plan.policyDigest) problems.push(problem('policy-mismatch', 'Supplied policy digest differs from the plan policy digest'));
+      const anchor = p.trustedKeys.find(k => k.id === issuer.keyId);
       if (!anchor || anchor.role !== 'capture-issuer' || p.revokedKeyIds.includes(issuer.keyId)) problems.push(problem('untrusted-signer', 'Signer is not a trusted, unrevoked capture-issuer anchor of the policy'));
     } catch (error) { problems.push(problem('untrusted-signer', `Policy invalid: ${error.message}`)); }
   }
 
-  const planned = plan.attempts.length;
+  const planned = plan.attempts.length, runIds = new Set(), bundles = new Set();
   let previous = planDigest, previousAt = Date.parse(plan.createdAt);
   ledger.entries.forEach((envelope, i) => {
     let e;
@@ -72,6 +74,7 @@ function replay(ledger, { policy, requireClosed = false } = {}) {
       if (attempts.size >= MAX_ATTEMPTS) { problems.push(problem('attempt-limit', `Entry ${i}: too many attempts`)); return; }
       if (!original || original.status !== 'errored' || original.retriedBy !== null) { problems.push(problem('bad-retry', `Entry ${i}: Invalid retry: the retried attempt must exist, be errored and not already retried`)); return; }
       if (e.subjectDigest !== original.subjectDigest || !plan.subjects.includes(e.subjectDigest)) { problems.push(problem('bad-retry', `Entry ${i}: Invalid retry: a retry keeps the original subject`)); return; }
+      if (e.scenarioSetDigest !== original.scenarioSetDigest || e.seed !== original.seed) { problems.push(problem('bad-retry', `Entry ${i}: Invalid retry: a retry keeps the original scenario set and seed`)); return; }
       original.retriedBy = e.attemptId;
       attempts.set(e.attemptId, { status: 'planned', subjectDigest: e.subjectDigest, scenarioSetDigest: e.scenarioSetDigest, seed: e.seed, amended: true, retriedBy: null, retryOf: e.retryOf });
       return;
@@ -80,14 +83,21 @@ function replay(ledger, { policy, requireClosed = false } = {}) {
     const allowed = { started: ['planned'], completed: ['started'], errored: ['started'], abandoned: ['planned', 'started'] }[e.kind];
     if (!allowed.includes(state.status)) { problems.push(problem('bad-transition', `Entry ${i}: Invalid transition ${state.status} to ${e.kind}`)); return; }
     state.status = e.kind === 'started' ? 'started' : e.kind;
-    if (e.kind === 'completed') { state.runId = e.runId; state.evidenceBundleDigest = e.evidenceBundleDigest; }
+    if (e.kind === 'completed') {
+      if (runIds.has(e.runId) || bundles.has(e.evidenceBundleDigest)) problems.push(problem('duplicate-evidence', `Entry ${i}: Duplicate run ID or evidence bundle digest across completions`));
+      runIds.add(e.runId); bundles.add(e.evidenceBundleDigest);
+      state.runId = e.runId; state.evidenceBundleDigest = e.evidenceBundleDigest;
+    }
   }
 
   if (requireClosed) for (const [id, s] of attempts) if (!TERMINAL.has(s.status)) problems.push(problem('unaccounted-attempt', `Attempt ${id} has no terminal entry`));
-  return { problems, attempts, plan, issuer };
+  const headDigest = ledger.entries.length ? digest(ledger.entries.at(-1)) : planDigest, entryCount = ledger.entries.length;
+  if (expectHead !== undefined && expectHead !== headDigest) problems.push(problem('head-mismatch', 'Ledger head digest differs from the pinned head (rollback or fork)'));
+  if (expectEntries !== undefined && expectEntries !== entryCount) problems.push(problem('entry-count-mismatch', 'Ledger entry count differs from the pinned count'));
+  return { problems, attempts, plan, issuer, headDigest, entryCount };
 }
 
-function summarize(plan, attempts) {
+function summarize(plan, attempts, headDigest, entryCount) {
   const counts = { completed: 0, errored: 0, abandoned: 0 }, open = [];
   let amendments = 0;
   for (const [id, s] of attempts) {
@@ -95,15 +105,22 @@ function summarize(plan, attempts) {
     if (s.amended) amendments += 1;
   }
   // Unaccounted attempts stay in the denominator: planned is never reduced by non-completion.
-  return { campaignId: plan.campaignId, planned: attempts.size, ...counts, unaccounted: open.length, unaccountedAttemptIds: open, amendments, closed: open.length === 0 };
+  return { campaignId: plan.campaignId, planned: attempts.size, ...counts, unaccounted: open.length, unaccountedAttemptIds: open, amendments, closed: open.length === 0, headDigest, entryCount };
 }
 
 export function verifyLedger(ledger, options = {}) {
   try {
-    const { problems, attempts, plan } = replay(JSON.parse(canonical(ledger)), options);
-    return { valid: problems.length === 0, problems, closed: plan ? summarize(plan, attempts).closed : false, summary: plan && problems.length === 0 ? summarize(plan, attempts) : null };
+    const { policy, trustPlanSigner = false } = options;
+    const { problems, attempts, plan, headDigest, entryCount } = replay(JSON.parse(canonical(ledger)), options);
+    const warnings = [];
+    // Signer trust is explicit: either a policy anchors the signer as a capture issuer, or the caller names the risk.
+    if (policy === undefined && trustPlanSigner !== true) problems.push(problem('policy-required', 'Verification needs a policy listing the signer as a capture-issuer, or an explicit trustPlanSigner flag'));
+    if (policy === undefined && trustPlanSigner === true) warnings.push('Signer was NOT checked against a capture-issuer anchor: the plan-embedded key is trusted as-is');
+    const signerTrust = policy !== undefined ? 'policy' : trustPlanSigner === true ? 'plan-signer-unverified' : 'none';
+    const full = plan ? summarize(plan, attempts, headDigest, entryCount) : null;
+    return { valid: problems.length === 0, problems, warnings, signerTrust, closed: full ? full.closed : false, headDigest: headDigest ?? null, entryCount: entryCount ?? null, summary: full && problems.length === 0 ? full : null };
   } catch (error) {
-    return { valid: false, problems: [problem('malformed', `Ledger is malformed: ${error.message}`)], closed: false, summary: null };
+    return { valid: false, problems: [problem('malformed', `Ledger is malformed: ${error.message}`)], warnings: [], signerTrust: 'none', closed: false, headDigest: null, entryCount: null, summary: null };
   }
 }
 
@@ -159,6 +176,6 @@ export function attemptStates(ledger) {
 }
 
 export function summarizeCampaign(ledger) {
-  const { plan, attempts } = checked(ledger);
-  return summarize(plan, attempts);
+  const { plan, attempts, headDigest, entryCount } = checked(ledger);
+  return summarize(plan, attempts, headDigest, entryCount);
 }

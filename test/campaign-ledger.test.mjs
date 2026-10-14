@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { generateKeyPairSync, createPrivateKey, createPublicKey } from 'node:crypto';
-import { createPlan, openLedger, appendEntry, verifyLedger, summarizeCampaign, verifyCaptureIssuerPolicy } from '../src/campaign/index.mjs';
+import { createPlan, openLedger, appendEntry, verifyLedger as verifyStrict, summarizeCampaign, verifyCaptureIssuerPolicy } from '../src/campaign/index.mjs';
 import { signEntry } from '../src/campaign/domain/records.mjs';
 import { assess, digest, hashBytes, keyId, signEvidence, validatePolicy } from '../src/index.mjs';
 import { manifest, profile, policy, payload, evaluatorDigest, NOW } from './helpers.mjs';
@@ -22,6 +22,8 @@ const run = (ledger, id, at, kind = 'completed') => {
   if (kind === 'completed') return add(ledger, { kind, attemptId: id, at, runId: `run-${id}`, evidenceBundleDigest: hashBytes(`bundle-${id}`) });
   return add(ledger, { kind: 'errored', attemptId: id, at, errorCode: 'TIMEOUT', evidenceBundleDigest: null });
 };
+// Structural tests opt out of the signer-trust requirement explicitly; trust tests pass a policy.
+const verifyLedger = (ledger, options = {}) => verifyStrict(ledger, options.policy ? options : { trustPlanSigner: true, ...options });
 const codes = result => result.problems.map(p => p.code);
 
 test('campaign plan commits to attempts, digests and issuer before any attempt', () => {
@@ -102,10 +104,10 @@ test('campaign ledger detects edited removed and reordered history', () => {
 });
 
 test('campaign ledger rejects a foreign signer and requires the capture issuer role under policy', () => {
-  const ledger = opened();
-  assert.throws(() => add(ledger, { kind: 'started', attemptId: 'a-1', at: T1 }, stranger.privateKey), /issuer/i);
   const base = policy();
   const asIssuer = { ...base, trustedKeys: [{ id: keyId(issuerPem), publicKey: issuerPem, role: 'capture-issuer' }] };
+  const ledger = openLedger({ plan: createPlan(planInput({ policyDigest: digest(asIssuer) })), privateKey: issuer.privateKey, now: T0 });
+  assert.throws(() => add(ledger, { kind: 'started', attemptId: 'a-1', at: T1 }, stranger.privateKey), /issuer/i);
   assert.equal(verifyLedger(ledger, { policy: asIssuer }).valid, true);
   const asSelf = { ...base, trustedKeys: [{ id: keyId(issuerPem), publicKey: issuerPem, role: 'self' }] };
   assert.ok(codes(verifyLedger(ledger, { policy: asSelf })).includes('untrusted-signer'));
@@ -117,7 +119,9 @@ test('campaign ledger rejects a foreign signer and requires the capture issuer r
 
 test('campaign summary keeps unaccounted attempts in the denominator', () => {
   let ledger = opened();
-  assert.deepEqual(summarizeCampaign(ledger), { campaignId: 'campaign:pilot-1', planned: 3, completed: 0, errored: 0, abandoned: 0, unaccounted: 3, unaccountedAttemptIds: ['a-1', 'a-2', 'a-3'], amendments: 0, closed: false });
+  const { headDigest, entryCount, ...counts } = summarizeCampaign(ledger);
+  assert.equal(entryCount, 3); assert.match(headDigest, /^[a-f0-9]{64}$/);
+  assert.deepEqual(counts, { campaignId: 'campaign:pilot-1', planned: 3, completed: 0, errored: 0, abandoned: 0, unaccounted: 3, unaccountedAttemptIds: ['a-1', 'a-2', 'a-3'], amendments: 0, closed: false });
   ledger = run(ledger, 'a-1', T1);
   ledger = run(ledger, 'a-2', T2, 'errored');
   ledger = add(ledger, { kind: 'started', attemptId: 'a-3', at: T3 });
@@ -152,7 +156,7 @@ test('campaign retry is a signed amendment that keeps the errored attempt counte
   let ledger = run(opened(), 'a-1', T1, 'errored');
   assert.throws(() => add(ledger, { kind: 'amended', attemptId: 'a-2', retryOf: 'a-2', subjectDigest: subject, scenarioSetDigest, seed: null, at: T2 }), /retry|duplicate/i);
   assert.throws(() => add(ledger, { kind: 'amended', attemptId: 'a-1b', retryOf: 'a-2', subjectDigest: subject, scenarioSetDigest, seed: null, at: T2 }), /retry/i);
-  ledger = add(ledger, { kind: 'amended', attemptId: 'a-1b', retryOf: 'a-1', subjectDigest: subject, scenarioSetDigest, seed: 7, at: T2 });
+  ledger = add(ledger, { kind: 'amended', attemptId: 'a-1b', retryOf: 'a-1', subjectDigest: subject, scenarioSetDigest, seed: null, at: T2 });
   assert.throws(() => add(ledger, { kind: 'amended', attemptId: 'a-1c', retryOf: 'a-1', subjectDigest: subject, scenarioSetDigest, seed: null, at: T2 }), /retry/i);
   const s = summarizeCampaign(ledger);
   assert.equal(s.planned, 4); assert.equal(s.errored, 1); assert.equal(s.amendments, 1);
@@ -199,4 +203,55 @@ test('policy schema describes the capture issuer role', async () => {
   const { readFile } = await import('node:fs/promises');
   const schema = JSON.parse(await readFile(new URL('../schemas/policy.schema.json', import.meta.url), 'utf8'));
   assert.deepEqual(schema.properties.trustedKeys.items.properties.role.enum, ['self', 'independent', 'capture-issuer']);
+});
+
+test('campaign amendment must keep the original scenario set and seed', () => {
+  const errored = run(opened(), 'a-1', T1, 'errored');
+  const retry = patch => add(errored, { kind: 'amended', attemptId: 'a-1b', retryOf: 'a-1', subjectDigest: subject, scenarioSetDigest, seed: null, at: T2, ...patch });
+  assert.throws(() => retry({ scenarioSetDigest: hashBytes('another scenario set') }), /retry/i);
+  assert.throws(() => retry({ seed: 7 }), /retry/i);
+  assert.equal(verifyLedger(retry({})).valid, true);
+});
+
+test('campaign ledger rejects duplicate run IDs and evidence bundle digests across completions', () => {
+  let ledger = run(opened(), 'a-1', T1);
+  ledger = add(ledger, { kind: 'started', attemptId: 'a-2', at: T2 });
+  const completed = patch => add(ledger, { kind: 'completed', attemptId: 'a-2', at: T2, runId: 'run-a-2', evidenceBundleDigest: hashBytes('bundle-a-2'), ...patch });
+  assert.throws(() => completed({ runId: 'run-a-1' }), /duplicate/i);
+  assert.throws(() => completed({ evidenceBundleDigest: hashBytes('bundle-a-1') }), /duplicate/i);
+  assert.equal(verifyLedger(completed({})).valid, true);
+});
+
+test('campaign ledger head digest and entry count expose truncation when pinned', () => {
+  const full = run(opened(), 'a-1', T1);
+  const result = verifyLedger(full);
+  assert.equal(result.entryCount, 5);
+  assert.match(result.headDigest, /^[a-f0-9]{64}$/);
+  assert.equal(summarizeCampaign(full).headDigest, result.headDigest);
+  const truncated = { ...structuredClone(full), entries: full.entries.slice(0, 4) };
+  assert.equal(verifyLedger(truncated).valid, true, 'an unpinned rolled-back ledger still verifies');
+  assert.notEqual(verifyLedger(truncated).headDigest, result.headDigest);
+  assert.ok(codes(verifyLedger(truncated, { expectHead: result.headDigest })).includes('head-mismatch'));
+  assert.ok(codes(verifyLedger(truncated, { expectEntries: 5 })).includes('entry-count-mismatch'));
+  const forked = run(opened(), 'a-2', T1);
+  assert.ok(codes(verifyLedger(forked, { expectHead: result.headDigest })).includes('head-mismatch'));
+  assert.equal(verifyLedger(full, { expectHead: result.headDigest, expectEntries: 5 }).valid, true);
+});
+
+test('campaign verification requires a capture issuer policy or an explicit trust flag and binds the policy digest', () => {
+  const asIssuer = { ...policy(), trustedKeys: [{ id: keyId(issuerPem), publicKey: issuerPem, role: 'capture-issuer' }] };
+  const bound = openLedger({ plan: createPlan(planInput({ policyDigest: digest(asIssuer) })), privateKey: issuer.privateKey, now: T0 });
+  const bare = verifyStrict(bound);
+  assert.equal(bare.valid, false);
+  assert.ok(codes(bare).includes('policy-required'));
+  const ok = verifyStrict(bound, { policy: asIssuer });
+  assert.equal(ok.valid, true);
+  assert.equal(ok.signerTrust, 'policy');
+  const trusted = verifyStrict(bound, { trustPlanSigner: true });
+  assert.equal(trusted.valid, true);
+  assert.equal(trusted.signerTrust, 'plan-signer-unverified');
+  assert.ok(trusted.warnings.some(w => /capture-issuer/.test(w)));
+  const other = { ...asIssuer, id: 'a-different-policy' };
+  assert.ok(codes(verifyStrict(bound, { policy: other })).includes('policy-mismatch'));
+  assert.ok(codes(verifyStrict(opened(), { policy: asIssuer })).includes('policy-mismatch'));
 });

@@ -1,13 +1,13 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { generateKeyPairSync } from 'node:crypto';
-import { mkdtemp, mkdir, readFile, readdir, rm, stat, writeFile, chmod } from 'node:fs/promises';
+import { mkdtemp, mkdir, symlink, readFile, readdir, rm, stat, writeFile, chmod } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { spawnSync } from 'node:child_process';
-import { createPlan, openLedger, appendEntry, verifyLedger, summarizeCampaign, runCampaign, conformanceDigests } from '../src/campaign/index.mjs';
+import { createPlan, openLedger, appendEntry, verifyLedger as verifyStrict, summarizeCampaign, runCampaign, conformanceDigests } from '../src/campaign/index.mjs';
 import { SCENARIOS, createReferenceAdapter, createCommandAdapter } from '../src/conformance/index.mjs';
 import { markAdapter } from '../src/conformance/application/origins.mjs';
 import { digest, hashBytes, keyId } from '../src/index.mjs';
@@ -21,10 +21,12 @@ const manifests = { [subjectDigest]: manifest };
 const careful = { source: 'fixture', id: 'reference-careful', mode: 'careful' };
 const repoRoot = fileURLToPath(new URL('../', import.meta.url));
 const digests = conformanceDigests();
-const planFor = (ids, adapter = careful, patch = {}) => createPlan({ campaignId: 'campaign:runner', useCase: 'Synthetic fixture campaign', ...digests, policyDigest: hashBytes('policy'), adapter, attempts: ids.map(attemptId => ({ attemptId, subjectDigest, scenarioSetDigest: digests.scenarioSetDigest, seed: null })), createdAt: T0, privateKey: issuer.privateKey, ...patch });
+const capturePolicy = { schema: 'kya.policy/v1', id: 'runner-policy', profileDigest: digests.profileDigest, scopeId: manifest.scope.id, minCoverage: 1, minScore: 800, minIndependentCoverage: 0, allowedSources: ['fixture'], maxEvidenceAgeSeconds: 3600, trustedKeys: [{ id: keyId(issuerPem), publicKey: issuerPem, role: 'capture-issuer' }], revokedKeyIds: [], revokedEvidenceIds: [], revokedSubjectDigests: [] };
+const verifyLedger = (ledger, options = {}) => verifyStrict(ledger, { policy: capturePolicy, ...options });
+const planFor = (ids, adapter = careful, patch = {}) => createPlan({ campaignId: 'campaign:runner', useCase: 'Synthetic fixture campaign', ...digests, policyDigest: digest(capturePolicy), adapter, attempts: ids.map(attemptId => ({ attemptId, subjectDigest, scenarioSetDigest: digests.scenarioSetDigest, seed: null })), createdAt: T0, privateKey: issuer.privateKey, ...patch });
 const ledgerFor = (ids, adapter, patch) => openLedger({ plan: planFor(ids, adapter, patch), privateKey: issuer.privateKey, now: T0 });
 const scratch = () => mkdtemp(join(tmpdir(), 'kya-campaign-'));
-const base = (ledger, dir, extra = {}) => ({ plan: ledger.plan, ledger, adapter: createReferenceAdapter({ mode: 'careful' }), manifests, privateKey: issuer.privateKey, privateDir: dir, clock: () => T1, ...extra });
+const base = (ledger, dir, extra = {}) => ({ plan: ledger.plan, ledger, adapter: createReferenceAdapter({ mode: 'careful' }), manifests, policy: capturePolicy, privateKey: issuer.privateKey, privateDir: dir, clock: () => T1, ...extra });
 
 test('campaign runner executes planned attempts through conformance and writes private 0600 bundles', async () => {
   const dir = await scratch();
@@ -160,29 +162,28 @@ test('campaign CLI plans runs verifies and summarizes on the reference adapter',
     const keyFile = join(dir, 'issuer.pem'), manifestFile = join(dir, 'manifest.json'), policyFile = join(dir, 'policy.json'), ledgerFile = join(dir, 'ledger.json'), priv = join(dir, 'private');
     await writeFile(keyFile, issuer.privateKey.export({ format: 'pem', type: 'pkcs8' }), { mode: 0o600 });
     await writeFile(manifestFile, JSON.stringify(manifest));
-    const policy = { schema: 'kya.policy/v1', id: 'campaign-policy', profileDigest: digests.profileDigest, scopeId: manifest.scope.id, minCoverage: 1, minScore: 800, minIndependentCoverage: 0, allowedSources: ['fixture'], maxEvidenceAgeSeconds: 3600, trustedKeys: [{ id: keyId(issuerPem), publicKey: issuerPem, role: 'capture-issuer' }], revokedKeyIds: [], revokedEvidenceIds: [], revokedSubjectDigests: [] };
-    await writeFile(policyFile, JSON.stringify(policy));
+    await writeFile(policyFile, JSON.stringify(capturePolicy));
     const planned = cli(['plan', '--campaign-id', 'campaign:cli', '--use-case', 'Synthetic CLI campaign', '--manifest', manifestFile, '--attempts', '2', '--adapter', 'reference', '--policy', policyFile, '--key', keyFile, '--now', T0, '--out', ledgerFile]);
     assert.equal(planned.status, 0, planned.stderr);
     assert.equal(JSON.parse(planned.stdout).planned, 2);
     const before = JSON.parse(await readFile(ledgerFile, 'utf8'));
     assert.equal(before.entries.length, 2);
-    const ran = cli(['run', '--ledger', ledgerFile, '--manifest', manifestFile, '--private-dir', priv, '--adapter', 'reference', '--key', keyFile, '--now', T1]);
+    const ran = cli(['run', '--ledger', ledgerFile, '--manifest', manifestFile, '--private-dir', priv, '--adapter', 'reference', '--policy', policyFile, '--key', keyFile, '--now', T1]);
     assert.equal(ran.status, 0, ran.stderr);
     assert.deepEqual(JSON.parse(ran.stdout).results.map(r => r.outcome), ['completed', 'completed']);
     const verified = cli(['verify-ledger', '--ledger', ledgerFile, '--policy', policyFile, '--require-closed', 'true']);
     assert.equal(verified.status, 0, verified.stdout + verified.stderr);
     assert.equal(JSON.parse(verified.stdout).valid, true);
-    const summary = cli(['summary', '--ledger', ledgerFile]);
+    const summary = cli(['summary', '--ledger', ledgerFile, '--policy', policyFile]);
     assert.equal(summary.status, 0, summary.stderr);
     assert.deepEqual([JSON.parse(summary.stdout).planned, JSON.parse(summary.stdout).completed, JSON.parse(summary.stdout).unaccounted], [2, 2, 0]);
     assert.equal((await stat(join(priv, 'a-001.bundle.json'))).mode & 0o777, 0o600);
-    const wrongAdapter = cli(['run', '--ledger', ledgerFile, '--manifest', manifestFile, '--private-dir', priv, '--adapter', 'command', '--key', keyFile, '--now', T1]);
+    const wrongAdapter = cli(['run', '--ledger', ledgerFile, '--manifest', manifestFile, '--private-dir', priv, '--adapter', 'command', '--policy', policyFile, '--key', keyFile, '--now', T1]);
     assert.notEqual(wrongAdapter.status, 0);
     const tampered = JSON.parse(await readFile(ledgerFile, 'utf8'));
     tampered.entries[0].payload.at = T1;
     await writeFile(join(dir, 'tampered.json'), JSON.stringify(tampered));
-    const bad = cli(['verify-ledger', '--ledger', join(dir, 'tampered.json')]);
+    const bad = cli(['verify-ledger', '--ledger', join(dir, 'tampered.json'), '--policy', policyFile]);
     assert.equal(bad.status, 1);
     assert.equal(JSON.parse(bad.stdout).valid, false);
   } finally { await rm(dir, { recursive: true, force: true }); }
@@ -193,4 +194,57 @@ test('campaign CLI refuses a missing clock unknown flags and unknown commands', 
   assert.match(cli(['summary', '--ledger', '/nonexistent', '--bogus', 'x']).stderr, /Unknown flag/);
   assert.match(cli(['frobnicate']).stderr, /Unknown command/);
   assert.match(cli(['run', '--ledger', '/nonexistent', '--manifest', '/nonexistent', '--private-dir', '/tmp/x', '--adapter', 'reference', '--key', '/nonexistent']).stderr, /Missing --now/);
+  assert.match(cli(['run', '--ledger', '/nonexistent', '--manifest', '/nonexistent', '--private-dir', '/tmp/x', '--adapter', 'reference', '--key', '/nonexistent', '--now', T1]).stderr, /--policy|--trust-plan-signer/);
+});
+
+test('campaign runner refuses a private directory reached through a symlink into the repository', async () => {
+  const dir = await scratch();
+  try {
+    const link = join(dir, 'lnk');
+    await symlink(join(repoRoot, 'docs'), link);
+    const target = join(link, 'privnew');
+    await assert.rejects(runCampaign(base(ledgerFor(['a-1']), target)), /repository/i);
+    assert.equal(existsSync(join(repoRoot, 'docs', 'privnew')), false);
+  } finally { await rm(dir, { recursive: true, force: true }); }
+});
+
+test('campaign runner refuses a signer that is not a capture issuer under the supplied policy', async () => {
+  const dir = await scratch();
+  try {
+    const ledger = ledgerFor(['a-1']);
+    const asSelf = { ...capturePolicy, trustedKeys: [{ ...capturePolicy.trustedKeys[0], role: 'self' }] };
+    await assert.rejects(runCampaign(base(ledger, dir, { policy: asSelf })), /ledger|signer|policy/i);
+    await assert.rejects(runCampaign(base(ledger, dir, { policy: undefined })), /policy|trust/i);
+    const unbound = openLedger({ plan: createPlan({ campaignId: 'campaign:u', useCase: 'x', ...digests, policyDigest: hashBytes('other policy'), adapter: careful, attempts: [{ attemptId: 'a-1', subjectDigest, scenarioSetDigest: digests.scenarioSetDigest, seed: null }], createdAt: T0, privateKey: issuer.privateKey }), privateKey: issuer.privateKey, now: T0 });
+    await assert.rejects(runCampaign(base(unbound, dir)), /policy/i);
+    const trusted = await runCampaign(base(ledger, dir, { policy: undefined, trustPlanSigner: true }));
+    assert.equal(trusted.results[0].outcome, 'completed');
+    assert.deepEqual(await readdir(dir), ['a-1.bundle.json']);
+  } finally { await rm(dir, { recursive: true, force: true }); }
+});
+
+test('campaign CLI exits 2 when an attempt is errored or unaccounted and pins head and entry count', async () => {
+  const dir = await scratch();
+  try {
+    const keyFile = join(dir, 'issuer.pem'), manifestFile = join(dir, 'manifest.json'), policyFile = join(dir, 'policy.json'), ledgerFile = join(dir, 'ledger.json'), priv = join(dir, 'private');
+    await writeFile(keyFile, issuer.privateKey.export({ format: 'pem', type: 'pkcs8' }), { mode: 0o600 });
+    await writeFile(manifestFile, JSON.stringify(manifest)); await writeFile(policyFile, JSON.stringify(capturePolicy));
+    const dangling = appendEntry({ ledger: ledgerFor(['a-001', 'a-002']), privateKey: issuer.privateKey, entry: { kind: 'started', attemptId: 'a-001', at: T0 } });
+    await writeFile(ledgerFile, JSON.stringify(dangling));
+    const args = ['--ledger', ledgerFile, '--manifest', manifestFile, '--private-dir', priv, '--adapter', 'reference', '--policy', policyFile, '--key', keyFile, '--now', T1];
+    const ran = cli(['run', ...args]);
+    assert.equal(ran.status, 2, ran.stderr);
+    assert.equal(JSON.parse(ran.stdout).summary.unaccounted, 1);
+    const summary = JSON.parse(cli(['summary', '--ledger', ledgerFile, '--policy', policyFile]).stdout);
+    assert.match(summary.headDigest, /^[a-f0-9]{64}$/); assert.equal(summary.entryCount, 5);
+    assert.equal(cli(['summary', '--ledger', ledgerFile, '--policy', policyFile, '--expect-head', summary.headDigest, '--expect-entries', '5']).status, 0);
+    const wrongHead = cli(['summary', '--ledger', ledgerFile, '--policy', policyFile, '--expect-head', hashBytes('x')]);
+    assert.notEqual(wrongHead.status, 0); assert.match(wrongHead.stderr, /head-mismatch/);
+    const wrongCount = cli(['verify-ledger', '--ledger', ledgerFile, '--policy', policyFile, '--expect-entries', '2']);
+    assert.equal(wrongCount.status, 1); assert.ok(JSON.parse(wrongCount.stdout).problems.some(p => p.code === 'entry-count-mismatch'));
+    const bare = cli(['verify-ledger', '--ledger', ledgerFile]);
+    assert.equal(bare.status, 1); assert.ok(JSON.parse(bare.stdout).problems.some(p => p.code === 'policy-required'));
+    const trusted = cli(['verify-ledger', '--ledger', ledgerFile, '--trust-plan-signer', 'true']);
+    assert.equal(trusted.status, 0); assert.equal(JSON.parse(trusted.stdout).signerTrust, 'plan-signer-unverified');
+  } finally { await rm(dir, { recursive: true, force: true }); }
 });
