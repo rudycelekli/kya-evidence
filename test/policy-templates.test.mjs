@@ -192,10 +192,38 @@ test('a profile missing the template checks or an existing output file is refuse
   assert.equal(keyId(indPem).length, 64);
 });
 
+test('a profile other than the frozen core profile is refused without allow-custom-profile', () => {
+  // The four checks the strictest mandatory minimums need would still leave a smaller denominator.
+  const subset = put('subset.json', { ...CORE, checks: CORE.checks.filter(c => ['security.secrets', 'security.injection', 'authority.refusal', 'accountability.tamper'].includes(c.id)) });
+  const reweighted = put('reweighted.json', { ...CORE, checks: CORE.checks.map(c => (c.id === 'operations.budget' ? { ...c, weight: 50 } : c)) });
+  for (const f of [subset, reweighted]) {
+    const out = path('o.json'), p = run(['--template', 'read-only-assistant', '--profile', f, '--trust-key', 'self:' + selfPub, '--out', out]);
+    assert.equal(p.status, 1); assert.match(p.stderr, /allow-custom-profile/); assert.equal(existsSync(out), false);
+  }
+});
+
+test('allow-custom-profile generates a policy with a prominent warning and a marked id', () => {
+  const reweighted = put('reweighted2.json', { ...CORE, checks: CORE.checks.map(c => (c.id === 'operations.budget' ? { ...c, weight: 50 } : c)) });
+  const out = path('o.json'), p = run(['--template', 'read-only-assistant', '--profile', reweighted, '--trust-key', 'self:' + selfPub, '--allow-custom-profile', '--out', out]);
+  assert.equal(p.status, 0, p.stderr);
+  const s = JSON.parse(p.stdout), policy = JSON.parse(readFileSync(out, 'utf8'));
+  assert.equal(s.customProfile, true); assert.match(s.warnings[0], /CUSTOM PROFILE/); assert.equal(policy.id, 'template-read-only-assistant-custom-profile');
+  assert.equal(policy.profileDigest, digest(JSON.parse(readFileSync(reweighted, 'utf8'))));
+  assert.equal(JSON.parse(run(['--template', 'read-only-assistant', '--profile', profileFile, '--trust-key', 'self:' + selfPub, '--out', path('c.json')]).stdout).customProfile, false);
+  const missing = put('missing.json', { ...CORE, checks: CORE.checks.slice(0, 3) });
+  assert.equal(run(['--template', 'read-only-assistant', '--profile', missing, '--trust-key', 'self:' + selfPub, '--allow-custom-profile', '--out', path('d.json')]).status, 1);
+});
+
 test('the template documentation states these are starting points and no template makes an agent safe', () => {
   const doc = readFileSync(join(root, 'docs/POLICY-TEMPLATES.md'), 'utf8');
   assert.match(doc, /starting points/i); assert.match(doc, /not validated thresholds/i); assert.match(doc, /no template makes an agent safe/i);
   for (const t of TEMPLATES) assert.ok(doc.includes('`' + t + '`'));
   const gh = readFileSync(join(root, 'docs/GITHUB-ACTION.md'), 'utf8');
   assert.match(gh, /does not prove/i); assert.match(gh, /exit code 2/i);
+  assert.match(gh, /base branch or a protected path/i); assert.match(gh, /never from the code under test/i); assert.match(gh, /--expect-policy-digest/); assert.match(gh, /--allow-fixture/);
+  const wf = readFileSync(join(root, 'docs/examples/kya-check.workflow.yml'), 'utf8');
+  assert.match(wf, /expect-policy-digest/); assert.match(wf, /expect-evaluator-digest/); assert.match(wf, /base/i); assert.equal(/ref: \$\{\{ github\.head_ref/.test(wf), false);
+  const action = readFileSync(join(root, 'action/action.yml'), 'utf8');
+  assert.match(action, /actions\/setup-node@[0-9a-f]{40} # v4/); for (const k of ['allow-fixture', 'expect-policy-digest', 'expect-evaluator-digest']) assert.ok(action.includes(k + ':'));
+  assert.match(doc, /allow-custom-profile/);
 });

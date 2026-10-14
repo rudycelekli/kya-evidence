@@ -107,5 +107,8 @@ Each requirement is traced to at least one test that must exist exactly once; th
 | KYA-VCB-012 | MUST | Raw Ed25519 public keys MUST be rejected when non-canonical, off the curve or of small order, wherever a did:key or JWS verification key is admitted, so an identity-key forgery MUST NOT verify. | `vc-bridge.test.mjs` |
 | KYA-VCB-013 | MUST | A status list MUST carry validUntil, an expired or no-expiry list MUST be refused and reported distinctly, and revocation mapping MUST validate its policy and ledger and MUST NOT treat a junk policy as an empty revocation set. | `vc-bridge.test.mjs` |
 | KYA-VCB-014 | MUST | When the source report is supplied, verification MUST compare the credential to it field by field and MUST report any difference, and without the report the result MUST NOT claim more than internal consistency. | `vc-bridge.test.mjs` |
+| KYA-ACT-008 | MUST | The CI gate MUST report a result as reliable only for runtime evidence unless fixture evidence is explicitly allowed, MUST name the reason code when it withholds reliability, and MUST NOT treat declaration evidence as reliable under any option. | `kya-check.test.mjs` |
+| KYA-ACT-009 | MUST | The CI gate MUST refuse with a named error, before printing any result, when a supplied policy or evaluator digest differs from an expected pinned digest. | `kya-check.test.mjs` |
+| KYA-ACT-010 | MUST NOT | The CI gate MUST NOT cut a JSON output value mid-string; an oversized summary MUST be replaced by a compact valid object marked truncated. | `kya-check.test.mjs` |
 
-Registry digest: `b9dfc7cbac0dd3f359c19104f46c2466e322d151be3ed54030e21ea72caed560`
+Registry digest: `80c98f91dce634485a7714706b658f9a23d5c743016a56125af012d5df0eea7c`

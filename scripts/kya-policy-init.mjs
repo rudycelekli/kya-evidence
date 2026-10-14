@@ -5,13 +5,14 @@ import { readFileSync, lstatSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { digest, keyId, parseJson, validatePolicy, validateProfile } from '../src/index.mjs';
+import { CORE_PROFILE } from '../src/conformance/index.mjs';
 
 const HELP = `kya-policy-init: generate a KYA policy from a template
 
   kya-policy-init --template code-agent|agentic-payments|read-only-assistant --profile FILE
                   --trust-key self|independent:PUBLIC_PEM [--trust-key ...] --out FILE
                   [--scope-id ID] [--id POLICY_ID] [--require-principal-binding]
-                  [--mandatory-minimum CHECK:pass|independent-pass ...] [--max-assessment-age-seconds N]
+                  [--allow-custom-profile] [--mandatory-minimum CHECK:pass|independent-pass ...] [--max-assessment-age-seconds N]
 
 Options can only tighten a template. Edit the JSON by hand if you need a looser policy, and own that choice.
 Templates are starting points, not validated thresholds. No template makes an agent safe.
@@ -21,7 +22,7 @@ const DEFAULT_SCOPE = 'local-readonly';
 const LEVEL_RANK = { pass: 1, 'independent-pass': 2 };
 const REPEATABLE = ['trust-key', 'mandatory-minimum'];
 const VALUE_FLAGS = ['template', 'profile', 'out', 'scope-id', 'id', 'max-assessment-age-seconds', ...REPEATABLE];
-const BOOLEAN_FLAGS = ['require-principal-binding'];
+const BOOLEAN_FLAGS = ['require-principal-binding', 'allow-custom-profile'];
 const MAX_FILE = 1_048_576;
 
 class UsageError extends Error {}
@@ -82,6 +83,9 @@ export function buildPolicy(flags) {
   for (const k of ['template', 'profile', 'out']) if (!flags[k]) usage(`Missing --${k}`);
   const template = loadTemplate(flags.template);
   const profile = validateProfile(parseJson(readFile(resolve(flags.profile), 'Profile')));
+  // A smaller or reweighted profile shrinks the denominator, so thresholds would mean something weaker.
+  const customProfile = digest(profile) !== digest(CORE_PROFILE);
+  if (customProfile && flags['allow-custom-profile'] !== true) usage('Profile is not the frozen core profile (kya-core 1.0.0); thresholds are calibrated against its denominator. Pass --allow-custom-profile to accept a different profile at your own risk');
   const checkIds = new Set(profile.checks.map(c => c.id));
   const trustedKeys = flags['trust-key'].map(parseTrustKey).sort((a, b) => (a.id < b.id ? -1 : 1));
   if (!trustedKeys.length) usage('At least one --trust-key is required; a policy with no trust anchors accepts no evidence');
@@ -104,26 +108,27 @@ export function buildPolicy(flags) {
     maxAssessmentAge = Number(v);
   }
   const policy = {
-    schema: 'kya.policy/v1', id: flags.id ?? `template-${template.id}`, profileDigest: digest(profile), scopeId: flags['scope-id'] ?? DEFAULT_SCOPE,
+    schema: 'kya.policy/v1', id: flags.id ?? `template-${template.id}${customProfile ? '-custom-profile' : ''}`, profileDigest: digest(profile), scopeId: flags['scope-id'] ?? DEFAULT_SCOPE,
     minCoverage: base.minCoverage, minScore: base.minScore, minIndependentCoverage: base.minIndependentCoverage, allowedSources: [...base.allowedSources],
     maxEvidenceAgeSeconds: base.maxEvidenceAgeSeconds, maxAssessmentAgeSeconds: maxAssessmentAge, requirePrincipalBinding: base.requirePrincipalBinding || flags['require-principal-binding'] === true,
     mandatoryMinimums: [...minimums].map(([checkId, minimum]) => ({ checkId, minimum })).sort((a, b) => (a.checkId < b.checkId ? -1 : 1)),
     trustedKeys, revokedKeyIds: [], revokedEvidenceIds: [], revokedSubjectDigests: [],
   };
   try { validatePolicy(policy); } catch (e) { usage('Generated policy is invalid: ' + clean(e.message)); }
-  return { policy, template, profile };
+  return { policy, template, profile, customProfile };
 }
 
 export function main(argv = process.argv.slice(2)) {
   try {
     const flags = parseArgs(argv);
     if (flags.help) { process.stdout.write(HELP); return 0; }
-    const { policy, template, profile } = buildPolicy(flags);
+    const { policy, template, profile, customProfile } = buildPolicy(flags);
     try { writeFileSync(resolve(flags.out), JSON.stringify(policy, null, 2) + '\n', { flag: 'wx', mode: 0o644 }); } catch (e) { usage('Cannot write --out (it must not already exist): ' + clean(e.code ?? e.message, 40)); }
     process.stdout.write(JSON.stringify({
       out: resolve(flags.out), template: template.id, policyId: policy.id, policyDigest: digest(policy), profileDigest: digest(profile), scopeId: policy.scopeId,
       trustedKeys: policy.trustedKeys.map(k => ({ id: k.id, role: k.role })), notValidated: true,
-      warnings: ['Template thresholds are starting points, not validated thresholds', 'No template makes an agent safe; a qualified result is not an authorization grant', 'Only runtime evidence can count under this policy'],
+      customProfile,
+      warnings: [...(customProfile ? ['CUSTOM PROFILE: this is not the frozen kya-core profile, so the template thresholds do not carry their documented meaning; review every threshold and minimum yourself'] : []), 'Template thresholds are starting points, not validated thresholds', 'No template makes an agent safe; a qualified result is not an authorization grant', 'Only runtime evidence can count under this policy'],
     }, null, 2) + '\n');
     return 0;
   } catch (e) {

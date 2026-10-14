@@ -43,6 +43,18 @@ inputs:
     description: "unreliable (default) fails unless the result is qualified and current. not-qualified ignores currency triggers. never reports without failing."
     required: false
     default: unreliable
+  allow-fixture:
+    description: "Set to true to let fixture or mixed evidence count as reliable. Default false: only runtime evidence is reliable. Never use for a real decision."
+    required: false
+    default: 'false'
+  expect-policy-digest:
+    description: SHA-256 digest the policy must have. Take it from the base branch or a protected path, never from the code under test. A mismatch is an input error (exit 1).
+    required: false
+    default: ''
+  expect-evaluator-digest:
+    description: SHA-256 digest the evaluator must have. Same trust rule as expect-policy-digest.
+    required: false
+    default: ''
   node-version:
     description: Node.js version for actions/setup-node. KYA Evidence needs 22 or later.
     required: false
@@ -83,7 +95,9 @@ outputs:
 runs:
   using: composite
   steps:
-    - uses: actions/setup-node@v4
+    # Pinned to the commit the v4 tag pointed at on 2026-10-14 (gh api repos/actions/setup-node/git/ref/tags/v4).
+    # Re-resolve and review before bumping.
+    - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
       with:
         node-version: ${{ inputs.node-version }}
     - id: check
@@ -101,6 +115,9 @@ runs:
         KYA_IN_INCIDENTS: ${{ inputs.incidents }}
         KYA_IN_NOW: ${{ inputs.now }}
         KYA_IN_FAIL_ON: ${{ inputs.fail-on }}
+        KYA_IN_ALLOW_FIXTURE: ${{ inputs.allow-fixture }}
+        KYA_IN_EXPECT_POLICY: ${{ inputs.expect-policy-digest }}
+        KYA_IN_EXPECT_EVALUATOR: ${{ inputs.expect-evaluator-digest }}
       run: |
         args=()
         add() { if [ -n "$2" ]; then args+=("$1" "$2"); fi; }
@@ -114,4 +131,7 @@ runs:
         add --incidents "$KYA_IN_INCIDENTS"
         add --now "$KYA_IN_NOW"
         add --fail-on "$KYA_IN_FAIL_ON"
+        add --expect-policy-digest "$KYA_IN_EXPECT_POLICY"
+        add --expect-evaluator-digest "$KYA_IN_EXPECT_EVALUATOR"
+        if [ "$KYA_IN_ALLOW_FIXTURE" = "true" ]; then args+=(--allow-fixture); fi
         node "$KYA_ACTION_PATH/../scripts/kya-check.mjs" "${args[@]}"
