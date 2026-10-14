@@ -25,7 +25,7 @@ const mutants=[
   ['malformed validity accepted',"insist(timestamp(assessment.validUntil,'Assessment validity') >= timestamp(assessment.assessedAt,'Assessment time'),'Assessment validity precedes its assessment time');","",'src/assessment/application/currency.mjs'],
   ['future resolution honoured',"if (e.future) { ignored.push({id:e.id,reason:'Incident is dated in the future'}); continue; }","",'src/assessment/application/currency.mjs'],
   ['envelope dedupe removed',"if (seen.has(envelopeDigest)) continue;","",'src/assessment/application/currency.mjs'],
-  ['ambiguous-reference gate removed',"else if (targets.length>1) ignored.push","else if (false) ignored.push",'src/assessment/application/currency.mjs'],
+  ['ambiguous-reference gate removed',"if ((counts.get(e.refId)??0)>1) ignored.push","if (false) ignored.push",'src/assessment/application/currency.mjs'],
   ['mandatory-minimum gate removal',"if (decision!=='revoked' && decision!=='expired') {\n    for (const m of policy.mandatoryMinimums","if (false) {\n    for (const m of policy.mandatoryMinimums"],
   ['mandatory-minimum unknown treated as met',"if (c.status==='pass' && (m.minimum==='pass'","if (c.status!=='fail' && (m.minimum==='pass'"],
   ['independent-pass downgraded to pass',"(m.minimum==='pass' || c.independence==='independent')","(true)"],
@@ -38,7 +38,8 @@ const mutants=[
   ['currency trigger code removed',"code:CURRENCY_CODES[id],","",'src/assessment/application/currency.mjs'],
   ['report exit-code check removed',"else if (found[0].status === 'skip' || run.error || (run.exitCode !== 0 && !run.tests.some(x => x.status === 'fail'))) unknown = true;","else if (found[0].status === 'skip') unknown = true;",'src/conformance-report/report.mjs'],
   ['blocker-code critical count cross-check removed',"insist(c.filter(x => x === 'CRITICAL_CHECK_FAILED').length === failedCritical, 'Invalid blocker codes: critical failure count does not match the report checks');","",'src/assessment/application/codes.mjs'],
-  ['unproven minimum named as failed',"else block('MANDATORY_MINIMUM_UNPROVEN',","else block('MANDATORY_MINIMUM_NOT_MET',",'src/assessment/application/assess.mjs']
+  ['unproven minimum named as failed',"else block('MANDATORY_MINIMUM_UNPROVEN',","else block('MANDATORY_MINIMUM_NOT_MET',",'src/assessment/application/assess.mjs'],
+  ['ambiguity judged only over live reports',"if ((counts.get(e.refId)??0)>1) ignored.push","if (targets.length>1) ignored.push",'src/assessment/application/currency.mjs']
 ];
 const results=[];
 function failedNames(output){return [...output.matchAll(/^not ok \d+ - (.+)$/gm)].map(m=>m[1]).slice(0,5);}

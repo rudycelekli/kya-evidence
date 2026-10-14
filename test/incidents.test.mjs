@@ -101,3 +101,25 @@ test('a resolution delivered twice still resolves, and a future-dated resolution
   assert.deepEqual(ids(checkCurrency(report,ctx([a,r,r]))),[]);
   assert.deepEqual(ids(checkCurrency(report,ctx([a,res2(inc,{reportedAt:'2026-10-14T00:00:00.000Z'})]))),['incident-open']);
 });
+
+test('ambiguity is judged over every eligible report so the result cannot flip as the clock passes', () => {
+  const { i, report, inc } = setup();
+  const reviewerKey = reviewer.privateKey;
+  const incidents = [
+    inc({ reportedAt: '2026-10-13T12:00:30.000Z' }, keys.privateKey),
+    inc({ id: 'res:1', kind: 'resolution', severity: 'low', refId: 'inc:1', reportedAt: '2026-10-13T12:10:00.000Z' }, reviewerKey),
+    inc({ severity: 'low', reportedAt: '2026-10-13T12:40:00.000Z', detailsDigest: hashBytes('dup') }, keys.privateKey)
+  ];
+  const at = now => checkCurrency(report, { manifest: i.manifest, policy: i.policy, now, incidents });
+  const before = at('2026-10-13T12:30:00.000Z'), after = at('2026-10-13T12:50:00.000Z');
+  for (const r of [before, after]) { assert.equal(r.current, false); assert.deepEqual(r.incidents.open, ['inc:1']); assert.deepEqual(r.incidents.resolved, []); }
+  assert.deepEqual(before.incidents.open, after.incidents.open);
+  assert(before.incidents.ignored.some(x => /ambiguous|conflict/i.test(x.reason)));
+});
+
+test('the ignored list is order independent so the whole currency result is stable under permutation', () => {
+  const { report, inc, ctx } = setup(), stranger2 = generateKeyPairSync('ed25519');
+  const incidents = [inc({}, stranger.privateKey), inc({ id: 'inc:2' }, stranger2.privateKey), inc({ subjectDigest: hashBytes('other') }), inc({ id: 'inc:3', severity: 'low' }, stranger.privateKey)];
+  const a = checkCurrency(report, ctx(incidents)), b = checkCurrency(report, ctx([...incidents].reverse()));
+  assert.equal(JSON.stringify(a), JSON.stringify(b));
+});

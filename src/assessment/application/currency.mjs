@@ -42,8 +42,10 @@ function evaluateIncidents(envelopes, assessment, policy, at) {
   for (const e of others) {
     if (e.future) { ignored.push({id:e.id,reason:'Incident is dated in the future'}); continue; }
     const targets=live.filter(r=>r.id===e.refId);
-    if (!targets.length) ignored.push({id:e.id,reason:'References unknown incident'});
-    else if (targets.length>1) ignored.push({id:e.id,reason:'Ambiguous reference: several reports share this ID'});
+    // Ambiguity is judged over every eligible report, not only the live ones, so a future-dated duplicate
+    // cannot make a reference look unique now and ambiguous later (the result must not flip with the clock).
+    if ((counts.get(e.refId)??0)>1) ignored.push({id:e.id,reason:'Ambiguous reference: several reports share this ID'});
+    else if (!targets.length) ignored.push({id:e.id,reason:'References unknown incident'});
     else if (e.kind==='appeal') appealed.add(targets[0].id);
     else if (e.role!=='independent') ignored.push({id:e.id,reason:'Resolution requires an independent trusted key'});
     else if (targets[0].keyId===e.keyId) ignored.push({id:e.id,reason:'Reporter cannot resolve its own report'});
@@ -53,7 +55,7 @@ function evaluateIncidents(envelopes, assessment, policy, at) {
   const blocking=live.filter(r=>BLOCKING.includes(r.severity)), isResolved=r=>resolved.has(r.keyId+'|'+r.id);
   const idsOf=list=>[...new Set(list.map(r=>r.id))].sort();
   const open=idsOf(blocking.filter(r=>!isResolved(r)));
-  return {considered:envelopes.length,open,resolved:idsOf(blocking.filter(isResolved)).filter(id=>!open.includes(id)),appealed:[...appealed].sort(),observed:idsOf(live.filter(r=>!BLOCKING.includes(r.severity))),ignored};
+  return {considered:envelopes.length,open,resolved:idsOf(blocking.filter(isResolved)).filter(id=>!open.includes(id)),appealed:[...appealed].sort(),observed:idsOf(live.filter(r=>!BLOCKING.includes(r.severity))),ignored:ignored.sort((x,y)=>(x.id??'')<(y.id??'')?-1:(x.id??'')>(y.id??'')?1:x.reason<y.reason?-1:x.reason>y.reason?1:0)};
 }
 
 export function checkCurrency(assessment, {manifest, policy, now, incidents = []} = {}) {

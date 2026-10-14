@@ -616,7 +616,7 @@
       "level": "MUST",
       "area": "incidents",
       "section": "Reports and viewers",
-      "statement": "Every distinct trusted report record MUST be retained; duplicate or conflicting IDs MUST fail closed (reports stay open, a resolution targets only an unambiguous reference), no key MUST be able to hide, downgrade or clear another record by reusing its ID, input order MUST NOT change the outcome, and an identical envelope delivered twice MUST NOT quarantine itself.",
+      "statement": "Every distinct trusted report record MUST be retained; duplicate or conflicting IDs MUST fail closed (reports stay open, a resolution targets only an unambiguous reference), no key MUST be able to hide, downgrade or clear another record by reusing its ID, input order MUST NOT change the outcome, and an identical envelope delivered twice MUST NOT quarantine itself; ambiguity MUST be judged over every eligible report so the result does not change as the clock passes without a new record.",
       "tests": [
         {
           "file": "test/incidents.test.mjs",
@@ -633,6 +633,14 @@
         {
           "file": "test/incidents.test.mjs",
           "title": "a resolution delivered twice still resolves, and a future-dated resolution never does"
+        },
+        {
+          "file": "test/incidents.test.mjs",
+          "title": "ambiguity is judged over every eligible report so the result cannot flip as the clock passes"
+        },
+        {
+          "file": "test/incidents.test.mjs",
+          "title": "the ignored list is order independent so the whole currency result is stable under permutation"
         }
       ]
     },
