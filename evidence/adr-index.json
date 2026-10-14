@@ -288,8 +288,20 @@
         "ADR-0019",
         "ADR-0020"
       ]
+    },
+    {
+      "id": "ADR-0024",
+      "title": "Governance charter, IPR, claims, versioning, extension registry and decision process",
+      "status": "Proposed",
+      "file": "docs/adr/0024-governance-charter-and-change-process.md",
+      "contentDigest": "3554141b38dac3c007a9ba590f6560ca5cb4a08472e6ea7d8e376dd64a0a45ff",
+      "related": [
+        "ADR-0003",
+        "ADR-0011",
+        "ADR-0021"
+      ]
     }
   ],
-  "digest": "6e8f7f155b1c847e266593c41c46faed090ecacee805d19f1c2f0e7bcb2bda7c",
+  "digest": "d8c1cad146ed7ff9254aeb74e915c64044a96f578f74cb8aa2b4ea0c6f4a43e7",
   "store": "portable local file; not a claim of AgentDB graph persistence"
 }

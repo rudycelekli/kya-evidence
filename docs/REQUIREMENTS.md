@@ -116,5 +116,8 @@ Each requirement is traced to at least one test that must exist exactly once; th
 | KYA-ACT-012 | MUST | With require-pins the gate MUST refuse with a named error before any output unless every applicable pin is supplied, and manifest and evidence under test MUST be accepted from separate paths than the policy and profile. | `kya-check.test.mjs` |
 | KYA-ACT-013 | MUST | Gate outputs and the truncated summary MUST keep the evidence mode, the allow-fixture flag, the pins, the decision and capped blocker codes. | `kya-check.test.mjs` |
 | KYA-ACT-014 | MUST | The gate MUST flag a policy that is not built on the frozen core profile as a custom profile. | `kya-check.test.mjs` |
+| KYA-GOV-001 | MUST | Every governance document and the code of conduct MUST open with the draft-counsel notice until counsel has reviewed it and a body has adopted it. | `governance-docs.test.mjs` |
+| KYA-GOV-002 | MUST | CONTRIBUTING MUST state that each proposed commit carries a Developer Certificate of Origin sign-off, and a proposal without that sign-off MUST NOT be merged. | `governance-docs.test.mjs` |
+| KYA-GOV-003 | MUST | Every ADR MUST carry a Status line and the five required sections Context, Decision, Alternatives, Consequences and Validation. | `governance-docs.test.mjs` |
 
-Registry digest: `ce556b7b23adcf64b4c2546858e499afb7a2a326fdf47b709e0df471e48c9d77`
+Registry digest: `88c0916183466c080f9a41395c26c2fc511d15959734f25dbb68c97c98a6be1a`
