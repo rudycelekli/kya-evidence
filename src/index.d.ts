@@ -22,17 +22,17 @@ export function signEvidence(payload:Evidence,privateKey:unknown):Envelope;
 export function verifyEvidence(envelope:unknown):{payload:Evidence;keyId:string;envelopeDigest:string};
 export function verifyArtifact(payload:Evidence,bytes:string|Uint8Array):boolean;
 export function assess(input:{manifest:ReadonlyInput<Manifest>;profile:ReadonlyInput<Profile>;evidence:ReadonlyInput<Envelope[]>;policy:ReadonlyInput<Policy>;evaluatorDigest:string;now?:string}):Assessment;
-export function verifyAssessment(report:Assessment):{integrity:true;reportDigest:string;authenticated:false;warning:string};
-export function compareAssessments(left:Assessment,right:Assessment):{schema:'kya.comparison/v1';left:string;right:string;scoreDelta:number;decisionChanged:boolean;measurement:string};
+export function verifyAssessment(report:ReadonlyInput<Assessment>):{integrity:true;reportDigest:string;authenticated:false;warning:string};
+export function compareAssessments(left:ReadonlyInput<Assessment>,right:ReadonlyInput<Assessment>):{schema:'kya.comparison/v1';left:string;right:string;scoreDelta:number;decisionChanged:boolean;measurement:string};
 export function importDeclarations(format:'open-kya-alpha'|'a2a-1',value:unknown):Record<string,unknown>;
 export const DIMENSIONS:readonly Dimension[];
 export const SOURCES:readonly Source[];
 export interface SourceArtifact {id:string;digest:string;kind:'original'|'derived'|'hypothesis';rights:'private'|'redistributable'}
 export interface FrozenInputs {manifest:Manifest;profile:Profile;policy:Policy;evidence:Envelope[];evaluatorDigest:string;now:string}
 export interface Universe {schema:'kya.universe/v1';assessorSourceDigest:string;parentDigest:string|null;hypothesis:string|null;question:string;sourceArtifacts:SourceArtifact[];invalidates:string[];inputs:FrozenInputs;assessment:Assessment;limitations:string[];universeDigest:string}
-export function createUniverse(value:{inputs:FrozenInputs;question:string;sourceArtifacts?:SourceArtifact[];parentDigest?:string|null;hypothesis?:string|null;invalidates?:string[]}):Universe;
-export function verifyUniverse(universe:Universe):{integrity:true;replayMatched:true;universeDigest:string;assessorSourceDigest:string;authenticated:false};
-export function forkUniverse(parent:Universe,patch:Partial<FrozenInputs>&{hypothesis:string;question?:string;sourceArtifacts?:SourceArtifact[];invalidates?:string[]}):Universe;
-export function verifyUniverseGraph(universes:Universe[]):{nodes:number;roots:string[];declaredInvalidations:string[];affectedDescendants:string[];integrity:true;replayMatched:true;authenticated:false;limitation:string};
-export function compareUniverses(left:Universe,right:Universe):Record<string,unknown>;
+export function createUniverse(value:ReadonlyInput<{inputs:FrozenInputs;question:string;sourceArtifacts?:SourceArtifact[];parentDigest?:string|null;hypothesis?:string|null;invalidates?:string[]}>):Universe;
+export function verifyUniverse(universe:ReadonlyInput<Universe>):{integrity:true;replayMatched:true;universeDigest:string;assessorSourceDigest:string;authenticated:false};
+export function forkUniverse(parent:ReadonlyInput<Universe>,patch:ReadonlyInput<Partial<FrozenInputs>&{hypothesis:string;question?:string;sourceArtifacts?:SourceArtifact[];invalidates?:string[]}>):Universe;
+export function verifyUniverseGraph(universes:ReadonlyInput<Universe[]>):{nodes:number;roots:string[];declaredInvalidations:string[];affectedDescendants:string[];integrity:true;replayMatched:true;authenticated:false;limitation:string};
+export function compareUniverses(left:ReadonlyInput<Universe>,right:ReadonlyInput<Universe>):Record<string,unknown>;
 export const ASSESSOR_SOURCE_DIGEST:string;
