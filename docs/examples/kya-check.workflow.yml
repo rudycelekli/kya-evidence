@@ -1,0 +1,59 @@
+# Example workflow: gate a pull request on a KYA policy without letting the pull request rewrite the gate.
+# Copy to .github/workflows/kya-check.yml. OWNER/kya-evidence and COMMIT_SHA are placeholders: pin a full commit SHA you reviewed.
+#
+# Two trust zones, two checkouts:
+#   base/  the BASE commit (the protected branch). Holds the policy and the profile. The evaluator and the expected
+#          digests come from repository variables. None of these can be edited by the pull request being judged.
+#   head/  the pull request HEAD commit. Holds the manifest and the signed evidence UNDER TEST. This is the thing
+#          being assessed, so it must come from the pull request; if it came from base, a change to the agent would never be judged.
+# The pull request code is read as data only and is never executed by this job.
+#
+# Setup, reviewed like branch protection:
+#   base:kya-gate/policy.json and base:kya-gate/profile.json  (kya-policy-init output; changes need review)
+#   head:kya-gate/manifest.json and head:kya-gate/evidence.json  (the agent version and its signed runtime evidence)
+#   repository variables KYA_POLICY_DIGEST, KYA_EVALUATOR_DIGEST and KYA_EVALUATOR (the digest the evidence binds to)
+# If a variable is unset the check fails with PINS_REQUIRED instead of running unpinned.
+name: kya-check
+on:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  kya-check:
+    runs-on: ubuntu-latest
+    steps:
+      # actions/checkout pinned to the commit the v4 tag pointed at on 2026-10-14 (gh api repos/actions/checkout/git/ref/tags/v4).
+      # Re-resolve and review before bumping.
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+          path: base
+          persist-credentials: false
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          path: head
+          persist-credentials: false
+      - name: Fix the clock once so the result is reproducible and recorded
+        run: echo "KYA_NOW=$(date -u +%Y-%m-%dT%H:%M:%S.000Z)" >> "$GITHUB_ENV"
+      - name: KYA check
+        id: kya
+        uses: OWNER/kya-evidence/action@COMMIT_SHA
+        with:
+          # Protected inputs: from the base commit and repository variables.
+          policy: base/kya-gate/policy.json
+          profile: base/kya-gate/profile.json
+          evaluator: ${{ vars.KYA_EVALUATOR }}
+          expect-policy-digest: ${{ vars.KYA_POLICY_DIGEST }}
+          expect-evaluator-digest: ${{ vars.KYA_EVALUATOR_DIGEST }}
+          require-pins: 'true'
+          # Inputs under test: from the pull request head.
+          manifest: head/kya-gate/manifest.json
+          evidence: head/kya-gate/evidence.json
+          now: ${{ env.KYA_NOW }}
+          fail-on: unreliable
+          # allow-fixture: 'true'   # only for demos; fixture evidence is not reliable by default
+      # Without the action, check out kya-evidence next to your code and run
+      #   node kya-evidence/scripts/kya-check.mjs --policy base/kya-gate/policy.json --profile base/kya-gate/profile.json \
+      #     --manifest head/kya-gate/manifest.json --evidence head/kya-gate/evidence.json --evaluator "$KYA_EVALUATOR" \
+      #     --expect-policy-digest "$KYA_POLICY_DIGEST" --expect-evaluator-digest "$KYA_EVALUATOR_DIGEST" --require-pins --now "$KYA_NOW"

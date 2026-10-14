@@ -83,6 +83,15 @@ node bin/kya.mjs currency \
 
 A fired trigger (`subject-changed`, `policy-changed`, `subject-revoked`, `assessment-expired`, `assessment-aged`, `clock-regression` or `incident-open`) returns `action: reassess` and exit code 2. `reliable` is true only for a qualified decision with no trigger. Incident records (`kya.incident/v1`) are Ed25519-signed under their own prefix, and only keys listed as trust anchors in the policy count. No CLI command creates them yet; the library function `signIncident` does. A policy with `requirePrincipalBinding: true` withholds qualification from a manifest without a declared `principal.accountableParty`, which is a pseudonymous `{kind, ref}` and is not verified. Step-by-step commands with real output are in the [relying-party quickstart](docs/QUICKSTART-RELYING-PARTY.md).
 
+## Adoption tooling
+
+- **Gate a pipeline on a policy:** `kya check` (and a composite GitHub Action in [`action/`](action/README.md)) turns an assessment and currency check into exit codes, annotations and a step summary. See [GITHUB-ACTION.md](docs/GITHUB-ACTION.md). The action has not yet run on a real GitHub runner.
+- **Start from a policy template:** `kya policy-init` builds a conservative policy for code agents, agentic payments or read-only assistants. Templates are starting points with unvalidated thresholds and make no agent safe. See [POLICY-TEMPLATES.md](docs/POLICY-TEMPLATES.md).
+- **Run a frozen campaign:** `kya campaign` records a signed, append-only planned-attempt ledger before any attempt runs, so a verifier who knows the intended ledger length or head digest sees unaccounted attempts in the denominator (a truncated or forked ledger is undetectable without an externally pinned head) ([ADR-0021](docs/adr/0021-capture-issuer-role-and-campaign-ledger.md)). It implements only the ledger slice of [ADR-0017](docs/adr/0017-measured-signed-capture-attestation.md); measured capture is not built.
+- **Carry results in W3C credentials:** `kya vc` exports an assessment as a VC 2.0 `vc+jwt` with Bitstring Status List revocation. It proves key possession, not truthful execution ([VC-BRIDGE.md](docs/VC-BRIDGE.md)).
+- **Beyond the 18 public checks:** [scenario suites](docs/SCENARIO-SUITES.md) with synthetic incident reconstructions and commit-reveal holdouts, outside the pinned core evaluator.
+- **Plan:** [WORLD-CLASS-PLAN.md](docs/WORLD-CLASS-PLAN.md) and [STANDARDIZATION-STRATEGY.md](docs/STANDARDIZATION-STRATEGY.md).
+
 ## Evidence before reputation
 
 <img src="assets/evidence-flow.svg" alt="Bind the exact subject, verify signed evidence, enforce your trust policy, explain a scoped decision." width="1200" />

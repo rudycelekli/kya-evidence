@@ -1,0 +1,161 @@
+name: KYA check
+description: Gate a workflow on a KYA Evidence policy. Local policy check only; it is not an authorization grant.
+author: KYA Evidence contributors
+
+inputs:
+  assessment-inputs:
+    description: JSON file holding manifest, profile, policy, evidence and evaluatorDigest (optionally now). Use this or the individual file inputs.
+    required: false
+    default: ''
+  manifest:
+    description: Path to the agent manifest JSON.
+    required: false
+    default: ''
+  profile:
+    description: Path to the frozen profile JSON (assess mode).
+    required: false
+    default: ''
+  policy:
+    description: Path to the relying-party policy JSON.
+    required: false
+    default: ''
+  evidence:
+    description: Path to the signed evidence bundle JSON (assess mode).
+    required: false
+    default: ''
+  evaluator:
+    description: Evaluator digest the evidence must bind to (assess mode).
+    required: false
+    default: ''
+  assessment:
+    description: Path to an existing assessment JSON. Selects currency-only mode together with manifest and policy.
+    required: false
+    default: ''
+  incidents:
+    description: Path to signed incident records JSON (optional).
+    required: false
+    default: ''
+  now:
+    description: ISO UTC timestamp with milliseconds. When empty the system clock is read and the summary says so.
+    required: false
+    default: ''
+  fail-on:
+    description: "unreliable (default) fails unless the result is qualified and current. not-qualified ignores currency triggers. never reports without failing."
+    required: false
+    default: unreliable
+  allow-fixture:
+    description: "Set to true to let fixture or mixed evidence count as reliable. Default false: only runtime evidence is reliable. Never use for a real decision."
+    required: false
+    default: 'false'
+  expect-policy-digest:
+    description: SHA-256 digest the policy must have. Take it from the base branch or a protected path, never from the code under test. A mismatch is an input error (exit 1).
+    required: false
+    default: ''
+  expect-evaluator-digest:
+    description: SHA-256 digest the evaluator must have. Same trust rule as expect-policy-digest.
+    required: false
+    default: ''
+  expect-assessment-digest:
+    description: Currency-only mode. reportDigest the assessment file must have; a mismatch is an input error (exit 1, ASSESSMENT_DIGEST_MISMATCH). Take it from a trusted source.
+    required: false
+    default: ''
+  allow-unpinned-assessment:
+    description: "Currency-only mode. Set to true to accept an assessment file without a pinned digest. Default false: reliability is withheld (ASSESSMENT_NOT_PINNED) because the evidence mode is only as trustworthy as that file."
+    required: false
+    default: 'false'
+  require-pins:
+    description: "Default true: refuse (exit 1, PINS_REQUIRED) unless the policy and evaluator pins (and, in currency-only mode, the assessment pin) are supplied. Set to false only for local experiments."
+    required: false
+    default: 'true'
+  node-version:
+    description: Node.js version for actions/setup-node. KYA Evidence needs 22 or later.
+    required: false
+    default: '22'
+
+outputs:
+  decision:
+    description: qualified, insufficient-evidence, blocked, expired or revoked.
+    value: ${{ steps.check.outputs.decision }}
+  reliable:
+    description: "true only when the decision is qualified and no reassessment trigger fired."
+    value: ${{ steps.check.outputs.reliable }}
+  current:
+    description: "true when no reassessment trigger fired."
+    value: ${{ steps.check.outputs.current }}
+  evidence-mode:
+    description: "runtime, fixture, mixed or declaration: the evidence mode the result was computed on."
+    value: ${{ steps.check.outputs.evidence-mode }}
+  allow-fixture:
+    description: "true when fixture evidence was explicitly allowed to count as reliable."
+    value: ${{ steps.check.outputs.allow-fixture }}
+  score:
+    description: Earned score out of 1000.
+    value: ${{ steps.check.outputs.score }}
+  coverage:
+    description: Observed coverage ratio.
+    value: ${{ steps.check.outputs.coverage }}
+  blocker-codes:
+    description: Comma-separated blocker codes.
+    value: ${{ steps.check.outputs.blocker-codes }}
+  trigger-codes:
+    description: Comma-separated reassessment trigger codes.
+    value: ${{ steps.check.outputs.trigger-codes }}
+  exit-code:
+    description: The exit code the check produced (0 or 2).
+    value: ${{ steps.check.outputs.exit-code }}
+  clock-source:
+    description: "flag, inputs-file or system-clock."
+    value: ${{ steps.check.outputs.clock-source }}
+  summary-json:
+    description: The compact JSON summary on one line.
+    value: ${{ steps.check.outputs.summary-json }}
+
+runs:
+  using: composite
+  steps:
+    # Pinned to the commit the v4 tag pointed at on 2026-10-14 (gh api repos/actions/setup-node/git/ref/tags/v4).
+    # Re-resolve and review before bumping.
+    - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+      with:
+        node-version: ${{ inputs.node-version }}
+    - id: check
+      shell: bash
+      # Inputs reach the script through the environment, never by interpolation into the shell text.
+      env:
+        KYA_ACTION_PATH: ${{ github.action_path }}
+        KYA_IN_ASSESSMENT_INPUTS: ${{ inputs.assessment-inputs }}
+        KYA_IN_MANIFEST: ${{ inputs.manifest }}
+        KYA_IN_PROFILE: ${{ inputs.profile }}
+        KYA_IN_POLICY: ${{ inputs.policy }}
+        KYA_IN_EVIDENCE: ${{ inputs.evidence }}
+        KYA_IN_EVALUATOR: ${{ inputs.evaluator }}
+        KYA_IN_ASSESSMENT: ${{ inputs.assessment }}
+        KYA_IN_INCIDENTS: ${{ inputs.incidents }}
+        KYA_IN_NOW: ${{ inputs.now }}
+        KYA_IN_FAIL_ON: ${{ inputs.fail-on }}
+        KYA_IN_ALLOW_FIXTURE: ${{ inputs.allow-fixture }}
+        KYA_IN_EXPECT_POLICY: ${{ inputs.expect-policy-digest }}
+        KYA_IN_EXPECT_EVALUATOR: ${{ inputs.expect-evaluator-digest }}
+        KYA_IN_EXPECT_ASSESSMENT: ${{ inputs.expect-assessment-digest }}
+        KYA_IN_ALLOW_UNPINNED: ${{ inputs.allow-unpinned-assessment }}
+        KYA_IN_REQUIRE_PINS: ${{ inputs.require-pins }}
+      run: |
+        args=()
+        add() { if [ -n "$2" ]; then args+=("$1" "$2"); fi; }
+        add --assessment-inputs "$KYA_IN_ASSESSMENT_INPUTS"
+        add --manifest "$KYA_IN_MANIFEST"
+        add --profile "$KYA_IN_PROFILE"
+        add --policy "$KYA_IN_POLICY"
+        add --evidence "$KYA_IN_EVIDENCE"
+        add --evaluator "$KYA_IN_EVALUATOR"
+        add --assessment "$KYA_IN_ASSESSMENT"
+        add --incidents "$KYA_IN_INCIDENTS"
+        add --now "$KYA_IN_NOW"
+        add --fail-on "$KYA_IN_FAIL_ON"
+        add --expect-policy-digest "$KYA_IN_EXPECT_POLICY"
+        add --expect-evaluator-digest "$KYA_IN_EXPECT_EVALUATOR"
+        add --expect-assessment-digest "$KYA_IN_EXPECT_ASSESSMENT"
+        if [ "$KYA_IN_ALLOW_FIXTURE" = "true" ]; then args+=(--allow-fixture); fi
+        if [ "$KYA_IN_ALLOW_UNPINNED" = "true" ]; then args+=(--allow-unpinned-assessment); fi
+        if [ "$KYA_IN_REQUIRE_PINS" != "false" ]; then args+=(--require-pins); fi
+        node "$KYA_ACTION_PATH/../scripts/kya-check.mjs" "${args[@]}"

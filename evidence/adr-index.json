@@ -196,8 +196,9 @@
       "title": "Measured, signed capture attestation (`kya.capture/v1`)",
       "status": "Proposed",
       "file": "docs/adr/0017-measured-signed-capture-attestation.md",
-      "contentDigest": "51f2bc2a3393af6a23196db324fb117860f71959f7e9d11e8e725a78bc67b314",
+      "contentDigest": "5cabdec9626c23778e850192e6001ff288cd95910e299ce28b407cae361eb0c9",
       "related": [
+        "ADR-0021",
         "ADR-0003",
         "ADR-0004",
         "ADR-0009",
@@ -244,8 +245,51 @@
         "ADR-0014",
         "ADR-0017"
       ]
+    },
+    {
+      "id": "ADR-0021",
+      "title": "Capture-issuer role and signed campaign ledger",
+      "status": "Implemented",
+      "file": "docs/adr/0021-capture-issuer-role-and-campaign-ledger.md",
+      "contentDigest": "361a6acfc0671086d679444ccd1171afbefde8a402b0cca26c94f26006e24d5e",
+      "related": [
+        "ADR-0003",
+        "ADR-0004",
+        "ADR-0010",
+        "ADR-0014",
+        "ADR-0017",
+        "ADR-0019",
+        "ADR-0020"
+      ]
+    },
+    {
+      "id": "ADR-0022",
+      "title": "W3C VC 2.0 export bridge for assessment results",
+      "status": "Implemented",
+      "file": "docs/adr/0022-vc-export-bridge.md",
+      "contentDigest": "a3b604c9b49cd6ee99a341b6df5a2653f4758da543bb02d809dae856ae67773b",
+      "related": [
+        "ADR-0002",
+        "ADR-0003",
+        "ADR-0013",
+        "ADR-0016"
+      ]
+    },
+    {
+      "id": "ADR-0023",
+      "title": "Declarative scenario suites and commit-reveal holdouts",
+      "status": "Implemented",
+      "file": "docs/adr/0023-scenario-suites-and-holdout-commitments.md",
+      "contentDigest": "a971b008071294ec0d8a7a63a4d3c645a25d8cc23ca78d9da93aee737e573367",
+      "related": [
+        "ADR-0003",
+        "ADR-0010",
+        "ADR-0018",
+        "ADR-0019",
+        "ADR-0020"
+      ]
     }
   ],
-  "digest": "33ee47bb20c3cc76e14254dd20bc69271731369ca5ec1bd361016640fe26a4c2",
+  "digest": "6e8f7f155b1c847e266593c41c46faed090ecacee805d19f1c2f0e7bcb2bda7c",
   "store": "portable local file; not a claim of AgentDB graph persistence"
 }
