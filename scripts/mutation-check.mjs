@@ -55,7 +55,7 @@ const mutants=[
   ["private directory real-path check removed","insist(!inside(repo, join(real, ...rest)), 'Private directory must be outside the repository');","","src/campaign/application/runner.mjs"],
   ["pinned ledger head check removed","expectHead !== undefined && expectHead !== headDigest","false","src/campaign/domain/ledger.mjs"],
   ["duplicate evidence check removed","if (runIds.has(e.runId.toLowerCase()) || bundles.has(e.evidenceBundleDigest))","if (false)","src/campaign/domain/ledger.mjs"],
-  ["fixture evidence counted as reliable","if (mode === 'fixture') return allowFixture ? null : 'FIXTURE_EVIDENCE_NOT_RELIABLE';","if (mode === 'fixture') return null;","scripts/kya-check.mjs"],
+  ["fixture evidence counted as reliable","if (m === 'fixture') { if (!allowFixture) out.push('FIXTURE_EVIDENCE_NOT_RELIABLE'); }","if (m === 'fixture') { }","scripts/kya-check.mjs"],
   ["expired status list accepted","if (e.code === 'EXPIRED') fail('STATUS_LIST_EXPIRED'","if (false) fail('STATUS_LIST_EXPIRED'","src/vc-bridge/status.mjs"],
   ["unpinned assessment counted as reliable","if (mode === 'currency-only' && !pins.assessmentPinned && !allowUnpinned) out.push('ASSESSMENT_NOT_PINNED');","","scripts/kya-check.mjs"],
   ["assessment digest pin check removed","if (currencyOnly) checks.push(['expect-assessment-digest', input.assessment?.reportDigest, 'ASSESSMENT_DIGEST_MISMATCH', 'assessmentPinned', 'assessment']);","","scripts/kya-check.mjs"],
@@ -68,6 +68,8 @@ const results=[];
 function failedNames(output){return [...output.matchAll(/^not ok \d+ - (.+)$/gm)].map(m=>m[1]).slice(0,5);}
 function counts(output){const get=name=>Number(new RegExp(`^# ${name} (\\d+)$`,'m').exec(output)?.[1]??NaN);return{tests:get('tests'),pass:get('pass'),fail:get('fail'),cancelled:get('cancelled'),skipped:get('skipped')};}
 function runTests(dir){const p=spawnSync(process.execPath,['--test','--test-reporter=tap','test/assessment.test.mjs','test/incidents.test.mjs','test/refusal-codes.test.mjs','test/mandatory-minimums.test.mjs','test/conformance-report.test.mjs','test/campaign-ledger.test.mjs','test/campaign-runner.test.mjs','test/capture-issuer-scoring.test.mjs','test/vc-bridge.test.mjs','test/kya-check.test.mjs'],{cwd:dir,encoding:'utf8',timeout:90000,maxBuffer:200000});if(p.error||p.signal)throw Error('Mutation test execution failed');return{process:p,counts:counts(p.stdout)};}
+// Fail fast: report every drifted anchor before spending minutes on test runs.
+{const drift=[];for(const [name,from,,target=source]of mutants){const text=target===source?original:await readFile(join(root,target),'utf8');if(!text.includes(from))drift.push(name+' ('+target+')');}if(drift.length)throw Error('Mutation anchor drift in '+drift.length+' control(s): '+drift.join('; '));}
 for(const [name,from,to,target=source]of mutants){
   const base=target===source?original:await readFile(join(root,target),'utf8');
   if(!base.includes(from))throw Error('Mutation anchor drift: '+name);
