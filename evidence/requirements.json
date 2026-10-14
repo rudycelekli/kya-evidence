@@ -1883,6 +1883,79 @@
           "title": "kya revocation lists map to revoked ledger entries by subject digest and by evidence id"
         }
       ]
+    },
+    {
+      "id": "KYA-CMP-014",
+      "level": "MUST",
+      "area": "campaign",
+      "section": "Records and bindings",
+      "statement": "A campaign amendment (retry) MUST keep the original attempt's scenario set and seed, and completions MUST NOT reuse a run ID or an evidence bundle digest.",
+      "tests": [
+        {
+          "file": "test/campaign-ledger.test.mjs",
+          "title": "campaign amendment must keep the original scenario set and seed"
+        },
+        {
+          "file": "test/campaign-ledger.test.mjs",
+          "title": "campaign ledger rejects duplicate run IDs and evidence bundle digests across completions"
+        }
+      ]
+    },
+    {
+      "id": "KYA-CMP-015",
+      "level": "MUST",
+      "area": "campaign",
+      "section": "Records and bindings",
+      "statement": "Ledger verification and summary MUST report the head digest and entry count and MUST fail when a pinned expected head or entry count does not match; without an externally pinned head a rolled-back or forked ledger is undetectable and MUST NOT be described as detected.",
+      "tests": [
+        {
+          "file": "test/campaign-ledger.test.mjs",
+          "title": "campaign ledger head digest and entry count expose truncation when pinned"
+        }
+      ]
+    },
+    {
+      "id": "KYA-CMP-016",
+      "level": "MUST",
+      "area": "campaign",
+      "section": "Records and bindings",
+      "statement": "Ledger verification MUST require a capture-issuer policy or an explicit trust flag, MUST bind the supplied policy digest to the plan, and MUST report when the signer was not checked.",
+      "tests": [
+        {
+          "file": "test/campaign-ledger.test.mjs",
+          "title": "campaign verification requires a capture issuer policy or an explicit trust flag and binds the policy digest"
+        }
+      ]
+    },
+    {
+      "id": "KYA-CMP-017",
+      "level": "MUST",
+      "area": "campaign",
+      "section": "Records and bindings",
+      "statement": "The campaign runner MUST refuse a private directory reached through a symlink into the repository and MUST refuse a signer that is not a capture issuer under the supplied policy.",
+      "tests": [
+        {
+          "file": "test/campaign-runner.test.mjs",
+          "title": "campaign runner refuses a private directory reached through a symlink into the repository"
+        },
+        {
+          "file": "test/campaign-runner.test.mjs",
+          "title": "campaign runner refuses a signer that is not a capture issuer under the supplied policy"
+        }
+      ]
+    },
+    {
+      "id": "KYA-CMP-018",
+      "level": "MUST",
+      "area": "campaign",
+      "section": "Records and bindings",
+      "statement": "The campaign CLI MUST exit non-zero when an attempt ended errored or unaccounted, and MUST honour pinned head and entry-count expectations.",
+      "tests": [
+        {
+          "file": "test/campaign-runner.test.mjs",
+          "title": "campaign CLI exits 2 when an attempt is errored or unaccounted and pins head and entry count"
+        }
+      ]
     }
   ]
 }

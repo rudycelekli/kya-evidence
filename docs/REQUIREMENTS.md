@@ -99,5 +99,10 @@ Each requirement is traced to at least one test that must exist exactly once; th
 | KYA-VCB-009 | MUST | Status list decoding MUST bound decompressed size, MUST refuse lists shorter than the minimum of 131072 entries, and MUST refuse out-of-range indices, mismatched purposes and malformed entries. | `vc-bridge.test.mjs` |
 | KYA-VCB-010 | MUST | A status check MUST verify the list credential signature, issuer and validity window, MUST support revocation and suspension as separate purposes, and a revoked or suspended credential MUST fail verification when its list is supplied. | `vc-bridge.test.mjs` |
 | KYA-VCB-011 | MUST | Status index assignment MUST be deterministic and keyed by an issuer secret, MUST NOT take the subject digest as input, MUST NOT move an index already assigned, and policy revocation MUST map to the credential bits of the revoked subject digests and evidence IDs. | `vc-bridge.test.mjs` |
+| KYA-CMP-014 | MUST | A campaign amendment (retry) MUST keep the original attempt's scenario set and seed, and completions MUST NOT reuse a run ID or an evidence bundle digest. | `campaign-ledger.test.mjs` |
+| KYA-CMP-015 | MUST | Ledger verification and summary MUST report the head digest and entry count and MUST fail when a pinned expected head or entry count does not match; without an externally pinned head a rolled-back or forked ledger is undetectable and MUST NOT be described as detected. | `campaign-ledger.test.mjs` |
+| KYA-CMP-016 | MUST | Ledger verification MUST require a capture-issuer policy or an explicit trust flag, MUST bind the supplied policy digest to the plan, and MUST report when the signer was not checked. | `campaign-ledger.test.mjs` |
+| KYA-CMP-017 | MUST | The campaign runner MUST refuse a private directory reached through a symlink into the repository and MUST refuse a signer that is not a capture issuer under the supplied policy. | `campaign-runner.test.mjs` |
+| KYA-CMP-018 | MUST | The campaign CLI MUST exit non-zero when an attempt ended errored or unaccounted, and MUST honour pinned head and entry-count expectations. | `campaign-runner.test.mjs` |
 
-Registry digest: `790d99a92f25360a37bf64bf9509cae1fe885c32448b8358b6a05f15795f405a`
+Registry digest: `40bbad52443f06fe93d3b7a8ad86c6214b181adbf83dc3b5aedd2167589b2470`
