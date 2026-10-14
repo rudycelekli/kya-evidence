@@ -90,8 +90,33 @@
         "ADR-0002",
         "ADR-0006"
       ]
+    },
+    {
+      "id": "ADR-0009",
+      "title": "Bind diagnostic dossiers to replayed evidence and exact scope",
+      "status": "Implemented",
+      "file": "docs/adr/0009-evidence-bound-diagnostic-dossiers.md",
+      "contentDigest": "4ccd1072ea2443ecabc2faf8fcc73aa070063e6d3ec24dfc1ff113d2f428ec3f",
+      "related": [
+        "ADR-0002",
+        "ADR-0003",
+        "ADR-0005",
+        "ADR-0006"
+      ]
+    },
+    {
+      "id": "ADR-0010",
+      "title": "Ship fixed offline evaluation-control benchmarks",
+      "status": "Implemented",
+      "file": "docs/adr/0010-frozen-offline-control-benchmarks.md",
+      "contentDigest": "b0642599f4fc03c1c9756ff1cbf290b22b596cbd230f330f9eb75a053b8d2dc4",
+      "related": [
+        "ADR-0003",
+        "ADR-0004",
+        "ADR-0009"
+      ]
     }
   ],
-  "digest": "9125e1cb2746e40d93f28e0879c63f9985ad8be4cbb82db5f860551754fd56ef",
+  "digest": "8fefdaa20f9ed6ff2a1156c6c79d09fc59989f258d08d8e9a6306bd107584c8a",
   "store": "portable local file; not a claim of AgentDB graph persistence"
 }

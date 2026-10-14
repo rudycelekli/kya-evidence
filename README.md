@@ -4,11 +4,37 @@
 
 **A passport says what an agent is. Evidence shows what an exact agent system did, under an exact scope.**
 
-KYA Evidence is local-first open infrastructure for **Know Your Agent**: portable agent passports, signed check receipts, configurable relying-party policies and explainable assurance assessments. The vision is a neutral standard that people, organizations and independent assessors can implement, reproduce and contest. The current deliverable is a dependency-free Node.js reference implementation, **v0.1 alpha**, not an adopted industry standard.
+KYA Evidence is local-first open infrastructure for **Know Your Agent**: portable agent passports, signed check receipts, configurable relying-party policies and explainable assurance assessments. The vision is a neutral standard that people, organizations and independent assessors can implement, reproduce and contest. The current deliverable is a dependency-free Node.js reference implementation, **v0.1.0-alpha.3**, not an adopted industry standard.
 
 Every person may eventually delegate to an agent. Every relying party will need a better answer than “trust the prompt.” Start with an exact question: **does this configuration meet this party's policy for this scope, on this evidence?** Keep the result portable, the decision explainable and the correction process open.
 
 [Specification](docs/SPECIFICATION.md) · [Scoring](docs/SCORING.md) · [Research universes](docs/UNIVERSES.md) · [Byte interoperability](docs/INTEROPERABILITY.md) · [Threat model](docs/THREAT-MODEL.md) · [Adapters](docs/ADAPTERS.md) · [Roadmap](docs/ROADMAP.md) · [Contribute](CONTRIBUTING.md)
+
+## Read the full agent dossier
+
+A headline score is the beginning of the report. KYA now explains which responses replay, which predicates failed, which passing claims lack originals, and where the evidence cannot reach. The dossier keeps scope, source, coverage, reported cost, evaluator controls and unresolved questions together.
+
+![From scoped evidence to strengths, failures and persistent blind spots](assets/dossier-atlas.svg)
+
+```sh
+node bin/kya.mjs diagnose --mode reckless --with-benchmarks true --out .kya/dossier
+node bin/kya.mjs dossier-verify --dossier .kya/dossier/dossier.json \
+  --inputs .kya/dossier/inputs.json --observations .kya/dossier/observations.json \
+  --benchmarks .kya/dossier/benchmark-run.json
+```
+
+Open `dossier.html` for the offline, printable report or read `dossier.md`. This command runs a clearly labelled synthetic example with no model account or provider call. Use `kya dossier` with your own frozen, authorized inputs and originals for a real evidence dossier. [Report contract](docs/DOSSIERS.md).
+
+## Challenge the evaluator
+
+Sixteen frozen controls include four complete behavioral reference modes and twelve signed-receipt admission challenges. Cases preserve expected outcomes, missing measurements and every failure. Six real weakened assessor gates are detected by the unchanged control population. These checks establish local evaluator behavior; commercial agents need separate measured campaigns.
+
+```sh
+node bin/kya.mjs bench --out .kya/controls
+node bin/kya.mjs bench-verify .kya/controls/benchmark-run.json
+```
+
+[Benchmark catalog and observation boundaries](docs/BENCHMARKS.md) · [Code-grounded design study](docs/research/2026-10-14-evaluation-blueprint.md)
 
 ## Run from a checkout
 

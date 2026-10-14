@@ -13,6 +13,8 @@ The ambition is neutral infrastructure for portable passports, independently ass
 | 6 · Portable ecosystem | Credential/discovery bridges, relying-policy exchange, issuer accountability | Tested mappings, source-class preservation, correction/revocation/appeal interoperability |
 | 7 · Empirical assurance | Use-case-specific weights and thresholds | Prospective outcome validation, failure-severity calibration and fairness scrutiny |
 
+Alpha3 adds response-bound [diagnostic dossiers](DOSSIERS.md), [16 frozen public evaluator controls](BENCHMARKS.md) and exact full-scope comparison. The [source-grounded blueprint](research/2026-10-14-evaluation-blueprint.md) explains inherited mechanisms and remaining capture/calibration gaps. Local project-lane review is distinct from the external challenge required at stage 1. The Python byte checker is a team-built second implementation of a restricted byte/signature subset, distinct from independently governed full protocol implementations at stage 5.
+
 ## Bounded continuous cycle
 
 Define a hypothesis. Freeze baseline, evaluator and cases. Create an isolated candidate. Compare identical cases, quality, latency and total cost. Independently review. Record `ACCEPT`, `REJECT` or `INCONCLUSIVE`. Retain rollback. Human publication authority remains intact. Research failure is evidence; it should not be hidden behind improved demo numbers.

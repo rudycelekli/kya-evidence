@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 430" role="img" aria-labelledby="title desc">
+<title id="title">Know Your Agent: confidence with an evidence boundary</title>
+<desc id="desc">Illustrated flow from an exact scoped system through signed receipts and original-response replay into supported strengths, failed predicates and persistent blind spots. Signatures and response replay do not verify hidden effects, complete incident history or predictive safety. All labels remain visible with reduced motion.</desc>
+<style>.paper{fill:#f4f2eb}.ink{fill:#173c32}.muted{fill:#4f6659}.rule{fill:none;stroke:#aebfaf;stroke-width:1.5}.node{fill:#edf3e9;stroke:#9bb69f}.good{fill:#256c4b}.unknown{fill:#d8a23f}.label{font-family:Arial,Helvetica,sans-serif}.mono{font-family:ui-monospace,SFMono-Regular,Consolas,monospace}.signal{animation:passage 7s cubic-bezier(.22,1,.36,1) infinite;transform-box:fill-box;transform-origin:center}.limit{stroke-dasharray:5 6}@keyframes passage{0%,10%{transform:translateX(0);opacity:0}20%{opacity:1}70%{transform:translateX(448px);opacity:1}85%,100%{transform:translateX(448px);opacity:0}}@media(prefers-reduced-motion:reduce){.signal{animation:none;display:none}}@media(prefers-color-scheme:dark){.paper{fill:#173c32}.ink{fill:#eef4e8}.muted{fill:#bfd1c2}.node{fill:#224a3a;stroke:#73957b}.rule{stroke:#799584}.good{fill:#a6d1a4}.unknown{fill:#eac274}}</style>
+<rect class="paper" width="1200" height="430" rx="12"/>
+<text class="mono muted" x="40" y="38" font-size="12" letter-spacing="2">ILLUSTRATED EVALUATION FLOW / NO LIVE STATUS</text>
+<text class="label ink" x="40" y="87" font-size="36" font-weight="700">Know what your agent can demonstrate.</text>
+<text class="label muted" x="40" y="116" font-size="17">A stronger report preserves the boundary between proof, claims and unknowns.</text>
+<path class="rule" d="M40 140H1160M226 219H700M700 219H770M770 219V181H805M770 219H805M770 219V263H805"/>
+<rect class="node" x="40" y="171" width="186" height="96" rx="4"/>
+<text class="mono ink" x="57" y="199" font-size="13">01 / EXACT SCOPE</text><text class="label muted" x="57" y="226" font-size="14">Agent + configuration</text><text class="label muted" x="57" y="248" font-size="14">Purpose + permissions</text>
+<rect class="node" x="285" y="171" width="174" height="96" rx="4"/>
+<text class="mono ink" x="301" y="199" font-size="13">02 / RECEIPTS</text><text class="label muted" x="301" y="226" font-size="14">Signature + trust policy</text><text class="label muted" x="301" y="248" font-size="14">Complete check set</text>
+<rect class="node" x="518" y="171" width="184" height="96" rx="4"/>
+<text class="mono ink" x="534" y="199" font-size="13">03 / REPLAY</text><text class="label muted" x="534" y="226" font-size="14">Original bytes + bindings</text><text class="label muted" x="534" y="248" font-size="14">Frozen response oracle</text>
+<circle class="good signal" cx="240" cy="219" r="5"/>
+<circle class="good" cx="819" cy="181" r="5"/><text class="label ink" x="839" y="187" font-size="18" font-weight="700">Supported response strengths</text>
+<circle class="ink" cx="819" cy="219" r="5"/><text class="label ink" x="839" y="225" font-size="18" font-weight="700">Failed predicates + evidence</text>
+<circle class="unknown" cx="819" cy="263" r="5"/><text class="label ink" x="839" y="269" font-size="18" font-weight="700">Blind spots stay visible</text>
+<path class="rule limit" d="M40 309H1160"/>
+<text class="mono muted" x="40" y="337" font-size="12" letter-spacing="1">EVIDENCE BOUNDARY</text>
+<text class="label ink" x="40" y="365" font-size="17">Actual effects · omitted incidents · serving identity · calibration · billing</text>
+<text class="label muted" x="40" y="393" font-size="16">These require additional independent evidence. A high score cannot fill the gap.</text>
+</svg>

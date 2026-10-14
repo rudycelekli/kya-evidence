@@ -11,6 +11,9 @@ The alpha is a working local reference implementation. Its tests establish defin
 | Research universes | Frozen inputs, source-engine hashes, replay, hypothesis forks and correction lineage | Cross-engine snapshots require their archived implementation; fork integrity does not establish causation |
 | Local distribution | Immutable Git blobs, fixed archive metadata, full inventory hashes, strict tar verification and offline install | A local archive is unpublished; the build receipt is unsigned |
 | Presentation | Offline/no-network source checks, safe text rendering, accessible SVG metadata and reduced-motion rules | A browser visual pass has not been performed |
+| Diagnostic dossier | Selected-original digest/request/outcome replay, duplicate quarantine, fixed populations, safe rendering and trusted-input recomputation | Passing responses do not verify hidden effects, complete history or causal explanations |
+| Embedded controls | Sixteen frozen fixture cases, authored expectations, full-case replay and actual weakened-gate experiments | A public catalog is susceptible to memorization and does not score commercial agents |
+| Typed SDK | Strict DOM/Node TypeScript consumers, readonly inputs and negative authority/source/JSON controls | Types do not replace runtime validation or confer execution authority |
 
 ## Run the checks
 
@@ -20,11 +23,15 @@ Node 22 or newer is required. Python 3.9 or newer is optional for portability ch
 node scripts/check.mjs
 node --test --test-reporter=tap test/*.test.mjs
 node scripts/mutation-check.mjs
+node bin/kya.mjs bench --out .kya/controls
+node bin/kya.mjs bench-verify .kya/controls/benchmark-run.json
 python3 interop/python/test_portability.py -v
 python3 interop/python/kya_portability.py check-vectors evidence/golden-vectors.json --no-crypto
 ```
 
 The Python checker can exit zero with `status: "partial"` when signature verification is unavailable. Read the status and verification fields; zero exit alone is not a signature pass. See [interoperability scope](INTEROPERABILITY.md).
+
+Alpha3's [diagnostic contract](DOSSIERS.md) and [benchmark catalog](BENCHMARKS.md) explain their exact observation boundaries. Standalone report checks are deliberately weaker than replay from trusted original inputs. The source-grounded [evaluation study](research/2026-10-14-evaluation-blueprint.md) records the inspected revisions and the measured repair controls without importing upstream capability claims.
 
 From a clean committed Git checkout, build and verify the exact local artifact:
 

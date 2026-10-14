@@ -1,8 +1,10 @@
 # ADR-0010: Ship fixed offline evaluation-control benchmarks
 
-**Status**: Proposed
+**Status**: Implemented
 **Date**: 2026-10-14
 **Depends-on**: ADR-0003, ADR-0004, ADR-0009
+
+Review boundary: separate project lane; no external certification.
 
 ## Context
 
@@ -25,3 +27,5 @@ Developers can exercise reproducible built-in checks without keys, model account
 ## Validation
 
 Test the complete catalog, positive controls, fixed negative controls and actual weak-source mutations. Reject omitted/reordered/duplicate cases, fabricated pass outcomes, modified expectations and inconsistent summaries even after outer checksums are recomputed. Record baseline failure to candidate pass using identical cases. No commercial product qualification is inferred.
+
+The owned alpha3 validation lane detected six actual weakened assessor gates while all 16 unchanged control cases completed and the clean positive still passed. Focused SDK and CLI cases reject resealed alterations and retain errors in the original denominator. These results cover selected defects under public fixture inputs; they are distinct from protected evaluation, external certification and vendor benchmarking.

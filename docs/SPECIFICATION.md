@@ -41,7 +41,11 @@ Every frozen check stays in the denominator. Unknown, abstained and errored chec
 
 ## Reports and viewers
 
-The report includes input digests, `selectedRunId`, `ambiguousRuns`, every check, `acceptedEvidenceDigests`, rejection reasons and explicit limitations. `reportDigest` is an unsigned checksum. `verify` returns checksum integrity with `authenticated:false`; an attacker can checksum false claims. Recompute from trusted original inputs to assess assurance.
+The report includes input digests, full-scope `scopeDigest`, `selectedRunId`, `ambiguousRuns`, every check, `acceptedEvidenceDigests`, rejection reasons and explicit limitations. `scopeDigest` hashes the entire manifest scope, including purpose and permissions. A readable scope ID alone is insufficient for comparison. Legacy assessments must be recomputed before new exact-scope comparisons. `reportDigest` is an unsigned checksum. `verify` returns checksum integrity with `authenticated:false`; an attacker can checksum false claims. Recompute from trusted original inputs to assess assurance.
+
+[Diagnostic dossiers](DOSSIERS.md) recompute the assessment and join originals to selected signed receipts. Replayed supported response predicates can support scoped strengths; signed assertions without matching originals remain reported passing claims. Failures preserve criticality without claiming a causal root cause. Missing telemetry, unresolved checks and seven structural observation limits remain visible. Standalone rendering validates consistency; trusted-input dossier verification recomputes the complete projection. Both remain unauthenticated without separate issuer/capture authority.
+
+[Embedded benchmarks](BENCHMARKS.md) preserve 16 public fixture control cases and their complete expected populations. They challenge the evaluator and never measure commercial-agent competence or protected-holdout generalization.
 
 The dashboard displays imported files as unverified claimed reports. Its presets use `kya.viewer-fixture/v1` and cannot masquerade as signed assessments. Raw observations and signed receipts are not embedded in the check list. Preserve authorized raw evidence privately, and redact before hashing public observation artifacts.
 

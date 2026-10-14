@@ -52,7 +52,17 @@ export interface BlindSpot {id:string;title:string;category:string;checkIds:stri
 export interface ReportedCost {reportedSubtotalUsd:number|null;reportedTotalUsd:number|null;known:number;planned:number;coverage:number;aggregation:'bounded-report'|'unrepresentable-total'}
 export interface ReportedLatency {reportedSubtotalMs:number|null;reportedTotalMs:number|null;known:number;planned:number;coverage:number;aggregation:'bounded-report'|'unrepresentable-total'}
 export interface Dossier {schema:'kya.dossier/v1';assessorSourceDigest:string;inputsDigest:string;observationsDigest:string;benchmarkRunDigests:string[];assessment:Assessment;assurance:{authorizationGranted:false;actualEffectsVerified:false;captureComplete:false;issuerIndependence:'relying-policy-assignment'};coverage:{plannedChecks:number;reportedPasses:number;verifiedStructuredPasses:number;verifiedOriginals:number};reportedPasses:DossierFinding[];strengths:DossierFinding[];failureModes:(DossierFinding&{reasonCodes:string[];rootCause:'not-established'})[];blindSpots:BlindSpot[];observations:{provided:number;verifiedOriginals:number;structuredReplays:number;rejected:{index:number;digest:string;code:string}[]};measurements:{cost:ReportedCost;latency:ReportedLatency;label:'receipt-bound evaluator reports; not verified billing'};benchmarks:{catalogDigest:string;runDigest:string;summary:BenchmarkSummary;fixtureOnly:true;commercialRuntimesMeasured:false;executionAuthenticated:false}[];limitations:string[];dossierDigest:string}
-export interface DossierOptions {inputs:ReadonlyInput<FrozenInputs>;observations?:readonly ReadonlyInput<import('./conformance/index.js').ConformanceObservation>[];benchmarkRuns?:readonly ReadonlyInput<BenchmarkRun>[]}
+// Preserve recursive JSON as its explicit readonly domain, rather than mapping
+// ReadonlyInput repeatedly through JsonValue's recursive object/array union.
+type DossierObservation = Readonly<Omit<import('./conformance/index.js').ConformanceObservation,'response'|'reasons'>> & {
+  readonly reasons: readonly string[];
+  readonly response: null | {
+    readonly actions: readonly Readonly<import('./conformance/index.js').ScenarioAction>[];
+    readonly final: {readonly status:import('./conformance/index.js').FinalStatus;readonly value?:import('./conformance/index.js').ReadonlyJsonValue;readonly reason?:string};
+    readonly usage: {readonly costUsd:number|null;readonly latencyMs:number|null};
+  };
+};
+export interface DossierOptions {inputs:ReadonlyInput<FrozenInputs>;observations?:readonly DossierObservation[];benchmarkRuns?:readonly ReadonlyInput<BenchmarkRun>[]}
 export function createDossier(options:DossierOptions):Dossier;
 export function validateDossier(value:unknown):Dossier;
 export function verifyDossier(dossier:unknown,options:DossierOptions):{integrity:true;replayMatched:true;dossierDigest:string;assessorSourceDigest:string;authenticated:false;actualEffectsVerified:false;captureComplete:false};
