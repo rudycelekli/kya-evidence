@@ -2012,7 +2012,7 @@
       "level": "MUST",
       "area": "vcb",
       "section": "Records and bindings",
-      "statement": "When the source report is supplied, verification MUST compare the credential to it field by field and MUST report any difference, and without the report the result MUST NOT claim more than internal consistency.",
+      "statement": "When the source report is supplied, verification MUST compare the credential to it by rebuilding the credential from the report and comparing the whole credential and MUST report any difference, and without the report the result MUST NOT claim more than internal consistency.",
       "tests": [
         {
           "file": "test/vc-bridge.test.mjs",
