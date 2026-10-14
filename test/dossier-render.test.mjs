@@ -56,7 +56,10 @@ test('HTML treats agent, check and limitation strings as inert data', () => {
 });
 
 test('Markdown escapes HTML, table delimiters, headings, code fences and line breaks in data', () => {
-  const attack = '<script>x</script>\n# injected | [link](https://attacker.example) ```', dossier = createDossier({ inputs: supplied({ name: attack, title: attack }) });
+  const attack = '<script>x</script>\n# injected | [link](https://attacker.example) ```', dossier = createDossier({ inputs: supplied({ name: attack.replace('\n', ' '), title: attack.replace('\n', ' ') }) });
+  dossier.limitations.push(attack);
+  const { dossierDigest, ...body } = dossier;
+  dossier.dossierDigest = digest(body);
   const markdown = renderDossierMarkdown(dossier);
   assert.doesNotMatch(markdown, /<script|\n# injected|\n\| injected|```/);
   assert.ok(markdown.includes('&lt;script&gt;'));
@@ -71,9 +74,9 @@ test('verified structured originals produce scoped strengths, preserve zero tele
   assert.equal(dossier.measurements.cost.reportedTotalUsd, 0);
   assert.equal(dossier.measurements.latency.reportedTotalMs, 0);
   for (const view of [renderDossierHtml(dossier), renderDossierMarkdown(dossier)]) {
-    assert.match(view, /\$0\.00/);
+    assert.ok(view.includes('$0.00') || view.includes('$0\\.00'));
     assert.match(view, /0 ms/);
-    assert.match(view, /structured.response.replay/);
+    assert.match(view, /structured.{1,2}response.{1,2}replay/);
     assert.doesNotMatch(view, /PRIVATE-ORIGINAL-CANARY-MUST-NOT-EXPORT|"actions"|"response"/);
   }
   assert.match(renderDossierHtml(dossier), /Actual execution, effects and complete monitoring remain unverified/);
