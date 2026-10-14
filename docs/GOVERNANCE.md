@@ -30,7 +30,7 @@ A bounded cycle records owner, inputs, source/evaluator revisions, candidate, te
 
 ## Requirement identifiers
 
-The registry is `evidence/requirements.json`. IDs have the form `KYA-<AREA>-<NNN>`. The generated [requirements document](REQUIREMENTS.md) lists 39 requirements at this revision, and its registry digest changes whenever the registry changes.
+The registry is `evidence/requirements.json`. IDs have the form `KYA-<AREA>-<NNN>`. The generated [requirements document](REQUIREMENTS.md) lists every requirement with its traces, and its registry digest changes whenever the registry changes.
 
 - IDs are never reused. A new obligation takes the next free number in its area.
 - A requirement is retired only by a new ADR that names the removed obligation and the reason. The retired ID stays allocated.

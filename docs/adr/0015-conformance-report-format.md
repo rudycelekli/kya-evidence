@@ -25,3 +25,7 @@ Any implementation can publish a comparable, digest-bound claim. The registry di
 ## Validation
 
 `test/conformance-report.test.mjs` covers deterministic builds, summary counts with not-run retained, rejection of unknown, missing and duplicate IDs, declaration-backed pass, digest mismatch, misuse of not-applicable, strict shape, tampered summaries, signature tampering and cross-domain signatures, TAP parsing with escapes and skips, mapping rules for fail, skip and absent traces, and the CLI end to end on a fixture repository.
+
+## Integration amendment
+
+The report code was first placed under `src/conformance/`, whose every `.mjs` file is bound into the evaluator digest. Adding it changed the evaluator identity (`d0bc7f78...` to a different value) and would have invalidated all previously issued evidence as wrong-evaluator. It now lives in `src/conformance-report/` and the evaluator digest is pinned by `evidence/evaluator-identity.json` and a test (KYA-EVL-001), so any future change under `src/conformance/` is deliberate and needs an ADR.

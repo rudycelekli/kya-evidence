@@ -758,6 +758,19 @@
           "title": "conformance CLI builds unsigned reports from traced tests and verifies them"
         }
       ]
+    },
+    {
+      "id": "KYA-EVL-001",
+      "level": "MUST",
+      "area": "evaluator",
+      "section": "Trust and eligibility",
+      "statement": "The evaluator digest MUST be pinned in evidence/evaluator-identity.json; any change to a source file under src/conformance/ MUST fail the pin until the file is updated in the same change as an ADR, and code that is not evaluator logic MUST live outside src/conformance/.",
+      "tests": [
+        {
+          "file": "test/evaluator-identity.test.mjs",
+          "title": "evaluator identity is pinned so unrelated source changes cannot silently invalidate evidence"
+        }
+      ]
     }
   ]
 }

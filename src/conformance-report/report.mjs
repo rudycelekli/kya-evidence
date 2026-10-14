@@ -1,6 +1,6 @@
 import { createPrivateKey, createPublicKey, sign, verify, KeyObject } from 'node:crypto';
-import { canonical, digest, exactKeys, insist } from '../../shared/canonical.mjs';
-import { text, hash, timestamp, keyId, publicKeyObject, validatePublicPem } from '../../identity/domain/services/validation.mjs';
+import { canonical, digest, exactKeys, insist } from '../shared/canonical.mjs';
+import { text, hash, timestamp, keyId, publicKeyObject, validatePublicPem } from '../identity/domain/services/validation.mjs';
 
 // kya.conformance-report/v1: an implementation states, per requirement ID, what it ran and what happened.
 // Declarations never count as pass. not-run stays in the denominator. Nothing here reads a clock.

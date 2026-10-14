@@ -3,7 +3,7 @@ import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { join, resolve } from 'node:path';
 import { parseJson } from '../src/shared/canonical.mjs';
-import { buildReport, validateReport, verifyReport, parseTap, mapTapToRequirements } from '../src/conformance/index.mjs';
+import { buildReport, validateReport, verifyReport, parseTap, mapTapToRequirements } from '../src/conformance-report/index.mjs';
 import { loadRequirements } from './requirements.mjs';
 
 // Builds a kya.conformance-report/v1 for the JS reference by actually running each cited test file under

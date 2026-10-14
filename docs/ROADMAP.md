@@ -19,7 +19,7 @@ Alpha3 adds response-bound [diagnostic dossiers](DOSSIERS.md), [16 frozen public
 
 | Stage | Status | Basis |
 | :--- | :--- | :--- |
-| 0 · Reference core | Implemented for the alpha3 scope | `npm test` passes 324 tests with 0 skipped. Requirement registry has 39 traced entries. 17 mutation gates are run by CI. Package reproducibility is checked in CI |
+| 0 · Reference core | Implemented for the alpha3 scope | `npm test` passes with 0 skipped tests. Every requirement in the registry is traced to a test (see REQUIREMENTS.md). The mutation gates in `scripts/mutation-check.mjs` run in CI. Package reproducibility is checked in CI |
 | 1 · Independent challenge | Open | No external review is recorded. The reviews named in ADR-0014 were project-lane reviews |
 | 2 · Authorized runtime lanes | Partial, not promoted | Typed Claude Code and Codex parsers and adapter plans exist. The README states that Claude execution is blocked until managed policy can be established. No official invocation verification is recorded |
 | 3 · Stronger capture | Open | No tool side-effect capture. Currency and incident records are offline checks over supplied data |
@@ -33,10 +33,10 @@ Alpha3 adds response-bound [diagnostic dossiers](DOSSIERS.md), [16 frozen public
 Done, committed on `python-conformance` and tested locally. None of it has external review:
 
 - Optional `principal.accountableParty` and policy `requirePrincipalBinding` (ADR-0012).
-- `checkCurrency` and `kya currency` with six monitoring triggers (ADR-0013).
+- `checkCurrency` and `kya currency` with named monitoring triggers (ADR-0013; incident-open added by ADR-0014).
 - Signed `kya.incident/v1` report, resolution and appeal records with independent-only resolution and fail-closed duplicate handling (ADR-0014).
-- Traced normative requirements registry, 39 entries with generated documentation (ADR-0011).
-- 17 named mutation gates in `scripts/mutation-check.mjs`, run by CI.
+- Traced normative requirements registry with generated documentation (ADR-0011).
+- Named mutation gates in `scripts/mutation-check.mjs`, run by CI.
 - CI fails on any skipped or `todo` test.
 
 Next, none started. Each needs an ADR and tests first:

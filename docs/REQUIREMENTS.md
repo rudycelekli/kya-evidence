@@ -50,5 +50,6 @@ Each requirement is traced to at least one test that must exist exactly once; th
 | KYA-CNF-003 | MUST | Conformance summary counts MUST keep not-run requirements in the denominator and MUST be recomputed on validation; a requirement MAY be not-applicable only when the implementation's declared subset excludes it. | `conformance-report.test.mjs` |
 | KYA-CNF-004 | MUST | A signed conformance report MUST use the Ed25519 domain-separated input prefix kya.conformance-report/v1 followed by a newline, and a signature MUST NOT verify under another record domain or after any payload change. | `conformance-report.test.mjs` |
 | KYA-CNF-005 | MUST | The reference report builder MUST mark a requirement pass only when every traced test passed and none was skipped, MUST mark a failing trace fail, and MUST treat skipped, absent or ambiguous traces as not-run. | `conformance-report.test.mjs` |
+| KYA-EVL-001 | MUST | The evaluator digest MUST be pinned in evidence/evaluator-identity.json; any change to a source file under src/conformance/ MUST fail the pin until the file is updated in the same change as an ADR, and code that is not evaluator logic MUST live outside src/conformance/. | `evaluator-identity.test.mjs` |
 
-Registry digest: `f754f7f4ecd39c86a441d0e471ac010c06b838ea8f4d8c27b69a6e134186496a`
+Registry digest: `4dd008aefefb4b72c8e531fa627227658a7a3a6a5f0fd13f05ec9fb3c090796e`

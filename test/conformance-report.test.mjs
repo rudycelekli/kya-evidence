@@ -7,7 +7,7 @@ import { join } from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { digest } from '../src/index.mjs';
-import { buildReport, validateReport, signReport, verifyReport, parseTap, mapTapToRequirements, summarize, REPORT_DOMAIN } from '../src/conformance/index.mjs';
+import { buildReport, validateReport, signReport, verifyReport, parseTap, mapTapToRequirements, summarize, REPORT_DOMAIN } from '../src/conformance-report/index.mjs';
 
 const REG = { schema: 'kya.requirements/v1', requirements: [
   { id: 'KYA-AAA-001', level: 'MUST', area: 'a', section: 's', statement: 'x MUST y', tests: [{ file: 'test/a.test.mjs', title: 't1' }] },
