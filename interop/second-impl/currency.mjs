@@ -1,10 +1,9 @@
 // checkCurrency semantics (second implementation). See README.md: team-built, NOT independent.
-import { Refusal, digest, isTs, isObj, HEX64, exactKeys, isStr, ms, validManifest, validPolicy, verifyProof } from './kya2.mjs';
+import { Refusal, digest, isTs, isObj, HEX64, exactKeys, isId, ms, validManifest, validPolicy, verifyProof } from './kya2.mjs';
 
 const refuse = m => { throw new Refusal(m); };
 const DECISIONS = ['qualified', 'insufficient-evidence', 'blocked', 'expired', 'revoked'];
 const SEVERITIES = ['low', 'medium', 'high', 'critical'];
-const ID_RE = /^[A-Za-z0-9][A-Za-z0-9._:\/-]{0,127}$/;
 const INCIDENT_KEYS = ['detailsDigest', 'id', 'kind', 'refId', 'reportedAt', 'schema', 'severity', 'subjectDigest'];
 
 // Verify checksum and internal consistency of a stored assessment before using it.
@@ -26,12 +25,12 @@ function incidentShape(e) {
   if (!exactKeys(e, ['payload', 'proof'])) return 'envelope must hold payload and proof';
   const p = e.payload;
   if (!exactKeys(p, INCIDENT_KEYS) || p.schema !== 'kya.incident/v1') return 'payload keys or schema';
-  if (!isStr(p.id, 128) || !ID_RE.test(p.id)) return 'id';
+  if (!isId(p.id)) return 'id';
   if (!['report', 'resolution', 'appeal'].includes(p.kind)) return 'kind';
   if (!SEVERITIES.includes(p.severity)) return 'severity';
   if (!HEX64.test(p.detailsDigest) || !HEX64.test(p.subjectDigest)) return 'digest';
   if (!isTs(p.reportedAt)) return 'time';
-  if (p.kind === 'report' ? p.refId !== null : (typeof p.refId !== 'string' || !ID_RE.test(p.refId) || p.refId === p.id)) return 'refId';
+  if (p.kind === 'report' ? p.refId !== null : (!isId(p.refId) || p.refId === p.id)) return 'refId';
   return null;
 }
 
@@ -118,12 +117,28 @@ export function currencyResult(inp) {
   const inc = processIncidents(incidents, a, policy, nowMs);
   if (inc.open.length) fire('incident-open', 'INCIDENT_OPEN');
   const current = triggers.length === 0;
-  const result = {
-    schema: 'kya.impl-result/v1', operation: 'currency', current, reliable: current && a.decision === 'qualified', action: current ? 'none' : 'reassess',
-    checkedAt: now, assessmentDigest: a.reportDigest, triggers, incidents: inc
+  // Layout and fixed strings per docs/SPECIFICATION.md "Currency result layout and reason vocabulary".
+  const DETAIL = {
+    'clock-regression': 'Check time precedes the assessment time',
+    'subject-changed': 'Manifest no longer matches the assessed subject digest',
+    'policy-changed': 'Relying policy differs from the assessed policy',
+    'subject-revoked': 'Subject digest is revoked by the supplied policy',
+    'assessment-expired': 'Assessment validity interval has ended',
+    'assessment-aged': 'Assessment is older than the policy maximum age',
+    'incident-open': `${inc.open.length} unresolved high or critical incident record(s) for this subject`
   };
-  // The impl-result carries resultDigest of the full kya.currency/v1 result. The layout of that result is not specified in the
-  // allowed sources; this is a best-effort digest of the fields that are specified. See AMBIGUITIES.md.
-  result.resultDigest = digest({ schema: 'kya.currency/v1', current: result.current, reliable: result.reliable, action: result.action, checkedAt: now, assessmentDigest: a.reportDigest, triggers, incidents: inc });
-  return result;
+  const full = {
+    schema: 'kya.currency/v1', assessmentDigest: a.reportDigest, checkedAt: now, current, reliable: current && a.decision === 'qualified',
+    action: current ? 'none' : 'reassess', triggers: triggers.map(t => ({ ...t, detail: DETAIL[t.id] })), incidents: inc, authenticated: false,
+    limits: [
+      'Detects change against supplied manifest, policy and clock only; it does not observe runtime behavior',
+      'Report checksum is unauthenticated; recompute from trusted inputs before reliance',
+      'Incident records are trusted only through the supplied policy anchors; an omitted incident is undetectable',
+      'A passing check is not an authorization grant'
+    ]
+  };
+  return {
+    schema: 'kya.impl-result/v1', operation: 'currency', current: full.current, reliable: full.reliable, action: full.action,
+    checkedAt: now, assessmentDigest: a.reportDigest, triggers, incidents: inc, resultDigest: digest(full)
+  };
 }

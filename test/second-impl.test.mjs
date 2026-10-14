@@ -27,12 +27,12 @@ test('second implementation refuses every refusal vector and never crashes on an
 });
 
 test('second implementation digest failures are limited to the two digest fields and are listed honestly', async () => {
-  // Byte-identical digests need blocker wording and the kya.currency/v1 layout, which the allowed sources do not state.
+  // All 111 vectors are byte-exact against the documented text; keep it that way.
   // This test pins that every failure is a digest-only difference and that the passing count does not regress.
   const { summary, outcomes } = await run();
   const failures = outcomes.filter(o => o.status === 'fail');
   const notDigest = failures.filter(o => !/^\$\.(reportDigest|resultDigest)\b/.test(o.detail ?? '')).map(o => `${o.id}: ${o.detail}`);
   assert.deepEqual(notDigest, []);
-  assert.ok(summary.vectors.pass >= 43, `digest-exact passes fell to ${summary.vectors.pass}`);
+  assert.ok(summary.vectors.pass >= 111, `digest-exact passes fell to ${summary.vectors.pass}`);
   assert.equal(summary.vectors.unsupported, 0);
 });

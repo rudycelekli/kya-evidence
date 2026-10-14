@@ -86,7 +86,9 @@ export const HEX64 = /^[0-9a-f]{64}$/;
 const TS = /^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d\.\d{3}Z$/;
 export const isTs = s => typeof s === 'string' && TS.test(s) && !Number.isNaN(Date.parse(s)) && new Date(s).toISOString() === s;
 export const ms = s => Date.parse(s);
-export const isStr = (s, max = 512) => typeof s === 'string' && s.length > 0 && s.length <= max;
+export const isStr = (s, max = 512) => typeof s === 'string' && s.length > 0 && s.length <= max && !/[\u0000-\u001f\u007f]/.test(s);
+export const isPem = s => typeof s === 'string' && s.length > 0 && s.length <= 2000;
+export const isId = s => typeof s === 'string' && s.length <= 128 && /^[A-Za-z0-9][A-Za-z0-9:._\/-]*$/.test(s);
 export const exactKeys = (o, req, opt = []) => isObj(o) && req.every(k => Object.hasOwn(o, k)) && Object.keys(o).every(k => req.includes(k) || opt.includes(k));
 const uniqueStrs = a => Array.isArray(a) && a.every(x => isStr(x)) && new Set(a).size === a.length;
 
@@ -149,7 +151,7 @@ export function validPolicy(p, profileDigest, scopeId, checkIds) {
   if (!Array.isArray(p.trustedKeys)) refuse('trustedKeys');
   const kids = new Set();
   for (const k of p.trustedKeys) {
-    if (!exactKeys(k, ['id', 'publicKey', 'role']) || !HEX64.test(k.id) || !isStr(k.publicKey, 4096) || !ROLES.includes(k.role)) refuse('trusted key');
+    if (!exactKeys(k, ['id', 'publicKey', 'role']) || !HEX64.test(k.id) || !isPem(k.publicKey) || !ROLES.includes(k.role)) refuse('trusted key');
     if (kids.has(k.id)) refuse('duplicate trusted key');
     kids.add(k.id);
   }
@@ -175,7 +177,7 @@ export function verifyProof(domain, payload, proof) {
   // returns null when fine, else a reason string
   if (!exactKeys(proof, ['algorithm', 'keyId', 'publicKey', 'signature'])) return 'Malformed envelope: proof keys';
   if (proof.algorithm !== 'Ed25519') return 'Malformed envelope: algorithm';
-  if (!HEX64.test(proof.keyId) || !isStr(proof.publicKey, 4096) || typeof proof.signature !== 'string') return 'Malformed envelope: proof fields';
+  if (!HEX64.test(proof.keyId) || !isPem(proof.publicKey) || typeof proof.signature !== 'string') return 'Malformed envelope: proof fields';
   let key;
   try { key = createPublicKey(proof.publicKey); } catch { return 'Public key is not usable'; }
   if (key.asymmetricKeyType !== 'ed25519') return 'Public key is not Ed25519';
@@ -195,7 +197,7 @@ function evidenceShape(e) {
   const p = e.payload;
   if (!exactKeys(p, EVIDENCE_KEYS)) return 'Malformed envelope: payload keys';
   if (p.schema !== 'kya.evidence/v1') return 'Malformed envelope: payload schema';
-  for (const k of ['id', 'runId', 'checkId', 'scopeId']) if (!isStr(p[k])) return 'Malformed envelope: ' + k;
+  for (const k of ['id', 'runId', 'checkId', 'scopeId']) if (!isId(p[k])) return 'Malformed envelope: ' + k;
   for (const k of ['artifactDigest', 'evaluatorDigest', 'profileDigest', 'subjectDigest']) if (!HEX64.test(p[k])) return 'Malformed envelope: ' + k;
   if (!['pass', 'fail', 'abstain', 'error'].includes(p.outcome)) return 'Malformed envelope: outcome';
   if (!SOURCES.includes(p.source)) return 'Malformed envelope: source';
@@ -210,24 +212,24 @@ const LIMITATIONS = [
   'Signatures attest bytes and key possession, not truthful execution',
   'No universal predictive validation; public suites can be gamed'
 ];
-const FIXTURE_LIMITATION = 'Fixture evidence is synthetic; it does not describe real-world behavior';
+const FIXTURE_LIMITATION = 'Includes synthetic fixture evidence; not a real product benchmark';
 const r6 = x => Math.round(x * 1e6) / 1e6;
 export const T = {
   critFailed: c => `Critical check failed: ${c.id}`,
   critUnproven: c => `Critical check unproven: ${c.id}`,
-  coverage: (cov, p) => `Coverage ${r6(cov)} is below policy minimum ${p.minCoverage}`,
-  indep: (i, p) => `Independent coverage ${r6(i)} is below policy minimum ${p.minIndependentCoverage}`,
-  score: (sc, p) => `Score ${sc.earned} is below policy minimum ${p.minScore}`,
-  ambiguous: () => 'Several runs tie for most recent',
-  conflict: () => 'The selected run holds duplicate evidence IDs',
-  invalidated: () => 'The latest run holds revoked, expired or stale receipts',
-  mixed: () => 'The selected run has several evaluator signers',
-  repeated: () => 'A frozen check has repeated observations in the selected run',
-  noScored: () => 'No check is a known pass or fail',
-  principal: () => 'Policy requires an accountable party and the manifest declares none',
-  minNotMet: m => `Mandatory minimum not met: ${m.checkId}`,
-  minUnproven: m => `Mandatory minimum unproven: ${m.checkId}`,
-  subject: s => s
+  coverage: () => 'Evidence coverage below relying policy',
+  indep: () => 'Independent coverage below relying policy',
+  score: () => 'Score below relying policy',
+  ambiguous: () => 'Ambiguous equally recent runs',
+  conflict: () => 'Selected run contains quarantined conflicting evidence IDs',
+  invalidated: () => 'Latest bound run contains invalidated evidence; no fallback qualification',
+  mixed: () => 'Frozen run has multiple evaluator issuers',
+  repeated: () => 'Frozen check has repeated observations; retry requires a new whole run',
+  noScored: () => 'No scored observations',
+  principal: () => 'Policy requires a declared accountable party; manifest declares none',
+  minNotMet: (m, st) => `Mandatory minimum not met: ${m.checkId} requires ${m.minimum}; observed ${st}`,
+  minUnproven: (m, st) => `Mandatory minimum unproven: ${m.checkId} requires ${m.minimum}; observed ${st}`,
+  subject: code => ({ SUBJECT_REVOKED: 'Subject digest is revoked by relying policy', SUBJECT_NOT_YET_VALID: 'Manifest is not yet valid', SUBJECT_EXPIRED: 'Manifest has expired' })[code]
 };
 const SEVERITY_RANK = { pass: 0, abstain: 1, error: 2, fail: 3 };
 
@@ -249,7 +251,7 @@ export function assess(inp) {
   const revKeys = new Set(policy.revokedKeyIds), revEv = new Set(policy.revokedEvidenceIds);
   const subjectRevoked = policy.revokedSubjectDigests.includes(subjectDigest) || false;
   const notYet = NOW < ms(manifest.issuedAt), expired = NOW > ms(manifest.expiresAt);
-  const subjectStatus = subjectRevoked ? 'Subject is revoked' : notYet ? 'Subject is not yet issued' : expired ? 'Subject is expired' : null;
+  const subjectStatus = subjectRevoked ? 'Subject is revoked' : expired ? 'Subject is expired' : notYet ? 'Subject is not yet issued' : null;
 
   // Stage 1: per receipt, up to "bound". rec = { i, env, p, role, reject }
   const rejected = new Map(); // index -> reason
@@ -260,18 +262,22 @@ export function assess(inp) {
     const rec = { i, env, p: isObj(env) ? env.payload : null, bound: false, id: null };
     recs.push(rec);
     if (reason) { rejected.set(i, reason); return; }
-    rec.id = env.payload.id; // a rejection id is reported only once shape and signature are valid
+    rec.id = env.payload.id.slice(0, 128); // a rejection id is reported only once shape and signature are valid
     const p = env.payload, k = trusted.get(env.proof.keyId);
     if (!k) { rejected.set(i, 'Signer is not a relying-party trust anchor'); return; }
     if (k.role === 'capture-issuer') { rejected.set(i, 'A capture-issuer key cannot issue scoring evidence'); return; }
     rec.role = k.role;
-    if (p.source === 'declaration') { rejected.set(i, 'A declaration cannot satisfy an observed check'); return; }
-    if (!policy.allowedSources.includes(p.source)) { rejected.set(i, 'Evidence source is disallowed'); return; }
+    if (subjectStatus) { rejected.set(i, subjectStatus); return; }
     if (p.subjectDigest !== subjectDigest) { rejected.set(i, 'Exact system digest differs'); return; }
     if (p.scopeId !== manifest.scope.id) { rejected.set(i, 'Evidence scope differs'); return; }
     if (p.profileDigest !== profileDigest) { rejected.set(i, 'Frozen profile differs'); return; }
     if (p.evaluatorDigest !== evaluatorDigest) { rejected.set(i, 'Evaluator digest differs'); return; }
     if (!checkIndex.has(p.checkId)) { rejected.set(i, 'Evidence check is outside frozen profile'); return; }
+    if (p.source === 'declaration') { rejected.set(i, 'A declaration cannot satisfy an observed check'); return; }
+    if (!policy.allowedSources.includes(p.source)) { rejected.set(i, 'Evidence source is disallowed'); return; }
+    const t = ms(p.observedAt);
+    if (t > NOW) { rejected.set(i, 'Observation is in the future'); return; }
+    if (t < ms(manifest.issuedAt)) { rejected.set(i, 'Observation predates manifest'); return; }
     rec.bound = true;
   });
 
@@ -286,19 +292,11 @@ export function assess(inp) {
   };
 
   if (subjectStatus) {
-    for (const r of recs) if (r.bound) rejected.set(r.i, subjectStatus);
     const code = subjectRevoked ? 'SUBJECT_REVOKED' : notYet ? 'SUBJECT_NOT_YET_VALID' : 'SUBJECT_EXPIRED';
-    add(code, T.subject(subjectStatus));
+    add(code, T.subject(code));
     return mkReport({ ...base, decision: subjectRevoked ? 'revoked' : 'expired', selected: null, ambiguous: false, results: new Map(), accepted: [], blockers, rejected, recs });
   }
 
-  // Stage 2: pre-bound exclusions for recency: observation in the future or predating the manifest are not "bound".
-  for (const r of recs) {
-    if (!r.bound) continue;
-    const t = ms(r.p.observedAt);
-    if (t > NOW) { r.bound = false; rejected.set(r.i, 'Observation is in the future'); }
-    else if (t < ms(manifest.issuedAt)) { r.bound = false; rejected.set(r.i, 'Observation predates manifest'); }
-  }
   // Recency by run among bound receipts.
   const runs = new Map();
   for (const r of recs) if (r.bound) {
@@ -389,19 +387,19 @@ function finalize(o) {
       for (const c of unproven) { insufficient = true; add('CRITICAL_CHECK_UNPROVEN', T.critUnproven(c, results.get(c.id))); }
       if (coverage < policy.minCoverage) { insufficient = true; add('COVERAGE_BELOW_POLICY', T.coverage(coverage, policy)); }
       if (indep < policy.minIndependentCoverage) { insufficient = true; add('INDEPENDENT_COVERAGE_BELOW_POLICY', T.indep(indep, policy)); }
-      if (!insufficient && score.earned < policy.minScore) { blocked = true; add('SCORE_BELOW_POLICY', T.score(score, policy)); }
       if (ambiguous) { insufficient = true; add('AMBIGUOUS_RUNS', T.ambiguous(selected)); }
       if (flags?.conflict) { insufficient = true; add('RUN_CONFLICT', T.conflict(selected)); }
       if (flags?.invalidated) { insufficient = true; add('RUN_INVALIDATED', T.invalidated(selected)); }
       if (flags?.mixed) { insufficient = true; add('MIXED_RUN_ISSUERS', T.mixed(selected)); }
       if (flags?.repeated) { insufficient = true; add('REPEATED_RUN_CHECKS', T.repeated(selected)); }
-      if (K === 0) { insufficient = true; add('NO_SCORED_OBSERVATIONS', T.noScored()); }
       if (policy.requirePrincipalBinding && !manifest.principal.accountableParty) { insufficient = true; add('PRINCIPAL_UNBOUND', T.principal()); }
+      if (K === 0) { insufficient = true; add('NO_SCORED_OBSERVATIONS', T.noScored()); }
+      if (!insufficient && score.earned < policy.minScore) { blocked = true; add('SCORE_BELOW_POLICY', T.score(score, policy)); }
     }
     for (const m of policy.mandatoryMinimums ?? []) {
       const r = results.get(m.checkId), st = r?.p.outcome;
-      if (st === 'fail' || (st === 'pass' && m.minimum === 'independent-pass' && r.role !== 'independent')) { blocked = true; add('MANDATORY_MINIMUM_NOT_MET', T.minNotMet(m, r)); }
-      else if (st !== 'pass') { blocked = true; add('MANDATORY_MINIMUM_UNPROVEN', T.minUnproven(m, r)); }
+      if (st === 'fail' || (st === 'pass' && m.minimum === 'independent-pass' && r.role !== 'independent')) { blocked = true; add('MANDATORY_MINIMUM_NOT_MET', T.minNotMet(m, st ?? 'unknown')); }
+      else if (st !== 'pass') { blocked = true; add('MANDATORY_MINIMUM_UNPROVEN', T.minUnproven(m, st ?? 'unknown')); }
     }
     decision = blocked ? 'blocked' : insufficient ? 'insufficient-evidence' : 'qualified';
   }
