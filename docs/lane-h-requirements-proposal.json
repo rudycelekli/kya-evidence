@@ -98,7 +98,43 @@
         { "file": "test/policy-templates.test.mjs", "title": "templates that need independent evidence are refused without an independent key" },
         { "file": "test/policy-templates.test.mjs", "title": "weakening a template or naming unknown checks is refused" },
         { "file": "test/policy-templates.test.mjs", "title": "a profile missing the template checks or an existing output file is refused" },
-        { "file": "test/policy-templates.test.mjs", "title": "overrides can tighten a template and the flags are honoured" }
+        { "file": "test/policy-templates.test.mjs", "title": "overrides can tighten a template and the flags are honoured" },
+        { "file": "test/policy-templates.test.mjs", "title": "a profile other than the frozen core profile is refused without allow-custom-profile" },
+        { "file": "test/policy-templates.test.mjs", "title": "allow-custom-profile generates a policy with a prominent warning and a marked id" }
+      ]
+    },
+    {
+      "id": "KYA-ACT-008",
+      "level": "MUST",
+      "area": "adoption",
+      "section": "Trust and eligibility",
+      "statement": "The CI gate MUST report a result as reliable only for runtime evidence unless fixture evidence is explicitly allowed, MUST name the reason code when it withholds reliability, and MUST NOT treat declaration evidence as reliable under any option.",
+      "tests": [
+        { "file": "test/kya-check.test.mjs", "title": "fixture evidence is not reliable by default and exits 2 with a named reason" },
+        { "file": "test/kya-check.test.mjs", "title": "allow-fixture makes qualified fixture evidence reliable and records no reason code" },
+        { "file": "test/kya-check.test.mjs", "title": "runtime evidence is reliable without any flag and mixed evidence is not" },
+        { "file": "test/kya-check.test.mjs", "title": "a declaration or unknown evidence mode is never reliable even with allow-fixture" }
+      ]
+    },
+    {
+      "id": "KYA-ACT-009",
+      "level": "MUST",
+      "area": "adoption",
+      "section": "Trust and eligibility",
+      "statement": "The CI gate MUST refuse with a named error, before printing any result, when a supplied policy or evaluator digest differs from an expected pinned digest.",
+      "tests": [
+        { "file": "test/kya-check.test.mjs", "title": "policy and evaluator digest pins pass on a match and refuse a mismatch before any summary" },
+        { "file": "test/kya-check.test.mjs", "title": "pins also apply in currency only mode and a policy edited after the pin is refused" }
+      ]
+    },
+    {
+      "id": "KYA-ACT-010",
+      "level": "MUST NOT",
+      "area": "adoption",
+      "section": "Reports and viewers",
+      "statement": "The CI gate MUST NOT cut a JSON output value mid-string; an oversized summary MUST be replaced by a compact valid object marked truncated.",
+      "tests": [
+        { "file": "test/kya-check.test.mjs", "title": "an oversized summary becomes a compact valid truncated JSON output value" }
       ]
     }
   ]

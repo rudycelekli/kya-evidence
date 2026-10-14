@@ -21,7 +21,7 @@ const jsonOf = out => JSON.parse(out.split('\n').filter(l => !l.startsWith('::')
 const reportFile = (x, patch = {}) => { const r = { ...assess(x), ...patch }; delete r.reportDigest; return put('assessment.json', { ...r, reportDigest: digest(r) }); };
 
 test('qualified and current inputs exit 0 and print a compact summary', () => {
-  const p = run(['--assessment-inputs', bundleFile(), '--now', NOW]);
+  const p = run(['--assessment-inputs', bundleFile(), '--now', NOW, '--allow-fixture']);
   assert.equal(p.status, 0, p.stderr);
   const s = jsonOf(p.stdout);
   assert.equal(s.schema, 'kya.check-summary/v1'); assert.equal(s.decision, 'qualified'); assert.equal(s.reliable, true);
@@ -32,8 +32,8 @@ test('qualified and current inputs exit 0 and print a compact summary', () => {
 
 test('individual input flags give the same result as an inputs file', () => {
   const x = inputs();
-  const flags = ['--manifest', put('m.json', x.manifest), '--profile', put('p.json', x.profile), '--policy', put('pol.json', x.policy), '--evidence', put('e.json', x.evidence), '--evaluator', x.evaluatorDigest, '--now', NOW];
-  const a = run(flags), b = run(['--assessment-inputs', bundleFile(x), '--now', NOW]);
+  const flags = ['--manifest', put('m.json', x.manifest), '--profile', put('p.json', x.profile), '--policy', put('pol.json', x.policy), '--evidence', put('e.json', x.evidence), '--evaluator', x.evaluatorDigest, '--now', NOW, '--allow-fixture'];
+  const a = run(flags), b = run(['--assessment-inputs', bundleFile(x), '--now', NOW, '--allow-fixture']);
   assert.equal(a.status, 0, a.stderr); assert.equal(a.stdout, b.stdout);
 });
 
@@ -53,7 +53,7 @@ test('missing evidence exits 2 as insufficient evidence', () => {
 
 test('currency only mode exits 0 when the stored assessment is still current', () => {
   const x = inputs();
-  const p = run(['--assessment', reportFile(x), '--manifest', put('m.json', x.manifest), '--policy', put('pol.json', x.policy), '--now', NOW]);
+  const p = run(['--assessment', reportFile(x), '--manifest', put('m.json', x.manifest), '--policy', put('pol.json', x.policy), '--now', NOW, '--allow-fixture']);
   assert.equal(p.status, 0, p.stderr);
   const s = jsonOf(p.stdout); assert.equal(s.mode, 'currency-only'); assert.equal(s.reliable, true);
 });
@@ -111,7 +111,7 @@ test('omitting now uses the system clock and says so', () => {
 
 test('fail-on controls the exit code without changing the summary', () => {
   const x = inputs(), incident = signIncident({ schema: 'kya.incident/v1', id: 'inc-2', subjectDigest: digest(x.manifest), kind: 'report', severity: 'critical', refId: null, reportedAt: '2026-10-13T11:30:00.000Z', detailsDigest: hashBytes('n') }, keys.privateKey);
-  const base = ['--assessment-inputs', bundleFile(x), '--incidents', put('inc.json', [incident]), '--now', NOW];
+  const base = ['--assessment-inputs', bundleFile(x), '--incidents', put('inc.json', [incident]), '--now', NOW, '--allow-fixture'];
   assert.equal(run(base).status, 2);
   assert.equal(run([...base, '--fail-on', 'unreliable']).status, 2);
   assert.equal(run([...base, '--fail-on', 'not-qualified']).status, 0);
@@ -129,7 +129,7 @@ test('GitHub annotations appear only when GITHUB_ACTIONS is true', () => {
   const p = run(args, { GITHUB_ACTIONS: 'true' });
   assert.match(p.stdout, /^::error title=KYA decision/m); assert.match(p.stdout, /CRITICAL_CHECK_FAILED/);
   assert.ok(jsonOf(p.stdout).decision === 'blocked');
-  assert.equal(run(['--assessment-inputs', bundleFile(), '--now', NOW], { GITHUB_ACTIONS: 'true' }).stdout.includes('::error'), false);
+  assert.equal(run(['--assessment-inputs', bundleFile(), '--now', NOW, '--allow-fixture'], { GITHUB_ACTIONS: 'true' }).stdout.includes('::error'), false);
 });
 
 test('annotation text from untrusted names is escaped and cannot start a new command', () => {
@@ -149,7 +149,7 @@ test('a forged assessment with newlines in text fields cannot inject workflow co
   const evil = '\n::error::pwned\n::set-output name=x::y\r\n# injected';
   const file = reportFile(x, { agentName: 'evil' + evil + '[link](http://evil.example)<img src=x>', blockers: [], decision: 'qualified' });
   const summaryFile = join(dir, 'step-forged.md');
-  const p = run(['--assessment', file, '--manifest', put('m.json', x.manifest), '--policy', put('pol.json', x.policy), '--now', NOW], { GITHUB_ACTIONS: 'true', GITHUB_STEP_SUMMARY: summaryFile });
+  const p = run(['--assessment', file, '--manifest', put('m.json', x.manifest), '--policy', put('pol.json', x.policy), '--now', NOW, '--allow-fixture'], { GITHUB_ACTIONS: 'true', GITHUB_STEP_SUMMARY: summaryFile });
   assert.equal(p.status, 0, p.stderr); assert.ok(r.agentName.length > 0);
   for (const line of p.stdout.split('\n')) assert.equal(line.startsWith('::error::pwned') || line.startsWith('::set-output'), false);
   const md = readFileSync(summaryFile, 'utf8');
@@ -159,7 +159,7 @@ test('a forged assessment with newlines in text fields cannot inject workflow co
 test('GITHUB_OUTPUT and GITHUB_STEP_SUMMARY are appended to and carry no secrets', () => {
   const out = join(dir, 'gh-output.txt'), summary = join(dir, 'gh-summary.md');
   writeFileSync(out, 'prior=keep\n'); writeFileSync(summary, 'earlier step\n');
-  const p = run(['--assessment-inputs', bundleFile(), '--now', NOW], { GITHUB_OUTPUT: out, GITHUB_STEP_SUMMARY: summary, GITHUB_TOKEN: 'ghs_SECRETTOKENVALUE', MY_SECRET: 'hunter2hunter2' });
+  const p = run(['--assessment-inputs', bundleFile(), '--now', NOW, '--allow-fixture'], { GITHUB_OUTPUT: out, GITHUB_STEP_SUMMARY: summary, GITHUB_TOKEN: 'ghs_SECRETTOKENVALUE', MY_SECRET: 'hunter2hunter2' });
   assert.equal(p.status, 0, p.stderr);
   const o = readFileSync(out, 'utf8'), lines = o.trim().split('\n');
   assert.equal(lines[0], 'prior=keep');
@@ -191,7 +191,81 @@ test('system clock use in GitHub Actions raises a warning annotation', () => {
 });
 
 test('fixture only evidence raises a warning even when the policy qualifies it', () => {
-  const p = run(['--assessment-inputs', bundleFile(), '--now', NOW], { GITHUB_ACTIONS: 'true' });
+  const p = run(['--assessment-inputs', bundleFile(), '--now', NOW, '--allow-fixture'], { GITHUB_ACTIONS: 'true' });
   assert.equal(p.status, 0); assert.match(p.stdout, /^::warning title=KYA evidence::.*fixture/m);
   assert.ok(signerId.length === 64 && publicKey.includes('PUBLIC KEY'));
+});
+
+// Inputs whose evidence comes from the runtime source, optionally mixed with fixture receipts.
+const runtimeInputs = (fixtureIndexes = []) => {
+  const x = inputs(); x.policy = { ...x.policy, allowedSources: ['runtime', 'fixture'] };
+  x.evidence = x.profile.checks.map((_, i) => signEvidence(payload(x.manifest, x.profile, i, { source: fixtureIndexes.includes(i) ? 'fixture' : 'runtime' }), keys.privateKey));
+  return x;
+};
+
+test('fixture evidence is not reliable by default and exits 2 with a named reason', () => {
+  const f = bundleFile(), out = join(dir, 'gh-fixture.md');
+  const p = run(['--assessment-inputs', f, '--now', NOW], { GITHUB_ACTIONS: 'true', GITHUB_STEP_SUMMARY: out });
+  assert.equal(p.status, 2);
+  const s = jsonOf(p.stdout); assert.equal(s.decision, 'qualified'); assert.equal(s.reliable, false); assert.equal(s.exitCode, 2);
+  assert.deepEqual(s.reasonCodes, ['FIXTURE_EVIDENCE_NOT_RELIABLE']);
+  assert.match(p.stdout, /^::error title=KYA evidence mode::.*FIXTURE_EVIDENCE_NOT_RELIABLE/m);
+  assert.match(readFileSync(out, 'utf8'), /FIXTURE\\_EVIDENCE\\_NOT\\_RELIABLE/);
+  assert.equal(run(['--assessment-inputs', f, '--now', NOW, '--fail-on', 'not-qualified']).status, 2);
+  assert.equal(run(['--assessment-inputs', f, '--now', NOW, '--fail-on', 'never']).status, 0);
+});
+
+test('allow-fixture makes qualified fixture evidence reliable and records no reason code', () => {
+  const p = run(['--assessment-inputs', bundleFile(), '--now', NOW, '--allow-fixture']);
+  assert.equal(p.status, 0, p.stderr); const s = jsonOf(p.stdout); assert.equal(s.reliable, true); assert.deepEqual(s.reasonCodes, []); assert.equal(s.allowFixture, true);
+});
+
+test('runtime evidence is reliable without any flag and mixed evidence is not', () => {
+  const ok = run(['--assessment-inputs', bundleFile(runtimeInputs()), '--now', NOW]);
+  assert.equal(ok.status, 0, ok.stderr); assert.equal(jsonOf(ok.stdout).evidenceMode, 'runtime');
+  const f = bundleFile(runtimeInputs([3]));
+  const mixed = run(['--assessment-inputs', f, '--now', NOW]);
+  assert.equal(mixed.status, 2); assert.equal(jsonOf(mixed.stdout).evidenceMode, 'mixed'); assert.deepEqual(jsonOf(mixed.stdout).reasonCodes, ['MIXED_EVIDENCE_NOT_RELIABLE']);
+  assert.equal(run(['--assessment-inputs', f, '--now', NOW, '--allow-fixture']).status, 0);
+});
+
+test('a declaration or unknown evidence mode is never reliable even with allow-fixture', () => {
+  const x = inputs(), pol = put('pol.json', x.policy), man = put('m.json', x.manifest);
+  for (const mode of ['declaration', 'none']) {
+    const p = run(['--assessment', reportFile(x, { evidenceMode: mode }), '--manifest', man, '--policy', pol, '--now', NOW, '--allow-fixture']);
+    assert.equal(p.status, 2, mode); assert.deepEqual(jsonOf(p.stdout).reasonCodes, ['EVIDENCE_MODE_NOT_RELIABLE']);
+  }
+});
+
+test('policy and evaluator digest pins pass on a match and refuse a mismatch before any summary', () => {
+  const x = inputs(), f = bundleFile(x), base = ['--assessment-inputs', f, '--now', NOW, '--allow-fixture'];
+  const ok = run([...base, '--expect-policy-digest', digest(x.policy), '--expect-evaluator-digest', x.evaluatorDigest]);
+  assert.equal(ok.status, 0, ok.stderr); const s = jsonOf(ok.stdout); assert.equal(s.pins.policyPinned, true); assert.equal(s.pins.evaluatorPinned, true); assert.equal(s.policyDigest, digest(x.policy));
+  const unpinned = jsonOf(run(base).stdout); assert.equal(unpinned.pins.policyPinned, false);
+  const bad = hashBytes('some other policy');
+  const a = run([...base, '--expect-policy-digest', bad]); assert.equal(a.status, 1); assert.match(a.stderr, /POLICY_DIGEST_MISMATCH/); assert.equal(a.stdout, '');
+  const b = run([...base, '--expect-evaluator-digest', bad]); assert.equal(b.status, 1); assert.match(b.stderr, /EVALUATOR_DIGEST_MISMATCH/); assert.equal(b.stdout, '');
+  assert.equal(run([...base, '--expect-policy-digest', 'abc']).status, 1);
+  const gh = run([...base, '--expect-policy-digest', bad], { GITHUB_ACTIONS: 'true' }); assert.match(gh.stdout, /^::error title=KYA usage or input error::POLICY_DIGEST_MISMATCH/m);
+});
+
+test('pins also apply in currency only mode and a policy edited after the pin is refused', () => {
+  const x = inputs(), args = ['--assessment', reportFile(x), '--manifest', put('m.json', x.manifest), '--policy', put('pol.json', x.policy), '--now', NOW, '--allow-fixture'];
+  assert.equal(run([...args, '--expect-policy-digest', digest(x.policy), '--expect-evaluator-digest', evaluatorDigest]).status, 0);
+  const edited = clone(x.policy); edited.minScore = 0;
+  const p = run(['--assessment', reportFile(x), '--manifest', put('m.json', x.manifest), '--policy', put('pol2.json', edited), '--now', NOW, '--allow-fixture', '--expect-policy-digest', digest(x.policy)]);
+  assert.equal(p.status, 1); assert.match(p.stderr, /POLICY_DIGEST_MISMATCH/);
+  assert.equal(run([...args, '--expect-evaluator-digest', hashBytes('other')]).status, 1);
+});
+
+test('an oversized summary becomes a compact valid truncated JSON output value', () => {
+  const x = inputs(), n = 20;
+  const file = reportFile(x, { decision: 'blocked', blockerCodes: Array(n).fill('SCORE_BELOW_POLICY'), blockers: Array(n).fill('B'.repeat(300)) });
+  const out = join(dir, 'gh-big.txt');
+  const p = run(['--assessment', file, '--manifest', put('m.json', x.manifest), '--policy', put('pol.json', x.policy), '--now', NOW], { GITHUB_OUTPUT: out });
+  assert.equal(p.status, 2);
+  const line = readFileSync(out, 'utf8').split('\n').find(l => l.startsWith('summary-json='));
+  const v = JSON.parse(line.slice('summary-json='.length));
+  assert.equal(v.truncated, true); assert.equal(v.decision, 'blocked'); assert.equal(v.reliable, false); assert.equal(v.exitCode, 2); assert.ok(v.blockerCodes.length > 0 && v.blockerCodes.length <= 20);
+  assert.ok(line.length <= 4100);
 });

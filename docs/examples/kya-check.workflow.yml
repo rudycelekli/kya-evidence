@@ -1,6 +1,10 @@
-# Example workflow: gate a pull request on a KYA policy.
-# Copy to .github/workflows/kya-check.yml in the repository that holds your agent's KYA inputs.
-# OWNER/kya-evidence and COMMIT_SHA are placeholders: pin a full commit SHA you have reviewed.
+# Example workflow: gate a pull request on a KYA policy without letting the pull request rewrite the gate.
+# Copy to .github/workflows/kya-check.yml. OWNER/kya-evidence and COMMIT_SHA are placeholders: pin a full commit SHA you reviewed.
+#
+# Trust rule: the policy, profile and evaluator digest come from the BASE branch (or another protected path)
+# and are pinned by digest held in repository variables. They never come from the code under test. A pull
+# request that edits its own policy or evidence would otherwise change the question and the answer together.
+# Review changes to this workflow, to kya-gate/ and to the KYA_* variables like changes to branch protection.
 name: kya-check
 on:
   pull_request:
@@ -10,17 +14,26 @@ jobs:
   kya-check:
     runs-on: ubuntu-latest
     steps:
+      # Gate inputs from the base commit, not from the pull request head.
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+          path: base
+          persist-credentials: false
       - name: Fix the clock once so the result is reproducible and recorded
         run: echo "KYA_NOW=$(date -u +%Y-%m-%dT%H:%M:%S.000Z)" >> "$GITHUB_ENV"
       - name: KYA check
         id: kya
         uses: OWNER/kya-evidence/action@COMMIT_SHA
         with:
-          # One JSON file: manifest, profile, policy, evidence, evaluatorDigest.
-          assessment-inputs: kya/inputs.json
-          # incidents: kya/incidents.json
+          # base/kya-gate/inputs.json holds manifest, profile, policy, evidence and evaluatorDigest as of the base commit.
+          assessment-inputs: base/kya-gate/inputs.json
+          # Digests pinned outside the pull request: set these repository variables in settings, reviewed separately.
+          expect-policy-digest: ${{ vars.KYA_POLICY_DIGEST }}
+          expect-evaluator-digest: ${{ vars.KYA_EVALUATOR_DIGEST }}
           now: ${{ env.KYA_NOW }}
           fail-on: unreliable
+          # allow-fixture: 'true'   # only for demos; fixture evidence is not reliable by default
       # Alternative without the action: check out kya-evidence next to your code and run
-      #   node kya-evidence/scripts/kya-check.mjs --assessment-inputs kya/inputs.json --now "$KYA_NOW"
+      #   node kya-evidence/scripts/kya-check.mjs --assessment-inputs base/kya-gate/inputs.json \
+      #     --expect-policy-digest "$KYA_POLICY_DIGEST" --expect-evaluator-digest "$KYA_EVALUATOR_DIGEST" --now "$KYA_NOW"

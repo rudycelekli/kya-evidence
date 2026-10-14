@@ -23,6 +23,8 @@ Flags: `--template`, `--profile`, `--trust-key ROLE:PUBLIC_PEM` (repeatable; ROL
 
 Options can only tighten. A `--mandatory-minimum` may add a check or raise `pass` to `independent-pass`, never lower a template floor; `--max-assessment-age-seconds` cannot exceed the template value; `--require-principal-binding` can turn the requirement on, not off. To loosen anything, edit the JSON yourself and own the choice.
 
+The profile must be the frozen core profile (`kya-core`, matched by digest). A smaller or reweighted profile shrinks the denominator, so the same numbers would mean something weaker; the generator refuses it unless you pass `--allow-custom-profile`. With that flag the output carries a `CUSTOM PROFILE` warning and `customProfile: true`, and the default policy id gets a `-custom-profile` suffix. You then own every threshold.
+
 The generator refuses: an unknown template name (names are matched exactly against a fixed list, never used as a path), an unknown role, a missing, unreadable, private or malformed key file, a duplicate key, a profile that lacks a check the policy names, and a template that needs independent evidence when no `independent` key is supplied.
 
 ## The templates

@@ -21,13 +21,26 @@ node scripts/kya-check.mjs --assessment assessment.json --manifest m.json --poli
 
 The summary holds `decision`, `score`, `coverage`, `independentCoverage`, `blockerCodes`, `blockers`, `currency` (`current`, `action`, `triggers` with codes, open incident IDs), `reliable`, `exitCode`, `clock` and `reportDigest`. With `--now` the output is deterministic. Without it the system clock is read, `clock.source` is `system-clock` and the summary says the result is not reproducible. An inputs file may carry `now`; it is used when `--now` is absent and reported as `inputs-file`.
 
+## Evidence mode: runtime only by default
+
+`reliable` and exit 0 require `evidenceMode` `runtime`. A `qualified` assessment built from fixture evidence reports `reliable: false`, the reason code `FIXTURE_EVIDENCE_NOT_RELIABLE` in `reasonCodes`, an `::error title=KYA evidence mode` annotation and a step-summary line, and exits 2. `mixed` evidence gives `MIXED_EVIDENCE_NOT_RELIABLE`; `declaration` or any unrecognised mode gives `EVIDENCE_MODE_NOT_RELIABLE`. `--allow-fixture` (Action input `allow-fixture: 'true'`) accepts fixture and mixed evidence for demos and tests; it never accepts declaration evidence, and the summary records `allowFixture: true`.
+
+## Trust boundary: do not let the code under test write its own gate
+
+Inputs and pinned digests must come from the base branch or a protected path, never from the code under test. If a pull request supplies the policy, the profile, the evidence and the evaluator digest, it can edit all of them in one commit and pass. Two flags close that gap:
+
+- `--expect-policy-digest DIGEST` exits 1 with `POLICY_DIGEST_MISMATCH` unless the SHA-256 digest of the supplied policy equals the pin.
+- `--expect-evaluator-digest DIGEST` exits 1 with `EVALUATOR_DIGEST_MISMATCH` unless the evaluator digest matches.
+
+Both are checked before anything is assessed or printed. Hold the pins in repository variables or another place the pull request cannot edit, check out gate inputs from the base commit, and review changes to the workflow itself. `docs/examples/kya-check.workflow.yml` does this. Without pins the summary shows `pins.policyPinned: false` and Actions raises a `KYA pins` warning. Pins do not prove the policy is a good one; they prove it is the one you chose.
+
 ## Exit codes
 
 | Code | Meaning |
 | :--- | :--- |
-| 0 | Reliable and current: `qualified`, no reassessment trigger (or `--fail-on` relaxed the gate) |
-| 2 | Exit code 2: not qualified (`blocked`, `insufficient-evidence`, `expired`, `revoked`) or reassessment required (subject or policy changed, expiry, age, open incident, clock regression) |
-| 1 | Usage or input error: unknown or duplicate flag, unreadable or non-regular file, bad JSON, malformed `--now`, invalid inputs, unwritable `GITHUB_OUTPUT` |
+| 0 | Reliable and current: `qualified` on runtime evidence, no reassessment trigger (or `--fail-on` relaxed the gate) |
+| 2 | Exit code 2: not qualified (`blocked`, `insufficient-evidence`, `expired`, `revoked`) non-runtime evidence without `--allow-fixture`, or reassessment required (subject or policy changed, expiry, age, open incident, clock regression) |
+| 1 | Usage or input error: unknown or duplicate flag, unreadable or non-regular file, bad JSON, malformed `--now`, a failed digest pin, invalid inputs, unwritable `GITHUB_OUTPUT` |
 
 ## In GitHub Actions
 
@@ -41,7 +54,8 @@ Pass `now` explicitly so the recorded time is a decision you made. A system-cloc
 - It trusts only the inputs it is given. A report checksum is not a signature, so currency-only mode recomputes nothing: it checks the stored assessment against the manifest, policy and clock you supply.
 - It does not observe the running agent, so it cannot see behavior after the evidence was gathered. An omitted incident is undetectable.
 - Signatures prove byte integrity and key possession, not truthful execution, human identity or independent review.
-- Fixture evidence is flagged with a warning and must not be read as a real product assessment.
+- Fixture evidence is not reliable by default and, when allowed, must not be read as a real product assessment.
+- `summary-json` in `GITHUB_OUTPUT` is never cut mid-string: past about 3800 characters it becomes a compact object with `truncated: true`, the decision, `reliable`, `exitCode` and capped code lists. The full summary is still printed to standard output.
 
 ## Not verified here
 

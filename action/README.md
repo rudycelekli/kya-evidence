@@ -14,7 +14,7 @@ This is a local policy check. It is not an authorization grant, and it does not 
     now: ${{ env.KYA_NOW }}
 ```
 
-Replace `OWNER/kya-evidence` and `COMMIT_SHA` with the repository you vendor or fork and a commit you reviewed. The action uses `actions/setup-node@v4` for Node.js 22 and runs with the repository workspace as the working directory, so input paths are relative to your checkout.
+Replace `OWNER/kya-evidence` and `COMMIT_SHA` with the repository you vendor or fork and a commit you reviewed. The action uses `actions/setup-node` pinned to a commit SHA (the v4 tag as of 2026-10-14) for Node.js 22 and runs with the repository workspace as the working directory, so input paths are relative to your checkout.
 
 ## Inputs
 
@@ -26,6 +26,8 @@ Replace `OWNER/kya-evidence` and `COMMIT_SHA` with the repository you vendor or 
 | `incidents` | Signed incident records |
 | `now` | ISO UTC timestamp with milliseconds. Empty means the system clock is read, and the summary and a warning annotation say so |
 | `fail-on` | `unreliable` (default), `not-qualified` or `never` |
+| `allow-fixture` | `true` lets fixture or mixed evidence count as reliable. Default `false`: only runtime evidence is reliable (reason code `FIXTURE_EVIDENCE_NOT_RELIABLE`) |
+| `expect-policy-digest`, `expect-evaluator-digest` | Pinned SHA-256 digests; a mismatch exits 1 before any result. Take them from the base branch or a protected path, never from the code under test |
 | `node-version` | Defaults to `22` |
 
 ## Outputs
