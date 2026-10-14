@@ -47,6 +47,10 @@ The proof checker verifies the signature byte layer. It does **not** reproduce f
 
 The Node interoperability tests launch a fixed Python checker with argument arrays, `shell: false`, a restricted environment, five-second timeout and one-MiB output cap. Python availability is probed first; hosts without Python record explicit skipped optional cross-language checks. Subprocess execution is not an OS sandbox for arbitrary hostile programs. Callers choose and trust their Python runtime and any installed cryptographic backend.
 
+## Assessment vectors
+
+Beside the byte and signature vectors, `evidence/assessment-vectors.json` holds assessment and currency vectors with expected decisions, blockers and digests. The harness is `scripts/run-vectors.mjs`; the contract is in `interop/impl-contract/README.md`. The vectors are public and their expected values come from the JavaScript reference, so they are not an independent check until a second implementation reproduces them.
+
 ## Verification evidence and remaining work
 
 The implementation lane ran Python 3.9.6 with existing `cryptography` 46.0.6. Every public canonical/hash vector matched, signing input was reconstructed, and the public Ed25519 fixture signature verified. Standard-library mode explicitly remained partial. Adversarial checks corrupted expected canonical text, expected hashes, signing input, envelope bytes and signature bytes; corrupted signatures failed even after recomputing their unsigned envelope checksum. A bounded batch compares all 513 signed fractions `n/256` for `-256 <= n <= 256` and 30 signed decimal powers against JavaScript.

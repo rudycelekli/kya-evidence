@@ -25,6 +25,8 @@ When a `declaredSubset` is present, IDs outside it must be `not-applicable` (or 
 
 `total`, `pass`, `fail`, `notApplicable`, `notRun`, `applicable = total - notApplicable`, `passPermille = floor(1000 * pass / applicable)` (null when `applicable` is 0) and `declarationEntries`. Validators recompute them; a mismatch is rejected. There is no hidden clock: `runAt` is supplied by the caller.
 
+Assessment semantics have a language-neutral vector set (`evidence/assessment-vectors.json`). To produce `portable-vector` evidence for an implementation, follow `docs/IMPLEMENTERS-GUIDE.md` and `interop/impl-contract/README.md`, then run `node scripts/run-vectors.mjs`. No second implementation has run these vectors yet.
+
 ## Producing a report
 
 JavaScript reference (runs every cited test file for real, so it takes as long as the traced suites):

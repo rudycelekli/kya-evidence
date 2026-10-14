@@ -314,8 +314,23 @@
         "ADR-0021",
         "ADR-0022"
       ]
+    },
+    {
+      "id": "ADR-0026",
+      "title": "Golden assessment vectors and a language-neutral harness",
+      "status": "Implemented",
+      "file": "docs/adr/0026-golden-assessment-vectors.md",
+      "contentDigest": "5ff2074e18dd4d7f628a7f675f8ccb9f37dbbd87645892478924e3a147a0b62c",
+      "related": [
+        "ADR-0003",
+        "ADR-0008",
+        "ADR-0013",
+        "ADR-0014",
+        "ADR-0015",
+        "ADR-0016"
+      ]
     }
   ],
-  "digest": "369a8f701bba3a50512fdcfe6c9afc5b5c7ed69a9340a1aa202761f0aea97986",
+  "digest": "5f9682126c5e648b6bce843525806a2d2b3198d1688fbfb499b5b72895b793cb",
   "store": "portable local file; not a claim of AgentDB graph persistence"
 }
