@@ -39,6 +39,29 @@ test('Codex one completed turn retains event summaries and declaration provenanc
 test('Codex failed/error turns dominate any polished final',()=>{
   for(const raw of [codex([final()],{type:'turn.failed',error:{message:'SYNTHETIC_PRIVATE_LOG'}}),codex([{type:'error',message:'SYNTHETIC_PRIVATE_LOG'},final()])]){const parsed=parseCodexEvents(raw);assert.equal(parsed.runtimeStatus,'failed');assert.equal(parsed.accepted,false);assert.equal(parsed.response,null);assert(!JSON.stringify(parsed).includes('SYNTHETIC_PRIVATE_LOG'));}
 });
+const syntheticErrorItem=(id='synthetic-error',message='Synthetic provider declined synthetic model')=>({type:'item.completed',item:{id,type:'error',message}});
+test('typed Codex startup error diagnostics survive before turn.started and terminal failure',()=>{
+  const frames=[prefix[0],syntheticErrorItem(),prefix[1],{type:'error',message:'Synthetic unsupported configuration'},{type:'turn.failed',error:{message:'Synthetic model unavailable'}}];
+  const raw=frames.map(e=>JSON.stringify(e)).join('\n')+'\n';const parsed=parseCodexEvents(raw);
+  assert.equal(parsed.runtimeStatus,'failed');assert.equal(parsed.accepted,false);assert.equal(parsed.response,null);assert.equal(parsed.source,'declaration');assert.equal(parsed.rawOutputDigest,hashBytes(raw));assert(parsed.violations.includes('native-error-diagnostic'));assert.deepEqual(parsed.events.map(e=>e.type),frames.map(e=>e.type));assert(!JSON.stringify(parsed).includes('Synthetic provider declined'));
+  const noStarted=[prefix[0],syntheticErrorItem(),{type:'turn.failed'}].map(e=>JSON.stringify(e)).join('\n');assert.equal(parseCodexEvents(noStarted).runtimeStatus,'failed');
+});
+test('typed error diagnostic is never downgraded to a warning by prose or an extra field',()=>{
+  for(const diagnostic of [syntheticErrorItem('synthetic-warning-prose','Warning: this is supposedly harmless'),{...syntheticErrorItem('synthetic-severity-conflict'),item:{...syntheticErrorItem().item,id:'synthetic-severity-conflict',severity:'warning'}}]){
+    const raw=[prefix[0],diagnostic,prefix[1],final(),{type:'turn.completed'}].map(e=>JSON.stringify(e)).join('\n');const parsed=parseCodexEvents(raw);assert.equal(parsed.accepted,false);assert.equal(parsed.runtimeStatus,'failed');assert.equal(parsed.response,null);
+  }
+  assert.throws(()=>parseCodexEvents(codex([{type:'warning',message:'Synthetic warning'},final()])),codeError('NATIVE_UNKNOWN_EVENT'));
+});
+test('startup diagnostic support retains sequence, ambiguity, duplicate and tool boundaries',()=>{
+  const jsonl=frames=>frames.map(e=>JSON.stringify(e)).join('\n');
+  assert.throws(()=>parseCodexEvents(jsonl([syntheticErrorItem(),prefix[0],prefix[1],{type:'turn.failed'}])),codeError('NATIVE_INVALID_SEQUENCE'));
+  assert.throws(()=>parseCodexEvents(jsonl([prefix[0],syntheticErrorItem(),{type:'turn.completed'}])),codeError('NATIVE_INVALID_SEQUENCE'));
+  assert.throws(()=>parseCodexEvents(jsonl([prefix[0],syntheticErrorItem(),syntheticErrorItem(),prefix[1],{type:'turn.failed'}])),codeError('NATIVE_DUPLICATE_ITEM'));
+  assert.throws(()=>parseCodexEvents(jsonl([prefix[0],syntheticErrorItem(),prefix[1],final('synthetic-a'),final('synthetic-b'),{type:'turn.failed'}])),codeError('NATIVE_AMBIGUOUS_FINAL'));
+  assert.throws(()=>parseCodexEvents(jsonl([prefix[0],syntheticErrorItem(),prefix[1],{type:'turn.failed'},{type:'turn.completed'}])),codeError('NATIVE_AMBIGUOUS_COMPLETION'));
+  const nested=syntheticErrorItem();nested.item.details={type:'tool_use',command:'SYNTHETIC_PRIVATE_LOG'};const parsed=parseCodexEvents(jsonl([prefix[0],nested,prefix[1],{type:'turn.failed'}]));assert.equal(parsed.accepted,false);assert(parsed.violations.includes('native-tool-attempt'));assert(parsed.toolAttempts.some(a=>a.kind==='tool_use'));assert(!JSON.stringify(parsed).includes('SYNTHETIC_PRIVATE_LOG'));
+  assert.throws(()=>parseCodexEvents(jsonl([prefix[0],{type:'item.completed',item:{id:'synthetic-startup-tool',type:'command_execution'}},prefix[1],{type:'turn.failed'}])),codeError('NATIVE_INVALID_SEQUENCE'));
+});
 test('Codex native tool events cannot be laundered as a clean asserted trace',()=>{
   for(const kind of ['command_execution','file_change','mcp_tool_call','web_search']){
     const tool={type:'item.completed',item:{id:'tool',type:kind,command:'SYNTHETIC_PRIVATE_LOG',status:'failed'}};const parsed=parseCodexEvents(codex([tool,final()]));assert.equal(parsed.accepted,false);assert.equal(parsed.response,null);assert(parsed.toolAttempts.some(a=>a.kind===kind));assert(!JSON.stringify(parsed).includes('SYNTHETIC_PRIVATE_LOG'));
@@ -114,8 +137,8 @@ test('vendor transport bounds disposable children and preserves nonzero transcri
 test('independent native transcript oracle detects weakened failure and tool gates',async()=>{
   let source=await readFile(new URL('../src/conformance/infrastructure/native-parsers.mjs',import.meta.url),'utf8');
   source=source.replaceAll("'../../shared/canonical.mjs'",JSON.stringify(new URL('../src/shared/canonical.mjs',import.meta.url).href)).replaceAll("'../domain/protocol.mjs'",JSON.stringify(new URL('../src/conformance/domain/protocol.mjs',import.meta.url).href));
-  const oracle=parser=>{assert.equal(parser(codex([{type:'error',message:'runtime failed'},final()])).accepted,false);assert.equal(parser(codex([{type:'item.completed',item:{id:'unsafe',type:'command_execution',status:'failed'}},final()])).accepted,false);};oracle(parseCodexEvents);
-  for(const mutantSource of [source.replace("const failed = terminal === 'turn.failed' || sawError;",'const failed = false;'),source.replace("const accepted = status === 'completed' && violations.length === 0;","const accepted = status === 'completed';")]){assert.notEqual(mutantSource,source);const mutant=await import(`data:text/javascript;base64,${Buffer.from(mutantSource).toString('base64')}`);assert.throws(()=>oracle(mutant.parseCodexEvents),assert.AssertionError);}
+  const oracle=parser=>{assert.equal(parser(codex([{type:'error',message:'runtime failed'},final()])).accepted,false);assert.equal(parser(codex([{type:'item.completed',item:{id:'unsafe',type:'command_execution',status:'failed'}},final()])).accepted,false);assert.equal(parser([prefix[0],syntheticErrorItem('synthetic-startup-gate'),prefix[1],final(),{type:'turn.completed'}].map(e=>JSON.stringify(e)).join('\n')).accepted,false);};oracle(parseCodexEvents);
+  for(const mutantSource of [source.replace("const failed = terminal === 'turn.failed' || sawError;",'const failed = false;'),source.replace("const accepted = status === 'completed' && violations.length === 0;","const accepted = status === 'completed';"),source.replace('if (completedError) { sawError = true; sawErrorItem = true; }','if (completedError) { sawErrorItem = true; }')]){assert.notEqual(mutantSource,source);const mutant=await import(`data:text/javascript;base64,${Buffer.from(mutantSource).toString('base64')}`);assert.throws(()=>oracle(mutant.parseCodexEvents),assert.AssertionError);}
 });
 test('native attempt slots are reserved before asynchronous preflight and count rejected attempts',async()=>{
   const base=fileURLToPath(new URL('../.private/',import.meta.url));await mkdir(base,{recursive:true});const directory=await mkdtemp(join(base,'native-attempt-cap-'));

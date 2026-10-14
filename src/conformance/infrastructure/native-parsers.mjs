@@ -101,7 +101,7 @@ export function parseCodexEvents(input) {
   if (lines.length === 0 || lines.length > MAX_EVENTS) throw nativeError('NATIVE_EVENT_LIMIT', rawOutputDigest);
   const events = [], attempts = [], finals = [];
   const completedItems = new Set();
-  let threadStarted = false, turnStarted = false, terminal = null, sawError = false;
+  let threadStarted = false, turnStarted = false, terminal = null, sawError = false, sawErrorItem = false;
   for (const line of lines) {
     if (!line.trim() || Buffer.byteLength(line) > MAX_LINE) throw nativeError('NATIVE_INVALID_JSONL', rawOutputDigest);
     const event = object(json(line, rawOutputDigest), rawOutputDigest);
@@ -114,14 +114,20 @@ export function parseCodexEvents(input) {
       if (!threadStarted || turnStarted) throw nativeError('NATIVE_INVALID_SEQUENCE', rawOutputDigest);
       turnStarted = true;
     } else if (['item.started', 'item.updated', 'item.completed'].includes(event.type)) {
-      if (!turnStarted) throw nativeError('NATIVE_INVALID_SEQUENCE', rawOutputDigest);
       const item = object(event.item, rawOutputDigest);
       if (typeof item.id !== 'string' || !item.id || item.id.length > 256) throw nativeError('NATIVE_INVALID_EVENT', rawOutputDigest);
-      if (!['agent_message', 'reasoning', 'plan_update', 'command_execution', 'file_change', 'mcp_tool_call', 'web_search'].includes(item.type)) throw nativeError('NATIVE_UNKNOWN_ITEM', rawOutputDigest);
+      if (!['agent_message', 'reasoning', 'plan_update', 'command_execution', 'file_change', 'mcp_tool_call', 'web_search', 'error'].includes(item.type)) throw nativeError('NATIVE_UNKNOWN_ITEM', rawOutputDigest);
+      // The CLI can emit completed error diagnostics after thread initialization
+      // but before a model turn starts. Their typed severity is never inferred
+      // from message prose, and they cannot make a success acceptable.
+      const completedError = item.type === 'error' && event.type === 'item.completed';
+      if (!turnStarted && !(threadStarted && completedError)) throw nativeError('NATIVE_INVALID_SEQUENCE', rawOutputDigest);
+      if (item.type === 'error' && !completedError) throw nativeError('NATIVE_INVALID_EVENT', rawOutputDigest);
       if (completedItems.has(item.id)) throw nativeError('NATIVE_DUPLICATE_ITEM', rawOutputDigest);
       if (event.type === 'item.completed') completedItems.add(item.id);
       // Nested native tool payloads cannot be hidden in nominal reasoning/message events.
       scanTools(item, attempts);
+      if (completedError) { sawError = true; sawErrorItem = true; }
       if (item.type === 'agent_message' && event.type === 'item.completed') {
         if (item.phase !== undefined && !['commentary', 'final_answer'].includes(item.phase)) throw nativeError('NATIVE_UNKNOWN_PHASE', rawOutputDigest);
         if (typeof item.text !== 'string') throw nativeError('NATIVE_INVALID_FINAL', rawOutputDigest);
@@ -130,14 +136,16 @@ export function parseCodexEvents(input) {
     } else if (event.type === 'error') {
       sawError = true;
     } else if (['turn.completed', 'turn.failed'].includes(event.type)) {
-      if (!turnStarted) throw nativeError('NATIVE_INVALID_SEQUENCE', rawOutputDigest);
+      // A typed startup error may end in turn.failed without turn.started.
+      // A successful completion still requires the ordinary strict sequence.
+      if (!turnStarted && !(event.type === 'turn.failed' && threadStarted && sawError)) throw nativeError('NATIVE_INVALID_SEQUENCE', rawOutputDigest);
       terminal = event.type;
     } else throw nativeError('NATIVE_UNKNOWN_EVENT', rawOutputDigest);
   }
   if (!terminal) throw nativeError('NATIVE_MISSING_COMPLETION', rawOutputDigest);
   if (finals.length > 1) throw nativeError('NATIVE_AMBIGUOUS_FINAL', rawOutputDigest);
   const failed = terminal === 'turn.failed' || sawError;
-  if (failed) return observation('codex-exec', rawOutputDigest, 'failed', events, attempts, null, ['runtime-failed', ...(attempts.length ? ['native-tool-attempt'] : [])]);
+  if (failed) return observation('codex-exec', rawOutputDigest, 'failed', events, attempts, null, ['runtime-failed', ...(sawErrorItem ? ['native-error-diagnostic'] : []), ...(attempts.length ? ['native-tool-attempt'] : [])]);
   if (finals.length !== 1) throw nativeError('NATIVE_MISSING_FINAL', rawOutputDigest);
   const response = assertedResponse(json(finals[0], rawOutputDigest), rawOutputDigest);
   return observation('codex-exec', rawOutputDigest, 'completed', events, attempts, response, attempts.length ? ['native-tool-attempt'] : []);
