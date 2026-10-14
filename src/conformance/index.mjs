@@ -3,3 +3,5 @@ export { runConformance,createReferenceAdapter } from './application/index.mjs';
 // Explicit infrastructure factories: importing the context never launches a process.
 export { createCommandAdapter } from './infrastructure/command.mjs';
 export { probeRuntimes } from './infrastructure/probes.mjs';
+export { parseClaudeResult, parseCodexEvents } from './infrastructure/native-parsers.mjs';
+export { buildClaudeCodePlan, buildCodexExecPlan, createClaudeCodeAdapter, createCodexExecAdapter } from './infrastructure/native-adapters.mjs';

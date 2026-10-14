@@ -160,3 +160,89 @@ export type RuntimeProbe =
   | { id: 'claude' | 'codex'; status: 'not-installed' | 'probe-failed'; version: null; quality: 'unmeasured' };
 /** Version-only probes; no quality score or model invocation is returned. */
 export function probeRuntimes(): Promise<RuntimeProbe[]>;
+
+export type NativeProvider = 'claude-code' | 'codex-exec';
+export interface NativeEventReference { type: string; artifactDigest: string }
+export interface NativeToolReference { kind: string; artifactDigest: string }
+export interface NativeParsedObservation {
+  schema: 'kya.native-observation/v1';
+  provider: NativeProvider;
+  source: 'declaration';
+  accepted: boolean;
+  runtimeStatus: 'completed' | 'failed';
+  rawOutputDigest: string;
+  events: NativeEventReference[];
+  toolAttempts: NativeToolReference[];
+  response: ScenarioResponse | null;
+  responseDigest: string | null;
+  violations: string[];
+  limitations: string[];
+}
+/** Strict version-specific parser; raw provider text never appears in parser errors. */
+export function parseClaudeResult(input: string | Uint8Array): NativeParsedObservation;
+export function parseCodexEvents(input: string | Uint8Array): NativeParsedObservation;
+export interface NativeAdapterBaseOptions {
+  /** Explicit absolute launcher/executable path; the caller separately verifies pinned bytes. */
+  executable: string;
+  cwd: string;
+  model: string;
+  timeoutMs?: number;
+  maxOutputBytes?: number;
+  /** Explicit existing-login access; not proof of billing route or OS isolation. */
+  auth?: { home: string; codexHome?: string };
+}
+export type ClaudeCodeAdapterOptions = NativeAdapterBaseOptions & { expectedGlobalInstructionsDigest?: never; acknowledgeIncludedGlobalInstructions?: never; schemaPath?: never };
+/** Deliberate global instruction inclusion requires both exact hash and acknowledgement. */
+export type CodexExecAdapterOptions = NativeAdapterBaseOptions & { schemaPath?: string } & (
+  | { expectedGlobalInstructionsDigest?: never; acknowledgeIncludedGlobalInstructions?: never }
+  | { expectedGlobalInstructionsDigest: string; acknowledgeIncludedGlobalInstructions: true }
+);
+export interface NativeCommandPlan {
+  readonly schema: 'kya.native-command-plan/v1';
+  readonly provider: NativeProvider;
+  readonly command: string;
+  readonly cwd: string;
+  readonly model: string;
+  readonly args: readonly string[];
+  readonly environment: Readonly<Record<string, string>>;
+  readonly timeoutMs: number;
+  readonly maxOutputBytes: number;
+  readonly authOptIn: boolean;
+  readonly schemaPath: string | null;
+  readonly schemaDigest: string | null;
+  readonly expectedGlobalInstructionsDigest: string | null;
+  readonly acknowledgeIncludedGlobalInstructions: boolean;
+  readonly executionState: 'blocked-managed-policy-unresolved' | 'requires-auth-and-local-preflight';
+  readonly observationSource: 'declaration';
+  readonly limitations: readonly string[];
+}
+export interface NativeTranscriptMetadata {
+  readonly schema: 'kya.native-transcript-reference/v1';
+  readonly provider: NativeProvider;
+  readonly source: 'declaration';
+  readonly requestDigest: string;
+  readonly commandPlanDigest: string;
+  readonly rawOutputDigest: string;
+  readonly outputBytes: number;
+  readonly exitCode: number | null;
+  readonly exitSignal: string | null;
+}
+export interface NativeCaptureOptions {
+  /** Explicit private caller-owned storage; no default storage/upload. A failure rejects the run. */
+  captureTranscript?: (rawBytes: Uint8Array, metadata: NativeTranscriptMetadata) => void | Promise<void>;
+}
+export function buildClaudeCodePlan(options: ClaudeCodeAdapterOptions): NativeCommandPlan;
+export function buildCodexExecPlan(options: CodexExecAdapterOptions): NativeCommandPlan;
+export type NativeAdapterObservation =
+  | (NativeParsedObservation & { requestDigest: string; commandPlanDigest: string; policy: JsonValue | null; transcriptCaptured: boolean; transport: { exitCode: number | null; exitSignal: string | null; latencyMs: number; rawOutputDigest: string; stderrDigest: string } })
+  | { schema: 'kya.native-observation/v1'; provider: NativeProvider; source: 'declaration'; accepted: false; runtimeStatus: 'rejected'; requestDigest: string; commandPlanDigest: string; rawOutputDigest: string | null; partialOutputDigest: string | null; transcriptCaptured: boolean; violations: string[]; limitations: string[] };
+export interface NativeAdapter extends ConformanceAdapter {
+  readonly id: NativeProvider;
+  readonly commandPlan: NativeCommandPlan;
+  inspectObservations(): NativeAdapterObservation[];
+  run(request: ScenarioRequest, options?: AdapterCallOptions): Promise<ScenarioResponse>;
+}
+/** Current Claude execution stays blocked pending verified effective managed-policy isolation. */
+export function createClaudeCodeAdapter(options: ClaudeCodeAdapterOptions & NativeCaptureOptions): Readonly<NativeAdapter>;
+/** Output remains declaration evidence, even after a completed native process. */
+export function createCodexExecAdapter(options: CodexExecAdapterOptions & NativeCaptureOptions): Readonly<NativeAdapter>;
