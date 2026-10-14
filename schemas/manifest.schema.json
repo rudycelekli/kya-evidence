@@ -45,6 +45,28 @@
           "minLength": 1,
           "maxLength": 128,
           "pattern": "^[A-Za-z0-9][A-Za-z0-9:._/-]*$"
+        },
+        "accountableParty": {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "enum": [
+                "natural-person",
+                "legal-entity"
+              ]
+            },
+            "ref": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128,
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9:._/-]*$"
+            }
+          },
+          "required": [
+            "kind",
+            "ref"
+          ],
+          "additionalProperties": false
         }
       },
       "required": [

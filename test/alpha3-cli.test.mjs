@@ -129,12 +129,20 @@ test('input symlinks and unrecognized execution options are refused', async () =
   rejects(cli(['bench-verify', join(benchDirectory, 'benchmark-run.json'), '--skip-gates', 'true']), /Unknown flag/);
 });
 
+// `sk-` must start a token: random base64url signature bytes can contain it mid-string by chance.
+const SECRET_PATTERN = /-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----|"privateKey"\s*:|"privatePem"\s*:|"(?:OPENAI_API_KEY|ANTHROPIC_API_KEY)"\s*:|(?<![A-Za-z0-9_-])sk-(?:proj-)?[A-Za-z0-9]{24,}/;
+test('secret pattern detects provider keys but ignores the same bytes inside a base64url signature', () => {
+  assert.match('{"k":"sk-proj-' + 'A'.repeat(30) + '"}', SECRET_PATTERN);
+  assert.match('token sk-' + 'b'.repeat(40), SECRET_PATTERN);
+  assert.match('{"privateKey": "x"}', SECRET_PATTERN);
+  assert.doesNotMatch('"signature":"Qf8_zsk-' + 'a'.repeat(30) + 'Zq"', SECRET_PATTERN);
+});
 test('dossier and benchmark exports contain public proofs but no signing private key or provider token', async () => {
   for (const out of [fixtureDirectory, benchDirectory]) {
     const files = await readdir(out); assert(!files.some(name => /private|secret|\.pem$/i.test(name)));
     for (const name of files) {
       const path = join(out, name), bytes = await readFile(path, 'utf8');
-      assert.doesNotMatch(bytes, /-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----|"privateKey"\s*:|"privatePem"\s*:|"(?:OPENAI_API_KEY|ANTHROPIC_API_KEY)"\s*:|sk-(?:proj-)?[A-Za-z0-9]{24,}/);
+      assert.doesNotMatch(bytes, SECRET_PATTERN);
       if (process.platform !== 'win32') assert.equal((await stat(path)).mode & 0o777, 0o600);
     }
   }

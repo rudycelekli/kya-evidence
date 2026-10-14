@@ -115,8 +115,57 @@
         "ADR-0004",
         "ADR-0009"
       ]
+    },
+    {
+      "id": "ADR-0011",
+      "title": "Number normative requirements and gate their test traceability",
+      "status": "Implemented",
+      "file": "docs/adr/0011-normative-requirement-traceability.md",
+      "contentDigest": "ba51c6f291da6444ec4c40cf4c2a84054d7bce775dcff2ef6c03478848e2c375",
+      "related": [
+        "ADR-0003",
+        "ADR-0008",
+        "ADR-0010"
+      ]
+    },
+    {
+      "id": "ADR-0012",
+      "title": "Declare an accountable party and let policy require it",
+      "status": "Implemented",
+      "file": "docs/adr/0012-declared-accountable-party-and-principal-binding.md",
+      "contentDigest": "a1c02565b11fdd41b87218836ac6fadec8c26fda7fc7306e4efff0d6c51765cb",
+      "related": [
+        "ADR-0001",
+        "ADR-0003",
+        "ADR-0011"
+      ]
+    },
+    {
+      "id": "ADR-0013",
+      "title": "Detect change after assessment with monitoring triggers",
+      "status": "Implemented",
+      "file": "docs/adr/0013-monitoring-triggers-and-assessment-currency.md",
+      "contentDigest": "1a6f1a70bb27e4c97ee259db00d684d8553bf1ce1f02d6e156d1606c03b7a95e",
+      "related": [
+        "ADR-0003",
+        "ADR-0004",
+        "ADR-0011",
+        "ADR-0012"
+      ]
+    },
+    {
+      "id": "ADR-0014",
+      "title": "Signed incident, resolution and appeal records",
+      "status": "Implemented",
+      "file": "docs/adr/0014-signed-incident-and-appeal-records.md",
+      "contentDigest": "5ea570c62fd21a4c8fd30e5f7db9fe53842d743df6b73830eed0e241a7d0a29e",
+      "related": [
+        "ADR-0004",
+        "ADR-0011",
+        "ADR-0013"
+      ]
     }
   ],
-  "digest": "8fefdaa20f9ed6ff2a1156c6c79d09fc59989f258d08d8e9a6306bd107584c8a",
+  "digest": "d148a6e58e3b817ef30334521500be2c8f491a28751bf60c98661d7c0f15dcf0",
   "store": "portable local file; not a claim of AgentDB graph persistence"
 }

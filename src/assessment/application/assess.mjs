@@ -112,11 +112,12 @@ export function assess({manifest,profile,evidence,policy,evaluatorDigest,now = n
   const blockers = [];
   const criticalFailures = checks.filter(c=>c.critical && c.status==='fail');
   const criticalUnknowns = checks.filter(c=>c.critical && !['pass','fail'].includes(c.status));
+  const principalUnbound = policy.requirePrincipalBinding === true && !manifest.principal.accountableParty;
   let decision;
   if (subjectRevoked) { decision='revoked'; blockers.push('Subject digest is revoked by relying policy'); }
   else if (subjectExpired || subjectFuture) { decision='expired'; blockers.push(subjectFuture ? 'Manifest is not yet valid' : 'Manifest has expired'); }
   else if (criticalFailures.length) { decision='blocked'; blockers.push(...criticalFailures.map(c=>`Critical check failed: ${c.id}`)); }
-  else if (ambiguousRuns || selectedRunConflict || selectedRunInvalid || mixedRunIssuers || repeatedRunChecks || known===0 || criticalUnknowns.length || known/total < policy.minCoverage || independent/total < policy.minIndependentCoverage) {
+  else if (ambiguousRuns || selectedRunConflict || selectedRunInvalid || mixedRunIssuers || repeatedRunChecks || known===0 || criticalUnknowns.length || principalUnbound || known/total < policy.minCoverage || independent/total < policy.minIndependentCoverage) {
     decision='insufficient-evidence';
     blockers.push(...criticalUnknowns.map(c=>`Critical check unproven: ${c.id}`));
     if (known/total < policy.minCoverage) blockers.push('Evidence coverage below relying policy');
@@ -126,6 +127,7 @@ export function assess({manifest,profile,evidence,policy,evaluatorDigest,now = n
     if (selectedRunInvalid) blockers.push('Latest bound run contains invalidated evidence; no fallback qualification');
     if (mixedRunIssuers) blockers.push('Frozen run has multiple evaluator issuers');
     if (repeatedRunChecks) blockers.push('Frozen check has repeated observations; retry requires a new whole run');
+    if (principalUnbound) blockers.push('Policy requires a declared accountable party; manifest declares none');
     if (known===0) blockers.push('No scored observations');
   } else if (score.earned < policy.minScore) { decision='blocked'; blockers.push('Score below relying policy'); }
   else { decision='qualified'; }
