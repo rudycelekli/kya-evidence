@@ -1,7 +1,10 @@
 import type { Dimension, Evidence, Manifest, Outcome, Profile, Source } from '../index.js';
 
 /** A strict JSON value. Runtime canonicalization also enforces shape and resource bounds. */
-export type JsonValue = null | boolean | number | string | JsonValue[] | { [key: string]: JsonValue };
+// Named recursion nodes let TypeScript cache deep readonly structural checks.
+interface JsonArray extends Array<JsonValue> {}
+interface JsonObject { [key: string]: JsonValue }
+export type JsonValue = null | boolean | number | string | JsonArray | JsonObject;
 export type ReadonlyJsonValue = null | boolean | number | string | readonly ReadonlyJsonValue[] | { readonly [key: string]: ReadonlyJsonValue };
 type DeepReadonly<T> = T extends object ? { readonly [K in keyof T]: DeepReadonly<T[K]> } : T;
 

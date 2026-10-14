@@ -1,7 +1,8 @@
 {
   "name": "kya-evidence",
   "version": "0.1.0-alpha.3",
-  "description": "Know Your Agent: Portable agent assurance: signed evidence, replay-supported diagnostics and frozen evaluator-control benchmarks.",
+  "description": "Know Your Agent: signed evidence, replayable assurance dossiers and frozen evaluator-control benchmarks.",
+  "keywords": ["know-your-agent", "agent-assurance", "agent-evaluation", "evidence", "reproducibility", "conformance"],
   "type": "module",
   "engines": { "node": ">=22" },
   "license": "Apache-2.0",
