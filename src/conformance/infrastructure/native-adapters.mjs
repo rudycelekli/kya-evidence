@@ -82,13 +82,14 @@ function adapter(options, provider, builder, parser) {
       if (!fixedPlan.authOptIn) throw nativeError('NATIVE_AUTH_REQUIRED');
       if (attempts >= 512) throw nativeError('NATIVE_OBSERVATION_LIMIT');
       if (inFlight) throw nativeError('NATIVE_CONCURRENCY_LIMIT');
-      const capturedRequest = parseJson(canonical(request));
-      const requestDigest = digest(capturedRequest), commandPlanDigest = digest(fixedPlan);
-      // Reserve before the first await; failed preflights consume a lifetime
-      // attempt and simultaneous calls cannot multiply the provider budget.
+      // Reserve before inspecting caller-controlled request properties. A Proxy
+      // can reenter during capture even before the first asynchronous preflight.
       attempts++; inFlight = true;
       let transport = null, recorded = false, transcriptCaptured = false;
+      let requestDigest, commandPlanDigest;
       try {
+        const capturedRequest = parseJson(canonical(request));
+        requestDigest = digest(capturedRequest); commandPlanDigest = digest(fixedPlan);
         if (signal?.aborted) throw nativeError('ABORTED');
         if (fixedPlan.schemaPath && schemaHash(fixedPlan.schemaPath) !== fixedPlan.schemaDigest) throw nativeError('NATIVE_SCHEMA_CHANGED');
         const policy = provider === 'claude-code' ? await preflightClaudePolicy(fixedPlan.environment.HOME) : { instructions: await preflightCodexInstructions(fixedPlan.environment.CODEX_HOME, fixedPlan.expectedGlobalInstructionsDigest, fixedPlan.acknowledgeIncludedGlobalInstructions), auth: await preflightCodexAuth(fixedPlan.environment.CODEX_HOME) };
@@ -111,7 +112,7 @@ function adapter(options, provider, builder, parser) {
         if (!accepted) throw nativeError(transport.exitCode !== 0 ? 'NONZERO_EXIT' : parsed.runtimeStatus === 'failed' ? 'NATIVE_TURN_FAILED' : 'NATIVE_TOOL_ATTEMPT', parsed.rawOutputDigest);
         return parsed.response;
       } catch (error) {
-        if (!recorded) observations.push({ schema: 'kya.native-observation/v1', provider, source: 'declaration', accepted: false, runtimeStatus: 'rejected', requestDigest, commandPlanDigest, rawOutputDigest: error.rawOutputDigest ?? transport?.rawOutputDigest ?? null, partialOutputDigest: error.partialOutputDigest ?? null, transcriptCaptured, violations: [typeof error.code === 'string' ? error.code : 'NATIVE_TRANSPORT_ERROR'], limitations: [...NATIVE_LIMITATIONS] });
+        if (!recorded && requestDigest !== undefined) observations.push({ schema: 'kya.native-observation/v1', provider, source: 'declaration', accepted: false, runtimeStatus: 'rejected', requestDigest, commandPlanDigest, rawOutputDigest: error.rawOutputDigest ?? transport?.rawOutputDigest ?? null, partialOutputDigest: error.partialOutputDigest ?? null, transcriptCaptured, violations: [typeof error.code === 'string' ? error.code : 'NATIVE_TRANSPORT_ERROR'], limitations: [...NATIVE_LIMITATIONS] });
         throw nativeError(typeof error.code === 'string' ? error.code : 'NATIVE_TRANSPORT_ERROR', error.rawOutputDigest ?? transport?.rawOutputDigest ?? null);
       } finally { inFlight = false; }
     }
