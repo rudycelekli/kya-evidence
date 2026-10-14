@@ -67,6 +67,8 @@ Recency of a run counts every receipt that was authentic and correctly bound, in
 
 Reasons for `incidents.ignored` entries: `Invalid incident record: <detail>` (id null), `Signing key is not a trusted anchor`, `Signing key is revoked`, `Incident concerns a different subject`, `Conflicting records share an ID; reports kept open, resolutions cannot target them`, `Conflicting records share one key and ID; not honoured`, `Incident is dated in the future`, `Blocking incident is dated in the future (clock skew or misdated); kept open`, `Ambiguous reference: several reports share this ID`, `References unknown incident`, `Resolution requires an independent trusted key`, `Reporter cannot resolve its own report` and `Resolution must be dated after the incident`.
 
+Within the incident reasons, a record gets the first that applies in this order: `Invalid incident record`, `Signing key is not a trusted anchor`, `Signing key is revoked`, `Incident concerns a different subject`; a record that passes these is then judged by the shared-ID, future-date and resolution reasons in the order listed above. An exact duplicate record (same envelope digest) counts toward `considered` but is otherwise skipped and never listed.
+
 Validator grammars: an identifier is 1 to 128 characters of the form `[A-Za-z0-9][A-Za-z0-9:._/-]*`; text is 1 to 512 characters (unless a field says otherwise) with no control characters, except that a public key field holds a PEM SPKI public key of at most 2000 characters with line breaks and is validated by its own rule; a hash is 64 lowercase hexadecimal characters; a timestamp is the exact `YYYY-MM-DDTHH:MM:SS.mmmZ` form that round-trips through `Date#toISOString`.
 
 ## Research replay and branching
