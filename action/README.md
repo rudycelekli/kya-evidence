@@ -28,11 +28,13 @@ Replace `OWNER/kya-evidence` and `COMMIT_SHA` with the repository you vendor or 
 | `fail-on` | `unreliable` (default), `not-qualified` or `never` |
 | `allow-fixture` | `true` lets fixture or mixed evidence count as reliable. Default `false`: only runtime evidence is reliable (reason code `FIXTURE_EVIDENCE_NOT_RELIABLE`) |
 | `expect-policy-digest`, `expect-evaluator-digest` | Pinned SHA-256 digests; a mismatch exits 1 before any result. Take them from the base branch or a protected path, never from the code under test |
+| `expect-assessment-digest`, `allow-unpinned-assessment` | Currency-only mode. The evidence mode is only as trustworthy as the assessment file, so pin its `reportDigest`; unpinned gives `ASSESSMENT_NOT_PINNED` unless allowed |
+| `require-pins` | Default `true`: exit 1 `PINS_REQUIRED` unless the policy and evaluator pins (and the assessment pin in currency-only mode) are supplied |
 | `node-version` | Defaults to `22` |
 
 ## Outputs
 
-`decision`, `reliable`, `current`, `score`, `coverage`, `blocker-codes`, `trigger-codes`, `exit-code`, `clock-source` and `summary-json`. Outputs are written before a failing exit. A failing step may hide its outputs from later steps unless they use `if: always()`; to read outputs while still continuing, set `fail-on: never` and gate on `reliable` yourself.
+`decision`, `reliable`, `current`, `evidence-mode`, `allow-fixture`, `score`, `coverage`, `blocker-codes`, `trigger-codes`, `exit-code`, `clock-source` and `summary-json`. Outputs are written before a failing exit. A failing step may hide its outputs from later steps unless they use `if: always()`; to read outputs while still continuing, set `fail-on: never` and gate on `reliable` yourself.
 
 ## Exit codes
 

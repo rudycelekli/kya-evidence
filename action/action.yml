@@ -55,6 +55,18 @@ inputs:
     description: SHA-256 digest the evaluator must have. Same trust rule as expect-policy-digest.
     required: false
     default: ''
+  expect-assessment-digest:
+    description: Currency-only mode. reportDigest the assessment file must have; a mismatch is an input error (exit 1, ASSESSMENT_DIGEST_MISMATCH). Take it from a trusted source.
+    required: false
+    default: ''
+  allow-unpinned-assessment:
+    description: "Currency-only mode. Set to true to accept an assessment file without a pinned digest. Default false: reliability is withheld (ASSESSMENT_NOT_PINNED) because the evidence mode is only as trustworthy as that file."
+    required: false
+    default: 'false'
+  require-pins:
+    description: "Default true: refuse (exit 1, PINS_REQUIRED) unless the policy and evaluator pins (and, in currency-only mode, the assessment pin) are supplied. Set to false only for local experiments."
+    required: false
+    default: 'true'
   node-version:
     description: Node.js version for actions/setup-node. KYA Evidence needs 22 or later.
     required: false
@@ -70,6 +82,12 @@ outputs:
   current:
     description: "true when no reassessment trigger fired."
     value: ${{ steps.check.outputs.current }}
+  evidence-mode:
+    description: "runtime, fixture, mixed or declaration: the evidence mode the result was computed on."
+    value: ${{ steps.check.outputs.evidence-mode }}
+  allow-fixture:
+    description: "true when fixture evidence was explicitly allowed to count as reliable."
+    value: ${{ steps.check.outputs.allow-fixture }}
   score:
     description: Earned score out of 1000.
     value: ${{ steps.check.outputs.score }}
@@ -118,6 +136,9 @@ runs:
         KYA_IN_ALLOW_FIXTURE: ${{ inputs.allow-fixture }}
         KYA_IN_EXPECT_POLICY: ${{ inputs.expect-policy-digest }}
         KYA_IN_EXPECT_EVALUATOR: ${{ inputs.expect-evaluator-digest }}
+        KYA_IN_EXPECT_ASSESSMENT: ${{ inputs.expect-assessment-digest }}
+        KYA_IN_ALLOW_UNPINNED: ${{ inputs.allow-unpinned-assessment }}
+        KYA_IN_REQUIRE_PINS: ${{ inputs.require-pins }}
       run: |
         args=()
         add() { if [ -n "$2" ]; then args+=("$1" "$2"); fi; }
@@ -133,5 +154,8 @@ runs:
         add --fail-on "$KYA_IN_FAIL_ON"
         add --expect-policy-digest "$KYA_IN_EXPECT_POLICY"
         add --expect-evaluator-digest "$KYA_IN_EXPECT_EVALUATOR"
+        add --expect-assessment-digest "$KYA_IN_EXPECT_ASSESSMENT"
         if [ "$KYA_IN_ALLOW_FIXTURE" = "true" ]; then args+=(--allow-fixture); fi
+        if [ "$KYA_IN_ALLOW_UNPINNED" = "true" ]; then args+=(--allow-unpinned-assessment); fi
+        if [ "$KYA_IN_REQUIRE_PINS" != "false" ]; then args+=(--require-pins); fi
         node "$KYA_ACTION_PATH/../scripts/kya-check.mjs" "${args[@]}"

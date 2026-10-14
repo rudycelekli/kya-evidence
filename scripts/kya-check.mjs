@@ -5,6 +5,9 @@ import { readFileSync, lstatSync, appendFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { assess, checkCurrency, parseJson, digest, BLOCKER_CODES } from '../src/index.mjs';
+import { CORE_PROFILE } from '../src/conformance/index.mjs';
+
+const CORE_PROFILE_DIGEST = digest(CORE_PROFILE);
 
 const HELP = `kya-check: gate a pipeline on a KYA policy
 
@@ -17,13 +20,16 @@ FILE for --assessment-inputs holds {manifest, profile, policy, evidence, evaluat
 --allow-fixture            let fixture (or mixed) evidence count as reliable; default needs runtime evidence
 --expect-policy-digest D   refuse (exit 1) unless the policy digest equals D
 --expect-evaluator-digest D  refuse (exit 1) unless the evaluator digest equals D
+--expect-assessment-digest D  currency-only mode: refuse (exit 1, ASSESSMENT_DIGEST_MISMATCH) unless the assessment reportDigest equals D
+--allow-unpinned-assessment  currency-only mode: do not withhold reliability (ASSESSMENT_NOT_PINNED) when no assessment pin is given
+--require-pins             refuse (exit 1, PINS_REQUIRED) unless the policy and evaluator pins (and, in currency-only mode, the assessment pin) are supplied
 Take inputs and pinned digests from the base branch or a protected path, never from the code under test.
 Exit: 0 reliable and current, 2 not qualified or reassess required, 1 usage or input error.
 Without --now the system clock is read and the summary says so.
 A result is a local policy check, not an authorization grant.
 `;
-const VALUE_FLAGS = ['assessment-inputs', 'assessment', 'manifest', 'profile', 'policy', 'evidence', 'evaluator', 'incidents', 'now', 'fail-on', 'expect-policy-digest', 'expect-evaluator-digest'];
-const BOOLEAN_FLAGS = ['allow-fixture'];
+const VALUE_FLAGS = ['assessment-inputs', 'assessment', 'manifest', 'profile', 'policy', 'evidence', 'evaluator', 'incidents', 'now', 'fail-on', 'expect-policy-digest', 'expect-evaluator-digest', 'expect-assessment-digest'];
+const BOOLEAN_FLAGS = ['allow-fixture', 'allow-unpinned-assessment', 'require-pins'];
 const FAIL_ON = ['unreliable', 'not-qualified', 'never'];
 const INPUT_KEYS = ['manifest', 'profile', 'policy', 'evidence', 'evaluatorDigest', 'now'];
 const MAX_FILE = 4_194_304;
@@ -70,20 +76,28 @@ export function escapeMarkdown(value, max = 200) {
 const num = v => (typeof v === 'number' && Number.isFinite(v) ? v : null);
 
 // Only runtime evidence can make a result reliable. Fixture (and mixed) evidence needs an explicit opt-in;
-// declaration or unrecognised modes are never reliable.
-function evidenceReason(report, allowFixture) {
-  if (report.decision !== 'qualified') return null;
-  const mode = report.evidenceMode;
-  if (mode === 'runtime') return null;
-  if (mode === 'fixture') return allowFixture ? null : 'FIXTURE_EVIDENCE_NOT_RELIABLE';
-  if (mode === 'mixed') return allowFixture ? null : 'MIXED_EVIDENCE_NOT_RELIABLE';
-  return 'EVIDENCE_MODE_NOT_RELIABLE';
+// declaration or unrecognised modes are never reliable. In currency-only mode the evidence mode is read from the
+// supplied assessment file, so it is only as trustworthy as that file: without a pinned assessment digest the result
+// is not reliable unless --allow-unpinned-assessment is given.
+function reasonCodesFor(report, { allowFixture, mode, pins, allowUnpinned }) {
+  if (report.decision !== 'qualified') return [];
+  const out = [], m = report.evidenceMode;
+  if (m === 'fixture') { if (!allowFixture) out.push('FIXTURE_EVIDENCE_NOT_RELIABLE'); }
+  else if (m === 'mixed') { if (!allowFixture) out.push('MIXED_EVIDENCE_NOT_RELIABLE'); }
+  else if (m !== 'runtime') out.push('EVIDENCE_MODE_NOT_RELIABLE');
+  if (mode === 'currency-only' && !pins.assessmentPinned && !allowUnpinned) out.push('ASSESSMENT_NOT_PINNED');
+  return out;
 }
 
-function summarize({ report, currency, mode, now, clockSource, failOn, allowFixture, pins }) {
-  const reason = evidenceReason(report, allowFixture), reasonCodes = reason ? [reason] : [];
-  const reliable = currency.reliable === true && !reason;
-  const failed = failOn === 'never' ? false : failOn === 'not-qualified' ? report.decision !== 'qualified' || !!reason : !reliable;
+const REASON_TEXT = {
+  ASSESSMENT_NOT_PINNED: 'the assessment file is not pinned, so its evidence mode cannot be trusted; supply --expect-assessment-digest from a trusted source',
+  EVIDENCE_MODE_NOT_RELIABLE: 'evidence mode cannot make a result reliable; use runtime evidence',
+};
+
+function summarize({ report, currency, mode, now, clockSource, failOn, allowFixture, allowUnpinned, pins, customProfile }) {
+  const reasonCodes = reasonCodesFor(report, { allowFixture, mode, pins, allowUnpinned });
+  const reliable = currency.reliable === true && !reasonCodes.length;
+  const failed = failOn === 'never' ? false : failOn === 'not-qualified' ? report.decision !== 'qualified' || !!reasonCodes.length : !reliable;
   const blockers = (Array.isArray(report.blockers) ? report.blockers : []).slice(0, 20).map(b => clean(b));
   const codes = (Array.isArray(report.blockerCodes) ? report.blockerCodes : []).filter(c => BLOCKER_CODES.includes(c));
   const summary = {
@@ -92,9 +106,9 @@ function summarize({ report, currency, mode, now, clockSource, failOn, allowFixt
     decision: clean(report.decision, 40), evidenceMode: clean(report.evidenceMode, 20),
     score: { earned: num(report.score?.earned), possible: num(report.score?.possible), upperBound: num(report.score?.upperBound) },
     coverage: num(report.coverage), independentCoverage: num(report.independentCoverage),
-    blockerCodes: codes, blockers, reasonCodes, allowFixture,
+    blockerCodes: codes, blockers, reasonCodes, allowFixture, allowUnpinnedAssessment: allowUnpinned, customProfile,
     policyDigest: pins.policyDigest, evaluatorDigest: clean(pins.evaluatorDigest, 64),
-    pins: { policyPinned: pins.policyPinned, evaluatorPinned: pins.evaluatorPinned },
+    pins: { policyPinned: pins.policyPinned, evaluatorPinned: pins.evaluatorPinned, assessmentPinned: pins.assessmentPinned },
     currency: {
       current: currency.current === true, action: clean(currency.action, 20),
       triggers: currency.triggers.map(t => ({ id: clean(t.id, 60), code: clean(t.code, 60), detail: clean(t.detail) })),
@@ -114,11 +128,12 @@ function annotations(s, onActions) {
   const warn = (title, msg) => `::warning title=${escapeProperty(title)}::${escapeData(clean(msg, 400))}`;
   const out = [];
   if (!s.reliable) out.push(err(`KYA decision: ${s.decision}`, `${s.agent.name} (${s.agent.scopeId}) is not reliable and current under the supplied policy`));
-  s.reasonCodes.forEach(c => out.push(err('KYA evidence mode', `${c}: evidence mode ${s.evidenceMode} cannot make a result reliable; use runtime evidence${c === 'EVIDENCE_MODE_NOT_RELIABLE' ? '' : ' or pass --allow-fixture knowingly'}`)));
+  s.reasonCodes.forEach(c => out.push(err(c === 'ASSESSMENT_NOT_PINNED' ? 'KYA assessment pin' : 'KYA evidence mode', c === 'ASSESSMENT_NOT_PINNED' ? `${c}: ${REASON_TEXT[c]}` : `${c}: evidence mode ${s.evidenceMode} cannot make a result reliable; use runtime evidence${c === 'EVIDENCE_MODE_NOT_RELIABLE' ? '' : ' or pass --allow-fixture knowingly'}`)));
   s.blockers.forEach((b, i) => out.push(err(`KYA blocker ${s.blockerCodes[i] ?? 'UNCODED'}`, b)));
   s.currency.triggers.forEach(t => out.push(err('KYA reassess required', `${t.code}: ${t.detail}`)));
   if (s.clock.source === 'system-clock') out.push(warn('KYA clock', s.clock.note));
   if (!s.pins.policyPinned || !s.pins.evaluatorPinned) out.push(warn('KYA pins', 'Policy or evaluator digest is not pinned; a change to the inputs under test can rewrite this gate. Pin both from a trusted source'));
+  if (s.customProfile) out.push(warn('KYA custom profile', 'The policy is not built on the frozen core profile; template thresholds do not carry their documented meaning'));
   if (s.evidenceMode === 'fixture' || s.evidenceMode === 'mixed') out.push(warn('KYA evidence', 'Result includes synthetic fixture evidence; it is not a real product assessment'));
   return out.length > 10 ? [...out.slice(0, 9), warn('KYA annotations', `${out.length - 9} further annotations omitted; see the JSON summary`)] : out;
 }
@@ -130,8 +145,10 @@ function markdown(s) {
     `| Score | ${s.score.earned ?? 'n/a'} of ${s.score.possible ?? 'n/a'} (upper bound ${s.score.upperBound ?? 'n/a'}) |`,
     `| Coverage | ${s.coverage ?? 'n/a'} (independent ${s.independentCoverage ?? 'n/a'}) |`, `| Evidence mode | ${e(s.evidenceMode)} |`,
     `| Current | ${s.currency.current} (action: ${e(s.currency.action)}) |`, `| Clock | ${e(s.clock.now)} from ${e(s.clock.source)} |`, `| Exit code | ${s.exitCode} |`, ''];
-  if (s.reasonCodes.length) { lines.push('Reliability withheld:', ''); s.reasonCodes.forEach(c => lines.push(`- ${e(c)}: evidence mode ${e(s.evidenceMode)}`)); lines.push(''); }
+  if (s.reasonCodes.length) { lines.push('Reliability withheld:', ''); s.reasonCodes.forEach(c => lines.push(`- ${e(c)}: ${c === 'ASSESSMENT_NOT_PINNED' ? e(REASON_TEXT[c]) : 'evidence mode ' + e(s.evidenceMode)}`)); lines.push(''); }
   if (!s.pins.policyPinned || !s.pins.evaluatorPinned) lines.push('Note: policy or evaluator digest is not pinned, so inputs from the code under test could rewrite this gate.', '');
+  if (s.customProfile) lines.push('Note: the policy is not built on the frozen core profile (customProfile: true); its thresholds do not carry their documented meaning.', '');
+  if (s.mode === 'currency-only' && !s.pins.assessmentPinned) lines.push('Note: currency-only mode reads the evidence mode from the assessment file; it is only as trustworthy as that file unless its digest is pinned.', '');
   if (s.blockers.length) { lines.push('Blockers:', ''); s.blockers.forEach((b, i) => lines.push(`- ${e(s.blockerCodes[i] ?? 'UNCODED')}: ${e(b)}`)); lines.push(''); }
   if (s.currency.triggers.length) { lines.push('Reassessment triggers:', ''); s.currency.triggers.forEach(t => lines.push(`- ${e(t.code)}: ${e(t.detail)}`)); lines.push(''); }
   if (s.clock.source === 'system-clock') lines.push(`Note: ${e(s.clock.note)}.`, '');
@@ -139,12 +156,18 @@ function markdown(s) {
   return lines.join('\n');
 }
 
-function githubOutputs(s) {
+// Never cut a JSON string: past the limit emit a compact, valid object that keeps the fields a caller needs to trust it.
+export function compactSummary(s) {
+  return { schema: s.schema, truncated: true, decision: s.decision, reliable: s.reliable, exitCode: s.exitCode, evidenceMode: s.evidenceMode, allowFixture: s.allowFixture,
+    allowUnpinnedAssessment: s.allowUnpinnedAssessment, customProfile: s.customProfile, pins: { ...s.pins }, reasonCodes: s.reasonCodes, blockerCodes: s.blockerCodes.slice(0, 20),
+    triggerCodes: s.currency.triggers.map(t => t.code).slice(0, 20), policyDigest: s.policyDigest };
+}
+
+export function githubOutputs(s) {
   const one = v => clean(String(v), 4000);
-  // Never cut a JSON string: past the limit emit a compact, valid object with the essential fields.
   const full = JSON.stringify(s);
-  const json = full.length <= 3800 ? full : JSON.stringify({ schema: s.schema, truncated: true, decision: s.decision, reliable: s.reliable, exitCode: s.exitCode, reasonCodes: s.reasonCodes, blockerCodes: s.blockerCodes.slice(0, 20), triggerCodes: s.currency.triggers.map(t => t.code).slice(0, 20), policyDigest: s.policyDigest });
-  return [['decision', s.decision], ['reliable', s.reliable], ['current', s.currency.current], ['score', s.score.earned ?? ''], ['coverage', s.coverage ?? ''],
+  const json = full.length <= 3800 ? full : JSON.stringify(compactSummary(s));
+  return [['decision', s.decision], ['reliable', s.reliable], ['current', s.currency.current], ['evidence-mode', s.evidenceMode], ['allow-fixture', s.allowFixture], ['score', s.score.earned ?? ''], ['coverage', s.coverage ?? ''],
     ['independent-coverage', s.independentCoverage ?? ''], ['blocker-codes', s.blockerCodes.join(',')], ['trigger-codes', s.currency.triggers.map(t => t.code).join(',')],
     ['exit-code', s.exitCode], ['clock-source', s.clock.source], ['summary-json', json]]
     .map(([k, v]) => `${k}=${one(v)}\n`).join('');
@@ -185,16 +208,26 @@ export function main(argv = process.argv.slice(2), env = process.env, write = s 
     try {
       // Pins are checked before anything is assessed or printed, so a swapped policy or evaluator cannot read as reliable.
       const evaluatorDigest = input.mode === 'currency-only' ? input.assessment?.evaluatorDigest : input.evaluatorDigest;
-      const pins = { policyDigest: digest(input.policy), evaluatorDigest, policyPinned: false, evaluatorPinned: false };
-      for (const [flag, actual, code, key] of [['expect-policy-digest', pins.policyDigest, 'POLICY_DIGEST_MISMATCH', 'policyPinned'], ['expect-evaluator-digest', evaluatorDigest, 'EVALUATOR_DIGEST_MISMATCH', 'evaluatorPinned']]) {
+      const pins = { policyDigest: digest(input.policy), evaluatorDigest, policyPinned: false, evaluatorPinned: false, assessmentPinned: false };
+      const currencyOnly = input.mode === 'currency-only';
+      const checks = [['expect-policy-digest', pins.policyDigest, 'POLICY_DIGEST_MISMATCH', 'policyPinned', 'policy'], ['expect-evaluator-digest', evaluatorDigest, 'EVALUATOR_DIGEST_MISMATCH', 'evaluatorPinned', 'evaluator']];
+      if (currencyOnly) checks.push(['expect-assessment-digest', input.assessment?.reportDigest, 'ASSESSMENT_DIGEST_MISMATCH', 'assessmentPinned', 'assessment']);
+      else if (flags['expect-assessment-digest'] !== undefined) usage('--expect-assessment-digest is only used with --assessment');
+      for (const [flag, actual, code, key, what] of checks) {
         if (flags[flag] === undefined) continue;
         if (!/^[a-f0-9]{64}$/.test(flags[flag])) usage(`--${flag} must be a 64 character lowercase SHA-256 hex digest`);
-        if (flags[flag] !== actual) usage(`${code}: the supplied ${flag === 'expect-policy-digest' ? 'policy' : 'evaluator'} does not match the pinned digest`);
+        if (flags[flag] !== actual) usage(`${code}: the supplied ${what} does not match the pinned digest`);
         pins[key] = true;
       }
+      if (flags['allow-unpinned-assessment'] && !currencyOnly) usage('--allow-unpinned-assessment is only used with --assessment');
+      if (flags['require-pins']) {
+        const missing = checks.filter(c => !pins[c[3]]).map(c => c[4]);
+        if (missing.length) usage(`PINS_REQUIRED: no pinned digest for the ${missing.join(', ')}; supply --expect-${missing.map(m => m + '-digest').join(' and --expect-')} from the base branch or a protected path`);
+      }
+      const customProfile = input.policy?.profileDigest !== CORE_PROFILE_DIGEST;
       report = input.mode === 'currency-only' ? input.assessment : assess({ manifest: input.manifest, profile: input.profile, policy: input.policy, evidence: input.evidence, evaluatorDigest: input.evaluatorDigest, now });
       const currency = checkCurrency(report, { manifest: input.manifest, policy: input.policy, incidents, now });
-      const s = summarize({ report, currency, mode: input.mode, now, clockSource, failOn, allowFixture: flags['allow-fixture'] === true, pins });
+      const s = summarize({ report, currency, mode: input.mode, now, clockSource, failOn, allowFixture: flags['allow-fixture'] === true, allowUnpinned: flags['allow-unpinned-assessment'] === true, pins, customProfile });
       for (const line of annotations(s, onActions)) write(line + '\n');
       write(JSON.stringify(s, null, 2) + '\n');
       try {
