@@ -2,14 +2,16 @@
 
 Each entry: what was unspecified, how it was resolved (guess, or a vector), and the vector that decided or tests it. "Vector-resolved" means the specification, guide and contract did not determine the behaviour and a vector (input or expected value) was consulted. "Guess" means no vector pins it; another implementation could differ and still pass. "Unresolved" means the vectors fail on the digest for this reason.
 
-## A. Unresolved (the 68 digest failures)
+## A. Still failing byte-exact after the spec-gaps-2 texts (32 vectors)
 
-| # | Gap | Vectors |
+Re-run after merging `origin/spec-gaps-2` and implementing only the newly documented texts (`docs/SCORING.md` "Blocker wording in the reference", `docs/SPECIFICATION.md` "Currency result layout and reason vocabulary"). Result: 111 of 111 semantic, 79 of 111 byte-exact (was 43). Every assess vector now matches except two; every non-refusal currency vector except one fails.
+
+| # | Documented statement that is missing, wrong or ambiguous | Vectors |
 | :-- | :--- | :--- |
-| A1 | Human blocker wording is not stated anywhere allowed. `docs/IMPLEMENTERS-GUIDE.md` and the contract say the strings are in `docs/SCORING.md`; that file lists codes only. Recovered by digest matching: `Critical check failed: <id>`, `Critical check unproven: <id>`, `No scored observations`. Not recovered (over a million phrasings tried): `COVERAGE_BELOW_POLICY`, `INDEPENDENT_COVERAGE_BELOW_POLICY`, `SCORE_BELOW_POLICY`, `AMBIGUOUS_RUNS`, `RUN_CONFLICT`, `RUN_INVALIDATED`, `MIXED_RUN_ISSUERS`, `REPEATED_RUN_CHECKS`, `PRINCIPAL_UNBOUND`, `MANDATORY_MINIMUM_NOT_MET`, `MANDATORY_MINIMUM_UNPROVEN`, and the three `SUBJECT_*` codes. My strings for these are placeholders. | `assess.coverage-below-policy`, `assess.score-one-below-threshold`, `assess.self-signed-below-independent-floor`, `assess.tied-latest-runs-ambiguous`, `assess.mixed-run-issuers`, `assess.repeated-check-two-passes`, `assess.principal-required-unbound`, `assess.revoked-evidence-id`, `assess.duplicate-eligible-evidence-id-quarantined`, `assess.minimum-failed-check-caps-decision`, `assess.minimum-omitted-evidence-cannot-lift`, `assess.subject-revoked` and others |
-| A2 | The limitation string added for fixture evidence, and where it sits in the limitations list. The three base strings were read from stored assessments; the fixture string appears only inside a digest. | `assess.fixture-allowed-by-policy`, `assess.mixed-fixture-and-runtime-labelled-mixed` |
-| A3 | The layout of the complete `kya.currency/v1` result whose SHA-256 is `resultDigest`. The contract shows only the `impl-result` projection (`triggers` carry `id` and `code` there, the full result may carry more, for example human detail text). Field subsets up to size 3 from about 70 plausible names were tried against the simplest vector (no triggers, no incidents) without a match. | every non-refusal `currency.*` vector, first example `currency.current-and-reliable` |
-| A4 | Whether the reports for revoked, expired and not-yet-valid subjects differ in layout from other reports (all receipts are rejected, checks are unknown, score zero). Semantics pass; digests do not, and the blocker wording (A1) hides the answer. | `assess.subject-revoked`, `assess.subject-expired`, `assess.subject-not-yet-valid` |
+| (old) | MISSING: the extra limitation string added for fixture evidence, and its position in `limitations`. Neither new section mentions it. | `assess.fixture-allowed-by-policy`, `assess.mixed-fixture-and-runtime-labelled-mixed` |
+| A2 | MISSING: the `detail` text of each trigger. The layout says triggers are `{id, code, detail}` and "detail strings are informational", but they feed `resultDigest`, so informational is not enough for a byte-exact result. Needed for the 12 or so currency vectors that fire triggers. | e.g. `currency.subject-changed`, `currency.assessment-expired`, `currency.incident-open-high` |
+| A3 | MISSING: the "four fixed strings" in `limits`. The count is given, the strings are not. Every currency result carries them, so this alone fails every non-refusal currency vector, including those with no triggers. | all non-refusal `currency.*` except `currency.invalid-incident-record-ignored` (digest not compared) |
+| A4 | Unverified: `authenticated` (always false), member set and `incidents` shape could not be separately confirmed because A2 and A3 hide the digest. | same as A3 |
 
 ## B. Vector-resolved (spec, guide and contract were insufficient)
 
@@ -40,7 +42,21 @@ Each entry: what was unspecified, how it was resolved (guess, or a vector), and 
 | B23 | A medium or low trusted report is `observed`, not open. | `currency.incident-medium-observed-only` |
 | B24 | A resolution by a self-role key and a resolution by the reporter's own key give two different reasons, and a resolution dated at the same instant as the report is ignored. | `currency.resolution-by-self-role-key-ignored`, `currency.incident-cannot-resolve-own-report`, `currency.resolution-dated-same-instant-ignored` |
 
-## C. Guesses no vector pins
+## B2. Resolved by the new texts (previously guesses or vector-resolved)
+
+Blocker wording (every code), `evidenceBundleDigest`, the rejection reason order (B4 and C5 were wrong: subject status applies to every trusted receipt before the binding checks, declaration and source checks come after the check-in-profile check, and key-revoked comes after future and predates), recency (B7, C4 confirmed), blocker order and short circuit (B6), validator grammars (C1, partly) and trigger order. Revoked, expired and not-yet-valid subject reports now match byte for byte (old A4 closed).
+
+New gaps found while implementing the texts:
+
+| # | Gap | Vector or area |
+| :-- | :--- | :--- |
+| N1 | Wrong or ambiguous: the grammar says text has "no control characters", but a PEM public key (trusted key, proof) contains line feeds. I exempted `publicKey`. The text should name that exception. | every vector with a key |
+| N2 | Ambiguous: `docs/SCORING.md` has two orderings, the code table (principal after the run blockers and `NO_SCORED_OBSERVATIONS` before it) and the wording table (principal before `NO_SCORED_OBSERVATIONS`), and says "in table order". I used the wording table order; no vector contains both, so neither is pinned. | `assess.principal-required-unbound` (single blocker) |
+| N3 | Ambiguous: `SCORE_BELOW_POLICY` for "a sufficiently observed result" does not say whether run blockers (ambiguous, mixed, repeated, invalidated, conflict) or the principal blocker make a result not sufficiently observed. I treat any insufficiency blocker as suppressing it. | not pinned |
+| N4 | Ambiguous: the reason list gives 128-character cut for ids; I apply it to `rejectedEvidence` ids only. Grammar says identifiers are at most 128 characters, so an over-long id would be a shape failure and the cut could never apply to a valid receipt. | not pinned |
+| N5 | Not stated: `<status>` in the minimum wording for a never-observed check. I used `unknown` (the check status in the report). | `assess.minimum-omitted-evidence-cannot-lift` matched |
+
+## C. Guesses no vector pins (some now superseded, see B2)
 
 | # | Choice made | Alternative |
 | :-- | :--- | :--- |
