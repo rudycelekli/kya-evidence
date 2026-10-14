@@ -1,5 +1,5 @@
 import { createPublicKey } from 'node:crypto';
-import { insist } from '../shared/canonical.mjs';
+import { insist, canonical } from '../shared/canonical.mjs';
 import { verifyAssessment } from '../assessment/application/assess.mjs';
 import { hash } from '../identity/domain/services/validation.mjs';
 import { didKeyFromPublicKey } from './encoding.mjs';
@@ -52,7 +52,15 @@ export function exportAssessmentCredential(assessment, options = {}) {
   insist(until > from, 'Assessment already expired at validFrom');
   const entries = [];
   for (const purpose of ['revocation', 'suspension']) if (options.status?.[purpose]) entries.push(statusEntry(purpose, options.status[purpose]));
-  const credential = {
+  const credential = buildCredentialBody(r, { issuer, validFrom, validUntil, entries });
+  const { token } = signCompact(credential, privateKey);
+  const evidenceIds = r.checks.map(c => c.evidenceId).filter(Boolean);
+  return { jwt: token, credential, issuer, ledgerEntry: { reportDigest: r.reportDigest, subjectDigest: r.subjectDigest, evidenceIds } };
+}
+
+// The single construction of the credential body. Export signs it; report verification rebuilds it and compares.
+function buildCredentialBody(r, { issuer, validFrom, validUntil, entries }) {
+  return {
     '@context': [VC_CONTEXT, { '@vocab': KYA_VOCAB }],
     id: `urn:kya:assessment:sha256:${r.reportDigest}`,
     type: ['VerifiableCredential', CREDENTIAL_TYPE],
@@ -69,9 +77,6 @@ export function exportAssessmentCredential(assessment, options = {}) {
     evidence: [{ type: 'KyaInputDigests', subjectDigest: r.subjectDigest, profileDigest: r.profileDigest, policyDigest: r.policyDigest, evaluatorDigest: r.evaluatorDigest, evidenceBundleDigest: r.evidenceBundleDigest, acceptedEvidenceDigests: r.acceptedEvidenceDigests, reportDigest: r.reportDigest }],
     ...(entries.length ? { credentialStatus: entries } : {})
   };
-  const { token } = signCompact(credential, privateKey);
-  const evidenceIds = r.checks.map(c => c.evidenceId).filter(Boolean);
-  return { jwt: token, credential, issuer, ledgerEntry: { reportDigest: r.reportDigest, subjectDigest: r.subjectDigest, evidenceIds } };
 }
 
 function checkClaims(c) {
@@ -88,25 +93,35 @@ function checkClaims(c) {
   return errs;
 }
 
-const SAME = ['subjectDigest', 'scopeDigest', 'scopeId', 'profileId', 'profileDigest', 'policyDigest', 'evaluatorDigest', 'reportDigest', 'assessedAt', 'selectedRunId', 'decision', 'score', 'coverage', 'independentCoverage', 'evidenceMode', 'limitations'];
-const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
-// Field-by-field comparison against the original report. Returns the names that differ.
+// Rebuild the expected credential from the report with the exporter's own construction and compare the whole thing.
+// Issuer, validFrom and validUntil come from the credential being checked (bounded against the report below). The status entries
+// are issuer-supplied options and are not in the report: they are rebuilt through the same constructor so their shape is exact, but
+// their content is not bound to the assessment. Returns names of the top-level members that differ.
+const canonicalForm = v => v === undefined ? 'undefined' : canonical(v);
+function subjectDiff(c, e) {
+  const keys = new Set([...Object.keys(e.credentialSubject), ...Object.keys(c.credentialSubject ?? {})]);
+  const names = [...keys].filter(k => canonicalForm(c.credentialSubject?.[k]) !== canonicalForm(e.credentialSubject[k]));
+  return `credentialSubject (${names.join(', ')})`;
+}
 function compareToReport(c, r) {
-  const s = c.credentialSubject, diffs = SAME.filter(k => !same(s[k], r[k]));
-  if (!same(s.blockerCodes, Object.hasOwn(r, 'blockerCodes') ? r.blockerCodes : null)) diffs.push('blockerCodes');
-  const ev = c.evidence?.[0] ?? {};
-  for (const k of ['evidenceBundleDigest', 'acceptedEvidenceDigests']) if (!same(ev[k], r[k])) diffs.push(`evidence.${k}`);
-  if (c.validUntil !== undefined && Date.parse(c.validUntil) > Date.parse(r.validUntil)) diffs.push('validUntil');
-  if (Date.parse(c.validFrom) < Date.parse(r.assessedAt)) diffs.push('validFrom');
-  return diffs;
+  const diffs = [];
+  let entries = [];
+  try { entries = [].concat(c.credentialStatus ?? []).map(e => statusEntry(e?.statusPurpose, e)); } catch { diffs.push('credentialStatus'); }
+  const expected = buildCredentialBody(r, { issuer: c.issuer, validFrom: c.validFrom, validUntil: c.validUntil, entries });
+  for (const k of new Set([...Object.keys(expected), ...Object.keys(c)])) {
+    if (canonicalForm(c[k]) !== canonicalForm(expected[k])) diffs.push(k === 'credentialSubject' ? subjectDiff(c, expected) : k);
+  }
+  if (!(Date.parse(c.validFrom) >= Date.parse(r.assessedAt))) diffs.push('validFrom (predates the assessment)');
+  if (!(Date.parse(c.validUntil) <= Date.parse(r.validUntil))) diffs.push('validUntil (outlives the assessment)');
+  return [...new Set(diffs)];
 }
 
 /**
  * Verify a vc+jwt assessment credential. Never throws for bad input: returns { valid, errors }.
  * authenticated is always false: a valid signature proves key possession, not truthful execution.
  * Without `report`, only internal consistency is checked: a holder of the issuer key can edit fields and re-sign, and the result
- * is still valid. With the original `report` (kya.assessment/v1) the credential is compared field by field and any difference is
- * REPORT_MISMATCH. Network access never happens; supply status list credentials as { [url]: jwt }.
+ * is still valid. With the original `report` (kya.assessment/v1) the credential is compared as a whole to a credential rebuilt from it
+ * and any difference is REPORT_MISMATCH naming the top-level member. Network access never happens; supply status list credentials as { [url]: jwt }.
  */
 export function verifyAssessmentCredential(token, { now = new Date().toISOString(), expectedIssuerKeys = [], policy, statusLists, requireStatusCheck = false, report } = {}) {
   const base = { authenticated: false, warning: WARNING };
