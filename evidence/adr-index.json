@@ -177,8 +177,62 @@
         "ADR-0011",
         "ADR-0014"
       ]
+    },
+    {
+      "id": "ADR-0017",
+      "title": "Measured, signed capture attestation (`kya.capture/v1`)",
+      "status": "Proposed",
+      "file": "docs/adr/0017-measured-signed-capture-attestation.md",
+      "contentDigest": "51f2bc2a3393af6a23196db324fb117860f71959f7e9d11e8e725a78bc67b314",
+      "related": [
+        "ADR-0003",
+        "ADR-0004",
+        "ADR-0009",
+        "ADR-0014",
+        "ADR-0020",
+        "ADR-0018"
+      ]
+    },
+    {
+      "id": "ADR-0018",
+      "title": "Evaluation-awareness detection through paired runs",
+      "status": "Proposed",
+      "file": "docs/adr/0018-evaluation-awareness-paired-runs.md",
+      "contentDigest": "7601d7523953654ed11df0161bd745e87a5cb19d333e87c188e74c0652442bd2",
+      "related": [
+        "ADR-0003",
+        "ADR-0010",
+        "ADR-0017",
+        "ADR-0019"
+      ]
+    },
+    {
+      "id": "ADR-0019",
+      "title": "Judge reliability floor",
+      "status": "Proposed",
+      "file": "docs/adr/0019-judge-reliability-floor.md",
+      "contentDigest": "ccf79576fb3180316a539f0a4af7da67c0f2a0bfa80c6b9f6cd67b3481ecd45b",
+      "related": [
+        "ADR-0003",
+        "ADR-0010",
+        "ADR-0017",
+        "ADR-0014"
+      ]
+    },
+    {
+      "id": "ADR-0020",
+      "title": "External anchoring of evidence bundles and capture digests",
+      "status": "Proposed",
+      "file": "docs/adr/0020-external-anchoring-of-evidence-bundles.md",
+      "contentDigest": "b520ced81bd9e6bdb325384f5185262cdc422697f5befba5e86912a71569e52f",
+      "related": [
+        "ADR-0003",
+        "ADR-0013",
+        "ADR-0014",
+        "ADR-0017"
+      ]
     }
   ],
-  "digest": "25d4cd7cc297a39a0b24b6666b7b7bb5594319dbb7b7fb9b8b05f3326496ac57",
+  "digest": "2d4cfd3122ed4fa5b7506662462f28afc9e2e4ac12e417905a7f809fb6b32be4",
   "store": "portable local file; not a claim of AgentDB graph persistence"
 }

@@ -50,6 +50,8 @@ Next, none started. Each needs an ADR and tests first:
 - External security and evaluator review (stage 1).
 - A second independent implementation (stage 5).
 
+Design proposals for stages 3 and 4 (measured signed capture, evaluation-awareness paired runs, a judge reliability floor, external anchoring) are in [DESIGN-CAPTURE-AND-PROTECTED-EVALUATION.md](DESIGN-CAPTURE-AND-PROTECTED-EVALUATION.md) and ADR-0017 to ADR-0020. They are proposed, not implemented.
+
 ## Bounded continuous cycle
 
 Define a hypothesis. Freeze baseline, evaluator and cases. Create an isolated candidate. Compare identical cases, quality, latency and total cost. Independently review. Record `ACCEPT`, `REJECT` or `INCONCLUSIVE`. Retain rollback. Human publication authority remains intact. Research failure is evidence; it should not be hidden behind improved demo numbers.
