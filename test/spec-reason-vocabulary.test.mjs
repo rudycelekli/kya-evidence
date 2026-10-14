@@ -50,3 +50,14 @@ test('the specification states the identifier text hash and timestamp grammars t
   assert.ok(validationSource.includes('{64}') && section.includes('64 lowercase hexadecimal'));
   assert.ok(validationSource.includes('T\\d{2}:\\d{2}:\\d{2}\\.\\d{3}Z') && section.includes('YYYY-MM-DDTHH:MM:SS.mmmZ'));
 });
+
+test('the specification states the fixed trigger detail limits and limitations strings of the reference', () => {
+  const fixed = ticks(section.split('Trigger `detail` strings')[1].split('\n\n')[0])
+    .concat(ticks(section.split('An assessment\'s `limitations`')[1].split('\n\n')[0]))
+    .filter(t => /^[A-Z]/.test(t));
+  assert.ok(fixed.length >= 14);
+  for (const text of fixed) {
+    const asSource = text.replace('<n>', '${inc.open.length}');
+    assert.ok(currencySource.includes(asSource) || assessSource.includes(asSource), `fixed string not in reference: ${text}`);
+  }
+});

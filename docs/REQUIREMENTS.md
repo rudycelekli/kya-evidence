@@ -135,4 +135,4 @@ Each requirement is traced to at least one test that must exist exactly once; th
 | KYA-SCO-003 | SHOULD | The scoring document SHOULD state the reference wording of every blocker and the order in which blockers appear, so that an implementer can reproduce report digests; relying software MUST branch on blocker codes, not wording. | `scoring-wording.test.mjs` |
 | KYA-RPT-005 | SHOULD | The specification SHOULD state the full currency result layout, the trigger firing order, the rejected-evidence and ignored-incident reason vocabularies and the identifier, text, hash and timestamp grammars, so that an implementer can reproduce report digests; relying software MUST branch on codes, not on reason or detail text. | `spec-reason-vocabulary.test.mjs` |
 
-Registry digest: `8015105e14c0bc4483e5c571c5361726bc5a86d636cc3cc454c3b6da31c108a9`
+Registry digest: `ea8f7663093f7404eaeaf1dfc62154db08fa9ff36efcd81961b6c9b00de236ca`

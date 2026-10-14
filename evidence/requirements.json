@@ -2492,6 +2492,10 @@
         {
           "file": "test/spec-reason-vocabulary.test.mjs",
           "title": "the specification states the identifier text hash and timestamp grammars the validators enforce"
+        },
+        {
+          "file": "test/spec-reason-vocabulary.test.mjs",
+          "title": "the specification states the fixed trigger detail limits and limitations strings of the reference"
         }
       ]
     }

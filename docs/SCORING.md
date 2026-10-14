@@ -79,6 +79,8 @@ The wording below is what the reference implementation writes in `blockers`. It 
 | `MANDATORY_MINIMUM_UNPROVEN` | `Mandatory minimum unproven: <id> requires <minimum>; observed <status>` |
 | `NO_OBSERVED_CHECKS` | `No observed checks` |
 
+The order of the wording table is the normative blocker order; the order of the code table above is not. `<status>` is `unknown` for a mandatory check that was never observed. `SCORE_BELOW_POLICY` applies only when no insufficiency blocker applies, because the score is judged only on a result that is otherwise sufficiently observed.
+
 Order and short circuit: a revoked subject yields only `SUBJECT_REVOKED`; an expired or not-yet-valid subject yields only its own code. Otherwise a critical failure yields only `CRITICAL_CHECK_FAILED` entries and suppresses the insufficiency blockers below it. When no critical check failed, the insufficiency blockers appear in table order from `CRITICAL_CHECK_UNPROVEN` through `NO_SCORED_OBSERVATIONS`, or `SCORE_BELOW_POLICY` for a sufficiently observed result. Mandatory-minimum entries are appended after those, and `NO_OBSERVED_CHECKS` last.
 
 `evidenceBundleDigest` is the digest of the array of the captured evidence envelopes' digests, in input order.
