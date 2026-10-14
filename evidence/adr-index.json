@@ -251,7 +251,7 @@
       "title": "Capture-issuer role and signed campaign ledger",
       "status": "Implemented",
       "file": "docs/adr/0021-capture-issuer-role-and-campaign-ledger.md",
-      "contentDigest": "208e9c291be74b24e534a9fed6d73a442514ac4c7c995b18d6957fbfea5cebcb",
+      "contentDigest": "361a6acfc0671086d679444ccd1171afbefde8a402b0cca26c94f26006e24d5e",
       "related": [
         "ADR-0003",
         "ADR-0004",
@@ -290,6 +290,6 @@
       ]
     }
   ],
-  "digest": "3bb1535e289f016556fcaf95b9af3d53a6aa37d401390b6b4cba72d3c12ea356",
+  "digest": "a63feb4074fae51ebdbac43319a3ba30b87326991354600fb8b05bdc738e0c44",
   "store": "portable local file; not a claim of AgentDB graph persistence"
 }

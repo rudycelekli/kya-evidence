@@ -110,5 +110,7 @@ Each requirement is traced to at least one test that must exist exactly once; th
 | KYA-ACT-008 | MUST | The CI gate MUST report a result as reliable only for runtime evidence unless fixture evidence is explicitly allowed, MUST name the reason code when it withholds reliability, and MUST NOT treat declaration evidence as reliable under any option. | `kya-check.test.mjs` |
 | KYA-ACT-009 | MUST | The CI gate MUST refuse with a named error, before printing any result, when a supplied policy or evaluator digest differs from an expected pinned digest. | `kya-check.test.mjs` |
 | KYA-ACT-010 | MUST NOT | The CI gate MUST NOT cut a JSON output value mid-string; an oversized summary MUST be replaced by a compact valid object marked truncated. | `kya-check.test.mjs` |
+| KYA-CMP-019 | MUST | Campaign run IDs MUST be unique case-insensitively and an errored entry MUST NOT reuse another attempt's evidence bundle digest; the summary MUST report each attempt's final state so a successful retry supersedes an errored attempt without hiding it. | `campaign-ledger.test.mjs` |
+| KYA-CMP-020 | MUST | The campaign CLI MUST exit non-zero from run, summary and verify-ledger unless every planned attempt completed (an open ledger only exits 0 with an explicit flag that reports it as open). | `campaign-runner.test.mjs` |
 
-Registry digest: `80c98f91dce634485a7714706b658f9a23d5c743016a56125af012d5df0eea7c`
+Registry digest: `59905d2bb5658b026c56ea1c3333aab87481f5c035feb8e8dd78bfa30d5a8932`
