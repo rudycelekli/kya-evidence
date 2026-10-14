@@ -63,3 +63,9 @@ test('same scope name with different purpose or permissions cannot establish com
 test('dossier inputs are captured once and unsupported options/reflexive mutation cannot alter decisions',async()=>{
  const f=await dossierFixture();const provided=new Proxy(f.inputs,{get(t,k){return k==='policy'?{...t.policy,trustedKeys:[]}:Reflect.get(t,k);}});const d=createDossier({inputs:provided,observations:f.observations});assert.equal(d.assessment.decision,'qualified');assert.throws(()=>createDossier({inputs:f.inputs,report:d.assessment}));const prior=d.dossierDigest;f.inputs.evidence=[];assert.equal(d.dossierDigest,prior);validateDossier(d);
 });
+
+test('standalone dossier cannot invent telemetry over absent originals or replace benchmark counts with prose',async()=>{
+ const f=await dossierFixture(),d=createDossier({inputs:f.inputs});for(const kind of ['cost','latency']){const fake=structuredClone(d),m=fake.measurements[kind],unit=kind==='cost'?'Usd':'Ms';m.known=m.planned;m.coverage=1;m['reportedSubtotal'+unit]=0;m['reportedTotal'+unit]=0;rehash(fake);assert.throws(()=>validateDossier(fake),/population/);}
+ const{runOfflineBenchmarks}=await import('../src/benchmarks/index.mjs');const benchmark=await runOfflineBenchmarks({now:NOW}),withBench=createDossier({inputs:f.inputs,observations:f.observations,benchmarkRuns:[benchmark]});for(const replacement of[null,{...withBench.benchmarks[0].summary,total:'\n# injected heading\n<script>PRIVATE_REPORT_SENTINEL</script>'},{...withBench.benchmarks[0].summary,total:1}]){const fake=structuredClone(withBench);fake.benchmarks[0].summary=replacement;rehash(fake);assert.throws(()=>validateDossier(fake));}
+});
+test('explicit null populations are malformed rather than silently omitted',async()=>{const f=await dossierFixture();assert.throws(()=>createDossier({inputs:f.inputs,observations:null}));assert.throws(()=>createDossier({inputs:f.inputs,benchmarkRuns:null}));});
