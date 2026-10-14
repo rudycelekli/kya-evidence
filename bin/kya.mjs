@@ -3,7 +3,7 @@ import { readFile, writeFile, mkdir, lstat } from 'node:fs/promises';
 import { resolve, join } from 'node:path';
 import { generateKeyPairSync } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
-import { assess, digest, hashBytes, keyId, signEvidence, parseJson, verifyEvidence, verifyAssessment, importDeclarations, createUniverse, forkUniverse, verifyUniverse, compareUniverses, createDossier, verifyDossier, renderDossierMarkdown, renderDossierHtml, runOfflineBenchmarks, verifyBenchmarkRun, BENCHMARK_CATALOG } from '../src/index.mjs';
+import { assess, digest, hashBytes, keyId, signEvidence, parseJson, verifyEvidence, verifyAssessment, checkCurrency, importDeclarations, createUniverse, forkUniverse, verifyUniverse, compareUniverses, createDossier, verifyDossier, renderDossierMarkdown, renderDossierHtml, runOfflineBenchmarks, verifyBenchmarkRun, BENCHMARK_CATALOG } from '../src/index.mjs';
 import { inspectConfiguration } from '../src/identity/infrastructure/inspect.mjs';
 import { renderAssessment } from '../src/assessment/infrastructure/render.mjs';
 import { CORE_PROFILE, EVALUATOR_DIGEST, createReferenceAdapter, runConformance, probeRuntimes } from '../src/conformance/index.mjs';
@@ -22,6 +22,7 @@ const HELP=`KYA Evidence 0.1.0-alpha.3 — Know Your Agent
   kya probe [--out FILE]
   kya import --format open-kya-alpha|a2a-1 --input FILE [--out FILE]
   kya assess --manifest FILE --profile FILE --policy FILE --evidence FILE --evaluator DIGEST [--now ISO] [--out DIRECTORY]
+  kya currency --assessment FILE --manifest FILE --policy FILE [--now ISO]
   kya verify FILE
   kya sign --input PAYLOAD --key PRIVATE_PEM [--out FILE]
   kya keygen DIRECTORY
@@ -127,6 +128,10 @@ export async function main(argv=process.argv.slice(2)){
     const report=assess({manifest,profile,policy,evidence,evaluatorDigest:flags.evaluator,now:flags.now??new Date().toISOString()});
     if(flags.out){const out=await reportDirectory(flags.out,report);console.log(JSON.stringify({out,decision:report.decision,score:report.score}));}else console.log(JSON.stringify(report,null,2));
     if(report.decision!=='qualified')process.exitCode=2;
+  }else if(command==='currency'){
+    allow(flags,['assessment','manifest','policy','now']);need(flags,['assessment','manifest','policy']);if(positional.length)throw Error('Unexpected positional argument');
+    const [assessment,manifest,policy]=await Promise.all(['assessment','manifest','policy'].map(k=>jsonFile(flags[k])));
+    const result=checkCurrency(assessment,{manifest,policy,now:flags.now??new Date().toISOString()});await emit(result);if(!result.current)process.exitCode=2;
   }else if(command==='verify'){
     allow(flags,[]);if(positional.length!==1)throw Error('verify requires FILE');const value=await jsonFile(positional[0]);
     if(value?.schema==='kya.assessment/v1')await emit(verifyAssessment(value));

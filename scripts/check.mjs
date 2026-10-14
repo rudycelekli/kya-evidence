@@ -10,4 +10,5 @@ for(const path of files.filter(x=>/\.m?js$/.test(x))){const p=spawnSync(process.
 for(const path of files.filter(x=>/\.json$/.test(x)))JSON.parse(await readFile(path,'utf8'));
 for(const required of ['README.md','LICENSE','NOTICE','AGENTS.md','docs/SPECIFICATION.md','docs/SCORING.md','docs/THREAT-MODEL.md','docs/GOVERNANCE.md','dashboard/index.html','assets/kya-hero.svg'])await lstat(join(root,required));
 const p=spawnSync(process.execPath,[join(root,'scripts/generate-schemas.mjs'),'--check'],{encoding:'utf8',timeout:5000});if(p.status!==0)throw Error(p.stderr);
-console.log(JSON.stringify({syntax:'passed',json:'passed',schemas:'matched',requiredArtifacts:'present',files:files.length,notEstablished:['external adoption','live commercial-agent qualification','independent security certification']}));
+const r=spawnSync(process.execPath,[join(root,'scripts/requirements.mjs'),'--check'],{encoding:'utf8',timeout:10000});if(r.status!==0)throw Error(r.stderr||'Requirement traceability failed');
+console.log(JSON.stringify({syntax:'passed',json:'passed',schemas:'matched',requirementTraceability:'passed',requiredArtifacts:'present',files:files.length,notEstablished:['external adoption','live commercial-agent qualification','independent security certification']}));

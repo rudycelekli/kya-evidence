@@ -49,3 +49,15 @@ test('local server serves public docs/modules but refuses private paths',async()
     assert.equal((await fetch(url+'/')).status,200);assert.equal((await fetch(url+'/README.md')).status,200);assert.equal((await fetch(url+'/.private/checkpoint.json')).status,404);assert.equal((await fetch(url+'/%2e%2e/.git/config')).status,404);assert.equal((await fetch(url+'/',{method:'POST'})).status,405);
   }finally{child.kill('SIGTERM');}
 });
+test('CLI currency exits 0 for an unchanged subject and 2 with triggers after a manifest change',async()=>{
+  const dir=await mkdtemp(join(tmpdir(),'kya-currency-'));
+  try{
+    const {assess}=await import('../src/index.mjs'),i=inputs(),report=assess(i),w=(n,v)=>writeFile(join(dir,n),JSON.stringify(v));
+    await w('a.json',report);await w('m.json',i.manifest);await w('p.json',i.policy);
+    const base=['currency','--assessment',join(dir,'a.json'),'--policy',join(dir,'p.json'),'--now',i.now];
+    const ok=run([...base,'--manifest',join(dir,'m.json')]);assert.equal(ok.status,0,ok.stderr);assert.equal(JSON.parse(ok.stdout).action,'none');
+    await w('m2.json',{...i.manifest,agent:{...i.manifest.agent,version:'9'}});
+    const bad=run([...base,'--manifest',join(dir,'m2.json')]);assert.equal(bad.status,2);assert.equal(JSON.parse(bad.stdout).triggers[0].id,'subject-changed');
+    assert.equal(run([...base]).status,1);
+  }finally{await rm(dir,{recursive:true,force:true});}
+});

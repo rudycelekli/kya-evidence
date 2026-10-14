@@ -1,6 +1,6 @@
 # KYA Evidence specification, v0.1
 
-Status: implemented experimental reference protocol. Independent security and standards-body review remain open. Normative requirements describe this implementation; they do not claim an adopted standard.
+Status: implemented experimental reference protocol. Independent security and standards-body review remain open. Normative requirements describe this implementation; they do not claim an adopted standard. Numbered requirements and their test traces are in [REQUIREMENTS.md](REQUIREMENTS.md).
 
 ## Purpose
 
@@ -21,7 +21,7 @@ The manifest declares; the profile freezes checks; receipts record outcomes; pol
 
 Strict JSON rejects duplicate members, unsupported values, prototype keys, excessive resources and unknown schema fields. Canonicalization uses a bounded sorted-key JSON subset, not a claimed RFC 8785 implementation. SHA-256 digests are 64 lowercase hexadecimal characters. Timestamps are canonical UTC ISO strings.
 
-The subject is the full-manifest digest. It binds harness/version, model, artifact/configuration digests, tool identities/versions/permissions and explicit scope. Tool permissions must be allowed in scope. Allowed and forbidden permissions cannot overlap. Changing a manifest field creates a new subject and invalidates old evidence for it.
+The subject is the full-manifest digest. It binds harness/version, model, artifact/configuration digests, tool identities/versions/permissions and explicit scope. A manifest MAY declare `principal.accountableParty` as `{kind:'natural-person'|'legal-entity', ref}`, a pseudonymous reference to who answers for the agent; it admits no personal-data fields and an agent can never be its own accountable party. A policy MAY set `requirePrincipalBinding`; when true, a manifest without that declaration cannot qualify. The declaration is an unverified claim: it makes accountability inspectable and bound to the subject digest, and does not prove identity, authority or legal liability. Relying on an issuer's evidence never transfers the relying party's own accountability. Tool permissions must be allowed in scope. Allowed and forbidden permissions cannot overlap. Changing a manifest field creates a new subject and invalidates old evidence for it.
 
 ## Trust and eligibility
 
@@ -42,6 +42,8 @@ Every frozen check stays in the denominator. Unknown, abstained and errored chec
 ## Reports and viewers
 
 The report includes input digests, full-scope `scopeDigest`, `selectedRunId`, `ambiguousRuns`, every check, `acceptedEvidenceDigests`, rejection reasons and explicit limitations. `scopeDigest` hashes the entire manifest scope, including purpose and permissions. A readable scope ID alone is insufficient for comparison. Legacy assessments must be recomputed before new exact-scope comparisons. `reportDigest` is an unsigned checksum. `verify` returns checksum integrity with `authenticated:false`; an attacker can checksum false claims. Recompute from trusted original inputs to assess assurance.
+
+A relying party SHOULD run `checkCurrency` (CLI `kya currency`) before each reliance. It compares the assessment against the current manifest, policy and clock and fires `subject-changed`, `policy-changed`, `subject-revoked`, `assessment-expired`, `assessment-aged` (optional policy `maxAssessmentAgeSeconds`) or `clock-regression`; any trigger means reassess. It is the analogue of KYC ongoing monitoring for change events. It does not observe runtime behavior, and its result is unauthenticated. Continuous behavioral monitoring needs independent capture and remains open.
 
 [Diagnostic dossiers](DOSSIERS.md) recompute the assessment and join originals to selected signed receipts. Replayed supported response predicates can support scoped strengths; signed assertions without matching originals remain reported passing claims. Failures preserve criticality without claiming a causal root cause. Missing telemetry, unresolved checks and seven structural observation limits remain visible. Standalone rendering validates consistency; trusted-input dossier verification recomputes the complete projection. Both remain unauthenticated without separate issuer/capture authority.
 

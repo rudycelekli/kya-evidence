@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { generateKeyPairSync } from 'node:crypto';
-import { assess, signEvidence, verifyEvidence, verifyArtifact, verifyAssessment, compareAssessments, digest, hashBytes, keyId, validateManifest, validatePolicy, validateProfile, validateEvidence } from '../src/index.mjs';
+import { assess, signEvidence, verifyEvidence, verifyArtifact, verifyAssessment, compareAssessments, checkCurrency, digest, hashBytes, keyId, validateManifest, validatePolicy, validateProfile, validateEvidence } from '../src/index.mjs';
 import { inputs, manifest, profile, policy, payload, bundle, keys, signerId, NOW, FUTURE, clone } from './helpers.mjs';
 
 test('complete synthetic run qualifies only its local policy with explicit fixture provenance',()=>{
@@ -167,4 +167,52 @@ test('semantically conflicting permissions, duplicate tool/check/key identifiers
   const p=profile();p.checks.push(p.checks[0]);assert.throws(()=>validateProfile(p));
   const k=policy();k.trustedKeys.push(k.trustedKeys[0]);assert.throws(()=>validatePolicy(k));
   const e=payload();e.expiresAt=e.observedAt;assert.throws(()=>validateEvidence(e));
+});
+
+test('principal binding: an agent cannot be its own accountable party, and the declaration is optional but strict',()=>{
+  const bound=(party)=>{const m=manifest();m.principal={id:'controller:test',accountableParty:party};return m;};
+  assert.equal(validateManifest(bound({kind:'legal-entity',ref:'org:example-operator'})).principal.accountableParty.kind,'legal-entity');
+  assert.equal(validateManifest(manifest()).principal.accountableParty,undefined);
+  for(const bad of [{kind:'agent',ref:'org:x'},{kind:'natural-person',ref:'agent:test'},{kind:'natural-person'},{kind:'natural-person',ref:'person:a',name:'Real Name'},'person:a',null])assert.throws(()=>validateManifest(bound(bad)));
+});
+test('policy can require a declared accountable party; absence withholds qualification and the declaration is part of the subject',()=>{
+  const base=inputs(),withParty=clone(base);withParty.manifest.principal.accountableParty={kind:'legal-entity',ref:'org:example-operator'};
+  withParty.evidence=bundle(withParty.manifest,base.profile);
+  const strict=i=>{const c=clone(i);c.policy.requirePrincipalBinding=true;return c;};
+  assert.equal(assess(base).decision,'qualified');
+  const missing=assess(strict(base));assert.equal(missing.decision,'insufficient-evidence');assert(missing.blockers.some(b=>/accountable party/i.test(b)));
+  const present=assess(strict(withParty));assert.equal(present.decision,'qualified');
+  assert.notEqual(present.subjectDigest,assess(base).subjectDigest);
+  const relaxed=clone(withParty);relaxed.policy.requirePrincipalBinding=false;assert.equal(assess(relaxed).decision,'qualified');
+  const bad=clone(base);bad.policy.requirePrincipalBinding='yes';assert.throws(()=>assess(bad));
+});
+test('policies and reports without the optional flag keep their previous digests and decisions',()=>{
+  const i=inputs();assert.equal('requirePrincipalBinding' in validatePolicy(i.policy),false);
+});
+
+test('currency: an unchanged assessment is current and any monitoring trigger demands reassessment',()=>{
+  const i=inputs(),report=assess(i),ctx=(edit=()=>{},now=NOW)=>{const c={manifest:clone(i.manifest),policy:clone(i.policy),now};edit(c);return c;};
+  const ok=checkCurrency(report,ctx());assert.equal(ok.current,true);assert.equal(ok.action,'none');assert.deepEqual(ok.triggers,[]);assert.equal(ok.authenticated,false);
+  const ids=c=>checkCurrency(report,c).triggers.map(t=>t.id);
+  assert.deepEqual(ids(ctx(c=>{c.manifest.agent.version='2';})),['subject-changed']);
+  assert.deepEqual(ids(ctx(c=>{c.manifest.system.tools[0].version='9';})),['subject-changed']);
+  assert.deepEqual(ids(ctx(c=>{c.policy.minScore=0;})),['policy-changed']);
+  assert.deepEqual(ids(ctx(c=>{c.policy.revokedSubjectDigests=[report.subjectDigest];})),['policy-changed','subject-revoked']);
+  assert.deepEqual(ids(ctx(()=>{},new Date(Date.parse(report.validUntil)+1).toISOString())),['assessment-expired']);
+  assert.deepEqual(ids(ctx(()=>{},new Date(Date.parse(report.assessedAt)-1).toISOString())),['clock-regression']);
+  const aged=ctx(c=>{c.policy.maxAssessmentAgeSeconds=60;},new Date(Date.parse(report.assessedAt)+61_000).toISOString());
+  assert(ids(aged).includes('assessment-aged'));
+  const bound=assess({...i,policy:{...i.policy,maxAssessmentAgeSeconds:60}}),fresh=ctx(c=>{c.policy.maxAssessmentAgeSeconds=60;},new Date(Date.parse(bound.assessedAt)+60_000).toISOString());
+  assert.equal(checkCurrency(bound,fresh).current,true);
+  assert.equal(checkCurrency(bound,{...fresh,now:new Date(Date.parse(bound.assessedAt)+61_000).toISOString()}).action,'reassess');
+});
+test('currency: a non-qualified decision is never reported as reliable, and malformed or forged input is rejected',()=>{
+  const i=inputs();i.evidence=[];const blocked=assess(i);assert.notEqual(blocked.decision,'qualified');
+  const r=checkCurrency(blocked,{manifest:i.manifest,policy:i.policy,now:NOW});assert.equal(r.current,true);assert.equal(r.reliable,false);
+  const good=assess(inputs()),forged=clone(good);forged.decision='qualified';forged.score.earned=1000;forged.validUntil='2099-01-01T00:00:00.000Z';
+  assert.throws(()=>checkCurrency(forged,{manifest:inputs().manifest,policy:inputs().policy,now:NOW}),/digest differs/);
+  assert.throws(()=>checkCurrency(good,{manifest:inputs().manifest,policy:inputs().policy}),/./);
+  assert.throws(()=>checkCurrency(good,{manifest:inputs().manifest,policy:inputs().policy,now:'yesterday'}),/./);
+  assert.throws(()=>checkCurrency(good,{manifest:{},policy:inputs().policy,now:NOW}),/./);
+  const p=inputs().policy;p.maxAssessmentAgeSeconds=0;assert.throws(()=>validatePolicy(p),/age/i);
 });

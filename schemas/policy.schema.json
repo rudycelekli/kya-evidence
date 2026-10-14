@@ -114,6 +114,14 @@
       },
       "maxItems": 4096,
       "uniqueItems": true
+    },
+    "requirePrincipalBinding": {
+      "type": "boolean"
+    },
+    "maxAssessmentAgeSeconds": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 31536000
     }
   },
   "required": [

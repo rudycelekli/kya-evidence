@@ -1,0 +1,560 @@
+{
+  "schema": "kya.requirements/v1",
+  "specification": "docs/SPECIFICATION.md",
+  "keywords": "MUST, MUST NOT, SHOULD and MAY are used as in RFC 2119/8174. Requirements describe this reference implementation; they are not an adopted standard.",
+  "requirements": [
+    {
+      "id": "KYA-INT-001",
+      "level": "MUST",
+      "area": "integrity",
+      "section": "Records and bindings",
+      "statement": "Canonicalization MUST be deterministic regardless of member insertion order, and MUST reject accessors, cycles, symbols, non-enumerable data and resource-exhausting input without invoking untrusted code.",
+      "tests": [
+        {
+          "file": "test/canonical.test.mjs",
+          "title": "canonical ordering and hash are deterministic"
+        },
+        {
+          "file": "test/canonical.test.mjs",
+          "title": "canonical rejects accessors without invoking them"
+        },
+        {
+          "file": "test/canonical.test.mjs",
+          "title": "cycles/depth/size cannot consume unbounded parser resources"
+        }
+      ]
+    },
+    {
+      "id": "KYA-INT-002",
+      "level": "MUST",
+      "area": "integrity",
+      "section": "Records and bindings",
+      "statement": "Strict parsing MUST reject duplicate object members and out-of-bound input, and MUST preserve string escapes and supported numbers exactly.",
+      "tests": [
+        {
+          "file": "test/canonical.test.mjs",
+          "title": "strict parser preserves strings"
+        },
+        {
+          "file": "test/interop.test.mjs",
+          "title": "Python rejects duplicate members and bounded input abuse"
+        }
+      ]
+    },
+    {
+      "id": "KYA-INT-003",
+      "level": "MUST",
+      "area": "integrity",
+      "section": "Records and bindings",
+      "statement": "Published golden vectors MUST reproduce the exact canonical bytes, SHA-256 digests and domain-separated Ed25519 signing input.",
+      "tests": [
+        {
+          "file": "test/vectors.test.mjs",
+          "title": "portable canonical and domain-separated Ed25519 vectors"
+        },
+        {
+          "file": "test/canonical.test.mjs",
+          "title": "canonical subset has stable golden vectors"
+        }
+      ]
+    },
+    {
+      "id": "KYA-INT-004",
+      "level": "MUST",
+      "area": "integrity",
+      "section": "Interoperability and versioning",
+      "statement": "A second implementation MUST reconstruct every published vector and MUST refuse, not approximate, inputs outside its supported subset.",
+      "tests": [
+        {
+          "file": "test/interop.test.mjs",
+          "title": "Python reconstructs every published vector"
+        },
+        {
+          "file": "test/interop.test.mjs",
+          "title": "Python explicitly refuses unsupported JS doubles"
+        },
+        {
+          "file": "test/interop.test.mjs",
+          "title": "independently corrupted canonical/hash/signing-input vectors fail"
+        }
+      ]
+    },
+    {
+      "id": "KYA-BND-001",
+      "level": "MUST",
+      "area": "binding",
+      "section": "Records and bindings",
+      "statement": "The subject digest MUST bind the complete manifest; changing a tool, model, configuration, principal or artifact field MUST invalidate prior receipts.",
+      "tests": [
+        {
+          "file": "test/assessment.test.mjs",
+          "title": "changed tool/model/config/principal/artifact fields invalidate prior receipts"
+        }
+      ]
+    },
+    {
+      "id": "KYA-BND-002",
+      "level": "MUST",
+      "area": "binding",
+      "section": "Records and bindings",
+      "statement": "Manifests MUST reject semantically conflicting permissions, duplicate identifiers and temporal inconsistency.",
+      "tests": [
+        {
+          "file": "test/assessment.test.mjs",
+          "title": "semantically conflicting permissions, duplicate tool/check/key identifiers and temporal mistakes reject"
+        }
+      ]
+    },
+    {
+      "id": "KYA-BND-003",
+      "level": "MUST",
+      "area": "binding",
+      "section": "Reports and viewers",
+      "statement": "Comparison MUST require identical policy, profile, evaluator, full-scope digest and complete check populations; equal scope names with different purpose or permissions MUST NOT compare.",
+      "tests": [
+        {
+          "file": "test/assessment.test.mjs",
+          "title": "comparisons require the same policy, profile, evaluator and complete populations"
+        },
+        {
+          "file": "test/dossier.test.mjs",
+          "title": "same scope name with different purpose or permissions cannot establish comparable scores"
+        }
+      ]
+    },
+    {
+      "id": "KYA-TRU-001",
+      "level": "MUST",
+      "area": "trust",
+      "section": "Trust and eligibility",
+      "statement": "Signature validity MUST be checked separately from trust; a receipt MUST NOT make its own key trusted or assign itself independence.",
+      "tests": [
+        {
+          "file": "test/assessment.test.mjs",
+          "title": "proof verifies signature bytes but trust is checked separately"
+        },
+        {
+          "file": "test/assessment.test.mjs",
+          "title": "independence is assigned out of band, never invented by the receipt"
+        }
+      ]
+    },
+    {
+      "id": "KYA-TRU-002",
+      "level": "MUST",
+      "area": "trust",
+      "section": "Trust and eligibility",
+      "statement": "Signature tampering, key substitution and non-canonical proof encoding MUST fail; only public Ed25519 SPKI keys are admissible trust anchors.",
+      "tests": [
+        {
+          "file": "test/assessment.test.mjs",
+          "title": "signature tampering, key substitution and noncanonical proof encoding fail"
+        },
+        {
+          "file": "test/assessment.test.mjs",
+          "title": "only public Ed25519 SPKI keys are admissible trust anchors"
+        }
+      ]
+    },
+    {
+      "id": "KYA-TRU-003",
+      "level": "MUST",
+      "area": "trust",
+      "section": "Trust and eligibility",
+      "statement": "A declaration MUST NOT satisfy a scored check, and a response MUST NOT elevate fixture origin to runtime origin.",
+      "tests": [
+        {
+          "file": "test/assessment.test.mjs",
+          "title": "declared claims cannot become scored observations"
+        },
+        {
+          "file": "test/conformance.test.mjs",
+          "title": "response validator rejects type confusion, claimed source and accessors"
+        }
+      ]
+    },
+    {
+      "id": "KYA-TRU-004",
+      "level": "MUST",
+      "area": "trust",
+      "section": "Trust and eligibility",
+      "statement": "Revoked keys, expired manifests, future-issued and over-age evidence MUST be rejected with the reason retained in the report.",
+      "tests": [
+        {
+          "file": "test/assessment.test.mjs",
+          "title": "manifest expiry, future issuance, freshness boundary and validUntil are enforced"
+        }
+      ]
+    },
+    {
+      "id": "KYA-TRU-005",
+      "level": "MUST",
+      "area": "trust",
+      "section": "Trust and eligibility",
+      "statement": "Eligible duplicate evidence IDs MUST be quarantined without boosting score, and untrusted duplicates MUST NOT remove a trusted result.",
+      "tests": [
+        {
+          "file": "test/assessment.test.mjs",
+          "title": "duplicate eligible IDs quarantine all duplicates without boosting score"
+        },
+        {
+          "file": "test/assessment.test.mjs",
+          "title": "untrusted duplicate-ID poisoning cannot remove a trusted result"
+        }
+      ]
+    },
+    {
+      "id": "KYA-TRU-006",
+      "level": "MUST",
+      "area": "trust",
+      "section": "Interoperability and versioning",
+      "statement": "Validators MUST return captured plain data; a Proxy MUST NOT substitute outcomes or trust roles after signature verification or canonical capture.",
+      "tests": [
+        {
+          "file": "test/assessment.test.mjs",
+          "title": "Proxy access cannot substitute a different outcome after signature verification"
+        },
+        {
+          "file": "test/assessment.test.mjs",
+          "title": "Proxy access cannot substitute policy trust roles after canonical capture"
+        }
+      ]
+    },
+    {
+      "id": "KYA-RUN-001",
+      "level": "MUST",
+      "area": "run-selection",
+      "section": "Run selection and qualification",
+      "statement": "Exactly one latest whole run MUST be selected; checks from several runs MUST NOT be composed.",
+      "tests": [
+        {
+          "file": "test/assessment.test.mjs",
+          "title": "one latest run is selected; best cases from multiple runs are not composed"
+        }
+      ]
+    },
+    {
+      "id": "KYA-RUN-002",
+      "level": "MUST",
+      "area": "run-selection",
+      "section": "Run selection and qualification",
+      "statement": "Tied latest runs MUST be reported ambiguous and MUST NOT qualify, and a selected critical failure MUST still block.",
+      "tests": [
+        {
+          "file": "test/assessment.test.mjs",
+          "title": "equally recent successful runs are explicitly ambiguous"
+        },
+        {
+          "file": "test/assessment.test.mjs",
+          "title": "equally recent independent runs cannot bury a critical failure"
+        }
+      ]
+    },
+    {
+      "id": "KYA-RUN-003",
+      "level": "MUST",
+      "area": "run-selection",
+      "section": "Run selection and qualification",
+      "statement": "Invalidating, revoking or expiring a newer failure MUST NOT revive an older pass, and a later self-signed pass MUST NOT erase a critical failure.",
+      "tests": [
+        {
+          "file": "test/assessment.test.mjs",
+          "title": "self-signed duplicate of a newer independent failure cannot revive an old passing run"
+        },
+        {
+          "file": "test/assessment.test.mjs",
+          "title": "revocation or expiry of a newer bound failure never revives an older successful run"
+        },
+        {
+          "file": "test/assessment.test.mjs",
+          "title": "a later self-signed pass in an independent run cannot erase a critical failure"
+        }
+      ]
+    },
+    {
+      "id": "KYA-RUN-004",
+      "level": "MUST",
+      "area": "run-selection",
+      "section": "Run selection and qualification",
+      "statement": "A repeated frozen check MUST NOT refresh validity or repair a failure; recovery MUST use a fresh complete run ID.",
+      "tests": [
+        {
+          "file": "test/assessment.test.mjs",
+          "title": "repeated frozen checks cannot refresh validity or repair a failure without a new run"
+        },
+        {
+          "file": "test/assessment.test.mjs",
+          "title": "same-timestamp failure wins same-check conflict independent of input order"
+        }
+      ]
+    },
+    {
+      "id": "KYA-SCO-001",
+      "level": "MUST",
+      "area": "scoring",
+      "section": "Run selection and qualification",
+      "statement": "Every frozen check MUST remain in the denominator; removing a failed check MUST NOT improve score, and empty evidence MUST remain unknown within a fixed 0..1000 range.",
+      "tests": [
+        {
+          "file": "test/assessment.test.mjs",
+          "title": "removing a failed check cannot improve earned score or denominator"
+        },
+        {
+          "file": "test/assessment.test.mjs",
+          "title": "empty evidence remains unknown with fixed 0..1000 range"
+        }
+      ]
+    },
+    {
+      "id": "KYA-SCO-002",
+      "level": "MUST",
+      "area": "scoring",
+      "section": "Run selection and qualification",
+      "statement": "A critical failure MUST block qualification even under zero thresholds, and zero thresholds MUST still require one scored observation.",
+      "tests": [
+        {
+          "file": "test/assessment.test.mjs",
+          "title": "critical failure blocks even a policy permitting score zero and partial coverage"
+        },
+        {
+          "file": "test/assessment.test.mjs",
+          "title": "zero policy thresholds still require at least one scored observation"
+        }
+      ]
+    },
+    {
+      "id": "KYA-RPT-001",
+      "level": "MUST",
+      "area": "reporting",
+      "section": "Reports and viewers",
+      "statement": "The report checksum MUST be treated as unauthenticated; verification MUST NOT establish issuer authenticity, and a rehashed false report MUST fail trusted-input replay.",
+      "tests": [
+        {
+          "file": "test/assessment.test.mjs",
+          "title": "report checksum detects changed score; cannot establish issuer authenticity"
+        },
+        {
+          "file": "test/benchmarks.test.mjs",
+          "title": "forged passing report cannot survive input-bound assessment replay"
+        }
+      ]
+    },
+    {
+      "id": "KYA-RPT-002",
+      "level": "MUST",
+      "area": "reporting",
+      "section": "Reports and viewers",
+      "statement": "Dossier strengths MUST be supported only by replayed originals; signed assertions without matching originals MUST remain reported claims.",
+      "tests": [
+        {
+          "file": "test/dossier.test.mjs",
+          "title": "a signed all-pass bundle without originals has reported assertions and no supported strengths"
+        },
+        {
+          "file": "test/dossier.test.mjs",
+          "title": "digest mismatches and re-signed wrong request bindings cannot support strengths"
+        }
+      ]
+    },
+    {
+      "id": "KYA-RPT-003",
+      "level": "MUST",
+      "area": "reporting",
+      "section": "Reports and viewers",
+      "statement": "Unmeasured telemetry MUST remain null or unknown, and unexecuted checks MUST be blind spots rather than invented agent failures.",
+      "tests": [
+        {
+          "file": "test/dossier.test.mjs",
+          "title": "zero usage is preserved and incomplete totals retain explicit measurement coverage"
+        },
+        {
+          "file": "test/dossier.test.mjs",
+          "title": "unexecuted/error checks are blind spots rather than invented agent failures"
+        }
+      ]
+    },
+    {
+      "id": "KYA-RPT-004",
+      "level": "MUST",
+      "area": "reporting",
+      "section": "Reports and viewers",
+      "statement": "A standalone dossier MUST NOT be resealable into a qualified decision while critical checks are failed or unproven.",
+      "tests": [
+        {
+          "file": "test/dossier.test.mjs",
+          "title": "critical failed or unproven checks cannot be resealed into a qualified standalone decision"
+        },
+        {
+          "file": "test/dossier.test.mjs",
+          "title": "forged narrative/coverage claims fail replay even after checksums are recomputed"
+        }
+      ]
+    },
+    {
+      "id": "KYA-UNI-001",
+      "level": "MUST",
+      "area": "research",
+      "section": "Research replay and branching",
+      "statement": "Identical frozen inputs MUST yield byte-identical universes, and modified assessor source MUST be rejected even when bindings are rehashed.",
+      "tests": [
+        {
+          "file": "test/universe.test.mjs",
+          "title": "same frozen inputs yield byte-identical universes and exact replay"
+        },
+        {
+          "file": "test/universe.test.mjs",
+          "title": "modified assessor source is rejected, including rehashing source binding around stale results"
+        }
+      ]
+    },
+    {
+      "id": "KYA-UNI-002",
+      "level": "MUST",
+      "area": "research",
+      "section": "Research replay and branching",
+      "statement": "Forks MUST name a parent and hypothesis; graphs MUST refuse missing or duplicate references; comparisons MUST refuse incomplete or incompatible populations and MUST NOT claim causal improvement.",
+      "tests": [
+        {
+          "file": "test/universe.test.mjs",
+          "title": "fork requires a hypothesis, preserves parent bytes and avoids shared mutable children"
+        },
+        {
+          "file": "test/universe.test.mjs",
+          "title": "graph verifies branch/correction references and refuses missing or duplicate nodes"
+        },
+        {
+          "file": "test/universe.test.mjs",
+          "title": "incomplete, abstained, errored and policy-incompatible comparisons refuse"
+        }
+      ]
+    },
+    {
+      "id": "KYA-BEN-001",
+      "level": "MUST",
+      "area": "benchmarks",
+      "section": "Reports and viewers",
+      "statement": "The frozen control catalog MUST keep its complete ordered population; tampered, reordered, resealed or laundered results MUST be rejected, and errors MUST NOT pass.",
+      "tests": [
+        {
+          "file": "test/benchmarks.test.mjs",
+          "title": "verifier rejects hash tampering and resealed expected-contract, ordering, population and implementation edits"
+        },
+        {
+          "file": "test/benchmarks.test.mjs",
+          "title": "error remains in population and never passes"
+        }
+      ]
+    },
+    {
+      "id": "KYA-BEN-002",
+      "level": "MUST",
+      "area": "benchmarks",
+      "section": "Reports and viewers",
+      "statement": "Controls MUST detect weakened assessor gates with identical complete populations, and MUST NOT measure commercial-agent competence.",
+      "tests": [
+        {
+          "file": "test/benchmarks.test.mjs",
+          "title": "frozen controls detect six actual assessor gate mutations"
+        },
+        {
+          "file": "test/benchmarks.test.mjs",
+          "title": "complete offline controls execute with unknown cost, measured duration and no commercial claims"
+        }
+      ]
+    },
+    {
+      "id": "KYA-CON-001",
+      "level": "MUST",
+      "area": "conformance",
+      "section": "Trust and eligibility",
+      "statement": "The core suite MUST be complete and immutable; reducing, reweighting or redirecting it MUST be refused, and gaming or silence MUST NOT yield passes.",
+      "tests": [
+        {
+          "file": "test/conformance.test.mjs",
+          "title": "suite cannot be reduced, reweighted or redirected"
+        },
+        {
+          "file": "test/conformance.test.mjs",
+          "title": "careful passes, reckless fails, gaming cannot conceal actions, silence stays unproven"
+        }
+      ]
+    },
+    {
+      "id": "KYA-REL-001",
+      "level": "SHOULD",
+      "area": "release",
+      "section": "Interoperability and versioning",
+      "statement": "Release archives SHOULD be verified against a frozen regular-file subset, rejecting duplicate paths, checksum changes, padding and path traversal.",
+      "tests": [
+        {
+          "file": "test/release.test.mjs",
+          "title": "verifier rejects duplicate paths, missing terminator and trailing nonzero data"
+        },
+        {
+          "file": "test/release.test.mjs",
+          "title": "verifier rejects checksum changes, nonzero padding and truncated body"
+        },
+        {
+          "file": "test/release.test.mjs",
+          "title": "receipt digest mismatches, filename traversal and gzip output limits reject"
+        }
+      ]
+    },
+    {
+      "id": "KYA-PRN-001",
+      "level": "MUST",
+      "area": "principal",
+      "section": "Records and bindings",
+      "statement": "A declared accountable party MUST be a pseudonymous natural-person or legal-entity reference with no extra fields, and an agent MUST NOT be its own accountable party.",
+      "tests": [
+        {
+          "file": "test/assessment.test.mjs",
+          "title": "principal binding: an agent cannot be its own accountable party"
+        }
+      ]
+    },
+    {
+      "id": "KYA-PRN-002",
+      "level": "MUST",
+      "area": "principal",
+      "section": "Records and bindings",
+      "statement": "When policy requires principal binding, a manifest without a declared accountable party MUST NOT qualify; the declaration MUST be part of the subject digest, and absence of the policy flag MUST preserve prior behavior.",
+      "tests": [
+        {
+          "file": "test/assessment.test.mjs",
+          "title": "policy can require a declared accountable party"
+        },
+        {
+          "file": "test/assessment.test.mjs",
+          "title": "policies and reports without the optional flag keep their previous digests"
+        }
+      ]
+    },
+    {
+      "id": "KYA-MON-001",
+      "level": "MUST",
+      "area": "monitoring",
+      "section": "Reports and viewers",
+      "statement": "A currency check MUST report each fired monitoring trigger (subject change, policy change, revocation, expiry, age limit, clock regression) and MUST direct reassessment when any fires.",
+      "tests": [
+        {
+          "file": "test/assessment.test.mjs",
+          "title": "currency: an unchanged assessment is current and any monitoring trigger demands reassessment"
+        }
+      ]
+    },
+    {
+      "id": "KYA-MON-002",
+      "level": "MUST",
+      "area": "monitoring",
+      "section": "Reports and viewers",
+      "statement": "A currency check MUST reject a forged or malformed assessment, missing or invalid time, and invalid inputs, and MUST NOT report a non-qualified decision as reliable.",
+      "tests": [
+        {
+          "file": "test/assessment.test.mjs",
+          "title": "currency: a non-qualified decision is never reported as reliable"
+        }
+      ]
+    }
+  ]
+}

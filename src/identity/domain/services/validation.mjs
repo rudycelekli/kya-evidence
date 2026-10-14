@@ -40,7 +40,13 @@ export function validateManifest(v) {
   exactKeys(v, ['schema','agent','principal','system','scope','issuedAt','expiresAt'], 'Manifest');
   insist(v.schema === 'kya.manifest/v1', 'Unsupported manifest schema');
   exactKeys(v.agent, ['id','name','version'], 'Agent'); identifier(v.agent.id, 'Agent ID'); text(v.agent.name,'Agent name'); text(v.agent.version,'Agent version',128);
-  exactKeys(v.principal, ['id'], 'Principal'); identifier(v.principal.id,'Principal ID');
+  exactKeys(v.principal, Object.hasOwn(v.principal,'accountableParty') ? ['id','accountableParty'] : ['id'], 'Principal'); identifier(v.principal.id,'Principal ID');
+  if (Object.hasOwn(v.principal,'accountableParty')) {
+    // Pseudonymous declaration of who answers for the agent. An agent can never be its own accountable party; no personal data fields are admitted.
+    const a = v.principal.accountableParty; exactKeys(a, ['kind','ref'], 'Accountable party');
+    insist(['natural-person','legal-entity'].includes(a.kind), 'Accountable party must be a natural person or legal entity'); identifier(a.ref,'Accountable party reference');
+    insist(a.ref !== v.agent.id, 'An agent cannot be its own accountable party');
+  }
   exactKeys(v.system, ['harness','harnessVersion','model','artifactDigest','configDigest','tools'], 'System');
   text(v.system.harness,'Harness',128); text(v.system.harnessVersion,'Harness version',128); text(v.system.model,'Model',128);
   hash(v.system.artifactDigest,'Artifact digest'); hash(v.system.configDigest,'Config digest');
@@ -75,12 +81,14 @@ export function validateProfile(v) {
 
 export function validatePolicy(v) {
   v=JSON.parse(canonical(v));
-  exactKeys(v,['schema','id','profileDigest','scopeId','minCoverage','minScore','minIndependentCoverage','allowedSources','maxEvidenceAgeSeconds','trustedKeys','revokedKeyIds','revokedEvidenceIds','revokedSubjectDigests'],'Policy');
+  exactKeys(v,['schema','id','profileDigest','scopeId','minCoverage','minScore','minIndependentCoverage','allowedSources','maxEvidenceAgeSeconds','trustedKeys','revokedKeyIds','revokedEvidenceIds','revokedSubjectDigests',...(Object.hasOwn(v,'requirePrincipalBinding')?['requirePrincipalBinding']:[]),...(Object.hasOwn(v,'maxAssessmentAgeSeconds')?['maxAssessmentAgeSeconds']:[])],'Policy');
   insist(v.schema === 'kya.policy/v1','Unsupported policy schema'); identifier(v.id,'Policy ID'); hash(v.profileDigest,'Policy profile'); identifier(v.scopeId,'Policy scope');
   for (const k of ['minCoverage','minIndependentCoverage']) insist(typeof v[k] === 'number' && Number.isFinite(v[k]) && v[k] >= 0 && v[k] <= 1,`Invalid ${k}`);
   insist(Number.isInteger(v.minScore) && v.minScore >= 0 && v.minScore <= 1000,'Invalid minScore');
   insist(Number.isSafeInteger(v.maxEvidenceAgeSeconds) && v.maxEvidenceAgeSeconds > 0 && v.maxEvidenceAgeSeconds <= 31_536_000,'Invalid evidence age');
   list(v.allowedSources,'Allowed sources',3,(x)=>insist(SOURCES.includes(x),'Unknown evidence source'));
+  if (Object.hasOwn(v,'requirePrincipalBinding')) insist(typeof v.requirePrincipalBinding === 'boolean','requirePrincipalBinding must be boolean');
+  if (Object.hasOwn(v,'maxAssessmentAgeSeconds')) insist(Number.isSafeInteger(v.maxAssessmentAgeSeconds) && v.maxAssessmentAgeSeconds > 0 && v.maxAssessmentAgeSeconds <= 31_536_000,'Invalid assessment age');
   list(v.revokedKeyIds,'Revoked keys',4096,hash); list(v.revokedSubjectDigests,'Revoked subjects',4096,hash); list(v.revokedEvidenceIds,'Revoked evidence',4096);
   insist(Array.isArray(v.trustedKeys) && v.trustedKeys.length <= 256,'Invalid trust anchors');
   const ids = new Set();
