@@ -23,9 +23,14 @@ export function verifyEvidence(envelope:unknown):{payload:Evidence;keyId:string;
 export function verifyArtifact(payload:Evidence,bytes:string|Uint8Array):boolean;
 export function assess(input:{manifest:ReadonlyInput<Manifest>;profile:ReadonlyInput<Profile>;evidence:ReadonlyInput<Envelope[]>;policy:ReadonlyInput<Policy>;evaluatorDigest:string;now?:string}):Assessment;
 export function verifyAssessment(report:ReadonlyInput<Assessment>):{integrity:true;reportDigest:string;authenticated:false;warning:string};
-export interface CurrencyTrigger {id:'clock-regression'|'subject-changed'|'policy-changed'|'subject-revoked'|'assessment-expired'|'assessment-aged';detail:string}
-export interface CurrencyReport {schema:'kya.currency/v1';assessmentDigest:string;checkedAt:string;current:boolean;reliable:boolean;action:'none'|'reassess';triggers:CurrencyTrigger[];authenticated:false;limits:string[]}
-export function checkCurrency(assessment:ReadonlyInput<Assessment>,context:{manifest:ReadonlyInput<Manifest>;policy:ReadonlyInput<Policy>;now:string}):CurrencyReport;
+export interface CurrencyTrigger {id:'clock-regression'|'subject-changed'|'policy-changed'|'subject-revoked'|'assessment-expired'|'assessment-aged'|'incident-open';detail:string}
+export interface CurrencyReport {schema:'kya.currency/v1';assessmentDigest:string;checkedAt:string;current:boolean;reliable:boolean;action:'none'|'reassess';triggers:CurrencyTrigger[];authenticated:false;limits:string[];incidents:{considered:number;open:string[];resolved:string[];appealed:string[];observed:string[];ignored:{id:string|null;reason:string}[]}}
+export interface Incident {schema:'kya.incident/v1';id:string;subjectDigest:string;kind:'report'|'resolution'|'appeal';severity:'low'|'medium'|'high'|'critical';refId:string|null;reportedAt:string;detailsDigest:string}
+export interface IncidentEnvelope {payload:Incident;proof:{algorithm:'Ed25519';keyId:string;publicKey:string;signature:string}}
+export function signIncident(payload:ReadonlyInput<Incident>,privateKey:import('node:crypto').KeyObject|string):IncidentEnvelope;
+export function verifyIncident(envelope:ReadonlyInput<IncidentEnvelope>):{payload:Incident;keyId:string;envelopeDigest:string};
+export function validateIncident(value:ReadonlyInput<Incident>):Incident;
+export function checkCurrency(assessment:ReadonlyInput<Assessment>,context:{manifest:ReadonlyInput<Manifest>;policy:ReadonlyInput<Policy>;now:string;incidents?:ReadonlyInput<IncidentEnvelope>[]}):CurrencyReport;
 export function compareAssessments(left:ReadonlyInput<Assessment>,right:ReadonlyInput<Assessment>):{schema:'kya.comparison/v1';left:string;right:string;scoreDelta:number;decisionChanged:boolean;measurement:string};
 export function importDeclarations(format:'open-kya-alpha'|'a2a-1',value:unknown):Record<string,unknown>;
 export const DIMENSIONS:readonly Dimension[];

@@ -61,3 +61,13 @@ test('CLI currency exits 0 for an unchanged subject and 2 with triggers after a 
     assert.equal(run([...base]).status,1);
   }finally{await rm(dir,{recursive:true,force:true});}
 });
+test('CLI currency accepts signed incident records and exits 2 on an open critical incident',async()=>{
+  const dir=await mkdtemp(join(tmpdir(),'kya-incident-'));
+  try{
+    const {assess,signIncident,hashBytes}=await import('../src/index.mjs'),{keys}=await import('./helpers.mjs'),i=inputs(),report=assess(i),w=(n,v)=>writeFile(join(dir,n),JSON.stringify(v));
+    await w('a.json',report);await w('m.json',i.manifest);await w('p.json',i.policy);
+    await w('i.json',[signIncident({schema:'kya.incident/v1',id:'inc:cli',subjectDigest:report.subjectDigest,kind:'report',severity:'critical',refId:null,reportedAt:'2026-10-13T12:30:00.000Z',detailsDigest:hashBytes('private')},keys.privateKey)]);
+    const p=run(['currency','--assessment',join(dir,'a.json'),'--manifest',join(dir,'m.json'),'--policy',join(dir,'p.json'),'--incidents',join(dir,'i.json'),'--now','2026-10-13T13:00:00.000Z']);
+    assert.equal(p.status,2);assert.deepEqual(JSON.parse(p.stdout).incidents.open,['inc:cli']);
+  }finally{await rm(dir,{recursive:true,force:true});}
+});

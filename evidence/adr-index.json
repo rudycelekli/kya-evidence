@@ -152,8 +152,20 @@
         "ADR-0011",
         "ADR-0012"
       ]
+    },
+    {
+      "id": "ADR-0014",
+      "title": "Signed incident, resolution and appeal records",
+      "status": "Implemented",
+      "file": "docs/adr/0014-signed-incident-and-appeal-records.md",
+      "contentDigest": "a26acf438e07c519c2da6aa2bb684abcddc98d16a08ea6bbffbf92bc0085cada",
+      "related": [
+        "ADR-0004",
+        "ADR-0011",
+        "ADR-0013"
+      ]
     }
   ],
-  "digest": "ffc403e90aed8f313c0c6d2c8875420f681804b15dc71bdf406f3e018dce267e",
+  "digest": "1e7e6c79c58e6a08e9b7b849bda74148d04599f3e0b2dbe9f170d83b354471bf",
   "store": "portable local file; not a claim of AgentDB graph persistence"
 }

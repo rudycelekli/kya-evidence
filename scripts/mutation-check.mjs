@@ -17,11 +17,13 @@ const mutants=[
 ,
   ['principal-binding gate removal',"const principalUnbound = policy.requirePrincipalBinding === true && !manifest.principal.accountableParty;","const principalUnbound = false;"],
   ['expiry trigger removal',"if (at > validUntil) fire(","if (false) fire(",'src/assessment/application/currency.mjs'],
-  ['subject-change trigger removal',"if (digest(manifest) !== assessment.subjectDigest) fire(","if (false) fire(",'src/assessment/application/currency.mjs']
+  ['subject-change trigger removal',"if (digest(manifest) !== assessment.subjectDigest) fire(","if (false) fire(",'src/assessment/application/currency.mjs'],
+  ['independent-resolution requirement removal',"else if (e.role!=='independent') ignored.push","else if (false) ignored.push",'src/assessment/application/currency.mjs'],
+  ['incident trust-anchor bypass',"if (!roles.has(keyId)) skip(","if (false) skip(",'src/assessment/application/currency.mjs']
 ];
 const results=[];
 function counts(output){const get=name=>Number(new RegExp(`^# ${name} (\\d+)$`,'m').exec(output)?.[1]??NaN);return{tests:get('tests'),pass:get('pass'),fail:get('fail'),cancelled:get('cancelled'),skipped:get('skipped')};}
-function runTests(dir){const p=spawnSync(process.execPath,['--test','--test-reporter=tap','test/assessment.test.mjs'],{cwd:dir,encoding:'utf8',timeout:10000,maxBuffer:200000});if(p.error||p.signal)throw Error('Mutation test execution failed');return{process:p,counts:counts(p.stdout)};}
+function runTests(dir){const p=spawnSync(process.execPath,['--test','--test-reporter=tap','test/assessment.test.mjs','test/incidents.test.mjs'],{cwd:dir,encoding:'utf8',timeout:20000,maxBuffer:200000});if(p.error||p.signal)throw Error('Mutation test execution failed');return{process:p,counts:counts(p.stdout)};}
 for(const [name,from,to,target=source]of mutants){
   const base=target===source?original:await readFile(join(root,target),'utf8');
   if(!base.includes(from))throw Error('Mutation anchor drift: '+name);
@@ -34,4 +36,4 @@ for(const [name,from,to,target=source]of mutants){
     if(!killed)throw Error('SURVIVING evaluator mutant: '+name);
   }finally{await rm(dir,{recursive:true,force:true});}
 }
-console.log(JSON.stringify({schema:'kya.mutation-controls/v1',baselineSourceDigest:hashBytes(original),controls:results,allKilled:true,limits:'Nine targeted gate mutations; not exhaustive security verification'},null,2));
+console.log(JSON.stringify({schema:'kya.mutation-controls/v1',baselineSourceDigest:hashBytes(original),controls:results,allKilled:true,limits:'Eleven targeted gate mutations; not exhaustive security verification'},null,2));
