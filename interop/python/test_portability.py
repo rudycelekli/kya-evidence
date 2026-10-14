@@ -12,6 +12,8 @@ digest = MODULE["digest"]
 parse_json = MODULE["parse_json"]
 check_vectors = MODULE["check_vectors"]
 InvalidValue = MODULE["InvalidValue"]
+incident_bytes = MODULE["incident_bytes"]
+check_incident_vectors = MODULE["check_incident_vectors"]
 UnsupportedNumber = MODULE["UnsupportedNumber"]
 VECTORS = json.loads((HERE.parent.parent / "evidence/golden-vectors.json").read_text())
 
@@ -110,6 +112,76 @@ class PortableBytes(unittest.TestCase):
             canonical(Custom(x=1))
         with self.assertRaises(InvalidValue):
             canonical((1, 2))
+
+
+class IncidentBytes(unittest.TestCase):
+    BLOCK = VECTORS["incidents"]
+    BY_ID = {vector["id"]: vector for vector in BLOCK["vectors"]}
+
+    def test_every_vector_matches_its_javascript_expectation(self):
+        results = check_incident_vectors(self.BLOCK)
+        self.assertEqual(len(results), len(self.BLOCK["vectors"]))
+        if check_vectors(VECTORS)["signature"]["verified"]:
+            for item in results:
+                self.assertEqual(item["actual"], "accepted" if item["expect"] == "accept" else "rejected", item["id"])
+
+    def test_required_vector_coverage(self):
+        kinds = {v["envelope"]["payload"].get("kind") for v in self.BLOCK["vectors"] if v["expect"] == "accept"}
+        self.assertEqual(kinds, {"report", "resolution", "appeal"})
+        for name in ("wrong-kind", "wrong-severity", "report-with-ref", "resolution-null-ref", "extra-field", "bad-timestamp-format", "tampered-payload", "altered-signature", "noncanonical-signature-encoding", "evidence-domain-signature"):
+            self.assertEqual(self.BY_ID[name]["expect"], "reject", name)
+
+    def test_stdlib_mode_rejects_shape_and_never_claims_signatures(self):
+        results = {item["id"]: item for item in check_incident_vectors(self.BLOCK, False)}
+        for vector in self.BLOCK["vectors"]:
+            item = results[vector["id"]]
+            if vector["expect"] == "reject" and vector["stage"] == "shape":
+                self.assertEqual((item["actual"], item["stage"]), ("rejected", "shape"), vector["id"])
+            else:
+                self.assertEqual(item["actual"], "unverified", vector["id"])
+        self.assertEqual(check_vectors(VECTORS, False)["status"], "partial")
+
+    def test_signature_stage_failures_need_crypto_and_are_signature_stage(self):
+        if not check_vectors(VECTORS)["signature"]["verified"]:
+            self.skipTest("Optional cryptographic backend unavailable; never reported as verified")
+        for vector in self.BLOCK["vectors"]:
+            if vector["stage"] == "signature":
+                with self.assertRaises(InvalidValue) as caught:
+                    incident_bytes(vector["envelope"])
+                self.assertEqual(caught.exception.stage, "signature", vector["id"])
+
+    def test_mismatched_expectation_or_digest_fails_the_check(self):
+        changed = copy.deepcopy(self.BLOCK)
+        changed["vectors"][0]["expect"] = "reject"
+        changed["vectors"][0]["stage"] = "shape"
+        with self.assertRaises(InvalidValue):
+            check_incident_vectors(changed, False)
+        changed = copy.deepcopy(self.BLOCK)
+        changed["vectors"][0]["envelope"]["payload"]["severity"] = "low"
+        with self.assertRaisesRegex(InvalidValue, "envelope digest"):
+            check_incident_vectors(changed, False)
+
+    def test_shape_rules_are_strict(self):
+        good = copy.deepcopy(self.BY_ID["resolution"]["envelope"])
+        for key, value in [("refId", good["payload"]["id"]), ("refId", None), ("kind", "Report"), ("severity", ["low"]), ("reportedAt", "2026-10-14T12:00:00.000+00:00"), ("reportedAt", "٢026-10-14T12:00:00.000Z"), ("id", "x\n"), ("detailsDigest", "A" * 64)]:
+            changed = copy.deepcopy(good)
+            changed["payload"][key] = value
+            with self.assertRaises(InvalidValue, msg=key):
+                incident_bytes(changed, False)
+        for date, ok in [("2024-02-29", True), ("2023-02-29", False), ("1900-02-29", False), ("2000-02-29", True), ("0000-02-29", True)]:
+            changed = copy.deepcopy(good)
+            changed["payload"]["reportedAt"] = date + "T00:00:00.000Z"
+            if ok:
+                incident_bytes(changed, False)
+            else:
+                with self.assertRaises(InvalidValue):
+                    incident_bytes(changed, False)
+
+    def test_evidence_envelope_is_not_an_incident_and_vice_versa(self):
+        with self.assertRaises(InvalidValue):
+            incident_bytes(VECTORS["signature"]["envelope"], False)
+        with self.assertRaises(InvalidValue):
+            MODULE["signature_bytes"](self.BY_ID["report"]["envelope"], False)
 
 
 if __name__ == "__main__":

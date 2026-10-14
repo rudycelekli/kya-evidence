@@ -5,7 +5,7 @@ import { readFileSync, mkdtempSync, writeFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { canonical, digest } from '../src/index.mjs';
+import { canonical, digest, verifyIncident } from '../src/index.mjs';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 const script = join(root, 'interop/python/kya_portability.py');
@@ -25,6 +25,55 @@ test('Python reconstructs every published vector and records optional signature 
   assert.equal(result.value.externalIndependence, false);
   assert.equal(result.value.status === 'passed', result.value.signature.verified);
   assert.equal(result.value.signature.authenticatedIssuer, false);
+});
+
+const vectorFile = join(root, 'evidence/golden-vectors.json');
+const jsOutcome = envelope => { try { verifyIncident(structuredClone(envelope)); return { outcome: 'accept', stage: null }; } catch (e) { return { outcome: 'reject', stage: /signature verification failed/.test(e.message) ? 'signature' : 'shape' }; } };
+
+test('Python agrees with JS on every incident vector with a per-vector result list', { skip: !hasPython && 'Python 3 is optional; unavailable on this host' }, () => {
+  const { incidents } = JSON.parse(readFileSync(vectorFile, 'utf8'));
+  const result = python(['check-vectors', vectorFile]);
+  assert.equal(result.status, 0);
+  assert.equal(result.value.incidentVectors.length, incidents.vectors.length);
+  assert.equal(result.value.incidentSummary.total, incidents.vectors.length);
+  for (const [index, vector] of incidents.vectors.entries()) {
+    const py = result.value.incidentVectors[index], js = jsOutcome(vector.envelope);
+    assert.equal(py.id, vector.id);
+    assert.equal(js.outcome, vector.expect, vector.id);
+    if (py.actual === 'unverified') { assert.equal(result.value.signature.verified, false); assert.notEqual(js.stage, 'shape', vector.id); continue; }
+    assert.equal(py.actual === 'accepted' ? 'accept' : 'reject', js.outcome, vector.id);
+    assert.equal(py.stage, js.stage, vector.id);
+  }
+});
+
+test('Python stdlib-only incident checking rejects malformed shapes and leaves signature checks unverified', { skip: !hasPython }, () => {
+  const { incidents } = JSON.parse(readFileSync(vectorFile, 'utf8'));
+  const result = python(['check-vectors', vectorFile, '--no-crypto']);
+  assert.equal(result.status, 0);
+  assert.equal(result.value.status, 'partial');
+  assert.equal(result.value.signature.verified, false);
+  for (const [index, vector] of incidents.vectors.entries()) {
+    const py = result.value.incidentVectors[index], js = jsOutcome(vector.envelope);
+    if (js.stage === 'shape') assert.deepEqual([py.actual, py.stage], ['rejected', 'shape'], vector.id);
+    else assert.equal(py.actual, 'unverified', vector.id);
+  }
+  assert.equal(result.value.incidentSummary.accepted, 0);
+});
+
+test('Python fails closed when an incident vector expectation or envelope is corrupted', { skip: !hasPython }, () => {
+  const vectors = JSON.parse(readFileSync(vectorFile, 'utf8'));
+  const dir = mkdtempSync(join(tmpdir(), 'kya-python-incidents-'));
+  try {
+    for (const mutate of [v => { v.incidents.vectors[0].expect = 'reject'; v.incidents.vectors[0].stage = 'shape'; }, v => { v.incidents.vectors[3].expect = 'accept'; v.incidents.vectors[3].stage = null; }, v => { v.incidents.vectors[0].envelope.payload.severity = 'low'; }]) {
+      const changed = structuredClone(vectors);
+      mutate(changed);
+      const file = join(dir, 'corrupt.json');
+      writeFileSync(file, JSON.stringify(changed));
+      const result = python(['check-vectors', file, '--no-crypto']);
+      assert.equal(result.status, 1);
+      assert.equal(result.value.status, 'failed');
+    }
+  } finally { rmSync(dir, { recursive: true, force: true }); }
 });
 
 test('Python string spelling, UTF-16 member order and supported numbers agree with JS', { skip: !hasPython }, () => {

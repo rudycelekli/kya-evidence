@@ -1,0 +1,53 @@
+{
+  "schema": "kya.python-portability-validation/v1",
+  "scope": "kya.incident/v1 byte and shape layer",
+  "claim": "Secondary same-project byte implementation, not external independent adoption or semantic assessment parity; currency and resolution logic are not ported",
+  "runtime": {
+    "python": "3.13.5",
+    "optionalCryptography": "48.0.0"
+  },
+  "checks": [
+    {
+      "command": "python3 -I interop/python/test_portability.py -v",
+      "passed": 21,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "command": "node --test test/interop.test.mjs test/vectors.test.mjs test/canonical.test.mjs",
+      "passed": 43,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "command": "npm test",
+      "passed": 324,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "command": "python3 -I interop/python/kya_portability.py check-vectors evidence/golden-vectors.json --no-crypto",
+      "status": "partial",
+      "incidentSummary": { "accepted": 0, "rejected": 13, "unverified": 6, "total": 19 },
+      "signatureVerified": false
+    },
+    {
+      "command": "python3 -I interop/python/kya_portability.py check-vectors evidence/golden-vectors.json",
+      "status": "passed",
+      "incidentSummary": { "accepted": 3, "rejected": 16, "unverified": 0, "total": 19 },
+      "signatureVerified": true
+    }
+  ],
+  "inputs": {
+    "pythonSourceSha256": "f20e95ea247a04de556f5b2945652b6e631213b52630928faf87f02e86ae92d1",
+    "pythonTestsSha256": "76b6c080ff6aab3539ae224cd263d69cccb6ef3459265076c9c35e7d417f387c",
+    "publicVectorsSha256": "db5ba19c0564ca91754b1850e4036be632ca1993f316ebaa040be599882f952e"
+  },
+  "mutations": null,
+  "costUsd": null,
+  "limits": [
+    "Public toy key and synthetic records only; never a production trust anchor.",
+    "Mutation controls were not run for the incident checks in this receipt.",
+    "Standard-library mode rejects malformed shapes but leaves signature-dependent vectors unverified."
+  ]
+}
