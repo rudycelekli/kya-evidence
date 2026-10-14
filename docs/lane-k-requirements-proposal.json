@@ -1,0 +1,97 @@
+{
+  "schema": "kya.requirements-proposal/v1",
+  "lane": "K",
+  "note": "Proposed additions to evidence/requirements.json, which was frozen for this lane. Merge by the integration owner; then run npm run requirements. Every trace title appears exactly once in test/assessment-vectors.test.mjs.",
+  "requirements": [
+    {
+      "id": "KYA-VEC-001",
+      "level": "MUST",
+      "area": "vectors",
+      "section": "Interoperability and versioning",
+      "statement": "The golden assessment vector file MUST be reproducible byte for byte from the reference through its public API, and the generator MUST refuse to write when two runs differ or when the reference disagrees with a hand-written claim.",
+      "tests": [
+        { "file": "test/assessment-vectors.test.mjs", "title": "assessment vector generator reproduces the committed file byte for byte" },
+        { "file": "test/assessment-vectors.test.mjs", "title": "assessment vector generator check mode succeeds on the committed file" }
+      ]
+    },
+    {
+      "id": "KYA-VEC-002",
+      "level": "MUST",
+      "area": "vectors",
+      "section": "Interoperability and versioning",
+      "statement": "Every assessment vector MUST have a unique ID, MUST cite only requirement IDs that exist in the registry and MUST carry a rationale that names a cited requirement.",
+      "tests": [
+        { "file": "test/assessment-vectors.test.mjs", "title": "assessment vector IDs are unique and the set is large enough to be meaningful" },
+        { "file": "test/assessment-vectors.test.mjs", "title": "every cited requirement ID exists in the registry and every vector states a rationale that names one" }
+      ]
+    },
+    {
+      "id": "KYA-VEC-003",
+      "level": "MUST",
+      "area": "vectors",
+      "section": "Interoperability and versioning",
+      "statement": "Every blocker code and every currency trigger code MUST be exercised by at least one vector, or be declared unreachable with a reason, and the vectors MUST cover the named adversarial scenario families.",
+      "tests": [
+        { "file": "test/assessment-vectors.test.mjs", "title": "every blocker code and every currency code appears in a vector or is declared unreachable" },
+        { "file": "test/assessment-vectors.test.mjs", "title": "vectors cover the named scenario families" }
+      ]
+    },
+    {
+      "id": "KYA-VEC-004",
+      "level": "MUST",
+      "area": "vectors",
+      "section": "Interoperability and versioning",
+      "statement": "The harness MUST compare an implementation result to each expected value key for key, MUST report the first differing path, and MUST treat a missing field, an extra field, a wrong schema or a tampered expected value as a failure.",
+      "tests": [
+        { "file": "test/assessment-vectors.test.mjs", "title": "tampering an expected value is detected and the first differing path is reported" },
+        { "file": "test/assessment-vectors.test.mjs", "title": "an extra field, a missing field and a wrong schema in the result are all failures" },
+        { "file": "test/assessment-vectors.test.mjs", "title": "firstDifference and splitCommand behave exactly as the contract states" }
+      ]
+    },
+    {
+      "id": "KYA-VEC-005",
+      "level": "MUST NOT",
+      "area": "vectors",
+      "section": "Interoperability and versioning",
+      "statement": "The harness MUST NOT record a pass for an implementation that produces oversize output, non-JSON output, a crash, a hang, a refusal where a result is expected or an answer where a refusal is expected, and an unsupported operation MUST be not-run.",
+      "tests": [
+        { "file": "test/assessment-vectors.test.mjs", "title": "the harness refuses oversize output, non-JSON output, a crash and a hang without recording a pass" },
+        { "file": "test/assessment-vectors.test.mjs", "title": "a refusal vector fails when the implementation answers with output and exit code zero" },
+        { "file": "test/assessment-vectors.test.mjs", "title": "unsupported operations are not-run and never pass" },
+        { "file": "test/assessment-vectors.test.mjs", "title": "the JS reference adapter refuses malformed input with a non-zero exit and no output" }
+      ]
+    },
+    {
+      "id": "KYA-VEC-006",
+      "level": "MUST",
+      "area": "vectors",
+      "section": "Interoperability and versioning",
+      "statement": "The harness conformance report MUST mark a requirement pass only if all vectors citing it passed, fail if any failed, and not-run otherwise, using the portable-vector evidence class with vector IDs as executed IDs.",
+      "tests": [
+        { "file": "test/assessment-vectors.test.mjs", "title": "the JS reference passes every vector through the harness CLI and the report is valid" },
+        { "file": "test/assessment-vectors.test.mjs", "title": "a requirement passes only if every vector citing it passes" }
+      ]
+    },
+    {
+      "id": "KYA-VEC-007",
+      "level": "MUST",
+      "area": "vectors",
+      "section": "Interoperability and versioning",
+      "statement": "A deliberately weakened implementation, with one gate removed, MUST fail specific vectors and MUST NOT appear as pass for the requirement that gate enforces.",
+      "tests": [
+        { "file": "test/assessment-vectors.test.mjs", "title": "a deliberately weakened implementation fails specific vectors and never appears as pass" }
+      ]
+    },
+    {
+      "id": "KYA-VEC-008",
+      "level": "MUST NOT",
+      "area": "vectors",
+      "section": "Interoperability and versioning",
+      "statement": "A semantic-only run, which ignores digests, MUST NOT record any requirement as pass, and a vectors file with an unknown requirement, a duplicate ID or a foreign schema MUST be refused.",
+      "tests": [
+        { "file": "test/assessment-vectors.test.mjs", "title": "semantic-only mode ignores digests but can never record a requirement as pass" },
+        { "file": "test/assessment-vectors.test.mjs", "title": "the harness rejects a vectors file with an unknown requirement or a duplicate vector ID" }
+      ]
+    }
+  ]
+}
