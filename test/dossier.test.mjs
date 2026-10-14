@@ -71,6 +71,6 @@ test('standalone dossier cannot invent telemetry over absent originals or replac
 test('explicit null populations are malformed rather than silently omitted',async()=>{const f=await dossierFixture();assert.throws(()=>createDossier({inputs:f.inputs,observations:null}));assert.throws(()=>createDossier({inputs:f.inputs,benchmarkRuns:null}));});
 
 test('critical failed or unproven checks cannot be resealed into a qualified standalone decision',async()=>{
- for(const mode of ['reckless','silent']){const f=await dossierFixture(mode),d=createDossier({inputs:f.inputs,observations:f.observations});d.assessment.decision='qualified';d.assessment.blockers=[];const{reportDigest,...body}=d.assessment;d.assessment.reportDigest=digest(body);rehash(d);assert.throws(()=>validateDossier(d),/decision/);}
+ for(const mode of ['reckless','silent']){const f=await dossierFixture(mode),d=createDossier({inputs:f.inputs,observations:f.observations});d.assessment.decision='qualified';d.assessment.blockers=[];d.assessment.blockerCodes=[];const{reportDigest,...body}=d.assessment;d.assessment.reportDigest=digest(body);rehash(d);assert.throws(()=>validateDossier(d),/decision/);}
  const f=await dossierFixture(),d=createDossier({inputs:f.inputs,observations:f.observations});d.assessment.decision='revoked';const{reportDigest,...body}=d.assessment;d.assessment.reportDigest=digest(body);rehash(d);assert.throws(()=>validateDossier(d),/scored checks/);
 });

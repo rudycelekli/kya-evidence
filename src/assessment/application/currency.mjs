@@ -1,6 +1,7 @@
 import { canonical, digest, insist } from '../../shared/canonical.mjs';
 import { validateManifest, validatePolicy, timestamp, hash } from '../../identity/domain/services/validation.mjs';
 import { verifyAssessment } from './assess.mjs';
+import { CURRENCY_CODES } from './codes.mjs';
 import { verifyIncident } from '../../evidence/domain/services/incidents.mjs';
 
 // Monitoring triggers. An assessment is a point-in-time result; reliance later needs
@@ -62,7 +63,7 @@ export function checkCurrency(assessment, {manifest, policy, now, incidents = []
   insist(DECISIONS.includes(assessment.decision),'Unknown assessment decision');
   manifest=validateManifest(manifest); policy=validatePolicy(policy);
   const at=timestamp(now,'Currency check time'), assessedAt=Date.parse(assessment.assessedAt), validUntil=Date.parse(assessment.validUntil);
-  const triggers=[], fire=(id,detail)=>triggers.push({id,detail});
+  const triggers=[], fire=(id,detail)=>triggers.push({id,code:CURRENCY_CODES[id],detail});
   if (at < assessedAt) fire('clock-regression','Check time precedes the assessment time');
   if (digest(manifest) !== assessment.subjectDigest) fire('subject-changed','Manifest no longer matches the assessed subject digest');
   if (digest(policy) !== assessment.policyDigest) fire('policy-changed','Relying policy differs from the assessed policy');

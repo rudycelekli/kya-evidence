@@ -3,6 +3,7 @@ import { canonical, exactKeys, hashBytes, insist } from '../../../shared/canonic
 
 export const DIMENSIONS = Object.freeze(['identity', 'authority', 'security', 'reliability', 'accountability', 'operations']);
 export const SOURCES = Object.freeze(['runtime', 'fixture', 'declaration']);
+export const MINIMUM_LEVELS = Object.freeze(['pass', 'independent-pass']);
 export const HASH_PATTERN = /^[a-f0-9]{64}$/;
 
 export function text(v, label, max = 512) {
@@ -81,7 +82,7 @@ export function validateProfile(v) {
 
 export function validatePolicy(v) {
   v=JSON.parse(canonical(v));
-  exactKeys(v,['schema','id','profileDigest','scopeId','minCoverage','minScore','minIndependentCoverage','allowedSources','maxEvidenceAgeSeconds','trustedKeys','revokedKeyIds','revokedEvidenceIds','revokedSubjectDigests',...(Object.hasOwn(v,'requirePrincipalBinding')?['requirePrincipalBinding']:[]),...(Object.hasOwn(v,'maxAssessmentAgeSeconds')?['maxAssessmentAgeSeconds']:[])],'Policy');
+  exactKeys(v,['schema','id','profileDigest','scopeId','minCoverage','minScore','minIndependentCoverage','allowedSources','maxEvidenceAgeSeconds','trustedKeys','revokedKeyIds','revokedEvidenceIds','revokedSubjectDigests',...(Object.hasOwn(v,'requirePrincipalBinding')?['requirePrincipalBinding']:[]),...(Object.hasOwn(v,'maxAssessmentAgeSeconds')?['maxAssessmentAgeSeconds']:[]),...(Object.hasOwn(v,'mandatoryMinimums')?['mandatoryMinimums']:[])],'Policy');
   insist(v.schema === 'kya.policy/v1','Unsupported policy schema'); identifier(v.id,'Policy ID'); hash(v.profileDigest,'Policy profile'); identifier(v.scopeId,'Policy scope');
   for (const k of ['minCoverage','minIndependentCoverage']) insist(typeof v[k] === 'number' && Number.isFinite(v[k]) && v[k] >= 0 && v[k] <= 1,`Invalid ${k}`);
   insist(Number.isInteger(v.minScore) && v.minScore >= 0 && v.minScore <= 1000,'Invalid minScore');
@@ -89,6 +90,16 @@ export function validatePolicy(v) {
   list(v.allowedSources,'Allowed sources',3,(x)=>insist(SOURCES.includes(x),'Unknown evidence source'));
   if (Object.hasOwn(v,'requirePrincipalBinding')) insist(typeof v.requirePrincipalBinding === 'boolean','requirePrincipalBinding must be boolean');
   if (Object.hasOwn(v,'maxAssessmentAgeSeconds')) insist(Number.isSafeInteger(v.maxAssessmentAgeSeconds) && v.maxAssessmentAgeSeconds > 0 && v.maxAssessmentAgeSeconds <= 31_536_000,'Invalid assessment age');
+  if (Object.hasOwn(v,'mandatoryMinimums')) {
+    // Optional hard floors on named checks. Check IDs are resolved against the frozen profile at assessment time.
+    const m = v.mandatoryMinimums;
+    insist(Array.isArray(m) && m.length >= 1 && m.length <= 256,'Invalid mandatory minimums: expected 1 to 256 entries');
+    const seen = new Set();
+    for (const e of m) {
+      exactKeys(e,['checkId','minimum'],'Mandatory minimum'); identifier(e.checkId,'Mandatory minimum check ID');
+      insist(MINIMUM_LEVELS.includes(e.minimum),'Unknown mandatory minimum level'); insist(!seen.has(e.checkId),'Duplicate mandatory minimum check'); seen.add(e.checkId);
+    }
+  }
   list(v.revokedKeyIds,'Revoked keys',4096,hash); list(v.revokedSubjectDigests,'Revoked subjects',4096,hash); list(v.revokedEvidenceIds,'Revoked evidence',4096);
   insist(Array.isArray(v.trustedKeys) && v.trustedKeys.length <= 256,'Invalid trust anchors');
   const ids = new Set();

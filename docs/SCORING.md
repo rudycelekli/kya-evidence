@@ -27,6 +27,36 @@ If 9 of 18 equal-weight checks pass and nine are unknown, score is 500, coverage
 
 Revoked subject yields `revoked`; invalid subject time yields `expired`. A critical failure yields `blocked`, regardless of average. Critical unknowns, insufficient coverage or independence and tied latest runs prevent qualification. A known pass/fail is required even with zero thresholds. A sufficiently observed system below score threshold is `blocked`. `qualified` means only that this local policy was met; it does not grant runtime authority.
 
+## Named blocker codes
+
+An assessment never withholds a result silently. Each human-readable entry in `blockers` has a stable machine-readable code at the same index of `blockerCodes`, so relying software can branch on a code while the wording may change. The list is append-only: a code is never reused for a different meaning. Reports written before `blockerCodes` existed omit it, keep their original digest and still verify; when present it must hold exactly one known code per blocker.
+
+| Code | Decision | Fires when |
+| :--- | :--- | :--- |
+| `SUBJECT_REVOKED` | `revoked` | The subject digest is in the policy revocations |
+| `SUBJECT_EXPIRED` | `expired` | The manifest has expired at assessment time |
+| `SUBJECT_NOT_YET_VALID` | `expired` | The manifest is dated after assessment time |
+| `CRITICAL_CHECK_FAILED` | `blocked` | A critical check failed; one entry per check |
+| `CRITICAL_CHECK_UNPROVEN` | `insufficient-evidence` | A critical check is unknown, abstained or errored; one entry per check |
+| `COVERAGE_BELOW_POLICY` | `insufficient-evidence` | Known weight is below `minCoverage` |
+| `INDEPENDENT_COVERAGE_BELOW_POLICY` | `insufficient-evidence` | Independently signed weight is below `minIndependentCoverage` |
+| `SCORE_BELOW_POLICY` | `blocked` | A sufficiently observed result scores below `minScore` |
+| `AMBIGUOUS_RUNS` | `insufficient-evidence` | Several runs tie for most recent |
+| `RUN_CONFLICT` | `insufficient-evidence` | The selected run holds quarantined duplicate evidence IDs |
+| `RUN_INVALIDATED` | `insufficient-evidence` | The latest bound run holds revoked, expired or stale receipts; no fallback to an older run |
+| `MIXED_RUN_ISSUERS` | `insufficient-evidence` | One frozen run has several evaluator signers |
+| `REPEATED_RUN_CHECKS` | `insufficient-evidence` | One frozen check has repeated observations in a run |
+| `NO_SCORED_OBSERVATIONS` | `insufficient-evidence` | No check is a known pass or fail |
+| `NO_OBSERVED_CHECKS` | `insufficient-evidence` | A would-be qualification selected no observed check |
+| `PRINCIPAL_UNBOUND` | `insufficient-evidence` | Policy requires an accountable party and the manifest declares none |
+| `MANDATORY_MINIMUM_NOT_MET` | `blocked` | A policy mandatory minimum is not satisfied; one entry per unmet check |
+
+`checkCurrency` triggers keep their `id` and now carry a stable `code`: `CLOCK_REGRESSION` (`clock-regression`), `SUBJECT_CHANGED` (`subject-changed`), `POLICY_CHANGED` (`policy-changed`), `SUBJECT_REVOKED` (`subject-revoked`), `ASSESSMENT_EXPIRED` (`assessment-expired`), `ASSESSMENT_AGED` (`assessment-aged`) and `INCIDENT_OPEN` (`incident-open`).
+
+## Mandatory minimums
+
+A policy MAY add `mandatoryMinimums`, a non-empty list of `{checkId, minimum}` with unique check IDs. `minimum` is `pass` (the check must be a known pass in the selected run) or `independent-pass` (it must also be signed by a policy-assigned independent key). A check outcome is binary, so the threshold is the assurance level, not a numeric score. If any named check is not met, whether failed, unknown, abstained, errored, rejected or declared only, the decision is capped at `blocked` with one `MANDATORY_MINIMUM_NOT_MET` entry per unmet check, whatever the score and coverage. Revoked and expired subjects keep their more specific decision. Every named check ID must exist in the frozen profile or assessment is refused. The field is optional: absent, the policy and its digest are unchanged. Declarations and removed evidence can never satisfy a minimum, because only an eligible observed pass from the selected run counts.
+
 ## Reference profile
 
 Eighteen checks have weight 1, three per dimension. Equal weight is transparent and contestable, not universally validated.

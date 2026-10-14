@@ -40,6 +40,7 @@ export function validateReport(r){
  insist(new Set(r.checks.map(c=>c.id)).size===r.checks.length,'Duplicate check IDs');
  for(const c of r.checks){str(c.id,'check id');insist(DIMENSIONS.includes(c.dimension),'Invalid check dimension');insist(['pass','fail','unknown','abstain','error'].includes(c.status),'Invalid check status');insist(typeof c.critical==='boolean'&&Number.isSafeInteger(c.weight)&&c.weight>0&&c.weight<=100000,'Invalid check weight or critical flag');for(const k of ['title','evidenceId','keyId'])if(c[k]!=null)str(c[k],k);}
  insist(Array.isArray(r.blockers)&&r.blockers.length<=1024,'Invalid blockers');r.blockers.forEach(v=>str(v,'blocker'));
+ if(r.blockerCodes!==undefined)insist(Array.isArray(r.blockerCodes)&&r.blockerCodes.length===r.blockers.length&&r.blockerCodes.every(c=>typeof c==='string'&&/^[A-Z][A-Z0-9_]{1,63}$/.test(c)),'Invalid blocker codes');
  insist(Array.isArray(r.rejectedEvidence)&&r.rejectedEvidence.length<=4096,'Invalid rejection list');for(const e of r.rejectedEvidence){str(e.reason,'rejection reason');if(e.id!=null)str(e.id,'rejected ID');}
  if(r.limitations!=null){insist(Array.isArray(r.limitations)&&r.limitations.length<=128,'Invalid limitations');r.limitations.forEach(v=>str(v,'limitation'));}
  return r;
