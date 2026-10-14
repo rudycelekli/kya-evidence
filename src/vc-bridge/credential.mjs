@@ -88,12 +88,27 @@ function checkClaims(c) {
   return errs;
 }
 
+const SAME = ['subjectDigest', 'scopeDigest', 'scopeId', 'profileId', 'profileDigest', 'policyDigest', 'evaluatorDigest', 'reportDigest', 'assessedAt', 'selectedRunId', 'decision', 'score', 'coverage', 'independentCoverage', 'evidenceMode', 'limitations'];
+const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
+// Field-by-field comparison against the original report. Returns the names that differ.
+function compareToReport(c, r) {
+  const s = c.credentialSubject, diffs = SAME.filter(k => !same(s[k], r[k]));
+  if (!same(s.blockerCodes, Object.hasOwn(r, 'blockerCodes') ? r.blockerCodes : null)) diffs.push('blockerCodes');
+  const ev = c.evidence?.[0] ?? {};
+  for (const k of ['evidenceBundleDigest', 'acceptedEvidenceDigests']) if (!same(ev[k], r[k])) diffs.push(`evidence.${k}`);
+  if (c.validUntil !== undefined && Date.parse(c.validUntil) > Date.parse(r.validUntil)) diffs.push('validUntil');
+  if (Date.parse(c.validFrom) < Date.parse(r.assessedAt)) diffs.push('validFrom');
+  return diffs;
+}
+
 /**
  * Verify a vc+jwt assessment credential. Never throws for bad input: returns { valid, errors }.
  * authenticated is always false: a valid signature proves key possession, not truthful execution.
- * Network access never happens; supply status list credentials as { [url]: jwt }.
+ * Without `report`, only internal consistency is checked: a holder of the issuer key can edit fields and re-sign, and the result
+ * is still valid. With the original `report` (kya.assessment/v1) the credential is compared field by field and any difference is
+ * REPORT_MISMATCH. Network access never happens; supply status list credentials as { [url]: jwt }.
  */
-export function verifyAssessmentCredential(token, { now = new Date().toISOString(), expectedIssuerKeys = [], policy, statusLists, requireStatusCheck = false } = {}) {
+export function verifyAssessmentCredential(token, { now = new Date().toISOString(), expectedIssuerKeys = [], policy, statusLists, requireStatusCheck = false, report } = {}) {
   const base = { authenticated: false, warning: WARNING };
   const errors = [];
   let opened;
@@ -101,6 +116,15 @@ export function verifyAssessmentCredential(token, { now = new Date().toISOString
   catch (e) { return { ...base, valid: false, errors: [{ code: e.code ?? 'MALFORMED', message: e.message }] }; }
   const { credential, issuer } = opened;
   for (const [code, message] of checkClaims(credential)) errors.push({ code, message });
+  let reportChecked = false;
+  if (report !== undefined) {
+    try { verifyAssessment(report); } catch (e) { errors.push({ code: 'REPORT_INVALID', message: e.message }); report = undefined; }
+    if (report !== undefined) {
+      const diffs = compareToReport(credential, report);
+      if (diffs.length) errors.push({ code: 'REPORT_MISMATCH', message: `Credential differs from the supplied report in: ${diffs.join(', ')}` });
+      reportChecked = true;
+    }
+  }
   let issuerTrust = opened.issuerTrust, issuerRole = null;
   if (policy) {
     issuerRole = anchorRole(issuer, policy);
@@ -121,5 +145,5 @@ export function verifyAssessmentCredential(token, { now = new Date().toISOString
   }
   status.checked = all;
   if (requireStatusCheck && !all) errors.push({ code: 'STATUS_NOT_CHECKED', message: 'Status was required but not fully checked' });
-  return { ...base, valid: errors.length === 0, errors, issuer, issuerTrust, issuerRole, credential, status, validAt: now };
+  return { ...base, valid: errors.length === 0, errors, issuer, issuerTrust, issuerRole, credential, status, validAt: now, reportChecked };
 }

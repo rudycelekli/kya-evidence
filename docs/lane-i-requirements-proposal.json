@@ -9,10 +9,22 @@
       "section": "Records and bindings",
       "statement": "An exported assessment credential MUST bind the agent by KYA subject digest only, MUST carry the decision, score, coverage, profile, policy and evaluator digests, blocker codes, limitations and exact input digests of the source report, and MUST NOT carry a principal, agent name or any person identifier.",
       "tests": [
-        { "file": "test/vc-bridge.test.mjs", "title": "subject binds the agent by digest only with no person identity or principal fields" },
-        { "file": "test/vc-bridge.test.mjs", "title": "credential carries digests score coverage blockers and exact input digest evidence" },
-        { "file": "test/vc-bridge.test.mjs", "title": "header carries vc plus jwt typ EdDSA and a did key kid and payload is the bare credential" },
-        { "file": "test/vc-bridge.test.mjs", "title": "legacy reports without blocker codes export with explicit null codes" }
+        {
+          "file": "test/vc-bridge.test.mjs",
+          "title": "subject binds the agent by digest only with no person identity or principal fields"
+        },
+        {
+          "file": "test/vc-bridge.test.mjs",
+          "title": "credential carries digests score coverage blockers and exact input digest evidence"
+        },
+        {
+          "file": "test/vc-bridge.test.mjs",
+          "title": "header carries vc plus jwt typ EdDSA and a did key kid and payload is the bare credential"
+        },
+        {
+          "file": "test/vc-bridge.test.mjs",
+          "title": "legacy reports without blocker codes export with explicit null codes"
+        }
       ]
     },
     {
@@ -22,8 +34,14 @@
       "section": "Records and bindings",
       "statement": "Export MUST copy the evidence mode verbatim and MUST NOT export fixture or mixed evidence without the fixture limitation, and verification MUST reject a credential whose evidence mode and fixture limitation disagree even when the signature is valid.",
       "tests": [
-        { "file": "test/vc-bridge.test.mjs", "title": "fixture source assessments are never exported as runtime" },
-        { "file": "test/vc-bridge.test.mjs", "title": "runtime evidence mode is preserved verbatim and mixed carries the fixture limitation" }
+        {
+          "file": "test/vc-bridge.test.mjs",
+          "title": "fixture source assessments are never exported as runtime"
+        },
+        {
+          "file": "test/vc-bridge.test.mjs",
+          "title": "runtime evidence mode is preserved verbatim and mixed carries the fixture limitation"
+        }
       ]
     },
     {
@@ -33,9 +51,18 @@
       "section": "Records and bindings",
       "statement": "Export MUST refuse a report whose digest does not verify, MUST be deterministic for fixed inputs, and MUST NOT let a credential predate or outlive its assessment.",
       "tests": [
-        { "file": "test/vc-bridge.test.mjs", "title": "tampered report digest or body is refused at export" },
-        { "file": "test/vc-bridge.test.mjs", "title": "export is deterministic for fixed inputs and differs when any input changes" },
-        { "file": "test/vc-bridge.test.mjs", "title": "validity can only narrow the assessment window and never predate it" }
+        {
+          "file": "test/vc-bridge.test.mjs",
+          "title": "tampered report digest or body is refused at export"
+        },
+        {
+          "file": "test/vc-bridge.test.mjs",
+          "title": "export is deterministic for fixed inputs and differs when any input changes"
+        },
+        {
+          "file": "test/vc-bridge.test.mjs",
+          "title": "validity can only narrow the assessment window and never predate it"
+        }
       ]
     },
     {
@@ -45,10 +72,22 @@
       "section": "Records and bindings",
       "statement": "Verification MUST accept only alg EdDSA and typ vc+jwt, MUST judge the algorithm before using any key, MUST refuse embedded key or URL header members, and MUST refuse a kid that does not name the issuer did:key method.",
       "tests": [
-        { "file": "test/vc-bridge.test.mjs", "title": "alg none HS256 and unknown algorithms are refused before any key use" },
-        { "file": "test/vc-bridge.test.mjs", "title": "typ cty and unknown or key bearing header members are refused" },
-        { "file": "test/vc-bridge.test.mjs", "title": "a correctly signed token whose kid names a different method is refused" },
-        { "file": "test/vc-bridge.test.mjs", "title": "compact token shape is strict" }
+        {
+          "file": "test/vc-bridge.test.mjs",
+          "title": "alg none HS256 and unknown algorithms are refused before any key use"
+        },
+        {
+          "file": "test/vc-bridge.test.mjs",
+          "title": "typ cty and unknown or key bearing header members are refused"
+        },
+        {
+          "file": "test/vc-bridge.test.mjs",
+          "title": "a correctly signed token whose kid names a different method is refused"
+        },
+        {
+          "file": "test/vc-bridge.test.mjs",
+          "title": "compact token shape is strict"
+        }
       ]
     },
     {
@@ -58,10 +97,22 @@
       "section": "Records and bindings",
       "statement": "Verification MUST detect any change to the header, payload or signature and MUST refuse a signature by a key other than the issuer did:key, and a successful verification MUST report authenticated false.",
       "tests": [
-        { "file": "test/vc-bridge.test.mjs", "title": "credential round trips and verifies with a did key issuer and reports authenticated false" },
-        { "file": "test/vc-bridge.test.mjs", "title": "payload tampering invalidates the signature" },
-        { "file": "test/vc-bridge.test.mjs", "title": "header tampering and signature tampering are detected" },
-        { "file": "test/vc-bridge.test.mjs", "title": "signature by a different key than the issuer did is refused" }
+        {
+          "file": "test/vc-bridge.test.mjs",
+          "title": "credential round trips and verifies with a did key issuer and reports authenticated false"
+        },
+        {
+          "file": "test/vc-bridge.test.mjs",
+          "title": "payload tampering invalidates the signature"
+        },
+        {
+          "file": "test/vc-bridge.test.mjs",
+          "title": "header tampering and signature tampering are detected"
+        },
+        {
+          "file": "test/vc-bridge.test.mjs",
+          "title": "signature by a different key than the issuer did is refused"
+        }
       ]
     },
     {
@@ -71,8 +122,14 @@
       "section": "Records and bindings",
       "statement": "Verification MUST enforce the validity window at an explicit supplied time, and issuer trust MUST be relative to expected keys or a supplied policy and MUST NOT be inferred from the signature alone.",
       "tests": [
-        { "file": "test/vc-bridge.test.mjs", "title": "expired and not yet valid credentials are refused at explicit times" },
-        { "file": "test/vc-bridge.test.mjs", "title": "expected issuer keys must include the issuer and a policy must anchor it" }
+        {
+          "file": "test/vc-bridge.test.mjs",
+          "title": "expired and not yet valid credentials are refused at explicit times"
+        },
+        {
+          "file": "test/vc-bridge.test.mjs",
+          "title": "expected issuer keys must include the issuer and a policy must anchor it"
+        }
       ]
     },
     {
@@ -82,9 +139,18 @@
       "section": "Records and bindings",
       "statement": "The did:key encoding MUST use multicodec 0xed01 with multibase base58btc, MUST reject other multicodecs and non-canonical strings, and MUST agree with published did:key vectors.",
       "tests": [
-        { "file": "test/vc-bridge.test.mjs", "title": "did key vectors from the CCG spec decode to ed25519 multicodec and re-encode identically" },
-        { "file": "test/vc-bridge.test.mjs", "title": "did key derivation round trips a node key and rejects foreign multicodecs and malformed strings" },
-        { "file": "test/vc-bridge.test.mjs", "title": "base58btc keeps leading zero bytes and rejects bad alphabets" }
+        {
+          "file": "test/vc-bridge.test.mjs",
+          "title": "did key vectors from the CCG spec decode to ed25519 multicodec and re-encode identically"
+        },
+        {
+          "file": "test/vc-bridge.test.mjs",
+          "title": "did key derivation round trips a node key and rejects foreign multicodecs and malformed strings"
+        },
+        {
+          "file": "test/vc-bridge.test.mjs",
+          "title": "base58btc keeps leading zero bytes and rejects bad alphabets"
+        }
       ]
     },
     {
@@ -94,10 +160,22 @@
       "section": "Records and bindings",
       "statement": "Status lists MUST place index 0 at the leftmost bit, MUST encode as GZIP then multibase base64url with prefix u, and MUST refuse a wrong prefix, padding or corrupt data on decode.",
       "tests": [
-        { "file": "test/vc-bridge.test.mjs", "title": "status list bit order matches the spec with index zero as the leftmost bit" },
-        { "file": "test/vc-bridge.test.mjs", "title": "status list encoding round trips with gzip and the u multibase prefix" },
-        { "file": "test/vc-bridge.test.mjs", "title": "status list decoding refuses wrong prefix padding and corrupt data" },
-        { "file": "test/vc-bridge.test.mjs", "title": "base64url helper is canonical and strict" }
+        {
+          "file": "test/vc-bridge.test.mjs",
+          "title": "status list bit order matches the spec with index zero as the leftmost bit"
+        },
+        {
+          "file": "test/vc-bridge.test.mjs",
+          "title": "status list encoding round trips with gzip and the u multibase prefix"
+        },
+        {
+          "file": "test/vc-bridge.test.mjs",
+          "title": "status list decoding refuses wrong prefix padding and corrupt data"
+        },
+        {
+          "file": "test/vc-bridge.test.mjs",
+          "title": "base64url helper is canonical and strict"
+        }
       ]
     },
     {
@@ -107,9 +185,18 @@
       "section": "Records and bindings",
       "statement": "Status list decoding MUST bound decompressed size, MUST refuse lists shorter than the minimum of 131072 entries, and MUST refuse out-of-range indices, mismatched purposes and malformed entries.",
       "tests": [
-        { "file": "test/vc-bridge.test.mjs", "title": "gzip bombs are rejected by bounded decompression" },
-        { "file": "test/vc-bridge.test.mjs", "title": "undersized lists are refused at build and at check" },
-        { "file": "test/vc-bridge.test.mjs", "title": "wrong index out of range and wrong purpose and malformed entries are refused" }
+        {
+          "file": "test/vc-bridge.test.mjs",
+          "title": "gzip bombs are rejected by bounded decompression"
+        },
+        {
+          "file": "test/vc-bridge.test.mjs",
+          "title": "undersized lists are refused at build and at check"
+        },
+        {
+          "file": "test/vc-bridge.test.mjs",
+          "title": "wrong index out of range and wrong purpose and malformed entries are refused"
+        }
       ]
     },
     {
@@ -119,10 +206,22 @@
       "section": "Records and bindings",
       "statement": "A status check MUST verify the list credential signature, issuer and validity window, MUST support revocation and suspension as separate purposes, and a revoked or suspended credential MUST fail verification when its list is supplied.",
       "tests": [
-        { "file": "test/vc-bridge.test.mjs", "title": "status list credential sets only the requested bits and key changes are detected by checkStatus" },
-        { "file": "test/vc-bridge.test.mjs", "title": "status list must be signed by the expected issuer and be in its validity window" },
-        { "file": "test/vc-bridge.test.mjs", "title": "suspension is reversible by republishing and only revocation and suspension purposes are built" },
-        { "file": "test/vc-bridge.test.mjs", "title": "exported credential status entries verify against status lists and revoked credentials fail verification" }
+        {
+          "file": "test/vc-bridge.test.mjs",
+          "title": "status list credential sets only the requested bits and key changes are detected by checkStatus"
+        },
+        {
+          "file": "test/vc-bridge.test.mjs",
+          "title": "status list must be signed by the expected issuer and be in its validity window"
+        },
+        {
+          "file": "test/vc-bridge.test.mjs",
+          "title": "suspension is reversible by republishing and only revocation and suspension purposes are built"
+        },
+        {
+          "file": "test/vc-bridge.test.mjs",
+          "title": "exported credential status entries verify against status lists and revoked credentials fail verification"
+        }
       ]
     },
     {
@@ -132,9 +231,73 @@
       "section": "Records and bindings",
       "statement": "Status index assignment MUST be deterministic and keyed by an issuer secret, MUST NOT take the subject digest as input, MUST NOT move an index already assigned, and policy revocation MUST map to the credential bits of the revoked subject digests and evidence IDs.",
       "tests": [
-        { "file": "test/vc-bridge.test.mjs", "title": "index assignment is deterministic keyed and does not reveal the subject digest" },
-        { "file": "test/vc-bridge.test.mjs", "title": "index assignment avoids collisions with earlier ledger entries and never moves them" },
-        { "file": "test/vc-bridge.test.mjs", "title": "kya revocation lists map to revoked ledger entries by subject digest and by evidence id" }
+        {
+          "file": "test/vc-bridge.test.mjs",
+          "title": "index assignment is deterministic keyed and does not reveal the subject digest"
+        },
+        {
+          "file": "test/vc-bridge.test.mjs",
+          "title": "index assignment avoids collisions with earlier ledger entries and never moves them"
+        },
+        {
+          "file": "test/vc-bridge.test.mjs",
+          "title": "kya revocation lists map to revoked ledger entries by subject digest and by evidence id"
+        }
+      ]
+    },
+    {
+      "id": "KYA-VCB-012",
+      "level": "MUST",
+      "area": "vcb",
+      "section": "Records and bindings",
+      "statement": "Raw Ed25519 public keys MUST be rejected when non-canonical, off the curve or of small order, wherever a did:key or JWS verification key is admitted, so an identity-key forgery MUST NOT verify.",
+      "tests": [
+        {
+          "file": "test/vc-bridge.test.mjs",
+          "title": "small order and non canonical ed25519 public keys are rejected in did key decoding"
+        },
+        {
+          "file": "test/vc-bridge.test.mjs",
+          "title": "identity key forgery with base point R and S equal one is refused by credential and status list verification"
+        }
+      ]
+    },
+    {
+      "id": "KYA-VCB-013",
+      "level": "MUST",
+      "area": "vcb",
+      "section": "Records and bindings",
+      "statement": "A status list MUST carry validUntil, an expired or no-expiry list MUST be refused and reported distinctly, and revocation mapping MUST validate its policy and ledger and MUST NOT treat a junk policy as an empty revocation set.",
+      "tests": [
+        {
+          "file": "test/vc-bridge.test.mjs",
+          "title": "status lists must carry validUntil and an expired or stale list is reported as STATUS_LIST_EXPIRED"
+        },
+        {
+          "file": "test/vc-bridge.test.mjs",
+          "title": "credential verification reports an expired status list distinctly and a stale list never counts as checked"
+        },
+        {
+          "file": "test/vc-bridge.test.mjs",
+          "title": "revokedLedgerEntries validates the policy and the ledger and rejects junk"
+        },
+        {
+          "file": "test/vc-bridge.test.mjs",
+          "title": "status-list CLI refuses an empty policy and a missing valid until and signs a bounded list otherwise"
+        }
+      ]
+    },
+    {
+      "id": "KYA-VCB-014",
+      "level": "MUST",
+      "area": "vcb",
+      "section": "Records and bindings",
+      "statement": "When the source report is supplied, verification MUST compare the credential to it field by field and MUST report any difference, and without the report the result MUST NOT claim more than internal consistency.",
+      "tests": [
+        {
+          "file": "test/vc-bridge.test.mjs",
+          "title": "verification with the source report cross checks mode decision and digests and exposes a re-signed edit"
+        }
       ]
     }
   ]

@@ -3,14 +3,19 @@ import assert from 'node:assert/strict';
 import { generateKeyPairSync, createHmac, sign } from 'node:crypto';
 import { gzipSync } from 'node:zlib';
 import { assess, signEvidence, digest, keyId } from '../src/index.mjs';
-import { inputs, keys, clone } from './helpers.mjs';
-import { exportAssessmentCredential, verifyAssessmentCredential, didKeyFromPublicKey, publicKeyFromDidKey, base58btcEncode, base58btcDecode, createBitstring, setBit, getBit, encodeList, decodeList, buildStatusListCredential, checkStatus, allocateStatusIndices, revokedLedgerEntries, MIN_STATUS_ENTRIES, b64u } from '../src/vc-bridge/index.mjs';
+import { spawnSync } from 'node:child_process';
+import { mkdtempSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { inputs, keys, clone, policy as mkPolicy } from './helpers.mjs';
+import { exportAssessmentCredential, verifyAssessmentCredential, didKeyFromPublicKey, publicKeyFromDidKey, base58btcEncode, base58btcDecode, createBitstring, setBit, getBit, encodeList, decodeList, buildStatusListCredential, checkStatus, allocateStatusIndices, revokedLedgerEntries, MIN_STATUS_ENTRIES, b64u , base58btcEncode as b58 } from '../src/vc-bridge/index.mjs';
 
 const issuer = generateKeyPairSync('ed25519');
 const other = generateKeyPairSync('ed25519');
 const secret = 'a'.repeat(40);
 const VF = '2026-10-13T12:00:00.000Z';
 const AT = '2026-10-13T12:30:00.000Z';
+const LU = '2026-10-13T18:00:00.000Z';
 const report = () => assess(inputs());
 const exportIt = (r = report(), extra = {}) => exportAssessmentCredential(r, { issuerKey: issuer.privateKey, validFrom: VF, ...extra });
 const resign = (jwt, mutate, key = issuer.privateKey) => {
@@ -23,7 +28,7 @@ const resign = (jwt, mutate, key = issuer.privateKey) => {
 const codes = r => r.errors.map(e => e.code);
 const listUrl = 'https://example.test/status/rev';
 const entry = (i, purpose = 'revocation', extra = {}) => ({ type: 'BitstringStatusListEntry', statusPurpose: purpose, statusListIndex: i, statusListCredential: listUrl, ...extra });
-const mkList = (purpose, indices, url = listUrl, extra = {}) => buildStatusListCredential({ issuerKey: issuer.privateKey, id: url, purpose, indices, validFrom: VF, ...extra });
+const mkList = (purpose, indices, url = listUrl, extra = {}) => buildStatusListCredential({ issuerKey: issuer.privateKey, id: url, purpose, indices, validFrom: VF, validUntil: LU, ...extra });
 
 test('did key vectors from the CCG spec decode to ed25519 multicodec and re-encode identically', () => {
   for (const did of ['did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK', 'did:key:z6Mkf5rGMoatrSj1f4CyvuHBeXJELe9RPdzo2PKGNCKVtZxP']) {
@@ -257,7 +262,8 @@ test('status list must be signed by the expected issuer and be in its validity w
   const list = mkList('revocation', [1], listUrl, { validUntil: '2026-10-13T13:00:00.000Z' });
   assert.throws(() => checkStatus(list.jwt, entry('1'), { now: AT, expectedIssuerKeys: [didKeyFromPublicKey(other.publicKey)] }), /issuer/);
   assert.equal(checkStatus(list.jwt, entry('1'), { now: AT, expectedIssuerKeys: [didKeyFromPublicKey(issuer.publicKey)] }).valid, false);
-  assert.throws(() => checkStatus(list.jwt, entry('1'), { now: '2026-10-13T13:00:00.000Z' }), /window/);
+  assert.throws(() => checkStatus(list.jwt, entry('1'), { now: '2026-10-13T13:00:00.000Z' }), /STATUS_LIST_EXPIRED/);
+  assert.throws(() => checkStatus(list.jwt, entry('1'), { now: '2026-10-13T11:00:00.000Z' }), /window/);
   assert.throws(() => checkStatus(list.jwt, entry('1', 'revocation', { statusListCredential: 'https://example.test/other' }), { now: AT }), /URL/);
 });
 test('index assignment is deterministic keyed and does not reveal the subject digest', () => {
@@ -290,10 +296,10 @@ test('kya revocation lists map to revoked ledger entries by subject digest and b
   const a = mk(r.reportDigest, r.subjectDigest, ['evidence-0', 'evidence-1']);
   const b = mk(digest('b'), digest('sb'), ['evidence-9']);
   const c = mk(digest('c'), digest('sc'), ['evidence-5']);
-  const rev = revokedLedgerEntries(ledger, { revokedSubjectDigests: [r.subjectDigest], revokedEvidenceIds: ['evidence-5'] });
+  const rev = revokedLedgerEntries(ledger, { ...mkPolicy(), revokedSubjectDigests: [r.subjectDigest], revokedEvidenceIds: ['evidence-5'] });
   assert.deepEqual(rev.map(x => x.reportDigest).sort(), [a.reportDigest, c.reportDigest].sort());
   assert.equal(rev.includes(b), false);
-  assert.deepEqual(revokedLedgerEntries(ledger, { revokedSubjectDigests: [], revokedEvidenceIds: [] }), []);
+  assert.deepEqual(revokedLedgerEntries(ledger, mkPolicy()), []);
 });
 test('exported credential status entries verify against status lists and revoked credentials fail verification', () => {
   const r = report(); const indices = allocateStatusIndices({ secret, reportDigest: r.reportDigest, ledger: [] });
@@ -309,7 +315,7 @@ test('exported credential status entries verify against status lists and revoked
   const none = verifyAssessmentCredential(out.jwt, { now: AT });
   assert.equal(none.valid, true); assert.equal(none.status.checked, false);
   assert.ok(codes(verifyAssessmentCredential(out.jwt, { now: AT, requireStatusCheck: true })).includes('STATUS_NOT_CHECKED'));
-  const foreign = { ...clean, [listUrl]: buildStatusListCredential({ issuerKey: other.privateKey, id: listUrl, purpose: 'revocation', indices: [], validFrom: VF }).jwt };
+  const foreign = { ...clean, [listUrl]: buildStatusListCredential({ issuerKey: other.privateKey, id: listUrl, purpose: 'revocation', indices: [], validFrom: VF, validUntil: LU }).jwt };
   assert.ok(codes(verifyAssessmentCredential(out.jwt, { now: AT, statusLists: foreign })).includes('STATUS_VERIFICATION_ERROR'));
 });
 test('legacy reports without blocker codes export with explicit null codes', () => {
@@ -320,4 +326,96 @@ test('base64url helper is canonical and strict', () => {
   assert.equal(b64u.decode(b64u.encode(Buffer.from('hello'))).toString(), 'hello');
   assert.throws(() => b64u.decode('aGVsbG8='));
   assert.throws(() => b64u.decode('aGVsbG9'));
+});
+
+const P = (1n << 255n) - 19n;
+const modpow = (b, e, m = P) => { let r = 1n; b %= m; while (e > 0n) { if (e & 1n) r = r * b % m; b = b * b % m; e >>= 1n; } return r; };
+const inv = a => modpow(a, P - 2n);
+const leBytes = (n, len = 32) => { const o = Buffer.alloc(len); for (let i = 0; i < len; i++) { o[i] = Number(n & 0xffn); n >>= 8n; } return o; };
+const didOf = raw => 'did:key:z' + b58(Buffer.concat([Buffer.from([0xed, 0x01]), raw]));
+const D = (P - 121665n * inv(121666n) % P) % P;
+const onCurve = y => { const u = (y * y - 1n + P) % P, v = (D * y * y + 1n) % P; const t = u * inv(v) % P; return t === 0n || modpow(t, (P - 1n) / 2n) === 1n; };
+
+test('small order and non canonical ed25519 public keys are rejected in did key decoding', () => {
+  const identity = leBytes(1n), order2 = leBytes(P - 1n), nonCanonical = leBytes(P + 1n);
+  let y = 2n; while (onCurve(y)) y++;
+  const offCurve = leBytes(y);
+  assert.equal(order2.toString('hex'), 'ec' + 'ff'.repeat(30) + '7f');
+  for (const [name, raw, re] of [['identity', identity, /small-order/], ['order two', order2, /small-order/], ['non-canonical y', nonCanonical, /non-canonical/], ['off curve', offCurve, /not on the curve/]]) {
+    assert.throws(() => publicKeyFromDidKey(didOf(raw)), re, name);
+    assert.throws(() => didKeyFromPublicKey(raw), re, name);
+  }
+  const identityNegativeSign = Buffer.from(identity); identityNegativeSign[31] |= 0x80;
+  assert.throws(() => publicKeyFromDidKey(didOf(identityNegativeSign)), /non-canonical|small-order/);
+  for (let i = 0; i < 8; i++) { const k = generateKeyPairSync('ed25519').publicKey; assert.equal(publicKeyFromDidKey(didKeyFromPublicKey(k)).length, 32); }
+  assert.equal(publicKeyFromDidKey('did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK').length, 32);
+});
+test('identity key forgery with base point R and S equal one is refused by credential and status list verification', () => {
+  const did = didOf(leBytes(1n));
+  const basepointY = 4n * inv(5n) % P;
+  const sig = Buffer.concat([leBytes(basepointY), leBytes(1n)]);
+  const header = { alg: 'EdDSA', typ: 'vc+jwt', cty: 'vc', kid: `${did}#${did.slice(8)}` };
+  const payload = { '@context': ['https://www.w3.org/ns/credentials/v2'], type: ['VerifiableCredential', 'KyaAssessmentCredential'], issuer: did, validFrom: VF, credentialSubject: { type: 'KyaAssessment' } };
+  const enc = o => Buffer.from(JSON.stringify(o)).toString('base64url');
+  const forged = `${enc(header)}.${enc(payload)}.${sig.toString('base64url')}`;
+  const r = verifyAssessmentCredential(forged, { now: AT });
+  assert.equal(r.valid, false); assert.ok(codes(r).includes('ISSUER_INVALID'));
+  assert.throws(() => checkStatus(forged, entry('1'), { now: AT }), /STATUS_VERIFICATION_ERROR/);
+});
+test('status lists must carry validUntil and an expired or stale list is reported as STATUS_LIST_EXPIRED', () => {
+  assert.throws(() => buildStatusListCredential({ issuerKey: issuer.privateKey, id: listUrl, purpose: 'revocation', indices: [], validFrom: VF }), /validUntil/);
+  const noExpiry = resign(mkList('revocation', [1]).jwt, (h, p) => { delete p.validUntil; });
+  assert.throws(() => checkStatus(noExpiry, entry('1'), { now: AT }), /STATUS_LIST_NO_EXPIRY/);
+  const list = mkList('revocation', [1], listUrl, { validUntil: '2026-10-13T13:00:00.000Z' });
+  assert.equal(list.credential.validUntil, '2026-10-13T13:00:00.000Z');
+  assert.throws(() => checkStatus(list.jwt, entry('1'), { now: '2026-10-13T13:00:00.000Z' }), /STATUS_LIST_EXPIRED/);
+  const ttl = mkList('revocation', [1], listUrl, { ttl: 600000 });
+  assert.equal(ttl.credential.credentialSubject.ttl, 600000);
+  assert.equal(checkStatus(ttl.jwt, entry('1'), { now: '2026-10-13T12:09:59.999Z' }).set, true);
+  assert.throws(() => checkStatus(ttl.jwt, entry('1'), { now: '2026-10-13T12:10:00.000Z' }), /STATUS_LIST_EXPIRED/);
+  assert.throws(() => mkList('revocation', [1], listUrl, { ttl: 0 }), /ttl/);
+});
+test('credential verification reports an expired status list distinctly and a stale list never counts as checked', () => {
+  const r = report(); const indices = allocateStatusIndices({ secret, reportDigest: r.reportDigest, ledger: [] });
+  const out = exportIt(r, { status: { revocation: { statusListCredential: listUrl, statusListIndex: indices.revocation } } });
+  const stale = mkList('revocation', [], listUrl, { validUntil: '2026-10-13T12:10:00.000Z' });
+  const v = verifyAssessmentCredential(out.jwt, { now: AT, statusLists: { [listUrl]: stale.jwt }, requireStatusCheck: true });
+  assert.equal(v.valid, false); assert.ok(codes(v).includes('STATUS_LIST_EXPIRED')); assert.equal(v.status.checked, false);
+});
+test('revokedLedgerEntries validates the policy and the ledger and rejects junk', () => {
+  const ledger = [{ reportDigest: digest('a'), subjectDigest: digest('b'), evidenceIds: [], indices: { revocation: 1, suspension: 2 } }];
+  assert.throws(() => revokedLedgerEntries(ledger, {}));
+  assert.throws(() => revokedLedgerEntries(ledger, { revokedSubjectDigests: [], revokedEvidenceIds: [] }));
+  assert.throws(() => revokedLedgerEntries([{ subjectDigest: 'x' }], mkPolicy()), /ledger/i);
+  assert.throws(() => revokedLedgerEntries('nope', mkPolicy()), /ledger/i);
+});
+test('status-list CLI refuses an empty policy and a missing valid until and signs a bounded list otherwise', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'kya-vc-'));
+  const pem = join(dir, 'k.pem'); writeFileSync(pem, issuer.privateKey.export({ format: 'pem', type: 'pkcs8' }));
+  const pol = join(dir, 'pol.json'), good = join(dir, 'good.json'), led = join(dir, 'led.json');
+  writeFileSync(pol, '{}'); writeFileSync(good, JSON.stringify(mkPolicy())); writeFileSync(led, '[]');
+  const base = ['status-list', '--purpose', 'revocation', '--url', listUrl, '--ledger', led, '--key', pem, '--now', VF];
+  const run = args => spawnSync(process.execPath, ['scripts/kya-vc.mjs', ...args], { encoding: 'utf8', timeout: 20000 });
+  assert.notEqual(run([...base, '--policy', pol, '--valid-until', LU]).status, 0);
+  assert.notEqual(run([...base, '--policy', good]).status, 0);
+  const ok = run([...base, '--policy', good, '--valid-until', LU, '--out', join(dir, 'l.jwt')]);
+  assert.equal(ok.status, 0, ok.stderr);
+});
+test('verification with the source report cross checks mode decision and digests and exposes a re-signed edit', () => {
+  const r = report(); const jwt = exportIt(r).jwt;
+  const edit = (h, p) => { p.credentialSubject.evidenceMode = 'runtime'; p.credentialSubject.limitations = p.credentialSubject.limitations.filter(l => !/fixture/.test(l)); };
+  const forged = resign(jwt, edit);
+  const alone = verifyAssessmentCredential(forged, { now: AT });
+  assert.equal(alone.valid, true, 'without the report only internal consistency is checked');
+  assert.equal(alone.reportChecked, false); assert.equal(alone.authenticated, false);
+  const checked = verifyAssessmentCredential(forged, { now: AT, report: r });
+  assert.equal(checked.valid, false); assert.ok(codes(checked).includes('REPORT_MISMATCH')); assert.match(checked.errors.find(e => e.code === 'REPORT_MISMATCH').message, /evidenceMode/);
+  const ok = verifyAssessmentCredential(jwt, { now: AT, report: r });
+  assert.equal(ok.valid, true); assert.equal(ok.reportChecked, true);
+  for (const [k, v] of [['decision', 'blocked'], ['subjectDigest', digest('x')], ['coverage', 0.5]]) {
+    const bad = verifyAssessmentCredential(resign(jwt, (h, p) => { p.credentialSubject[k] = v; if (k === 'subjectDigest') p.credentialSubject.id = `urn:kya:subject:sha256:${v}`; }), { now: AT, report: r });
+    assert.ok(codes(bad).includes('REPORT_MISMATCH'), k);
+  }
+  const tampered = clone(r); tampered.score = { ...r.score, earned: 3 };
+  assert.ok(codes(verifyAssessmentCredential(jwt, { now: AT, report: tampered })).includes('REPORT_INVALID'));
 });
