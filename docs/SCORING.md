@@ -54,6 +54,35 @@ An assessment never withholds a result silently. Each human-readable entry in `b
 
 `checkCurrency` triggers keep their `id` and now carry a stable `code`: `CLOCK_REGRESSION` (`clock-regression`), `SUBJECT_CHANGED` (`subject-changed`), `POLICY_CHANGED` (`policy-changed`), `SUBJECT_REVOKED` (`subject-revoked`), `ASSESSMENT_EXPIRED` (`assessment-expired`), `ASSESSMENT_AGED` (`assessment-aged`) and `INCIDENT_OPEN` (`incident-open`).
 
+### Blocker wording in the reference
+
+The wording below is what the reference implementation writes in `blockers`. It feeds the report digest, so an implementation that wants byte-identical digests must match it; relying software should branch on `blockerCodes`, not on the text. `<id>` is a check ID; `<minimum>` is `pass` or `independent-pass`; `<status>` is the observed check status.
+
+| Code | Wording |
+| :--- | :--- |
+| `SUBJECT_REVOKED` | `Subject digest is revoked by relying policy` |
+| `SUBJECT_NOT_YET_VALID` | `Manifest is not yet valid` |
+| `SUBJECT_EXPIRED` | `Manifest has expired` |
+| `CRITICAL_CHECK_FAILED` | `Critical check failed: <id>` |
+| `CRITICAL_CHECK_UNPROVEN` | `Critical check unproven: <id>` |
+| `COVERAGE_BELOW_POLICY` | `Evidence coverage below relying policy` |
+| `INDEPENDENT_COVERAGE_BELOW_POLICY` | `Independent coverage below relying policy` |
+| `AMBIGUOUS_RUNS` | `Ambiguous equally recent runs` |
+| `RUN_CONFLICT` | `Selected run contains quarantined conflicting evidence IDs` |
+| `RUN_INVALIDATED` | `Latest bound run contains invalidated evidence; no fallback qualification` |
+| `MIXED_RUN_ISSUERS` | `Frozen run has multiple evaluator issuers` |
+| `REPEATED_RUN_CHECKS` | `Frozen check has repeated observations; retry requires a new whole run` |
+| `PRINCIPAL_UNBOUND` | `Policy requires a declared accountable party; manifest declares none` |
+| `NO_SCORED_OBSERVATIONS` | `No scored observations` |
+| `SCORE_BELOW_POLICY` | `Score below relying policy` |
+| `MANDATORY_MINIMUM_NOT_MET` | `Mandatory minimum not met: <id> requires <minimum>; observed <status>` |
+| `MANDATORY_MINIMUM_UNPROVEN` | `Mandatory minimum unproven: <id> requires <minimum>; observed <status>` |
+| `NO_OBSERVED_CHECKS` | `No observed checks` |
+
+Order and short circuit: a revoked subject yields only `SUBJECT_REVOKED`; an expired or not-yet-valid subject yields only its own code. Otherwise a critical failure yields only `CRITICAL_CHECK_FAILED` entries and suppresses the insufficiency blockers below it. When no critical check failed, the insufficiency blockers appear in table order from `CRITICAL_CHECK_UNPROVEN` through `NO_SCORED_OBSERVATIONS`, or `SCORE_BELOW_POLICY` for a sufficiently observed result. Mandatory-minimum entries are appended after those, and `NO_OBSERVED_CHECKS` last.
+
+`evidenceBundleDigest` is the digest of the array of the captured evidence envelopes' digests, in input order.
+
 ## Mandatory minimums
 
 A policy MAY add `mandatoryMinimums`, a non-empty list of `{checkId, minimum}` with unique check IDs. `minimum` is `pass` (the check must be a known pass in the selected run) or `independent-pass` (it must also be signed by a policy-assigned independent key). A check outcome is binary, so the threshold is the assurance level, not a numeric score. If any named check is not met, whether failed, unknown, abstained, errored, rejected or declared only, the decision is capped at `blocked` with one `MANDATORY_MINIMUM_NOT_MET` entry per unmet check, whatever the score and coverage. Revoked and expired subjects keep their more specific decision. Every named check ID must exist in the frozen profile or assessment is refused. The field is optional: absent, the policy and its digest are unchanged. Declarations and removed evidence can never satisfy a minimum, because only an eligible observed pass from the selected run counts.

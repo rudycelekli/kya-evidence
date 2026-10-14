@@ -2452,6 +2452,23 @@
           "title": "second implementation digest failures are limited to the two digest fields and are listed honestly"
         }
       ]
+    },
+    {
+      "id": "KYA-SCO-003",
+      "level": "SHOULD",
+      "area": "scoring",
+      "section": "Run selection and qualification",
+      "statement": "The scoring document SHOULD state the reference wording of every blocker and the order in which blockers appear, so that an implementer can reproduce report digests; relying software MUST branch on blocker codes, not wording.",
+      "tests": [
+        {
+          "file": "test/scoring-wording.test.mjs",
+          "title": "SCORING.md documents the reference wording for every blocker code exactly once"
+        },
+        {
+          "file": "test/scoring-wording.test.mjs",
+          "title": "every documented blocker wording is the string the reference emits"
+        }
+      ]
     }
   ]
 }
