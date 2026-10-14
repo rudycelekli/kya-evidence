@@ -164,8 +164,21 @@
         "ADR-0011",
         "ADR-0013"
       ]
+    },
+    {
+      "id": "ADR-0015",
+      "title": "Machine-readable conformance report with honest evidence classes",
+      "status": "Implemented",
+      "file": "docs/adr/0015-conformance-report-format.md",
+      "contentDigest": "3a3b71b722bd3bbff42dab69f081065c867bca96cafe448d16700bea0cc535a4",
+      "related": [
+        "ADR-0003",
+        "ADR-0008",
+        "ADR-0011",
+        "ADR-0014"
+      ]
     }
   ],
-  "digest": "d148a6e58e3b817ef30334521500be2c8f491a28751bf60c98661d7c0f15dcf0",
+  "digest": "cd2cb1c398afd87e151a0791c8d662b1ca00d4babec5bddda94a74bbb10bda77",
   "store": "portable local file; not a claim of AgentDB graph persistence"
 }

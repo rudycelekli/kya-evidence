@@ -20,6 +20,7 @@
     "verify:release": "node scripts/verify-release.mjs",
     "test:mutations": "node scripts/mutation-check.mjs",
     "requirements": "node scripts/requirements.mjs",
-    "adr:index": "node scripts/adr-index.mjs"
+    "adr:index": "node scripts/adr-index.mjs",
+    "conformance-report": "node scripts/conformance-report.mjs"
   }
 }

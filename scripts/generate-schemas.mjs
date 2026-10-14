@@ -18,6 +18,7 @@ const schemas={
   policy:withOptional(obj({schema:{const:'kya.policy/v1'},id,profileDigest:hash,scopeId:id,minCoverage:{type:'number',minimum:0,maximum:1},minScore:{type:'integer',minimum:0,maximum:1000},minIndependentCoverage:{type:'number',minimum:0,maximum:1},allowedSources:list({enum:['runtime','fixture','declaration']},3),maxEvidenceAgeSeconds:{type:'integer',minimum:1,maximum:31536000},trustedKeys:{type:'array',maxItems:256,items:obj({id:hash,publicKey:pem,role:{enum:['self','independent']}})},revokedKeyIds:list(hash,4096),revokedEvidenceIds:list(id,4096),revokedSubjectDigests:list(hash,4096)}),{requirePrincipalBinding:{type:'boolean'},maxAssessmentAgeSeconds:{type:'integer',minimum:1,maximum:31536000}}),
   evidence,
   incident:obj({schema:{const:'kya.incident/v1'},id,subjectDigest:hash,kind:{enum:['report','resolution','appeal']},severity:{enum:['low','medium','high','critical']},refId:{anyOf:[id,{type:'null'}]},reportedAt:time,detailsDigest:hash}),
+  'conformance-report':obj({schema:{const:'kya.conformance-report/v1'},implementation:obj({name:str,version:{...str,maxLength:128},language:{...str,maxLength:64},sourceDigest:{anyOf:[hash,{type:'null'}]},declaredSubset:{anyOf:[list({type:'string',pattern:'^KYA-[A-Z]{3}-\\d{3}$'},4096),{type:'null'}]}}),registryDigest:hash,runAt:time,results:{type:'array',minItems:1,maxItems:4096,items:obj({id:{type:'string',pattern:'^KYA-[A-Z]{3}-\\d{3}$'},result:{enum:['pass','fail','not-applicable','not-run']},evidence:{anyOf:[{enum:['executed-test','portable-vector','declaration']},{type:'null'}]},executed:list(str)})},summary:obj({total:{type:'integer',minimum:1},pass:{type:'integer',minimum:0},fail:{type:'integer',minimum:0},notApplicable:{type:'integer',minimum:0},notRun:{type:'integer',minimum:0},applicable:{type:'integer',minimum:0},passPermille:{anyOf:[{type:'integer',minimum:0,maximum:1000},{type:'null'}]},declarationEntries:{type:'integer',minimum:0}})}),
   envelope:obj({payload:evidence,proof:obj({algorithm:{const:'Ed25519'},keyId:hash,publicKey:pem,signature:{type:'string',pattern:'^[A-Za-z0-9_-]{86}$'}})})
 };
 await mkdir(root,{recursive:true});
@@ -27,4 +28,4 @@ for(const [name,value]of Object.entries(schemas)){
   if(process.argv.includes('--check')){if(canonical(JSON.parse(await readFile(path,'utf8')))!==canonical(full))throw Error(`Schema drift: ${name}`);}
   else await writeFile(path,output);
 }
-console.log(process.argv.includes('--check')?'Schemas match generator':'Generated six structural schemas');
+console.log(process.argv.includes('--check')?'Schemas match generator':'Generated seven structural schemas');
