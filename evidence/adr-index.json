@@ -164,8 +164,88 @@
         "ADR-0011",
         "ADR-0013"
       ]
+    },
+    {
+      "id": "ADR-0015",
+      "title": "Machine-readable conformance report with honest evidence classes",
+      "status": "Implemented",
+      "file": "docs/adr/0015-conformance-report-format.md",
+      "contentDigest": "371cdfe9d9a56eb3b727113b837a5eff993089cfd954332d9d206ac4b64e1b55",
+      "related": [
+        "ADR-0003",
+        "ADR-0008",
+        "ADR-0011",
+        "ADR-0014"
+      ]
+    },
+    {
+      "id": "ADR-0016",
+      "title": "Named blocker codes and mandatory minimums",
+      "status": "Implemented",
+      "file": "docs/adr/0016-named-blocker-codes-and-mandatory-minimums.md",
+      "contentDigest": "ddc973a39c00bfa97370d103edcc6d97fe3ab84449e9eec7ada9bcdc2e1d4ee3",
+      "related": [
+        "ADR-0003",
+        "ADR-0011",
+        "ADR-0012",
+        "ADR-0013"
+      ]
+    },
+    {
+      "id": "ADR-0017",
+      "title": "Measured, signed capture attestation (`kya.capture/v1`)",
+      "status": "Proposed",
+      "file": "docs/adr/0017-measured-signed-capture-attestation.md",
+      "contentDigest": "51f2bc2a3393af6a23196db324fb117860f71959f7e9d11e8e725a78bc67b314",
+      "related": [
+        "ADR-0003",
+        "ADR-0004",
+        "ADR-0009",
+        "ADR-0014",
+        "ADR-0020",
+        "ADR-0018"
+      ]
+    },
+    {
+      "id": "ADR-0018",
+      "title": "Evaluation-awareness detection through paired runs",
+      "status": "Proposed",
+      "file": "docs/adr/0018-evaluation-awareness-paired-runs.md",
+      "contentDigest": "7601d7523953654ed11df0161bd745e87a5cb19d333e87c188e74c0652442bd2",
+      "related": [
+        "ADR-0003",
+        "ADR-0010",
+        "ADR-0017",
+        "ADR-0019"
+      ]
+    },
+    {
+      "id": "ADR-0019",
+      "title": "Judge reliability floor",
+      "status": "Proposed",
+      "file": "docs/adr/0019-judge-reliability-floor.md",
+      "contentDigest": "ccf79576fb3180316a539f0a4af7da67c0f2a0bfa80c6b9f6cd67b3481ecd45b",
+      "related": [
+        "ADR-0003",
+        "ADR-0010",
+        "ADR-0017",
+        "ADR-0014"
+      ]
+    },
+    {
+      "id": "ADR-0020",
+      "title": "External anchoring of evidence bundles and capture digests",
+      "status": "Proposed",
+      "file": "docs/adr/0020-external-anchoring-of-evidence-bundles.md",
+      "contentDigest": "b520ced81bd9e6bdb325384f5185262cdc422697f5befba5e86912a71569e52f",
+      "related": [
+        "ADR-0003",
+        "ADR-0013",
+        "ADR-0014",
+        "ADR-0017"
+      ]
     }
   ],
-  "digest": "d148a6e58e3b817ef30334521500be2c8f491a28751bf60c98661d7c0f15dcf0",
+  "digest": "328285f759d96a62a762d87ea75322b7b72d7c9ae3bdce36e7a70ddf581cdd18",
   "store": "portable local file; not a claim of AgentDB graph persistence"
 }

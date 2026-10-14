@@ -17,6 +17,12 @@ node --test test/interop.test.mjs test/vectors.test.mjs
 
 The first command returns `status: "partial"` with all six canonical cases checked and `signature.verified: false`. The second uses `cryptography` only if already available; it returns `status: "passed"` only when Ed25519 verification succeeds. Inspect these fields: exit code zero also covers a successful byte check with an unavailable cryptographic backend. A missing backend never becomes a signature pass. A cryptographic failure returns exit code one. A valid but unsupported double returns exit code two and `status: "unsupported"`, without a canonical result.
 
+## Signed incident records (`kya.incident/v1`)
+
+`evidence/golden-vectors.json` also carries an `incidents` block of public synthetic vectors signed with the same public toy seed (never a trust anchor): a valid report, resolution and appeal, plus negative vectors. Each vector records `expect` (`accept` or `reject`), `stage` (`shape` or `signature`) and the envelope digest. The checker mirrors only the byte and shape layer: exact payload keys, `kind` and `severity` enumerations, report `refId` null, resolution and appeal `refId` an identifier different from `id`, identifier, SHA-256 and millisecond UTC timestamp patterns, the domain-separated signing input `kya.incident/v1`, newline plus canonical payload, key fingerprint, canonical base64url signature encoding and optional Ed25519 verification. It does not port currency, trust-anchor, independence or resolution logic.
+
+`check-vectors` prints `incidentVectors`, a per-vector list of `expect`, `actual` (`accepted`, `rejected` or `unverified`), `stage` and `reason`, plus `incidentSummary` counts. Any disagreement with a recorded expectation or stage exits with code one. In standard-library-only mode (`--no-crypto`, or no installed backend) shape-stage negatives are still rejected, but valid records and signature-stage negatives (tampered payload, altered signature, evidence-domain signature reused as incident) are reported `unverified` and the overall status stays `partial`; signatures are never claimed verified. The Node suite asserts that JavaScript and Python classify every vector identically. [Validation receipt](../interop/python/verification-20261014-incidents.json).
+
 To canonicalize bounded JSON from standard input:
 
 ```sh

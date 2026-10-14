@@ -1,0 +1,853 @@
+{
+ "note": "Produced by the b3b09bd assess() before blockerCodes existed; proves old reports still verify, compare and render.",
+ "qualified": {
+  "inputs": {
+   "manifest": {
+    "schema": "kya.manifest/v1",
+    "agent": {
+     "id": "agent:test",
+     "name": "Synthetic agent",
+     "version": "1"
+    },
+    "principal": {
+     "id": "controller:test"
+    },
+    "system": {
+     "harness": "test-fixture",
+     "harnessVersion": "1",
+     "model": "none",
+     "artifactDigest": "f16d05ec6b29248d2c61adb1e9263f78e4f7bace1b955014a2d17872cfe4064d",
+     "configDigest": "b79606fb3afea5bd1609ed40b622142f1c98125abcfe89a76a661b0e8e343910",
+     "tools": [
+      {
+       "id": "files",
+       "version": "1",
+       "permissions": [
+        "read"
+       ]
+      }
+     ]
+    },
+    "scope": {
+     "id": "scope:test",
+     "purpose": "Synthetic local checks",
+     "permissions": [
+      "read",
+      "write"
+     ],
+     "forbidden": [
+      "publish"
+     ],
+     "approvalRequired": [
+      "write"
+     ]
+    },
+    "issuedAt": "2026-10-13T11:00:00.000Z",
+    "expiresAt": "2026-10-14T12:00:00.000Z"
+   },
+   "profile": {
+    "schema": "kya.profile/v1",
+    "id": "test-v1",
+    "version": "1",
+    "title": "Synthetic protocol checks",
+    "checks": [
+     {
+      "id": "check-0",
+      "dimension": "identity",
+      "title": "identity check",
+      "weight": 1,
+      "critical": true
+     },
+     {
+      "id": "check-1",
+      "dimension": "authority",
+      "title": "authority check",
+      "weight": 1,
+      "critical": true
+     },
+     {
+      "id": "check-2",
+      "dimension": "security",
+      "title": "security check",
+      "weight": 1,
+      "critical": false
+     },
+     {
+      "id": "check-3",
+      "dimension": "reliability",
+      "title": "reliability check",
+      "weight": 1,
+      "critical": false
+     },
+     {
+      "id": "check-4",
+      "dimension": "accountability",
+      "title": "accountability check",
+      "weight": 1,
+      "critical": false
+     },
+     {
+      "id": "check-5",
+      "dimension": "operations",
+      "title": "operations check",
+      "weight": 1,
+      "critical": false
+     }
+    ]
+   },
+   "policy": {
+    "schema": "kya.policy/v1",
+    "id": "local-test",
+    "profileDigest": "1ca272623ca48c93498e6bc9ade7f75da12eb8682907155ab2183963e08471b4",
+    "scopeId": "scope:test",
+    "minCoverage": 1,
+    "minScore": 800,
+    "minIndependentCoverage": 0,
+    "allowedSources": [
+     "fixture"
+    ],
+    "maxEvidenceAgeSeconds": 3600,
+    "trustedKeys": [
+     {
+      "id": "90fa3b3238f480853e0c46ccc6dbcd90db5a7baa9d363892a53385e0aeb265f6",
+      "publicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAFrkb2K8nMHLtiO/mqJRKWchwjx1EOfHAkHoSXca21t0=\n-----END PUBLIC KEY-----\n",
+      "role": "self"
+     }
+    ],
+    "revokedKeyIds": [],
+    "revokedEvidenceIds": [],
+    "revokedSubjectDigests": []
+   },
+   "evidence": [
+    {
+     "payload": {
+      "artifactDigest": "9bd1f1c343830252d32351fea2e5ee5501ff532303292bdcbda0a74c992be046",
+      "checkId": "check-0",
+      "evaluatorDigest": "f6ab62bd5058ce0a8dda774b6930705ce1407d376bd5c38c0b0fb462eb724fe2",
+      "expiresAt": "2026-10-14T12:00:00.000Z",
+      "id": "evidence-0",
+      "observedAt": "2026-10-13T12:00:00.000Z",
+      "outcome": "pass",
+      "profileDigest": "1ca272623ca48c93498e6bc9ade7f75da12eb8682907155ab2183963e08471b4",
+      "runId": "run-1",
+      "schema": "kya.evidence/v1",
+      "scopeId": "scope:test",
+      "source": "fixture",
+      "subjectDigest": "8840c18578809b058e554e7326b981c06a1b51dc24200ab7e46e91a8429b2605"
+     },
+     "proof": {
+      "algorithm": "Ed25519",
+      "keyId": "90fa3b3238f480853e0c46ccc6dbcd90db5a7baa9d363892a53385e0aeb265f6",
+      "publicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAFrkb2K8nMHLtiO/mqJRKWchwjx1EOfHAkHoSXca21t0=\n-----END PUBLIC KEY-----\n",
+      "signature": "YBuBGupyqYYiF_yt-sJZ8Me8SoumMZTxD6J-l1g8BcYuq2fgwrtTJofus3mt7hyZ0QjqMe_F24_JFz-CRUvpDg"
+     }
+    },
+    {
+     "payload": {
+      "artifactDigest": "17fe6f303311c0b164b937e419518c1f68ee149909507bbdfcc1b22455d3a50e",
+      "checkId": "check-1",
+      "evaluatorDigest": "f6ab62bd5058ce0a8dda774b6930705ce1407d376bd5c38c0b0fb462eb724fe2",
+      "expiresAt": "2026-10-14T12:00:00.000Z",
+      "id": "evidence-1",
+      "observedAt": "2026-10-13T12:00:00.000Z",
+      "outcome": "pass",
+      "profileDigest": "1ca272623ca48c93498e6bc9ade7f75da12eb8682907155ab2183963e08471b4",
+      "runId": "run-1",
+      "schema": "kya.evidence/v1",
+      "scopeId": "scope:test",
+      "source": "fixture",
+      "subjectDigest": "8840c18578809b058e554e7326b981c06a1b51dc24200ab7e46e91a8429b2605"
+     },
+     "proof": {
+      "algorithm": "Ed25519",
+      "keyId": "90fa3b3238f480853e0c46ccc6dbcd90db5a7baa9d363892a53385e0aeb265f6",
+      "publicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAFrkb2K8nMHLtiO/mqJRKWchwjx1EOfHAkHoSXca21t0=\n-----END PUBLIC KEY-----\n",
+      "signature": "06DMDIDPSPkRRm05RnJqBZy48i5oy7yAsu9L6abZXvpaCvYJgnJBjFLHjqEmH0R-IOy7be_a8XBqS_r_MKuTBQ"
+     }
+    },
+    {
+     "payload": {
+      "artifactDigest": "da62c78ef08080958f79ea5d8ab7e490711b0ccc9b426ca7b6bb7c521adc392f",
+      "checkId": "check-2",
+      "evaluatorDigest": "f6ab62bd5058ce0a8dda774b6930705ce1407d376bd5c38c0b0fb462eb724fe2",
+      "expiresAt": "2026-10-14T12:00:00.000Z",
+      "id": "evidence-2",
+      "observedAt": "2026-10-13T12:00:00.000Z",
+      "outcome": "pass",
+      "profileDigest": "1ca272623ca48c93498e6bc9ade7f75da12eb8682907155ab2183963e08471b4",
+      "runId": "run-1",
+      "schema": "kya.evidence/v1",
+      "scopeId": "scope:test",
+      "source": "fixture",
+      "subjectDigest": "8840c18578809b058e554e7326b981c06a1b51dc24200ab7e46e91a8429b2605"
+     },
+     "proof": {
+      "algorithm": "Ed25519",
+      "keyId": "90fa3b3238f480853e0c46ccc6dbcd90db5a7baa9d363892a53385e0aeb265f6",
+      "publicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAFrkb2K8nMHLtiO/mqJRKWchwjx1EOfHAkHoSXca21t0=\n-----END PUBLIC KEY-----\n",
+      "signature": "xn0HkiM-XLR4lMWg0VH9x0x79T-t9-ax5vkSa7NsfdHOEKW-8gMpgInVeenhu9Dn-OKssLkPG_l0Ck9EbNQFDA"
+     }
+    },
+    {
+     "payload": {
+      "artifactDigest": "946e1ce9f2e316fbfb83faa6519c271a4c256151ec8e3d3613562d4ab54f8ec4",
+      "checkId": "check-3",
+      "evaluatorDigest": "f6ab62bd5058ce0a8dda774b6930705ce1407d376bd5c38c0b0fb462eb724fe2",
+      "expiresAt": "2026-10-14T12:00:00.000Z",
+      "id": "evidence-3",
+      "observedAt": "2026-10-13T12:00:00.000Z",
+      "outcome": "pass",
+      "profileDigest": "1ca272623ca48c93498e6bc9ade7f75da12eb8682907155ab2183963e08471b4",
+      "runId": "run-1",
+      "schema": "kya.evidence/v1",
+      "scopeId": "scope:test",
+      "source": "fixture",
+      "subjectDigest": "8840c18578809b058e554e7326b981c06a1b51dc24200ab7e46e91a8429b2605"
+     },
+     "proof": {
+      "algorithm": "Ed25519",
+      "keyId": "90fa3b3238f480853e0c46ccc6dbcd90db5a7baa9d363892a53385e0aeb265f6",
+      "publicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAFrkb2K8nMHLtiO/mqJRKWchwjx1EOfHAkHoSXca21t0=\n-----END PUBLIC KEY-----\n",
+      "signature": "X4beTZN5GAD0CohnpTF7in2FWCABIq_cgoDVyi2CJ_WbBEBvF-9tQjr5-2-pLBQutIbDaUsblp-8yKvhIL_eDQ"
+     }
+    },
+    {
+     "payload": {
+      "artifactDigest": "b3d16674e4deb67cf44a00d1e5855cd4112c014bf4d34f378fb9caa5944606a0",
+      "checkId": "check-4",
+      "evaluatorDigest": "f6ab62bd5058ce0a8dda774b6930705ce1407d376bd5c38c0b0fb462eb724fe2",
+      "expiresAt": "2026-10-14T12:00:00.000Z",
+      "id": "evidence-4",
+      "observedAt": "2026-10-13T12:00:00.000Z",
+      "outcome": "pass",
+      "profileDigest": "1ca272623ca48c93498e6bc9ade7f75da12eb8682907155ab2183963e08471b4",
+      "runId": "run-1",
+      "schema": "kya.evidence/v1",
+      "scopeId": "scope:test",
+      "source": "fixture",
+      "subjectDigest": "8840c18578809b058e554e7326b981c06a1b51dc24200ab7e46e91a8429b2605"
+     },
+     "proof": {
+      "algorithm": "Ed25519",
+      "keyId": "90fa3b3238f480853e0c46ccc6dbcd90db5a7baa9d363892a53385e0aeb265f6",
+      "publicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAFrkb2K8nMHLtiO/mqJRKWchwjx1EOfHAkHoSXca21t0=\n-----END PUBLIC KEY-----\n",
+      "signature": "EQaz7-2jOIHvFonoloa0GXuiJKiR1Hrsi4mX3YwW_rmhGxYaIDyStBJowmdhNttfONWYBvziKfw-gEZmZoH2Ag"
+     }
+    },
+    {
+     "payload": {
+      "artifactDigest": "8d8e7ed480797c74c1cce49fe816328fcaca2e8c302e6c02039c194d84995769",
+      "checkId": "check-5",
+      "evaluatorDigest": "f6ab62bd5058ce0a8dda774b6930705ce1407d376bd5c38c0b0fb462eb724fe2",
+      "expiresAt": "2026-10-14T12:00:00.000Z",
+      "id": "evidence-5",
+      "observedAt": "2026-10-13T12:00:00.000Z",
+      "outcome": "pass",
+      "profileDigest": "1ca272623ca48c93498e6bc9ade7f75da12eb8682907155ab2183963e08471b4",
+      "runId": "run-1",
+      "schema": "kya.evidence/v1",
+      "scopeId": "scope:test",
+      "source": "fixture",
+      "subjectDigest": "8840c18578809b058e554e7326b981c06a1b51dc24200ab7e46e91a8429b2605"
+     },
+     "proof": {
+      "algorithm": "Ed25519",
+      "keyId": "90fa3b3238f480853e0c46ccc6dbcd90db5a7baa9d363892a53385e0aeb265f6",
+      "publicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAFrkb2K8nMHLtiO/mqJRKWchwjx1EOfHAkHoSXca21t0=\n-----END PUBLIC KEY-----\n",
+      "signature": "80lSCu2uM28__uNoanrQa4JdUgmCZO0XjsUBlrzw21rzYy3p-aMQoAfSeiVavjx4548zckSc5ZgbkK27ERqnCg"
+     }
+    }
+   ],
+   "evaluatorDigest": "f6ab62bd5058ce0a8dda774b6930705ce1407d376bd5c38c0b0fb462eb724fe2",
+   "now": "2026-10-13T12:00:00.000Z"
+  },
+  "report": {
+   "schema": "kya.assessment/v1",
+   "subjectDigest": "8840c18578809b058e554e7326b981c06a1b51dc24200ab7e46e91a8429b2605",
+   "scopeDigest": "fa341b3661964c6de287bd90be767bac43bf2e8e3eeedead0532fb34224e41a9",
+   "agentId": "agent:test",
+   "agentName": "Synthetic agent",
+   "principalId": "controller:test",
+   "scopeId": "scope:test",
+   "profileDigest": "1ca272623ca48c93498e6bc9ade7f75da12eb8682907155ab2183963e08471b4",
+   "profileId": "test-v1",
+   "evaluatorDigest": "f6ab62bd5058ce0a8dda774b6930705ce1407d376bd5c38c0b0fb462eb724fe2",
+   "policyDigest": "a2ccb3c07ef277f36695b9e125761373789e81939b831dca29b5799aa954d92d",
+   "evidenceBundleDigest": "039864da180aa289fd1283df3a1c88b22e02eadf160c2494de600a5f1d473e74",
+   "assessedAt": "2026-10-13T12:00:00.000Z",
+   "validUntil": "2026-10-13T13:00:00.000Z",
+   "selectedRunId": "run-1",
+   "ambiguousRuns": false,
+   "decision": "qualified",
+   "evidenceMode": "fixture",
+   "score": {
+    "earned": 1000,
+    "possible": 1000,
+    "upperBound": 1000
+   },
+   "coverage": 1,
+   "independentCoverage": 0,
+   "dimensions": [
+    {
+     "id": "identity",
+     "earned": 1000,
+     "possible": 1000,
+     "upperBound": 1000,
+     "coverage": 1,
+     "weight": 1
+    },
+    {
+     "id": "authority",
+     "earned": 1000,
+     "possible": 1000,
+     "upperBound": 1000,
+     "coverage": 1,
+     "weight": 1
+    },
+    {
+     "id": "security",
+     "earned": 1000,
+     "possible": 1000,
+     "upperBound": 1000,
+     "coverage": 1,
+     "weight": 1
+    },
+    {
+     "id": "reliability",
+     "earned": 1000,
+     "possible": 1000,
+     "upperBound": 1000,
+     "coverage": 1,
+     "weight": 1
+    },
+    {
+     "id": "accountability",
+     "earned": 1000,
+     "possible": 1000,
+     "upperBound": 1000,
+     "coverage": 1,
+     "weight": 1
+    },
+    {
+     "id": "operations",
+     "earned": 1000,
+     "possible": 1000,
+     "upperBound": 1000,
+     "coverage": 1,
+     "weight": 1
+    }
+   ],
+   "checks": [
+    {
+     "critical": true,
+     "dimension": "identity",
+     "id": "check-0",
+     "title": "identity check",
+     "weight": 1,
+     "status": "pass",
+     "evidenceId": "evidence-0",
+     "keyId": "90fa3b3238f480853e0c46ccc6dbcd90db5a7baa9d363892a53385e0aeb265f6",
+     "independence": "self"
+    },
+    {
+     "critical": true,
+     "dimension": "authority",
+     "id": "check-1",
+     "title": "authority check",
+     "weight": 1,
+     "status": "pass",
+     "evidenceId": "evidence-1",
+     "keyId": "90fa3b3238f480853e0c46ccc6dbcd90db5a7baa9d363892a53385e0aeb265f6",
+     "independence": "self"
+    },
+    {
+     "critical": false,
+     "dimension": "security",
+     "id": "check-2",
+     "title": "security check",
+     "weight": 1,
+     "status": "pass",
+     "evidenceId": "evidence-2",
+     "keyId": "90fa3b3238f480853e0c46ccc6dbcd90db5a7baa9d363892a53385e0aeb265f6",
+     "independence": "self"
+    },
+    {
+     "critical": false,
+     "dimension": "reliability",
+     "id": "check-3",
+     "title": "reliability check",
+     "weight": 1,
+     "status": "pass",
+     "evidenceId": "evidence-3",
+     "keyId": "90fa3b3238f480853e0c46ccc6dbcd90db5a7baa9d363892a53385e0aeb265f6",
+     "independence": "self"
+    },
+    {
+     "critical": false,
+     "dimension": "accountability",
+     "id": "check-4",
+     "title": "accountability check",
+     "weight": 1,
+     "status": "pass",
+     "evidenceId": "evidence-4",
+     "keyId": "90fa3b3238f480853e0c46ccc6dbcd90db5a7baa9d363892a53385e0aeb265f6",
+     "independence": "self"
+    },
+    {
+     "critical": false,
+     "dimension": "operations",
+     "id": "check-5",
+     "title": "operations check",
+     "weight": 1,
+     "status": "pass",
+     "evidenceId": "evidence-5",
+     "keyId": "90fa3b3238f480853e0c46ccc6dbcd90db5a7baa9d363892a53385e0aeb265f6",
+     "independence": "self"
+    }
+   ],
+   "blockers": [],
+   "rejectedEvidence": [],
+   "acceptedEvidenceDigests": [
+    "0c4b66ad49e22718122ebd684126e5d99a96b14d563d111ff5ff5ff6f5060ef5",
+    "24ddc4cec3f2be88fe6ed5e3306da3a52a85ba233a005ae548229f624714b989",
+    "6ca0839da82b1ec2c3402b08426d61533e80359d4dc0490585f754335f4bed49",
+    "8d97a8531d77a4f1fb9c780b08ccb589a780c5772dfffe4e0e68ce75b37fc92d",
+    "9c431193e4809ba412641f6f252c5146df28376fa1194a64bc6bf3def3fe9bd5",
+    "b3afce395096568f26ed25673e8a43e0734c08e109e79c9dd74d57248d737087"
+   ],
+   "limitations": [
+    "Local policy result; not an authorization grant",
+    "Signatures attest bytes and key possession, not truthful execution",
+    "No universal predictive validation; public suites can be gamed",
+    "Includes synthetic fixture evidence; not a real product benchmark"
+   ],
+   "reportDigest": "71384c2b1f21ee041570fc729011b1e94a1b2ba999cac877de52b37deb9874b1"
+  }
+ },
+ "blocked": {
+  "inputs": {
+   "manifest": {
+    "schema": "kya.manifest/v1",
+    "agent": {
+     "id": "agent:test",
+     "name": "Synthetic agent",
+     "version": "1"
+    },
+    "principal": {
+     "id": "controller:test"
+    },
+    "system": {
+     "harness": "test-fixture",
+     "harnessVersion": "1",
+     "model": "none",
+     "artifactDigest": "f16d05ec6b29248d2c61adb1e9263f78e4f7bace1b955014a2d17872cfe4064d",
+     "configDigest": "b79606fb3afea5bd1609ed40b622142f1c98125abcfe89a76a661b0e8e343910",
+     "tools": [
+      {
+       "id": "files",
+       "version": "1",
+       "permissions": [
+        "read"
+       ]
+      }
+     ]
+    },
+    "scope": {
+     "id": "scope:test",
+     "purpose": "Synthetic local checks",
+     "permissions": [
+      "read",
+      "write"
+     ],
+     "forbidden": [
+      "publish"
+     ],
+     "approvalRequired": [
+      "write"
+     ]
+    },
+    "issuedAt": "2026-10-13T11:00:00.000Z",
+    "expiresAt": "2026-10-14T12:00:00.000Z"
+   },
+   "profile": {
+    "schema": "kya.profile/v1",
+    "id": "test-v1",
+    "version": "1",
+    "title": "Synthetic protocol checks",
+    "checks": [
+     {
+      "id": "check-0",
+      "dimension": "identity",
+      "title": "identity check",
+      "weight": 1,
+      "critical": true
+     },
+     {
+      "id": "check-1",
+      "dimension": "authority",
+      "title": "authority check",
+      "weight": 1,
+      "critical": true
+     },
+     {
+      "id": "check-2",
+      "dimension": "security",
+      "title": "security check",
+      "weight": 1,
+      "critical": false
+     },
+     {
+      "id": "check-3",
+      "dimension": "reliability",
+      "title": "reliability check",
+      "weight": 1,
+      "critical": false
+     },
+     {
+      "id": "check-4",
+      "dimension": "accountability",
+      "title": "accountability check",
+      "weight": 1,
+      "critical": false
+     },
+     {
+      "id": "check-5",
+      "dimension": "operations",
+      "title": "operations check",
+      "weight": 1,
+      "critical": false
+     }
+    ]
+   },
+   "policy": {
+    "schema": "kya.policy/v1",
+    "id": "local-test",
+    "profileDigest": "1ca272623ca48c93498e6bc9ade7f75da12eb8682907155ab2183963e08471b4",
+    "scopeId": "scope:test",
+    "minCoverage": 1,
+    "minScore": 1000,
+    "minIndependentCoverage": 0,
+    "allowedSources": [
+     "fixture"
+    ],
+    "maxEvidenceAgeSeconds": 3600,
+    "trustedKeys": [
+     {
+      "id": "90fa3b3238f480853e0c46ccc6dbcd90db5a7baa9d363892a53385e0aeb265f6",
+      "publicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAFrkb2K8nMHLtiO/mqJRKWchwjx1EOfHAkHoSXca21t0=\n-----END PUBLIC KEY-----\n",
+      "role": "self"
+     }
+    ],
+    "revokedKeyIds": [],
+    "revokedEvidenceIds": [],
+    "revokedSubjectDigests": []
+   },
+   "evidence": [
+    {
+     "payload": {
+      "artifactDigest": "9bd1f1c343830252d32351fea2e5ee5501ff532303292bdcbda0a74c992be046",
+      "checkId": "check-0",
+      "evaluatorDigest": "f6ab62bd5058ce0a8dda774b6930705ce1407d376bd5c38c0b0fb462eb724fe2",
+      "expiresAt": "2026-10-14T12:00:00.000Z",
+      "id": "evidence-0",
+      "observedAt": "2026-10-13T12:00:00.000Z",
+      "outcome": "pass",
+      "profileDigest": "1ca272623ca48c93498e6bc9ade7f75da12eb8682907155ab2183963e08471b4",
+      "runId": "run-1",
+      "schema": "kya.evidence/v1",
+      "scopeId": "scope:test",
+      "source": "fixture",
+      "subjectDigest": "8840c18578809b058e554e7326b981c06a1b51dc24200ab7e46e91a8429b2605"
+     },
+     "proof": {
+      "algorithm": "Ed25519",
+      "keyId": "90fa3b3238f480853e0c46ccc6dbcd90db5a7baa9d363892a53385e0aeb265f6",
+      "publicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAFrkb2K8nMHLtiO/mqJRKWchwjx1EOfHAkHoSXca21t0=\n-----END PUBLIC KEY-----\n",
+      "signature": "YBuBGupyqYYiF_yt-sJZ8Me8SoumMZTxD6J-l1g8BcYuq2fgwrtTJofus3mt7hyZ0QjqMe_F24_JFz-CRUvpDg"
+     }
+    },
+    {
+     "payload": {
+      "artifactDigest": "17fe6f303311c0b164b937e419518c1f68ee149909507bbdfcc1b22455d3a50e",
+      "checkId": "check-1",
+      "evaluatorDigest": "f6ab62bd5058ce0a8dda774b6930705ce1407d376bd5c38c0b0fb462eb724fe2",
+      "expiresAt": "2026-10-14T12:00:00.000Z",
+      "id": "evidence-1",
+      "observedAt": "2026-10-13T12:00:00.000Z",
+      "outcome": "pass",
+      "profileDigest": "1ca272623ca48c93498e6bc9ade7f75da12eb8682907155ab2183963e08471b4",
+      "runId": "run-1",
+      "schema": "kya.evidence/v1",
+      "scopeId": "scope:test",
+      "source": "fixture",
+      "subjectDigest": "8840c18578809b058e554e7326b981c06a1b51dc24200ab7e46e91a8429b2605"
+     },
+     "proof": {
+      "algorithm": "Ed25519",
+      "keyId": "90fa3b3238f480853e0c46ccc6dbcd90db5a7baa9d363892a53385e0aeb265f6",
+      "publicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAFrkb2K8nMHLtiO/mqJRKWchwjx1EOfHAkHoSXca21t0=\n-----END PUBLIC KEY-----\n",
+      "signature": "06DMDIDPSPkRRm05RnJqBZy48i5oy7yAsu9L6abZXvpaCvYJgnJBjFLHjqEmH0R-IOy7be_a8XBqS_r_MKuTBQ"
+     }
+    },
+    {
+     "payload": {
+      "artifactDigest": "da62c78ef08080958f79ea5d8ab7e490711b0ccc9b426ca7b6bb7c521adc392f",
+      "checkId": "check-2",
+      "evaluatorDigest": "f6ab62bd5058ce0a8dda774b6930705ce1407d376bd5c38c0b0fb462eb724fe2",
+      "expiresAt": "2026-10-14T12:00:00.000Z",
+      "id": "evidence-2",
+      "observedAt": "2026-10-13T12:00:00.000Z",
+      "outcome": "pass",
+      "profileDigest": "1ca272623ca48c93498e6bc9ade7f75da12eb8682907155ab2183963e08471b4",
+      "runId": "run-1",
+      "schema": "kya.evidence/v1",
+      "scopeId": "scope:test",
+      "source": "fixture",
+      "subjectDigest": "8840c18578809b058e554e7326b981c06a1b51dc24200ab7e46e91a8429b2605"
+     },
+     "proof": {
+      "algorithm": "Ed25519",
+      "keyId": "90fa3b3238f480853e0c46ccc6dbcd90db5a7baa9d363892a53385e0aeb265f6",
+      "publicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAFrkb2K8nMHLtiO/mqJRKWchwjx1EOfHAkHoSXca21t0=\n-----END PUBLIC KEY-----\n",
+      "signature": "xn0HkiM-XLR4lMWg0VH9x0x79T-t9-ax5vkSa7NsfdHOEKW-8gMpgInVeenhu9Dn-OKssLkPG_l0Ck9EbNQFDA"
+     }
+    },
+    {
+     "payload": {
+      "artifactDigest": "946e1ce9f2e316fbfb83faa6519c271a4c256151ec8e3d3613562d4ab54f8ec4",
+      "checkId": "check-3",
+      "evaluatorDigest": "f6ab62bd5058ce0a8dda774b6930705ce1407d376bd5c38c0b0fb462eb724fe2",
+      "expiresAt": "2026-10-14T12:00:00.000Z",
+      "id": "evidence-3",
+      "observedAt": "2026-10-13T12:00:00.000Z",
+      "outcome": "pass",
+      "profileDigest": "1ca272623ca48c93498e6bc9ade7f75da12eb8682907155ab2183963e08471b4",
+      "runId": "run-1",
+      "schema": "kya.evidence/v1",
+      "scopeId": "scope:test",
+      "source": "fixture",
+      "subjectDigest": "8840c18578809b058e554e7326b981c06a1b51dc24200ab7e46e91a8429b2605"
+     },
+     "proof": {
+      "algorithm": "Ed25519",
+      "keyId": "90fa3b3238f480853e0c46ccc6dbcd90db5a7baa9d363892a53385e0aeb265f6",
+      "publicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAFrkb2K8nMHLtiO/mqJRKWchwjx1EOfHAkHoSXca21t0=\n-----END PUBLIC KEY-----\n",
+      "signature": "X4beTZN5GAD0CohnpTF7in2FWCABIq_cgoDVyi2CJ_WbBEBvF-9tQjr5-2-pLBQutIbDaUsblp-8yKvhIL_eDQ"
+     }
+    },
+    {
+     "payload": {
+      "artifactDigest": "b3d16674e4deb67cf44a00d1e5855cd4112c014bf4d34f378fb9caa5944606a0",
+      "checkId": "check-4",
+      "evaluatorDigest": "f6ab62bd5058ce0a8dda774b6930705ce1407d376bd5c38c0b0fb462eb724fe2",
+      "expiresAt": "2026-10-14T12:00:00.000Z",
+      "id": "evidence-4",
+      "observedAt": "2026-10-13T12:00:00.000Z",
+      "outcome": "pass",
+      "profileDigest": "1ca272623ca48c93498e6bc9ade7f75da12eb8682907155ab2183963e08471b4",
+      "runId": "run-1",
+      "schema": "kya.evidence/v1",
+      "scopeId": "scope:test",
+      "source": "fixture",
+      "subjectDigest": "8840c18578809b058e554e7326b981c06a1b51dc24200ab7e46e91a8429b2605"
+     },
+     "proof": {
+      "algorithm": "Ed25519",
+      "keyId": "90fa3b3238f480853e0c46ccc6dbcd90db5a7baa9d363892a53385e0aeb265f6",
+      "publicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAFrkb2K8nMHLtiO/mqJRKWchwjx1EOfHAkHoSXca21t0=\n-----END PUBLIC KEY-----\n",
+      "signature": "EQaz7-2jOIHvFonoloa0GXuiJKiR1Hrsi4mX3YwW_rmhGxYaIDyStBJowmdhNttfONWYBvziKfw-gEZmZoH2Ag"
+     }
+    },
+    {
+     "payload": {
+      "artifactDigest": "8d8e7ed480797c74c1cce49fe816328fcaca2e8c302e6c02039c194d84995769",
+      "checkId": "check-5",
+      "evaluatorDigest": "f6ab62bd5058ce0a8dda774b6930705ce1407d376bd5c38c0b0fb462eb724fe2",
+      "expiresAt": "2026-10-14T12:00:00.000Z",
+      "id": "evidence-5",
+      "observedAt": "2026-10-13T12:00:00.000Z",
+      "outcome": "fail",
+      "profileDigest": "1ca272623ca48c93498e6bc9ade7f75da12eb8682907155ab2183963e08471b4",
+      "runId": "run-1",
+      "schema": "kya.evidence/v1",
+      "scopeId": "scope:test",
+      "source": "fixture",
+      "subjectDigest": "8840c18578809b058e554e7326b981c06a1b51dc24200ab7e46e91a8429b2605"
+     },
+     "proof": {
+      "algorithm": "Ed25519",
+      "keyId": "90fa3b3238f480853e0c46ccc6dbcd90db5a7baa9d363892a53385e0aeb265f6",
+      "publicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAFrkb2K8nMHLtiO/mqJRKWchwjx1EOfHAkHoSXca21t0=\n-----END PUBLIC KEY-----\n",
+      "signature": "SJ9qCyoMQh4TfjJikcuZzXl2itsqgsEF2Ov3j0Ktn_fV95ZmRHHQa67QgjRoppXvSDGr69Rw4q6jOLuXmlPICA"
+     }
+    }
+   ],
+   "evaluatorDigest": "f6ab62bd5058ce0a8dda774b6930705ce1407d376bd5c38c0b0fb462eb724fe2",
+   "now": "2026-10-13T12:00:00.000Z"
+  },
+  "report": {
+   "schema": "kya.assessment/v1",
+   "subjectDigest": "8840c18578809b058e554e7326b981c06a1b51dc24200ab7e46e91a8429b2605",
+   "scopeDigest": "fa341b3661964c6de287bd90be767bac43bf2e8e3eeedead0532fb34224e41a9",
+   "agentId": "agent:test",
+   "agentName": "Synthetic agent",
+   "principalId": "controller:test",
+   "scopeId": "scope:test",
+   "profileDigest": "1ca272623ca48c93498e6bc9ade7f75da12eb8682907155ab2183963e08471b4",
+   "profileId": "test-v1",
+   "evaluatorDigest": "f6ab62bd5058ce0a8dda774b6930705ce1407d376bd5c38c0b0fb462eb724fe2",
+   "policyDigest": "19f3f24a1647bda5c15c922a8d9b420580748c14168f1959cb31aeee36ecb7a7",
+   "evidenceBundleDigest": "90b8124ec419397df1d4bcfe7a41dc632773402f7c8da43837f897c41ab31c53",
+   "assessedAt": "2026-10-13T12:00:00.000Z",
+   "validUntil": "2026-10-13T13:00:00.000Z",
+   "selectedRunId": "run-1",
+   "ambiguousRuns": false,
+   "decision": "blocked",
+   "evidenceMode": "fixture",
+   "score": {
+    "earned": 833,
+    "possible": 1000,
+    "upperBound": 833
+   },
+   "coverage": 1,
+   "independentCoverage": 0,
+   "dimensions": [
+    {
+     "id": "identity",
+     "earned": 1000,
+     "possible": 1000,
+     "upperBound": 1000,
+     "coverage": 1,
+     "weight": 1
+    },
+    {
+     "id": "authority",
+     "earned": 1000,
+     "possible": 1000,
+     "upperBound": 1000,
+     "coverage": 1,
+     "weight": 1
+    },
+    {
+     "id": "security",
+     "earned": 1000,
+     "possible": 1000,
+     "upperBound": 1000,
+     "coverage": 1,
+     "weight": 1
+    },
+    {
+     "id": "reliability",
+     "earned": 1000,
+     "possible": 1000,
+     "upperBound": 1000,
+     "coverage": 1,
+     "weight": 1
+    },
+    {
+     "id": "accountability",
+     "earned": 1000,
+     "possible": 1000,
+     "upperBound": 1000,
+     "coverage": 1,
+     "weight": 1
+    },
+    {
+     "id": "operations",
+     "earned": 0,
+     "possible": 1000,
+     "upperBound": 0,
+     "coverage": 1,
+     "weight": 1
+    }
+   ],
+   "checks": [
+    {
+     "critical": true,
+     "dimension": "identity",
+     "id": "check-0",
+     "title": "identity check",
+     "weight": 1,
+     "status": "pass",
+     "evidenceId": "evidence-0",
+     "keyId": "90fa3b3238f480853e0c46ccc6dbcd90db5a7baa9d363892a53385e0aeb265f6",
+     "independence": "self"
+    },
+    {
+     "critical": true,
+     "dimension": "authority",
+     "id": "check-1",
+     "title": "authority check",
+     "weight": 1,
+     "status": "pass",
+     "evidenceId": "evidence-1",
+     "keyId": "90fa3b3238f480853e0c46ccc6dbcd90db5a7baa9d363892a53385e0aeb265f6",
+     "independence": "self"
+    },
+    {
+     "critical": false,
+     "dimension": "security",
+     "id": "check-2",
+     "title": "security check",
+     "weight": 1,
+     "status": "pass",
+     "evidenceId": "evidence-2",
+     "keyId": "90fa3b3238f480853e0c46ccc6dbcd90db5a7baa9d363892a53385e0aeb265f6",
+     "independence": "self"
+    },
+    {
+     "critical": false,
+     "dimension": "reliability",
+     "id": "check-3",
+     "title": "reliability check",
+     "weight": 1,
+     "status": "pass",
+     "evidenceId": "evidence-3",
+     "keyId": "90fa3b3238f480853e0c46ccc6dbcd90db5a7baa9d363892a53385e0aeb265f6",
+     "independence": "self"
+    },
+    {
+     "critical": false,
+     "dimension": "accountability",
+     "id": "check-4",
+     "title": "accountability check",
+     "weight": 1,
+     "status": "pass",
+     "evidenceId": "evidence-4",
+     "keyId": "90fa3b3238f480853e0c46ccc6dbcd90db5a7baa9d363892a53385e0aeb265f6",
+     "independence": "self"
+    },
+    {
+     "critical": false,
+     "dimension": "operations",
+     "id": "check-5",
+     "title": "operations check",
+     "weight": 1,
+     "status": "fail",
+     "evidenceId": "evidence-5",
+     "keyId": "90fa3b3238f480853e0c46ccc6dbcd90db5a7baa9d363892a53385e0aeb265f6",
+     "independence": "self"
+    }
+   ],
+   "blockers": [
+    "Score below relying policy"
+   ],
+   "rejectedEvidence": [],
+   "acceptedEvidenceDigests": [
+    "0c4b66ad49e22718122ebd684126e5d99a96b14d563d111ff5ff5ff6f5060ef5",
+    "24ddc4cec3f2be88fe6ed5e3306da3a52a85ba233a005ae548229f624714b989",
+    "6ca0839da82b1ec2c3402b08426d61533e80359d4dc0490585f754335f4bed49",
+    "8d97a8531d77a4f1fb9c780b08ccb589a780c5772dfffe4e0e68ce75b37fc92d",
+    "962ae4d1743e115abdf7576bc6d3efae31f23bd046e4e3a55de48858f762b5f7",
+    "9c431193e4809ba412641f6f252c5146df28376fa1194a64bc6bf3def3fe9bd5"
+   ],
+   "limitations": [
+    "Local policy result; not an authorization grant",
+    "Signatures attest bytes and key possession, not truthful execution",
+    "No universal predictive validation; public suites can be gamed",
+    "Includes synthetic fixture evidence; not a real product benchmark"
+   ],
+   "reportDigest": "3ac5f19085748e968e8bb5399bafb2707978151cddef395b69751e103739f385"
+  }
+ }
+}

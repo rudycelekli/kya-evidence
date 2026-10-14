@@ -1,0 +1,6 @@
+{
+  "schema": "kya.evaluator-identity/v1",
+  "evaluatorDigest": "d0bc7f7840e5ddf1a71eb3b9ac92e5c4d0be5d156eea2c6f4f909f7066b5e31b",
+  "binds": "descriptor, every .mjs/.js file under src/conformance/, and canonical source",
+  "note": "Changing any file under src/conformance/ changes this digest and invalidates evidence issued under the old evaluator. Update this file only in a change that also adds an ADR. Code that is not evaluator logic belongs outside src/conformance/."
+}

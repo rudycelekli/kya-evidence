@@ -1,6 +1,7 @@
 import { canonical, digest, insist, captureArrayItems } from '../../shared/canonical.mjs';
 import { validateManifest, validateProfile, validatePolicy, timestamp, hash, DIMENSIONS } from '../../identity/domain/services/validation.mjs';
 import { verifyEvidence } from '../../evidence/index.mjs';
+import { validateBlockerCodes } from './codes.mjs';
 
 const ratio = (n,d) => d ? Math.round(n/d*1_000_000)/1_000_000 : 0;
 const points = (n,d) => d ? Math.floor(n/d*1000) : 0;
@@ -19,8 +20,9 @@ export function assess({manifest,profile,evidence,policy,evaluatorDigest,now = n
   const subjectDigest = digest(manifest), profileDigest = digest(profile);
   insist(policy.profileDigest === profileDigest,'Policy does not bind this profile');
   insist(policy.scopeId === manifest.scope.id,'Policy does not bind this scope');
-  const trusted = new Map(policy.trustedKeys.map(k => [k.id,k]));
   const checkIds = new Set(profile.checks.map(c => c.id));
+  for (const m of policy.mandatoryMinimums ?? []) insist(checkIds.has(m.checkId),'Mandatory minimum names a check outside the frozen profile');
+  const trusted = new Map(policy.trustedKeys.map(k => [k.id,k]));
   const rejectedEvidence = [], eligible = [], bound = [];
   const reject = (index,id,reason) => rejectedEvidence.push({index,id:typeof id === 'string' ? id.slice(0,128) : null,reason});
   const subjectRevoked = policy.revokedSubjectDigests.includes(subjectDigest);
@@ -109,29 +111,43 @@ export function assess({manifest,profile,evidence,policy,evaluatorDigest,now = n
     const k = cs.filter(c=>['pass','fail'].includes(c.status)).reduce((s,c)=>s+c.weight,0);
     return {id,earned:points(p,t),possible:t ? 1000 : 0,upperBound:points(p+t-k,t),coverage:ratio(k,t),weight:t};
   });
-  const blockers = [];
+  const blockers = [], blockerCodes = [];
+  const block = (code,text) => { blockers.push(text); blockerCodes.push(code); };
   const criticalFailures = checks.filter(c=>c.critical && c.status==='fail');
   const criticalUnknowns = checks.filter(c=>c.critical && !['pass','fail'].includes(c.status));
   const principalUnbound = policy.requirePrincipalBinding === true && !manifest.principal.accountableParty;
   let decision;
-  if (subjectRevoked) { decision='revoked'; blockers.push('Subject digest is revoked by relying policy'); }
-  else if (subjectExpired || subjectFuture) { decision='expired'; blockers.push(subjectFuture ? 'Manifest is not yet valid' : 'Manifest has expired'); }
-  else if (criticalFailures.length) { decision='blocked'; blockers.push(...criticalFailures.map(c=>`Critical check failed: ${c.id}`)); }
+  if (subjectRevoked) { decision='revoked'; block('SUBJECT_REVOKED','Subject digest is revoked by relying policy'); }
+  else if (subjectExpired || subjectFuture) { decision='expired'; if (subjectFuture) block('SUBJECT_NOT_YET_VALID','Manifest is not yet valid'); else block('SUBJECT_EXPIRED','Manifest has expired'); }
+  else if (criticalFailures.length) { decision='blocked'; for (const c of criticalFailures) block('CRITICAL_CHECK_FAILED',`Critical check failed: ${c.id}`); }
   else if (ambiguousRuns || selectedRunConflict || selectedRunInvalid || mixedRunIssuers || repeatedRunChecks || known===0 || criticalUnknowns.length || principalUnbound || known/total < policy.minCoverage || independent/total < policy.minIndependentCoverage) {
     decision='insufficient-evidence';
-    blockers.push(...criticalUnknowns.map(c=>`Critical check unproven: ${c.id}`));
-    if (known/total < policy.minCoverage) blockers.push('Evidence coverage below relying policy');
-    if (independent/total < policy.minIndependentCoverage) blockers.push('Independent coverage below relying policy');
-    if (ambiguousRuns) blockers.push('Ambiguous equally recent runs');
-    if (selectedRunConflict) blockers.push('Selected run contains quarantined conflicting evidence IDs');
-    if (selectedRunInvalid) blockers.push('Latest bound run contains invalidated evidence; no fallback qualification');
-    if (mixedRunIssuers) blockers.push('Frozen run has multiple evaluator issuers');
-    if (repeatedRunChecks) blockers.push('Frozen check has repeated observations; retry requires a new whole run');
-    if (principalUnbound) blockers.push('Policy requires a declared accountable party; manifest declares none');
-    if (known===0) blockers.push('No scored observations');
-  } else if (score.earned < policy.minScore) { decision='blocked'; blockers.push('Score below relying policy'); }
+    for (const c of criticalUnknowns) block('CRITICAL_CHECK_UNPROVEN',`Critical check unproven: ${c.id}`);
+    if (known/total < policy.minCoverage) block('COVERAGE_BELOW_POLICY','Evidence coverage below relying policy');
+    if (independent/total < policy.minIndependentCoverage) block('INDEPENDENT_COVERAGE_BELOW_POLICY','Independent coverage below relying policy');
+    if (ambiguousRuns) block('AMBIGUOUS_RUNS','Ambiguous equally recent runs');
+    if (selectedRunConflict) block('RUN_CONFLICT','Selected run contains quarantined conflicting evidence IDs');
+    if (selectedRunInvalid) block('RUN_INVALIDATED','Latest bound run contains invalidated evidence; no fallback qualification');
+    if (mixedRunIssuers) block('MIXED_RUN_ISSUERS','Frozen run has multiple evaluator issuers');
+    if (repeatedRunChecks) block('REPEATED_RUN_CHECKS','Frozen check has repeated observations; retry requires a new whole run');
+    if (principalUnbound) block('PRINCIPAL_UNBOUND','Policy requires a declared accountable party; manifest declares none');
+    if (known===0) block('NO_SCORED_OBSERVATIONS','No scored observations');
+  } else if (score.earned < policy.minScore) { decision='blocked'; block('SCORE_BELOW_POLICY','Score below relying policy'); }
   else { decision='qualified'; }
-  if (!selected.size && decision==='qualified') { decision='insufficient-evidence'; blockers.push('No observed checks'); }
+  // Mandatory minimums cap the result at 'blocked' whatever the score. Only a pass from this selected
+  // run satisfies one (unknown, abstain, error, fail and rejected or declared evidence all fail it), so
+  // dropping a check from the evidence cannot lift the cap. Revocation and expiry stay more specific.
+  if (decision!=='revoked' && decision!=='expired') {
+    for (const m of policy.mandatoryMinimums ?? []) {
+      const c = checks.find(x=>x.id===m.checkId);
+      if (c.status==='pass' && (m.minimum==='pass' || c.independence==='independent')) continue;
+      decision='blocked';
+      // Named separately: a failed (or not independently passed) check is a finding, an unobserved one is a gap.
+      if (['pass','fail'].includes(c.status)) block('MANDATORY_MINIMUM_NOT_MET',`Mandatory minimum not met: ${m.checkId} requires ${m.minimum}; observed ${c.status}`);
+      else block('MANDATORY_MINIMUM_UNPROVEN',`Mandatory minimum unproven: ${m.checkId} requires ${m.minimum}; observed ${c.status}`);
+    }
+  }
+  if (!selected.size && decision==='qualified') { decision='insufficient-evidence'; block('NO_OBSERVED_CHECKS','No observed checks'); }
   const chosen = [...selected.values()];
   const modes = new Set(chosen.map(e=>e.payload.source));
   const evidenceMode = modes.size===0 ? 'none' : modes.size>1 ? 'mixed' : [...modes][0];
@@ -139,7 +155,7 @@ export function assess({manifest,profile,evidence,policy,evaluatorDigest,now = n
     schema:'kya.assessment/v1',subjectDigest,scopeDigest:digest(manifest.scope),agentId:manifest.agent.id,agentName:manifest.agent.name,principalId:manifest.principal.id,scopeId:manifest.scope.id,
     profileDigest,profileId:profile.id,evaluatorDigest,policyDigest:digest(policy),evidenceBundleDigest:digest(capturedEvidence.map(e=>e.digest)),
     assessedAt:now,validUntil:new Date(Math.min(Date.parse(manifest.expiresAt),...chosen.map(e=>e.validUntil))).toISOString(),
-    selectedRunId:selectedRun?.id ?? null,ambiguousRuns,decision,evidenceMode,score,coverage,independentCoverage,dimensions,checks,blockers,
+    selectedRunId:selectedRun?.id ?? null,ambiguousRuns,decision,evidenceMode,score,coverage,independentCoverage,dimensions,checks,blockers,blockerCodes,
     rejectedEvidence:rejectedEvidence.sort((a,b)=>a.index-b.index),acceptedEvidenceDigests:chosen.map(e=>e.envelopeDigest).sort(),
     limitations:['Local policy result; not an authorization grant','Signatures attest bytes and key possession, not truthful execution','No universal predictive validation; public suites can be gamed',...(evidenceMode==='fixture'||evidenceMode==='mixed'?['Includes synthetic fixture evidence; not a real product benchmark']:[])]
   };
@@ -151,6 +167,7 @@ export function verifyAssessment(report) {
   const {reportDigest,...body} = report;
   hash(reportDigest,'Report digest');
   insist(body.schema==='kya.assessment/v1' && digest(body)===reportDigest,'Assessment digest differs');
+  validateBlockerCodes(body);
   return {integrity:true,reportDigest,authenticated:false,warning:'Report checksum is not an evaluator signature; recompute from trusted inputs for decisions'};
 }
 

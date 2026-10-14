@@ -26,6 +26,12 @@ SPKI_ED25519_PREFIX = bytes.fromhex("302a300506032b6570032100")
 
 class InvalidValue(ValueError):
     """Malformed or out-of-bounds input, never a positive verification."""
+    stage = "shape"
+
+
+class SignatureFailure(InvalidValue):
+    """Well-formed proof whose Ed25519 signature does not verify."""
+    stage = "signature"
 
 
 class UnsupportedNumber(InvalidValue):
@@ -185,11 +191,9 @@ def read_bounded(file=None):
         raise InvalidValue("Input is not UTF-8") from error
 
 
-def signature_bytes(envelope, enable_crypto=True):
+def proof_bytes(envelope, domain, enable_crypto):
     """Verify the proof byte layer only; no trusting issuers or assessment."""
-    require(type(envelope) is dict and set(envelope) == {"payload", "proof"}, "Invalid envelope shape")
     payload, proof = envelope["payload"], envelope["proof"]
-    require(type(payload) is dict and payload.get("schema") == "kya.evidence/v1", "Unsupported payload domain")
     require(type(proof) is dict and set(proof) == {"algorithm", "keyId", "publicKey", "signature"}, "Invalid proof shape")
     require(proof["algorithm"] == "Ed25519", "Unsupported proof algorithm")
     pem, encoded = proof["publicKey"], proof["signature"]
@@ -205,7 +209,7 @@ def signature_bytes(envelope, enable_crypto=True):
     require(type(encoded) is str and re.fullmatch(r"[A-Za-z0-9_-]{86}", encoded) is not None, "Invalid signature encoding")
     signature = base64.urlsafe_b64decode(encoded + "==")
     require(len(signature) == 64 and base64.urlsafe_b64encode(signature).decode("ascii").rstrip("=") == encoded, "Noncanonical signature encoding")
-    signing_input = "kya.evidence/v1\n" + canonical(payload)
+    signing_input = domain + "\n" + canonical(payload)
     result = {"signingInput": signing_input, "keyId": proof["keyId"], "authenticatedIssuer": False, "semanticReceiptValidation": False}
     if not enable_crypto:
         return dict(result, status="unavailable", verified=False, reason="Cryptographic backend explicitly disabled")
@@ -218,10 +222,94 @@ def signature_bytes(envelope, enable_crypto=True):
     try:
         Ed25519PublicKey.from_public_bytes(der[-32:]).verify(signature, signing_input.encode("utf-8"))
     except InvalidSignature as error:
-        raise InvalidValue("Ed25519 signature verification failed") from error
+        raise SignatureFailure("Ed25519 signature verification failed") from error
     except UnsupportedAlgorithm:
         return dict(result, status="unavailable", verified=False, reason="Installed backend does not support Ed25519")
     return dict(result, status="verified", verified=True, backend="cryptography", backendVersion=cryptography.__version__)
+
+
+def signature_bytes(envelope, enable_crypto=True):
+    require(type(envelope) is dict and set(envelope) == {"payload", "proof"}, "Invalid envelope shape")
+    payload = envelope["payload"]
+    require(type(payload) is dict and payload.get("schema") == "kya.evidence/v1", "Unsupported payload domain")
+    return proof_bytes(envelope, "kya.evidence/v1", enable_crypto)
+
+
+INCIDENT_DOMAIN = "kya.incident/v1"
+INCIDENT_KEYS = {"schema", "id", "subjectDigest", "kind", "severity", "refId", "reportedAt", "detailsDigest"}
+INCIDENT_KINDS = ("report", "resolution", "appeal")
+INCIDENT_SEVERITIES = ("low", "medium", "high", "critical")
+IDENTIFIER = re.compile(r"[A-Za-z0-9][A-Za-z0-9:._/-]*")
+HASH = re.compile(r"[a-f0-9]{64}")
+TIMESTAMP = re.compile(r"([0-9]{4})-([0-9]{2})-([0-9]{2})T([0-9]{2}):([0-9]{2}):([0-9]{2})\.([0-9]{3})Z")
+
+
+def identifier(value, label):
+    require(type(value) is str and 0 < len(value) <= 128 and IDENTIFIER.fullmatch(value) is not None, "%s: invalid identifier" % label)
+
+
+def timestamp(value, label):
+    match = TIMESTAMP.fullmatch(value) if type(value) is str else None
+    require(match is not None, "%s: invalid ISO UTC timestamp" % label)
+    year, month, day, hour, minute, second, _ = (int(part) for part in match.groups())
+    leap = year % 4 == 0 and (year % 100 != 0 or year % 400 == 0)
+    days = (31, 29 if leap else 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31)
+    require(1 <= month <= 12 and 1 <= day <= days[month - 1] and hour < 24 and minute < 60 and second < 60, "%s: invalid ISO UTC timestamp" % label)
+
+
+def validate_incident(payload):
+    """Strict kya.incident/v1 shape only; no currency, trust or resolution semantics."""
+    require(type(payload) is dict and set(payload) == INCIDENT_KEYS, "Incident: unexpected or missing members")
+    require(payload["schema"] == INCIDENT_DOMAIN, "Unsupported incident schema")
+    identifier(payload["id"], "Incident ID")
+    for name in ("subjectDigest", "detailsDigest"):
+        require(type(payload[name]) is str and HASH.fullmatch(payload[name]) is not None, "Incident %s: invalid SHA-256" % name)
+    require(type(payload["kind"]) is str and payload["kind"] in INCIDENT_KINDS, "Unknown incident kind")
+    require(type(payload["severity"]) is str and payload["severity"] in INCIDENT_SEVERITIES, "Unknown incident severity")
+    if payload["kind"] == "report":
+        require(payload["refId"] is None, "A report cannot reference another incident")
+    else:
+        identifier(payload["refId"], "Referenced incident")
+        require(payload["refId"] != payload["id"], "An incident cannot reference itself")
+    timestamp(payload["reportedAt"], "Incident time")
+
+
+def incident_bytes(envelope, enable_crypto=True):
+    """Shape plus domain-separated signature byte layer for kya.incident/v1."""
+    canonical(envelope)
+    require(type(envelope) is dict and set(envelope) == {"payload", "proof"}, "Invalid incident envelope shape")
+    validate_incident(envelope["payload"])
+    return proof_bytes(envelope, INCIDENT_DOMAIN, enable_crypto)
+
+
+def check_incident_vectors(block, enable_crypto=True):
+    require(type(block) is dict and block.get("signingDomain") == INCIDENT_DOMAIN, "Unsupported incident vector block")
+    vectors = block.get("vectors")
+    require(type(vectors) is list and 0 < len(vectors) <= 256, "Invalid incident vectors")
+    results, seen = [], set()
+    for vector in vectors:
+        require(type(vector) is dict and type(vector.get("id")) is str and vector["id"] not in seen, "Invalid incident vector")
+        name = vector["id"]
+        seen.add(name)
+        require(vector.get("expect") in ("accept", "reject") and vector.get("stage") in (None, "shape", "signature"), "Incident vector %s: invalid expectation" % name)
+        require(digest(vector.get("envelope")) == vector.get("envelopeDigest"), "Incident vector %s: envelope digest differs" % name)
+        try:
+            verified = incident_bytes(vector["envelope"], enable_crypto)
+        except InvalidValue as error:
+            actual, stage, reason = "rejected", error.stage, str(error)[:160]
+        else:
+            actual, stage, reason = ("accepted" if verified["verified"] else "unverified"), None, verified.get("reason")
+            if vector["expect"] == "accept":
+                require(verified["signingInput"] == vector.get("signingInput"), "Incident vector %s: reconstructed signing input differs" % name)
+        if actual == "unverified":
+            # No crypto backend: a well-formed proof is never counted as accepted or rejected,
+            # but a shape-stage rejection must already have happened above.
+            require(not (vector["expect"] == "reject" and vector["stage"] == "shape"), "Incident vector %s: malformed shape was not rejected" % name)
+        else:
+            require((actual == "accepted") == (vector["expect"] == "accept"), "Incident vector %s: expected %s, got %s (%s)" % (name, vector["expect"], actual, reason))
+            require(stage == vector["stage"], "Incident vector %s: expected stage %s, got %s" % (name, vector["stage"], stage))
+        results.append({"id": name, "expect": vector["expect"], "actual": actual, "stage": stage, "reason": reason})
+    return results
 
 
 def check_vectors(vectors, enable_crypto=True):
@@ -239,7 +327,14 @@ def check_vectors(vectors, enable_crypto=True):
     require(digest(envelope) == vector.get("envelopeDigest"), "Envelope digest differs")
     verified = signature_bytes(envelope, enable_crypto)
     require(verified["signingInput"] == vector.get("signingInput"), "Reconstructed signing input differs")
-    return {"schema": "kya.python-vector-check/v1", "subset": SUBSET, "status": "passed" if verified["verified"] else "partial", "canonicalCases": len(cases), "signature": {key: value for key, value in verified.items() if key != "signingInput"}, "externalIndependence": False}
+    incidents = check_incident_vectors(vectors["incidents"], enable_crypto) if "incidents" in vectors else []
+    complete = verified["verified"] and all(item["actual"] != "unverified" for item in incidents)
+    result = {"schema": "kya.python-vector-check/v1", "subset": SUBSET, "status": "passed" if complete else "partial", "canonicalCases": len(cases), "signature": {key: value for key, value in verified.items() if key != "signingInput"}, "externalIndependence": False}
+    if incidents:
+        result["incidentVectors"] = incidents
+        result["incidentSummary"] = {name: sum(1 for item in incidents if item["actual"] == name) for name in ("accepted", "rejected", "unverified")}
+        result["incidentSummary"]["total"] = len(incidents)
+    return result
 
 
 def main(argv=None):

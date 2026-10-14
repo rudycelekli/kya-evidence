@@ -74,7 +74,7 @@ export function createDossier(value){
   return{...body,dossierDigest:digest(body)};
 }
 function assessmentShape(a){
-  exactKeys(a,['schema','subjectDigest','scopeDigest','agentId','agentName','principalId','scopeId','profileDigest','profileId','evaluatorDigest','policyDigest','evidenceBundleDigest','assessedAt','validUntil','selectedRunId','ambiguousRuns','decision','evidenceMode','score','coverage','independentCoverage','dimensions','checks','blockers','rejectedEvidence','acceptedEvidenceDigests','limitations','reportDigest'],'Dossier assessment');
+  exactKeys(a,['schema','subjectDigest','scopeDigest','agentId','agentName','principalId','scopeId','profileDigest','profileId','evaluatorDigest','policyDigest','evidenceBundleDigest','assessedAt','validUntil','selectedRunId','ambiguousRuns','decision','evidenceMode','score','coverage','independentCoverage','dimensions','checks','blockers',...(Object.hasOwn(a,'blockerCodes')?['blockerCodes']:[]),'rejectedEvidence','acceptedEvidenceDigests','limitations','reportDigest'],'Dossier assessment');
   for(const k of ['subjectDigest','scopeDigest','profileDigest','evaluatorDigest','policyDigest','evidenceBundleDigest'])hash(a[k]);
   insist(['qualified','blocked','insufficient-evidence','expired','revoked'].includes(a.decision)&&['runtime','fixture','mixed','none'].includes(a.evidenceMode),'Unsupported policy decision or source');
   insist(Array.isArray(a.checks)&&a.checks.length>0&&a.checks.length<=256,'Invalid dossier checks');

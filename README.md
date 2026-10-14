@@ -68,6 +68,21 @@ Use generated demo inputs and the [adapter protocol](docs/ADAPTERS.md) to connec
 
 The typed SDK includes strict Claude Code result and Codex event parsers, explicit command plans and opt-in native factories. Native model claims remain declarations and cannot earn observed-action credit. Claude execution is blocked until effective managed policy can be established. Codex requires verified subscription auth and explicit binding of included global instructions. See [execution gates and private transcript retention](docs/ADAPTERS.md) and [validation boundaries](docs/VALIDATION.md).
 
+## Relying-party currency and incidents
+
+An assessment is a point-in-time result. Before relying on it, check that its manifest, policy and clock still match, and that no unresolved incident applies:
+
+```sh
+node bin/kya.mjs currency \
+  --assessment ./artifacts/assessment/assessment.json \
+  --manifest ./manifest.json \
+  --policy ./policy.json \
+  [--incidents ./incidents.json] \
+  [--now 2026-10-14T16:41:00.000Z]
+```
+
+A fired trigger (`subject-changed`, `policy-changed`, `subject-revoked`, `assessment-expired`, `assessment-aged`, `clock-regression` or `incident-open`) returns `action: reassess` and exit code 2. `reliable` is true only for a qualified decision with no trigger. Incident records (`kya.incident/v1`) are Ed25519-signed under their own prefix, and only keys listed as trust anchors in the policy count. No CLI command creates them yet; the library function `signIncident` does. A policy with `requirePrincipalBinding: true` withholds qualification from a manifest without a declared `principal.accountableParty`, which is a pseudonymous `{kind, ref}` and is not verified. Step-by-step commands with real output are in the [relying-party quickstart](docs/QUICKSTART-RELYING-PARTY.md).
+
 ## Evidence before reputation
 
 <img src="assets/evidence-flow.svg" alt="Bind the exact subject, verify signed evidence, enforce your trust policy, explain a scoped decision." width="1200" />
@@ -98,7 +113,7 @@ To become a useful standard, the protocol needs independent implementations, pub
 
 This clean-room implementation applies evidence-first engineering: exact revisions, replayable tests, visible uncertainty, independently reviewed promotion and reversible change. Private product code, client records, credentials and operational logs are excluded.
 
-Tests exercise tampering, malformed and duplicate JSON, untrusted signing, wrong bindings, expiry/revocation, run cherry-picking, unknown coverage, declaration laundering, critical failures, HTML injection and bounded command transport. Evaluator mutation tests must detect weakened gates. Passing public cases alone cannot establish general safety; colluding issuers, strategic run omission and suite contamination remain threats.
+Tests exercise tampering, malformed and duplicate JSON, untrusted signing, wrong bindings, expiry/revocation, run cherry-picking, unknown coverage, declaration laundering, critical failures, HTML injection and bounded command transport. Evaluator mutation tests must detect weakened gates. Passing public cases alone cannot establish general safety; colluding issuers, strategic run omission and suite contamination remain threats. The [requirement registry](docs/REQUIREMENTS.md) lists every normative requirement with its test traces, each traced to tests that the gate checks for staleness; CI fails on any skipped or `todo` test. `scripts/mutation-check.mjs` applies named gate mutations to the assessment and incident code and requires each to be detected. [Threat model](docs/THREAT-MODEL.md) lists what is not mitigated.
 
 Research can fork without rewriting its past. [Universes](docs/UNIVERSES.md) hash every bundled executable module, package routing, exact input evidence and assessment time. Replay recomputes the result under that implementation. Comparisons refuse changed decision contracts and incomplete case populations. Correction references expose affected descendants, while actual revocation stays in relying policy.
 
@@ -117,5 +132,16 @@ The package builder reads immutable Git blobs from a clean committed revision, f
 A secondary [Python byte checker](docs/INTEROPERABILITY.md) reconstructs the public vectors without forwarding expected answers. It verifies Ed25519 when an existing cryptographic backend is available and otherwise reports partial verification. Its supported numeric subset is explicit; unsupported doubles are refused. This is a second implementation by this project team, with external implementers and full semantic assessment parity still needed.
 
 Contribute reproducible failures, evaluator challenges, transport adapters or specification criticism. Read [CONTRIBUTING.md](CONTRIBUTING.md), [governance](docs/GOVERNANCE.md) and [SECURITY.md](SECURITY.md). Ongoing development uses bounded hypotheses, frozen comparisons, independent review and explicit `ACCEPT`, `REJECT` or `INCONCLUSIVE` outcomes. A roadmap does not imply a running scheduler. Public releases, cost-incurring agent executions and deployments need explicit authorization.
+
+## What this is not
+
+- Not an adopted standard, certification or endorsement. No external review or second independent implementation exists yet.
+- Not verified human identity, legal authority or liability. `accountableParty` is a self-declared, pseudonymous reference that policy can require but cannot verify.
+- Not proof of truthful execution. A signature proves key possession and report integrity, not what an agent actually did.
+- Not a live revocation service. Revocation is whatever the relying policy snapshot says.
+- Not continuous monitoring. Currency checks only the supplied manifest, policy, incidents and clock. They observe no runtime behavior, and an incident nobody supplies is invisible.
+- Not an appeals process. Appeals are recorded and never clear a trigger.
+- Not a measurement of any commercial agent. Demo and benchmark outputs are synthetic fixtures.
+- Not an authorization grant, and never a credit or worth score for a person.
 
 Apache-2.0. [License](LICENSE) · [Notice](NOTICE)

@@ -92,5 +92,489 @@
       }
     },
     "envelopeDigest": "8e66802ddcf652a2d8bb5cdbd37b8d2d7c795b590c75411ef45c79ac87a354d4"
+  },
+  "incidents": {
+    "warning": "Public toy key and synthetic incident records; never a production trust anchor",
+    "signingDomain": "kya.incident/v1",
+    "vectors": [
+      {
+        "id": "report",
+        "expect": "accept",
+        "stage": null,
+        "description": "Valid signed report",
+        "envelope": {
+          "payload": {
+            "detailsDigest": "b6257b8714ae2b4173f784481b1d698e37887058bb756dfbd1673573309c7f49",
+            "id": "public-vector:incident-1",
+            "kind": "report",
+            "refId": null,
+            "reportedAt": "2026-10-14T09:00:00.000Z",
+            "schema": "kya.incident/v1",
+            "severity": "high",
+            "subjectDigest": "512a57edcbac1c144eb03f54297513f41b6d7a71b0d40c160cb80e37daaba712"
+          },
+          "proof": {
+            "algorithm": "Ed25519",
+            "keyId": "a050837d85070582ccf7394b0988847cc312cb88259b894899f6f239cf1791a5",
+            "publicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAA6EHv/POEL4dcN0Y50vAmWfk1jCbpQ1fHdyGZBJVMbg=\n-----END PUBLIC KEY-----\n",
+            "signature": "prxbR0Pgdnb-KvCUl8kkXn7mQ7UsoKsYeYbd-0gQtnbF_02h9usnSZwa98EtwTQRNXR-uq31_Nw83i7Mfei4Dw"
+          }
+        },
+        "envelopeDigest": "c2aaa481483d3d048cc60f7e1fadf5cf3e6c2c379a958f9f5c9e5b1428806ade",
+        "signingInput": "kya.incident/v1\n{\"detailsDigest\":\"b6257b8714ae2b4173f784481b1d698e37887058bb756dfbd1673573309c7f49\",\"id\":\"public-vector:incident-1\",\"kind\":\"report\",\"refId\":null,\"reportedAt\":\"2026-10-14T09:00:00.000Z\",\"schema\":\"kya.incident/v1\",\"severity\":\"high\",\"subjectDigest\":\"512a57edcbac1c144eb03f54297513f41b6d7a71b0d40c160cb80e37daaba712\"}"
+      },
+      {
+        "id": "resolution",
+        "expect": "accept",
+        "stage": null,
+        "description": "Valid signed resolution referencing the report",
+        "envelope": {
+          "payload": {
+            "detailsDigest": "b6257b8714ae2b4173f784481b1d698e37887058bb756dfbd1673573309c7f49",
+            "id": "public-vector:incident-2",
+            "kind": "resolution",
+            "refId": "public-vector:incident-1",
+            "reportedAt": "2026-10-14T10:00:00.000Z",
+            "schema": "kya.incident/v1",
+            "severity": "low",
+            "subjectDigest": "512a57edcbac1c144eb03f54297513f41b6d7a71b0d40c160cb80e37daaba712"
+          },
+          "proof": {
+            "algorithm": "Ed25519",
+            "keyId": "a050837d85070582ccf7394b0988847cc312cb88259b894899f6f239cf1791a5",
+            "publicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAA6EHv/POEL4dcN0Y50vAmWfk1jCbpQ1fHdyGZBJVMbg=\n-----END PUBLIC KEY-----\n",
+            "signature": "PGjAjiNDvoTloslWmWQbNGGb8Y-O_2KO1cL0FX_ZQuQEXpQvLEooVjsvN4EibtRhqv8KfV_A2Nvgm667Ixe9BQ"
+          }
+        },
+        "envelopeDigest": "ba5a4f70001ecd7b96eafa191c722ec55ba481002dae76f641c9571ece9d3782",
+        "signingInput": "kya.incident/v1\n{\"detailsDigest\":\"b6257b8714ae2b4173f784481b1d698e37887058bb756dfbd1673573309c7f49\",\"id\":\"public-vector:incident-2\",\"kind\":\"resolution\",\"refId\":\"public-vector:incident-1\",\"reportedAt\":\"2026-10-14T10:00:00.000Z\",\"schema\":\"kya.incident/v1\",\"severity\":\"low\",\"subjectDigest\":\"512a57edcbac1c144eb03f54297513f41b6d7a71b0d40c160cb80e37daaba712\"}"
+      },
+      {
+        "id": "appeal",
+        "expect": "accept",
+        "stage": null,
+        "description": "Valid signed appeal referencing the report",
+        "envelope": {
+          "payload": {
+            "detailsDigest": "b6257b8714ae2b4173f784481b1d698e37887058bb756dfbd1673573309c7f49",
+            "id": "public-vector:incident-3",
+            "kind": "appeal",
+            "refId": "public-vector:incident-1",
+            "reportedAt": "2026-10-14T11:00:00.000Z",
+            "schema": "kya.incident/v1",
+            "severity": "medium",
+            "subjectDigest": "512a57edcbac1c144eb03f54297513f41b6d7a71b0d40c160cb80e37daaba712"
+          },
+          "proof": {
+            "algorithm": "Ed25519",
+            "keyId": "a050837d85070582ccf7394b0988847cc312cb88259b894899f6f239cf1791a5",
+            "publicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAA6EHv/POEL4dcN0Y50vAmWfk1jCbpQ1fHdyGZBJVMbg=\n-----END PUBLIC KEY-----\n",
+            "signature": "JCSe3Mc0U2bsV_exQr2BdkWA3owKbLczFt19ZW267uyzAtl0VAm3Jz_WQbX-_2nx8V-_ZXAHP41Jzdp2Eno5AA"
+          }
+        },
+        "envelopeDigest": "749beeca856c30c762fcc55d01dac6ee0f2c7dbe4c73117c7a2cf7c366c0812f",
+        "signingInput": "kya.incident/v1\n{\"detailsDigest\":\"b6257b8714ae2b4173f784481b1d698e37887058bb756dfbd1673573309c7f49\",\"id\":\"public-vector:incident-3\",\"kind\":\"appeal\",\"refId\":\"public-vector:incident-1\",\"reportedAt\":\"2026-10-14T11:00:00.000Z\",\"schema\":\"kya.incident/v1\",\"severity\":\"medium\",\"subjectDigest\":\"512a57edcbac1c144eb03f54297513f41b6d7a71b0d40c160cb80e37daaba712\"}"
+      },
+      {
+        "id": "wrong-kind",
+        "expect": "reject",
+        "stage": "shape",
+        "description": "Unknown kind with a valid signature",
+        "envelope": {
+          "payload": {
+            "schema": "kya.incident/v1",
+            "id": "public-vector:incident-1",
+            "subjectDigest": "512a57edcbac1c144eb03f54297513f41b6d7a71b0d40c160cb80e37daaba712",
+            "kind": "dismissal",
+            "severity": "high",
+            "refId": null,
+            "reportedAt": "2026-10-14T09:00:00.000Z",
+            "detailsDigest": "b6257b8714ae2b4173f784481b1d698e37887058bb756dfbd1673573309c7f49"
+          },
+          "proof": {
+            "algorithm": "Ed25519",
+            "keyId": "a050837d85070582ccf7394b0988847cc312cb88259b894899f6f239cf1791a5",
+            "publicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAA6EHv/POEL4dcN0Y50vAmWfk1jCbpQ1fHdyGZBJVMbg=\n-----END PUBLIC KEY-----\n",
+            "signature": "ETc0JIDhn3HNgnLh9xIZYhf99GpnnWVHFODdtZ6HGuvBp41bQ6c8V15cEqQAxVrwNMLSdOvhvGhnyOb1GcTmDw"
+          }
+        },
+        "envelopeDigest": "0f092fdc708d3d0c7a5b09896e3ddd5fc85dc145226aed18ae264d1b3b320c8b"
+      },
+      {
+        "id": "wrong-severity",
+        "expect": "reject",
+        "stage": "shape",
+        "description": "Unknown severity with a valid signature",
+        "envelope": {
+          "payload": {
+            "schema": "kya.incident/v1",
+            "id": "public-vector:incident-1",
+            "subjectDigest": "512a57edcbac1c144eb03f54297513f41b6d7a71b0d40c160cb80e37daaba712",
+            "kind": "report",
+            "severity": "urgent",
+            "refId": null,
+            "reportedAt": "2026-10-14T09:00:00.000Z",
+            "detailsDigest": "b6257b8714ae2b4173f784481b1d698e37887058bb756dfbd1673573309c7f49"
+          },
+          "proof": {
+            "algorithm": "Ed25519",
+            "keyId": "a050837d85070582ccf7394b0988847cc312cb88259b894899f6f239cf1791a5",
+            "publicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAA6EHv/POEL4dcN0Y50vAmWfk1jCbpQ1fHdyGZBJVMbg=\n-----END PUBLIC KEY-----\n",
+            "signature": "ufa8CIOSpRIapgjuT_wTWysnAmw5xA6VGBcaBvMipoZiF6GW_rXcVZfvmz5tTXz7uQmaoperScRBp4Otb8xOAQ"
+          }
+        },
+        "envelopeDigest": "b4c3341bc880dacd5d129f380f2628744f403e9c7b877a8648b1c8f6cdec409b"
+      },
+      {
+        "id": "wrong-schema",
+        "expect": "reject",
+        "stage": "shape",
+        "description": "Evidence schema string in an incident envelope",
+        "envelope": {
+          "payload": {
+            "schema": "kya.evidence/v1",
+            "id": "public-vector:incident-1",
+            "subjectDigest": "512a57edcbac1c144eb03f54297513f41b6d7a71b0d40c160cb80e37daaba712",
+            "kind": "report",
+            "severity": "high",
+            "refId": null,
+            "reportedAt": "2026-10-14T09:00:00.000Z",
+            "detailsDigest": "b6257b8714ae2b4173f784481b1d698e37887058bb756dfbd1673573309c7f49"
+          },
+          "proof": {
+            "algorithm": "Ed25519",
+            "keyId": "a050837d85070582ccf7394b0988847cc312cb88259b894899f6f239cf1791a5",
+            "publicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAA6EHv/POEL4dcN0Y50vAmWfk1jCbpQ1fHdyGZBJVMbg=\n-----END PUBLIC KEY-----\n",
+            "signature": "2d_DwF6HGqlo0cuV0Fe94_AOPU-aGD9OGbjomLlYCJaQsDgw-n2fFkIbRMdpDwXx13HBhr38qNNybdjc4UhcCA"
+          }
+        },
+        "envelopeDigest": "c8f19f471138904fa915faf152db9e0b50f88a9abadb71719a3690bb39017bee"
+      },
+      {
+        "id": "report-with-ref",
+        "expect": "reject",
+        "stage": "shape",
+        "description": "Report with non-null refId",
+        "envelope": {
+          "payload": {
+            "schema": "kya.incident/v1",
+            "id": "public-vector:incident-1",
+            "subjectDigest": "512a57edcbac1c144eb03f54297513f41b6d7a71b0d40c160cb80e37daaba712",
+            "kind": "report",
+            "severity": "high",
+            "refId": "public-vector:other",
+            "reportedAt": "2026-10-14T09:00:00.000Z",
+            "detailsDigest": "b6257b8714ae2b4173f784481b1d698e37887058bb756dfbd1673573309c7f49"
+          },
+          "proof": {
+            "algorithm": "Ed25519",
+            "keyId": "a050837d85070582ccf7394b0988847cc312cb88259b894899f6f239cf1791a5",
+            "publicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAA6EHv/POEL4dcN0Y50vAmWfk1jCbpQ1fHdyGZBJVMbg=\n-----END PUBLIC KEY-----\n",
+            "signature": "u-QlwafpBbBtd7KXPKRVrvOCD58Wt7ecAF1c2H1IETEn_X6jJwU37L0k0EQGZaJLRJlW332QQrVoCd0rxMTACg"
+          }
+        },
+        "envelopeDigest": "a9fa210e8a85dfdb9db4af68a1cc2a656b35143b1bd4ea03dc93449017be5e4f"
+      },
+      {
+        "id": "resolution-null-ref",
+        "expect": "reject",
+        "stage": "shape",
+        "description": "Resolution with null refId",
+        "envelope": {
+          "payload": {
+            "schema": "kya.incident/v1",
+            "id": "public-vector:incident-2",
+            "subjectDigest": "512a57edcbac1c144eb03f54297513f41b6d7a71b0d40c160cb80e37daaba712",
+            "kind": "resolution",
+            "severity": "low",
+            "refId": null,
+            "reportedAt": "2026-10-14T10:00:00.000Z",
+            "detailsDigest": "b6257b8714ae2b4173f784481b1d698e37887058bb756dfbd1673573309c7f49"
+          },
+          "proof": {
+            "algorithm": "Ed25519",
+            "keyId": "a050837d85070582ccf7394b0988847cc312cb88259b894899f6f239cf1791a5",
+            "publicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAA6EHv/POEL4dcN0Y50vAmWfk1jCbpQ1fHdyGZBJVMbg=\n-----END PUBLIC KEY-----\n",
+            "signature": "oyVOiB23vlKRleiKeoly_zuIanj54JfihidzzW811UhQ3IvBhvyf0WBKEahakrSxFD_F2X76de-Zk1mSIX-LDA"
+          }
+        },
+        "envelopeDigest": "6951d0541d42a0aac73950e27e3c62bc7bf7dad9261c20842e51027d702a17bf"
+      },
+      {
+        "id": "resolution-self-ref",
+        "expect": "reject",
+        "stage": "shape",
+        "description": "Resolution referencing itself",
+        "envelope": {
+          "payload": {
+            "schema": "kya.incident/v1",
+            "id": "public-vector:incident-2",
+            "subjectDigest": "512a57edcbac1c144eb03f54297513f41b6d7a71b0d40c160cb80e37daaba712",
+            "kind": "resolution",
+            "severity": "low",
+            "refId": "public-vector:incident-2",
+            "reportedAt": "2026-10-14T10:00:00.000Z",
+            "detailsDigest": "b6257b8714ae2b4173f784481b1d698e37887058bb756dfbd1673573309c7f49"
+          },
+          "proof": {
+            "algorithm": "Ed25519",
+            "keyId": "a050837d85070582ccf7394b0988847cc312cb88259b894899f6f239cf1791a5",
+            "publicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAA6EHv/POEL4dcN0Y50vAmWfk1jCbpQ1fHdyGZBJVMbg=\n-----END PUBLIC KEY-----\n",
+            "signature": "FYZV5Zo6ybYBBnswyD3QOM5fsR5oL9mEhFjK1CJfEirWcUEXxEG7TBeFAqNZfU5uda2qCawvHyoHz9Ki242sBg"
+          }
+        },
+        "envelopeDigest": "3d1173c0779f1954a00a23ce4116ad793cdeeab978253bf882766f7722cf9abc"
+      },
+      {
+        "id": "extra-field",
+        "expect": "reject",
+        "stage": "shape",
+        "description": "Additional payload member",
+        "envelope": {
+          "payload": {
+            "schema": "kya.incident/v1",
+            "id": "public-vector:incident-1",
+            "subjectDigest": "512a57edcbac1c144eb03f54297513f41b6d7a71b0d40c160cb80e37daaba712",
+            "kind": "report",
+            "severity": "high",
+            "refId": null,
+            "reportedAt": "2026-10-14T09:00:00.000Z",
+            "detailsDigest": "b6257b8714ae2b4173f784481b1d698e37887058bb756dfbd1673573309c7f49",
+            "note": "extra"
+          },
+          "proof": {
+            "algorithm": "Ed25519",
+            "keyId": "a050837d85070582ccf7394b0988847cc312cb88259b894899f6f239cf1791a5",
+            "publicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAA6EHv/POEL4dcN0Y50vAmWfk1jCbpQ1fHdyGZBJVMbg=\n-----END PUBLIC KEY-----\n",
+            "signature": "SpYJyomv0LRnDE0CX_tx3q_cB_oC27R2VEqvMq3Ne7Yp_bIJ3sVxo8I2CNMQsbTszIsFJE7nFTa7Nmt5DRx3Bg"
+          }
+        },
+        "envelopeDigest": "ff090d5e362da8d01130fc9db36ad67dc2fb8f90c01a8146914ed1f68837ca9b"
+      },
+      {
+        "id": "missing-field",
+        "expect": "reject",
+        "stage": "shape",
+        "description": "Missing detailsDigest",
+        "envelope": {
+          "payload": {
+            "schema": "kya.incident/v1",
+            "id": "public-vector:incident-1",
+            "subjectDigest": "512a57edcbac1c144eb03f54297513f41b6d7a71b0d40c160cb80e37daaba712",
+            "kind": "report",
+            "severity": "high",
+            "refId": null,
+            "reportedAt": "2026-10-14T09:00:00.000Z"
+          },
+          "proof": {
+            "algorithm": "Ed25519",
+            "keyId": "a050837d85070582ccf7394b0988847cc312cb88259b894899f6f239cf1791a5",
+            "publicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAA6EHv/POEL4dcN0Y50vAmWfk1jCbpQ1fHdyGZBJVMbg=\n-----END PUBLIC KEY-----\n",
+            "signature": "R8srVizIS_zVaDaj4Mo5d5-4YnDsNezjd3a-JXhuev8vltyxWYU-rUDSg_0UPh7JyyVEKp8RBM4vxp19rjX-Cw"
+          }
+        },
+        "envelopeDigest": "2eec21e5dc0fcab83789d12bdfafbc8ac25143999887798ebe13b7ff229d7d25"
+      },
+      {
+        "id": "bad-timestamp-format",
+        "expect": "reject",
+        "stage": "shape",
+        "description": "Timestamp without milliseconds",
+        "envelope": {
+          "payload": {
+            "schema": "kya.incident/v1",
+            "id": "public-vector:incident-1",
+            "subjectDigest": "512a57edcbac1c144eb03f54297513f41b6d7a71b0d40c160cb80e37daaba712",
+            "kind": "report",
+            "severity": "high",
+            "refId": null,
+            "reportedAt": "2026-10-14T09:00:00Z",
+            "detailsDigest": "b6257b8714ae2b4173f784481b1d698e37887058bb756dfbd1673573309c7f49"
+          },
+          "proof": {
+            "algorithm": "Ed25519",
+            "keyId": "a050837d85070582ccf7394b0988847cc312cb88259b894899f6f239cf1791a5",
+            "publicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAA6EHv/POEL4dcN0Y50vAmWfk1jCbpQ1fHdyGZBJVMbg=\n-----END PUBLIC KEY-----\n",
+            "signature": "Lg1tth27YtjKnvSwIcTTUEY70B9isGlCauRpl_C5Ae6A08p8iS2AJ96PA0RRb240dA9Nr-BwOS4DKTJT37tnAw"
+          }
+        },
+        "envelopeDigest": "23d91d586dc318e5f8aa5094eb997ce51a3464e3dcf43e1d3f5a67d3e8e7a29a"
+      },
+      {
+        "id": "bad-timestamp-calendar",
+        "expect": "reject",
+        "stage": "shape",
+        "description": "Nonexistent calendar date",
+        "envelope": {
+          "payload": {
+            "schema": "kya.incident/v1",
+            "id": "public-vector:incident-1",
+            "subjectDigest": "512a57edcbac1c144eb03f54297513f41b6d7a71b0d40c160cb80e37daaba712",
+            "kind": "report",
+            "severity": "high",
+            "refId": null,
+            "reportedAt": "2026-02-30T09:00:00.000Z",
+            "detailsDigest": "b6257b8714ae2b4173f784481b1d698e37887058bb756dfbd1673573309c7f49"
+          },
+          "proof": {
+            "algorithm": "Ed25519",
+            "keyId": "a050837d85070582ccf7394b0988847cc312cb88259b894899f6f239cf1791a5",
+            "publicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAA6EHv/POEL4dcN0Y50vAmWfk1jCbpQ1fHdyGZBJVMbg=\n-----END PUBLIC KEY-----\n",
+            "signature": "lw0uSa9mREzKEgtTCSZI0Rd0y0rilIBPX-HQUqGz_16QzkR9w6IfNkug2zB7C2jnWBkk45lk0Zd2mt2XgyfBAQ"
+          }
+        },
+        "envelopeDigest": "1b372d51fa2a4e2932593443429eba3506692fd01320a709cecfd6f96223a917"
+      },
+      {
+        "id": "bad-hash-case",
+        "expect": "reject",
+        "stage": "shape",
+        "description": "Uppercase subject digest",
+        "envelope": {
+          "payload": {
+            "schema": "kya.incident/v1",
+            "id": "public-vector:incident-1",
+            "subjectDigest": "512A57EDCBAC1C144EB03F54297513F41B6D7A71B0D40C160CB80E37DAABA712",
+            "kind": "report",
+            "severity": "high",
+            "refId": null,
+            "reportedAt": "2026-10-14T09:00:00.000Z",
+            "detailsDigest": "b6257b8714ae2b4173f784481b1d698e37887058bb756dfbd1673573309c7f49"
+          },
+          "proof": {
+            "algorithm": "Ed25519",
+            "keyId": "a050837d85070582ccf7394b0988847cc312cb88259b894899f6f239cf1791a5",
+            "publicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAA6EHv/POEL4dcN0Y50vAmWfk1jCbpQ1fHdyGZBJVMbg=\n-----END PUBLIC KEY-----\n",
+            "signature": "l0kqFT21ez1FEyyJvl0SqM8Q5kuSKXWgl5BSxAAp3nDcT1s52m_i6UN1Als1WYIQ8EMK_aCYESQ0uUv9CnywCw"
+          }
+        },
+        "envelopeDigest": "15c1ad4465f2150fe70b0b308e43e075251b14c6664a96bd7a01c8cf4930f61e"
+      },
+      {
+        "id": "bad-identifier",
+        "expect": "reject",
+        "stage": "shape",
+        "description": "Identifier with a leading separator",
+        "envelope": {
+          "payload": {
+            "schema": "kya.incident/v1",
+            "id": "-bad",
+            "subjectDigest": "512a57edcbac1c144eb03f54297513f41b6d7a71b0d40c160cb80e37daaba712",
+            "kind": "report",
+            "severity": "high",
+            "refId": null,
+            "reportedAt": "2026-10-14T09:00:00.000Z",
+            "detailsDigest": "b6257b8714ae2b4173f784481b1d698e37887058bb756dfbd1673573309c7f49"
+          },
+          "proof": {
+            "algorithm": "Ed25519",
+            "keyId": "a050837d85070582ccf7394b0988847cc312cb88259b894899f6f239cf1791a5",
+            "publicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAA6EHv/POEL4dcN0Y50vAmWfk1jCbpQ1fHdyGZBJVMbg=\n-----END PUBLIC KEY-----\n",
+            "signature": "16sdiYIKFn0OaZ9oITEyR6HaD19ZSthh4_5EncMCUVmljY1GKwdWgA2ZJAWFHdtlk6NYjHgbIP02N79ZHxgYCg"
+          }
+        },
+        "envelopeDigest": "41015cc8904bcd8abcc08907f540e234fe71eccb1f0da754a012738dba0df022"
+      },
+      {
+        "id": "noncanonical-signature-encoding",
+        "expect": "reject",
+        "stage": "shape",
+        "description": "Same 64 signature bytes with nonzero trailing base64url bits",
+        "envelope": {
+          "payload": {
+            "schema": "kya.incident/v1",
+            "id": "public-vector:incident-1",
+            "subjectDigest": "512a57edcbac1c144eb03f54297513f41b6d7a71b0d40c160cb80e37daaba712",
+            "kind": "report",
+            "severity": "high",
+            "refId": null,
+            "reportedAt": "2026-10-14T09:00:00.000Z",
+            "detailsDigest": "b6257b8714ae2b4173f784481b1d698e37887058bb756dfbd1673573309c7f49"
+          },
+          "proof": {
+            "algorithm": "Ed25519",
+            "keyId": "a050837d85070582ccf7394b0988847cc312cb88259b894899f6f239cf1791a5",
+            "publicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAA6EHv/POEL4dcN0Y50vAmWfk1jCbpQ1fHdyGZBJVMbg=\n-----END PUBLIC KEY-----\n",
+            "signature": "prxbR0Pgdnb-KvCUl8kkXn7mQ7UsoKsYeYbd-0gQtnbF_02h9usnSZwa98EtwTQRNXR-uq31_Nw83i7Mfei4Dx"
+          }
+        },
+        "envelopeDigest": "47096b1fb436ab7a5dcdd187a8b919c8964a577659311f7992795ba49fc458ee"
+      },
+      {
+        "id": "tampered-payload",
+        "expect": "reject",
+        "stage": "signature",
+        "description": "Severity changed after signing",
+        "envelope": {
+          "payload": {
+            "schema": "kya.incident/v1",
+            "id": "public-vector:incident-1",
+            "subjectDigest": "512a57edcbac1c144eb03f54297513f41b6d7a71b0d40c160cb80e37daaba712",
+            "kind": "report",
+            "severity": "low",
+            "refId": null,
+            "reportedAt": "2026-10-14T09:00:00.000Z",
+            "detailsDigest": "b6257b8714ae2b4173f784481b1d698e37887058bb756dfbd1673573309c7f49"
+          },
+          "proof": {
+            "algorithm": "Ed25519",
+            "keyId": "a050837d85070582ccf7394b0988847cc312cb88259b894899f6f239cf1791a5",
+            "publicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAA6EHv/POEL4dcN0Y50vAmWfk1jCbpQ1fHdyGZBJVMbg=\n-----END PUBLIC KEY-----\n",
+            "signature": "prxbR0Pgdnb-KvCUl8kkXn7mQ7UsoKsYeYbd-0gQtnbF_02h9usnSZwa98EtwTQRNXR-uq31_Nw83i7Mfei4Dw"
+          }
+        },
+        "envelopeDigest": "64cdcbf74b583ddb0724c07e242fa4d7d11fd9bd321ba0c776cd57d8d40cd74c"
+      },
+      {
+        "id": "altered-signature",
+        "expect": "reject",
+        "stage": "signature",
+        "description": "First signature character changed",
+        "envelope": {
+          "payload": {
+            "schema": "kya.incident/v1",
+            "id": "public-vector:incident-1",
+            "subjectDigest": "512a57edcbac1c144eb03f54297513f41b6d7a71b0d40c160cb80e37daaba712",
+            "kind": "report",
+            "severity": "high",
+            "refId": null,
+            "reportedAt": "2026-10-14T09:00:00.000Z",
+            "detailsDigest": "b6257b8714ae2b4173f784481b1d698e37887058bb756dfbd1673573309c7f49"
+          },
+          "proof": {
+            "algorithm": "Ed25519",
+            "keyId": "a050837d85070582ccf7394b0988847cc312cb88259b894899f6f239cf1791a5",
+            "publicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAA6EHv/POEL4dcN0Y50vAmWfk1jCbpQ1fHdyGZBJVMbg=\n-----END PUBLIC KEY-----\n",
+            "signature": "orxbR0Pgdnb-KvCUl8kkXn7mQ7UsoKsYeYbd-0gQtnbF_02h9usnSZwa98EtwTQRNXR-uq31_Nw83i7Mfei4Dw"
+          }
+        },
+        "envelopeDigest": "8d977f3c254ab5988833de87ab217f91d8c223c20e2569e9cd04e42a5da797f2"
+      },
+      {
+        "id": "evidence-domain-signature",
+        "expect": "reject",
+        "stage": "signature",
+        "description": "Signature made over the evidence domain prefix reused as incident",
+        "envelope": {
+          "payload": {
+            "schema": "kya.incident/v1",
+            "id": "public-vector:incident-1",
+            "subjectDigest": "512a57edcbac1c144eb03f54297513f41b6d7a71b0d40c160cb80e37daaba712",
+            "kind": "report",
+            "severity": "high",
+            "refId": null,
+            "reportedAt": "2026-10-14T09:00:00.000Z",
+            "detailsDigest": "b6257b8714ae2b4173f784481b1d698e37887058bb756dfbd1673573309c7f49"
+          },
+          "proof": {
+            "algorithm": "Ed25519",
+            "keyId": "a050837d85070582ccf7394b0988847cc312cb88259b894899f6f239cf1791a5",
+            "publicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAA6EHv/POEL4dcN0Y50vAmWfk1jCbpQ1fHdyGZBJVMbg=\n-----END PUBLIC KEY-----\n",
+            "signature": "QvFFH232bLK_b8f4dS-OUOflw755gkFIq_2dVy1xWaInFy29hE9-2VRk4_kTgXgkJVQ37m_qeU6K4dOul6yYDg"
+          }
+        },
+        "envelopeDigest": "61613211cd0d606ef0297e660ee9bbdf74835b90cf2323ae72dad6faaa3c449d"
+      }
+    ]
   }
 }
