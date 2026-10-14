@@ -134,7 +134,7 @@ export function assess({manifest,profile,evidence,policy,evaluatorDigest,now = n
   const modes = new Set(chosen.map(e=>e.payload.source));
   const evidenceMode = modes.size===0 ? 'none' : modes.size>1 ? 'mixed' : [...modes][0];
   const report = {
-    schema:'kya.assessment/v1',subjectDigest,agentId:manifest.agent.id,agentName:manifest.agent.name,principalId:manifest.principal.id,scopeId:manifest.scope.id,
+    schema:'kya.assessment/v1',subjectDigest,scopeDigest:digest(manifest.scope),agentId:manifest.agent.id,agentName:manifest.agent.name,principalId:manifest.principal.id,scopeId:manifest.scope.id,
     profileDigest,profileId:profile.id,evaluatorDigest,policyDigest:digest(policy),evidenceBundleDigest:digest(capturedEvidence.map(e=>e.digest)),
     assessedAt:now,validUntil:new Date(Math.min(Date.parse(manifest.expiresAt),...chosen.map(e=>e.validUntil))).toISOString(),
     selectedRunId:selectedRun?.id ?? null,ambiguousRuns,decision,evidenceMode,score,coverage,independentCoverage,dimensions,checks,blockers,
@@ -155,7 +155,8 @@ export function verifyAssessment(report) {
 export function compareAssessments(left,right) {
   left=JSON.parse(canonical(left));right=JSON.parse(canonical(right));
   verifyAssessment(left); verifyAssessment(right);
-  for (const k of ['scopeId','profileDigest','evaluatorDigest','policyDigest','evidenceMode']) insist(left[k]===right[k],`Cannot compare different ${k}`);
+  hash(left.scopeDigest,'Left exact scope digest'); hash(right.scopeDigest,'Right exact scope digest');
+  for (const k of ['scopeId','scopeDigest','profileDigest','evaluatorDigest','policyDigest','evidenceMode']) insist(left[k]===right[k],`Cannot compare different ${k}`);
   insist(left.checks.length===right.checks.length && left.checks.every((c,i)=>c.id===right.checks[i].id && c.weight===right.checks[i].weight && ['pass','fail'].includes(c.status) && ['pass','fail'].includes(right.checks[i].status)),'Cannot compare incomplete or different check populations');
   return {schema:'kya.comparison/v1',left:left.reportDigest,right:right.reportDigest,scoreDelta:right.score.earned-left.score.earned,decisionChanged:left.decision!==right.decision,measurement:'same-policy evidence comparison; not a causal improvement claim'};
 }

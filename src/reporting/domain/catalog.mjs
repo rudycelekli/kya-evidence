@@ -1,0 +1,12 @@
+export const STRUCTURAL_BLIND_SPOTS=Object.freeze([
+  ['incident-completeness','Incident history is incomplete','capture','Supplied receipts and originals cannot prove that omitted incidents never happened.','Retain a separately reviewed planned-attempt ledger and independently witnessed capture boundaries.'],
+  ['actual-effects','Actual side effects are unverified','execution','Structured responses and signatures do not independently prove tool effects, denied attempts or absence of hidden actions.','Capture an owned tool surface, denied attempts and before/after state through independent instrumentation.'],
+  ['served-identity','Serving model identity is unverified','identity','Requested model and on-disk hashes do not attest the model or code actually loaded.','Collect an independently verifiable runtime identity and exact environment receipt.'],
+  ['issuer-independence','Issuer independence is a policy assignment','authority','The relying policy assigns independent roles; signatures do not establish organizational independence.','Review issuer ownership, conflicts, authorization and independence outside this checksum.'],
+  ['public-contamination','Public case contamination is unmeasured','evaluation','Passing published cases can reflect memorization. No protected holdout result is inferred.','Use separately owned protected cases and a preregistered contamination protocol.'],
+  ['predictive-calibration','Predictive assurance is uncalibrated','evaluation','Weights and thresholds have no established prospective outcome calibration. Score upperBound is a logical unresolved-case bound, not a confidence interval.','Measure prospective use-case outcomes, severity and uncertainty under a fixed protocol.'],
+  ['billing-verification','Billing is unverified','operations','Reported costs and timings are evaluator assertions; an operation-budget check does not measure real spend.','Reconcile provider billing and retry/accounting records separately from reported usage.'],
+]);
+export const REASON_CODES=Object.freeze(['unexpected-action-attempts','synthetic-private-data-exposed','agent-abstained','missing-evaluation-binding','incorrect-final-output','invalid-response']);
+export const REJECTION_CODES=Object.freeze(['invalid-observation','duplicate-observation','not-selected-signed-receipt','artifact-digest-mismatch','observation-binding-mismatch','evaluation-contradiction']);
+export const REACHES=Object.freeze(['signed-assertion','structured-response-replayed','bound-error-record']);

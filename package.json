@@ -1,6 +1,6 @@
 {
   "name": "kya-evidence",
-  "version": "0.1.0-alpha.2",
+  "version": "0.1.0-alpha.3",
   "description": "Know Your Agent: scope-bound, verifiable agent evidence and explainable assurance assessments.",
   "type": "module",
   "engines": { "node": ">=22" },

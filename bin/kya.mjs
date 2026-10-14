@@ -3,15 +3,20 @@ import { readFile, writeFile, mkdir, lstat } from 'node:fs/promises';
 import { resolve, join } from 'node:path';
 import { generateKeyPairSync } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
-import { assess, digest, hashBytes, keyId, signEvidence, parseJson, verifyEvidence, verifyAssessment, importDeclarations, createUniverse, forkUniverse, verifyUniverse, compareUniverses } from '../src/index.mjs';
+import { assess, digest, hashBytes, keyId, signEvidence, parseJson, verifyEvidence, verifyAssessment, importDeclarations, createUniverse, forkUniverse, verifyUniverse, compareUniverses, createDossier, verifyDossier, renderDossierMarkdown, renderDossierHtml, runOfflineBenchmarks, verifyBenchmarkRun, BENCHMARK_CATALOG } from '../src/index.mjs';
 import { inspectConfiguration } from '../src/identity/infrastructure/inspect.mjs';
 import { renderAssessment } from '../src/assessment/infrastructure/render.mjs';
 import { CORE_PROFILE, EVALUATOR_DIGEST, createReferenceAdapter, runConformance, probeRuntimes } from '../src/conformance/index.mjs';
 
-const HELP=`KYA Evidence 0.1.0-alpha.2 — Know Your Agent
+const HELP=`KYA Evidence 0.1.0-alpha.3 — Know Your Agent
 
   kya demo [--out DIRECTORY]
   kya benchmark [--out DIRECTORY]
+  kya diagnose [--mode careful|reckless|silent|gaming] --out DIRECTORY [--with-benchmarks true]
+  kya dossier --inputs FILE [--observations FILE] [--benchmarks FILE] --out DIRECTORY
+  kya dossier-verify --dossier FILE --inputs FILE [--observations FILE] [--benchmarks FILE]
+  kya bench [--now ISO] --out DIRECTORY
+  kya bench-verify FILE
   kya init DIRECTORY
   kya inspect DIRECTORY [--out FILE]
   kya probe [--out FILE]
@@ -51,6 +56,13 @@ async function reportDirectory(directory,report,inputs={}){
   for(const [name,value]of Object.entries(inputs))await saveJson(join(out,name+'.json'),value);
   return out;
 }
+async function dossierDirectory(directory,dossier){
+  const out=resolve(directory);await mkdir(out,{recursive:true,mode:0o700});
+  await saveJson(join(out,'dossier.json'),dossier);
+  await writeFile(join(out,'dossier.md'),renderDossierMarkdown(dossier),{flag:'wx',mode:0o600});
+  await writeFile(join(out,'dossier.html'),renderDossierHtml(dossier),{flag:'wx',mode:0o600});return out;
+}
+async function dossierOptions(flags){return{inputs:await jsonFile(flags.inputs),observations:flags.observations?await jsonFile(flags.observations):[],benchmarkRuns:flags.benchmarks?[await jsonFile(flags.benchmarks)]:[]};}
 export function starterManifest(now=new Date().toISOString(),mode='unmeasured'){
   return {schema:'kya.manifest/v1',agent:{id:'agent:'+mode,name:mode==='unmeasured'?'Unmeasured agent':'Synthetic '+mode+' fixture',version:'1'},principal:{id:'controller:local-fixture'},system:{harness:mode==='unmeasured'?'unverified':'kya-reference-fixture',harnessVersion:'1',model:'none',artifactDigest:hashBytes('synthetic-reference/v1'),configDigest:digest({mode}),tools:[{id:'local-file',version:'1',permissions:['read']}]},scope:{id:'local-readonly',purpose:'Local structured-action conformance checks',permissions:['read','write-local'],forbidden:['publish','spend','external-write','secret-read'],approvalRequired:['write-local']},issuedAt:new Date(Date.parse(now)-1000).toISOString(),expiresAt:new Date(Date.parse(now)+86_400_000).toISOString()};
 }
@@ -80,6 +92,25 @@ export async function main(argv=process.argv.slice(2)){
       const value={schema:'kya.fixture-benchmark/v1',at:now,fixtureOnly:true,commercialRuntimesMeasured:false,evaluatorDigest:EVALUATOR_DIGEST,profileDigest:digest(CORE_PROFILE),reports:results};
       if(flags.out){await saveJson(join(resolve(flags.out),'benchmark.json'),value);console.log(JSON.stringify({out:resolve(flags.out),fixtureOnly:true,results:results.map(r=>({agent:r.agentName,decision:r.decision,score:r.score.earned,coverage:r.coverage}))},null,2));}else console.log(JSON.stringify(value,null,2));
     }else console.log(JSON.stringify(flags.out?{out:resolve(flags.out),decision:results[0].decision,fixtureOnly:true,score:results[0].score}:results[0],null,2));
+  }else if(command==='diagnose'){
+    allow(flags,['mode','out','with-benchmarks']);need(flags,['out']);if(positional.length)throw Error('Unexpected positional argument');
+    const mode=flags.mode??'careful';if(!['careful','reckless','silent','gaming'].includes(mode)||flags['with-benchmarks']!==undefined&&!['true','false'].includes(flags['with-benchmarks']))throw Error('Unsupported fixture or benchmark option');
+    const now=new Date().toISOString(),keys=generateKeyPairSync('ed25519'),pem=keys.publicKey.export({type:'spki',format:'pem'}).toString(),x=await fixtureAssessment(mode,now,keys.privateKey,pem);
+    const inputs={manifest:x.manifest,profile:CORE_PROFILE,policy:x.policy,evidence:x.evidence,evaluatorDigest:EVALUATOR_DIGEST,now};
+    const benchmarkRuns=flags['with-benchmarks']==='true'?[await runOfflineBenchmarks({now})]:[];
+    const dossier=createDossier({inputs,observations:x.observations,benchmarkRuns}),out=await dossierDirectory(flags.out,dossier);
+    await saveJson(join(out,'inputs.json'),inputs);await saveJson(join(out,'observations.json'),x.observations);
+    if(benchmarkRuns.length)await saveJson(join(out,'benchmark-run.json'),benchmarkRuns[0]);
+    console.log(JSON.stringify({out,fixtureOnly:true,commercialRuntimesMeasured:false,decision:dossier.assessment.decision,strengths:dossier.strengths.length,failures:dossier.failureModes.length,blindSpots:dossier.blindSpots.length,dossierDigest:dossier.dossierDigest}));
+  }else if(command==='dossier'){
+    allow(flags,['inputs','observations','benchmarks','out']);need(flags,['inputs','out']);if(positional.length)throw Error('Unexpected positional argument');
+    const dossier=createDossier(await dossierOptions(flags)),out=await dossierDirectory(flags.out,dossier);console.log(JSON.stringify({out,decision:dossier.assessment.decision,dossierDigest:dossier.dossierDigest,authenticated:false}));
+  }else if(command==='dossier-verify'){
+    allow(flags,['dossier','inputs','observations','benchmarks']);need(flags,['dossier','inputs']);if(positional.length)throw Error('Unexpected positional argument');await emit(verifyDossier(await jsonFile(flags.dossier),await dossierOptions(flags)));
+  }else if(command==='bench'){
+    allow(flags,['now','out']);need(flags,['out']);if(positional.length)throw Error('Unexpected positional argument');const run=await runOfflineBenchmarks({now:flags.now??new Date().toISOString()}),out=resolve(flags.out);await mkdir(out,{recursive:true,mode:0o700});await saveJson(join(out,'benchmark-run.json'),run);await saveJson(join(out,'benchmark-catalog.json'),BENCHMARK_CATALOG);console.log(JSON.stringify({out,fixtureOnly:true,commercialRuntimesMeasured:false,summary:run.summary,runDigest:run.runDigest}));if(!run.summary.allPassed)process.exitCode=2;
+  }else if(command==='bench-verify'){
+    allow(flags,[]);if(positional.length!==1)throw Error('bench-verify requires FILE');const result=verifyBenchmarkRun(await jsonFile(positional[0]));await emit(result);if(!result.passed)process.exitCode=2;
   }else if(command==='init'){
     allow(flags,[]);if(positional.length!==1)throw Error('init requires DIRECTORY');const out=resolve(positional[0]);await mkdir(out,{recursive:true});
     await saveJson(join(out,'manifest.json'),starterManifest());await saveJson(join(out,'profile.json'),CORE_PROFILE);await saveJson(join(out,'policy.json'),relyingPolicy());await saveJson(join(out,'evidence.json'),[]);
