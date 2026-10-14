@@ -244,8 +244,22 @@
         "ADR-0014",
         "ADR-0017"
       ]
+    },
+    {
+      "id": "ADR-0023",
+      "title": "Declarative scenario suites and commit-reveal holdouts",
+      "status": "Implemented",
+      "file": "docs/adr/0023-scenario-suites-and-holdout-commitments.md",
+      "contentDigest": "224b9233597c4806eefe7fc3456710bdbfd54ad2878528e67207df5b9f2a6591",
+      "related": [
+        "ADR-0003",
+        "ADR-0010",
+        "ADR-0018",
+        "ADR-0019",
+        "ADR-0020"
+      ]
     }
   ],
-  "digest": "33ee47bb20c3cc76e14254dd20bc69271731369ca5ec1bd361016640fe26a4c2",
+  "digest": "cb6ba3d0c4e49a528fca4bcc00d7a43918590ec3b088f632753f67bb51920c21",
   "store": "portable local file; not a claim of AgentDB graph persistence"
 }
