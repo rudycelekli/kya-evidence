@@ -1,0 +1,198 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:kya-evidence:conformance-report:v1",
+  "title": "KYA Evidence conformance-report v1",
+  "description": "Structural schema only. Runtime validator additionally enforces key fingerprint, temporal ordering, uniqueness by ID, scope relations and canonical JSON resource limits.",
+  "type": "object",
+  "properties": {
+    "schema": {
+      "const": "kya.conformance-report/v1"
+    },
+    "implementation": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512,
+          "pattern": "^[^\\u0000-\\u001f\\u007f]+$"
+        },
+        "version": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[^\\u0000-\\u001f\\u007f]+$"
+        },
+        "language": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64,
+          "pattern": "^[^\\u0000-\\u001f\\u007f]+$"
+        },
+        "sourceDigest": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "declaredSubset": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "pattern": "^KYA-[A-Z]{3}-\\d{3}$"
+              },
+              "maxItems": 4096,
+              "uniqueItems": true
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "name",
+        "version",
+        "language",
+        "sourceDigest",
+        "declaredSubset"
+      ],
+      "additionalProperties": false
+    },
+    "registryDigest": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "runAt": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{3}Z$"
+    },
+    "results": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 4096,
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^KYA-[A-Z]{3}-\\d{3}$"
+          },
+          "result": {
+            "enum": [
+              "pass",
+              "fail",
+              "not-applicable",
+              "not-run"
+            ]
+          },
+          "evidence": {
+            "anyOf": [
+              {
+                "enum": [
+                  "executed-test",
+                  "portable-vector",
+                  "declaration"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "executed": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 512,
+              "pattern": "^[^\\u0000-\\u001f\\u007f]+$"
+            },
+            "maxItems": 256,
+            "uniqueItems": true
+          }
+        },
+        "required": [
+          "id",
+          "result",
+          "evidence",
+          "executed"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "summary": {
+      "type": "object",
+      "properties": {
+        "total": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "pass": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "fail": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "notApplicable": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "notRun": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "applicable": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "passPermille": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 1000
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "declarationEntries": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "total",
+        "pass",
+        "fail",
+        "notApplicable",
+        "notRun",
+        "applicable",
+        "passPermille",
+        "declarationEntries"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "schema",
+    "implementation",
+    "registryDigest",
+    "runAt",
+    "results",
+    "summary"
+  ],
+  "additionalProperties": false
+}
