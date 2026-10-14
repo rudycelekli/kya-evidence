@@ -96,4 +96,4 @@ Budget for two external reviews and a possible bounty; legal counsel for governa
 
 ## Tracking
 
-Status lives in this document's tables until a machine-readable ledger (`evidence/world-class-status.json`, with a CI rule that "verified" requires a linked evidence artifact) is built; that ledger is the first deliverable of Phase 0. Until then, no stream is described as complete.
+Status is tracked in [evidence/world-class-status.json](../evidence/world-class-status.json) and rendered to [WORLD-CLASS-STATUS.md](WORLD-CLASS-STATUS.md). `npm run check` fails if the ledger is invalid or out of date. The rules are enforced by `test/world-class-status.test.mjs`: an item is *verified* only with linked evidence of the right kind (a requirement, test or file for CI verification; a named outside party, an https link and a date for external review, independent implementation or real use), and work that needs an outside party cannot be marked verified on internal evidence. No stream is described as complete.
