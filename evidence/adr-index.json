@@ -70,9 +70,9 @@
     {
       "id": "ADR-0007",
       "title": "Native CLI output remains declaration evidence",
-      "status": "Implemented; independent review pending",
+      "status": "Implemented",
       "file": "docs/adr/0007-native-declaration-transports.md",
-      "contentDigest": "9e325fac31122fad644424ebe335e01d0bb866b55ea6be38d87b3481751116b8",
+      "contentDigest": "4d2d4be3bf9ce2794f40875f5b24543519f80af95f22eef1b094b40fdddebf4e",
       "related": [
         "ADR-0002",
         "ADR-0003",
@@ -92,6 +92,6 @@
       ]
     }
   ],
-  "digest": "082e06d2b0048d31c0ca85f81a281d0b420701804eae35c8a93fb62ddfd1852d",
+  "digest": "9125e1cb2746e40d93f28e0879c63f9985ad8be4cbb82db5f860551754fd56ef",
   "store": "portable local file; not a claim of AgentDB graph persistence"
 }

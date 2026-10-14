@@ -1,7 +1,8 @@
 # ADR-0007: Native CLI output remains declaration evidence
 
-**Status**: Implemented; independent review pending
-**Updated**: 2026-10-13 — Reserve lifetime attempt slots before asynchronous preflight, refuse simultaneous calls and bound native byte input before copying. Independent repair review follows.
+**Status**: Implemented
+**Updated**: 2026-10-13 — Reserve lifetime attempts before caller-controlled request capture, refuse simultaneous/reentrant calls and bound byte input before copying. Typed startup error diagnostics remain fatal.
+**Review**: Separate project-team lanes reproduced resource defects on frozen baseline/candidate cases and challenged diagnostic precedence. External certification remains open.
 **Date**: 2026-10-13
 **Related**: ADR-0002, ADR-0003, ADR-0004, ADR-0006
 
@@ -11,7 +12,7 @@ Claude Code and Codex CLI expose structured headless outputs, but an agent's ass
 
 ## Decision
 
-Add explicit opt-in command-plan builders, strict vendor parsers and native factories under the conformance subpath. Parse Claude single-result JSON or bounded event arrays and Codex exec JSONL. Preserve completed/failed events and byte-digest references without putting raw provider text in errors. Reject multiple final outputs, unsupported events, duplicate JSON, invalid UTF-8, resource overruns, failed turns and observed native tool attempts. Failed turns dominate polished final messages.
+Add explicit opt-in command-plan builders, strict vendor parsers and native factories under the conformance subpath. Parse Claude single-result JSON or bounded event arrays and Codex exec JSONL. Preserve completed/failed events and byte-digest references without putting raw provider text in errors. Reject multiple final outputs, unsupported events, duplicate JSON, invalid UTF-8, resource overruns, failed turns and observed native tool attempts. Failed turns and typed error diagnostics dominate polished final messages. Codex typed error items may precede a started turn after a thread begins; error prose or a conflicting warning severity cannot downgrade the failure. Unknown warning contracts remain unsupported.
 
 Native factories assign declaration provenance, including when a real process was observed. Their asserted actions cannot qualify the core assessment. Local parsed observations expose runtime status, sanitized event/tool references and raw-output hashes for authorized private retention; a hash does not prove original transcript possession or truthful execution. Nonzero process exit never qualifies.
 
@@ -35,6 +36,6 @@ Compatibility is version-specific and conservative. Unsupported transcripts and 
 
 ## Validation
 
-Synthetic transcript tests cover success/failure, failed-event dominance, hidden tool attempts, multiple finals, strict JSON/UTF-8, limits and source/type forgery. Independent controls detect actual parser-source mutations that disable failure/tool gates. Disposable Node children test bounded transport and nonzero failed-transcript preservation without invoking models. Plans are tested against authority-override injection and secret-environment inheritance. Global instruction/auth/schema preflights are tested with private disposable files. No live model/provider calls were performed by this implementation lane.
+Synthetic transcript tests cover success/failure, failed-event dominance, hidden tool attempts, multiple finals, strict JSON/UTF-8, limits and source/type forgery. Independent controls detect actual parser-source mutations that disable failure/tool gates. Disposable Node children test bounded transport and nonzero failed-transcript preservation without invoking models. Plans are tested against authority-override injection and secret-environment inheritance. Global instruction/auth/schema preflights are tested with private disposable files. No live model/provider calls were performed by this implementation lane. A separate two-attempt local subscription trial was provider-rejected, preserved both complete stdout originals, and earned zero coverage. Offline reanalysis under the repaired parser retains failed declaration status. Separate review used identical frozen resource cases and an independent 36-case error-position oracle; historical source and failures remain privately retained.
 
 Flag formats were checked against locally installed CLI help and the [Claude Code CLI reference](https://code.claude.com/docs/en/cli-reference) and [Codex CLI reference](https://developers.openai.com/codex/cli/reference). Current live capability remains subject to separate authorized measured runs and independent review.
