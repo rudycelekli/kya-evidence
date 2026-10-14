@@ -90,7 +90,7 @@ A fired trigger (`subject-changed`, `policy-changed`, `subject-revoked`, `assess
 - **Run a frozen campaign:** `kya campaign` records a signed, append-only planned-attempt ledger before any attempt runs, so a verifier who knows the intended ledger length or head digest sees unaccounted attempts in the denominator (a truncated or forked ledger is undetectable without an externally pinned head) ([ADR-0021](docs/adr/0021-capture-issuer-role-and-campaign-ledger.md)). It implements only the ledger slice of [ADR-0017](docs/adr/0017-measured-signed-capture-attestation.md); measured capture is not built.
 - **Carry results in W3C credentials:** `kya vc` exports an assessment as a VC 2.0 `vc+jwt` with Bitstring Status List revocation. It proves key possession, not truthful execution ([VC-BRIDGE.md](docs/VC-BRIDGE.md)).
 - **Beyond the 18 public checks:** [scenario suites](docs/SCENARIO-SUITES.md) with synthetic incident reconstructions and commit-reveal holdouts, outside the pinned core evaluator.
-- **Plan:** [WORLD-CLASS-PLAN.md](docs/WORLD-CLASS-PLAN.md) and [STANDARDIZATION-STRATEGY.md](docs/STANDARDIZATION-STRATEGY.md).
+- **Plan and status:** [WORLD-CLASS-PLAN.md](docs/WORLD-CLASS-PLAN.md), the checked [status ledger](docs/WORLD-CLASS-STATUS.md) and [STANDARDIZATION-STRATEGY.md](docs/STANDARDIZATION-STRATEGY.md).
 
 ## Evidence before reputation
 

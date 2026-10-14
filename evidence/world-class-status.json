@@ -1,0 +1,398 @@
+{
+  "schema": "kya.world-class-status/v1",
+  "updated": "2026-10-15",
+  "rule": "An item is verified only when linked evidence of the right kind exists: a requirement, test or file for CI verification, and a named outside party with an https link and a date for external review, independent implementation or real use. Work that needs an outside party cannot be marked verified on internal evidence.",
+  "streams": [
+    {
+      "id": "WS1",
+      "title": "Narrow, precise problem",
+      "items": [
+        {
+          "id": "WS1-01",
+          "title": "Problem statement and explicit non-goals",
+          "status": "in-progress",
+          "evidence": [
+            {
+              "type": "file",
+              "ref": "README.md"
+            },
+            {
+              "type": "file",
+              "ref": "docs/SPECIFICATION.md"
+            }
+          ],
+          "notes": "README states what this is not; no standalone one-page statement yet"
+        },
+        {
+          "id": "WS1-02",
+          "title": "Machine-readable claim-boundary codes on every artifact",
+          "status": "planned",
+          "evidence": []
+        },
+        {
+          "id": "WS1-03",
+          "title": "Comprehension test with three outside readers",
+          "status": "planned",
+          "evidence": [],
+          "needsOutside": true
+        }
+      ]
+    },
+    {
+      "id": "WS2",
+      "title": "Core plus profiles",
+      "items": [
+        {
+          "id": "WS2-01",
+          "title": "Conservative policy templates for three use cases",
+          "status": "implemented",
+          "evidence": [
+            {
+              "type": "test",
+              "ref": "test/policy-templates.test.mjs"
+            },
+            {
+              "type": "file",
+              "ref": "docs/POLICY-TEMPLATES.md"
+            }
+          ],
+          "notes": "thresholds are unvalidated starting points"
+        },
+        {
+          "id": "WS2-02",
+          "title": "Scenario suite family with synthetic incident reconstructions",
+          "status": "implemented",
+          "evidence": [
+            {
+              "type": "test",
+              "ref": "test/suites.test.mjs"
+            },
+            {
+              "type": "file",
+              "ref": "docs/adr/0023-scenario-suites-and-holdout-commitments.md"
+            }
+          ],
+          "notes": "no external fidelity review"
+        },
+        {
+          "id": "WS2-03",
+          "title": "Profile specification and registry rules",
+          "status": "planned",
+          "evidence": []
+        },
+        {
+          "id": "WS2-04",
+          "title": "Domain-expert sign-off for each flagship profile",
+          "status": "planned",
+          "evidence": [],
+          "needsOutside": true
+        }
+      ]
+    },
+    {
+      "id": "WS3",
+      "title": "Two independent implementations",
+      "items": [
+        {
+          "id": "WS3-01",
+          "title": "Golden assessment vectors for assessment semantics",
+          "status": "in-progress",
+          "evidence": [],
+          "notes": "Lane K"
+        },
+        {
+          "id": "WS3-02",
+          "title": "Byte-level canonical and signature vectors, JavaScript and Python",
+          "status": "verified",
+          "verifiedBy": "CI",
+          "evidence": [
+            {
+              "type": "requirement",
+              "ref": "KYA-INT-003"
+            },
+            {
+              "type": "requirement",
+              "ref": "KYA-INT-004"
+            }
+          ],
+          "notes": "team-built Python checker, restricted subset"
+        },
+        {
+          "id": "WS3-03",
+          "title": "Implementer's guide and language-neutral harness",
+          "status": "planned",
+          "evidence": []
+        },
+        {
+          "id": "WS3-04",
+          "title": "Two outside implementations pass all normative vectors",
+          "status": "planned",
+          "evidence": [],
+          "needsOutside": true
+        }
+      ]
+    },
+    {
+      "id": "WS4",
+      "title": "Neutral governance",
+      "items": [
+        {
+          "id": "WS4-01",
+          "title": "Draft charter, IPR, claims, versioning, extension and decision documents",
+          "status": "in-progress",
+          "evidence": [
+            {
+              "type": "file",
+              "ref": "docs/GOVERNANCE.md"
+            }
+          ],
+          "notes": "drafts for counsel, not adopted"
+        },
+        {
+          "id": "WS4-02",
+          "title": "Legal counsel review of IPR and trademark drafts",
+          "status": "planned",
+          "evidence": [],
+          "needsOutside": true
+        },
+        {
+          "id": "WS4-03",
+          "title": "Neutral home chosen and charter ratified by three independent organisations",
+          "status": "planned",
+          "evidence": [],
+          "needsOutside": true
+        }
+      ]
+    },
+    {
+      "id": "WS5",
+      "title": "Threat model and external security review",
+      "items": [
+        {
+          "id": "WS5-01",
+          "title": "Dependency-free property and fuzz test suite",
+          "status": "verified",
+          "verifiedBy": "CI",
+          "evidence": [
+            {
+              "type": "test",
+              "ref": "test/property-canonical.test.mjs"
+            },
+            {
+              "type": "test",
+              "ref": "test/property-assessment.test.mjs"
+            }
+          ]
+        },
+        {
+          "id": "WS5-02",
+          "title": "Mutation controls over security gates, run in CI",
+          "status": "verified",
+          "verifiedBy": "CI",
+          "evidence": [
+            {
+              "type": "file",
+              "ref": "scripts/mutation-check.mjs"
+            },
+            {
+              "type": "test",
+              "ref": "test/evaluator-identity.test.mjs"
+            }
+          ],
+          "notes": "targeted gates only"
+        },
+        {
+          "id": "WS5-03",
+          "title": "Formal threat model, cryptographic agility plan and supply-chain hardening",
+          "status": "in-progress",
+          "evidence": [
+            {
+              "type": "file",
+              "ref": "docs/THREAT-MODEL.md"
+            }
+          ]
+        },
+        {
+          "id": "WS5-04",
+          "title": "Two commissioned external reviews with retest",
+          "status": "planned",
+          "evidence": [],
+          "needsOutside": true
+        }
+      ]
+    },
+    {
+      "id": "WS6",
+      "title": "Interop with incumbents",
+      "items": [
+        {
+          "id": "WS6-01",
+          "title": "W3C VC 2.0 export with Bitstring Status List",
+          "status": "implemented",
+          "evidence": [
+            {
+              "type": "test",
+              "ref": "test/vc-bridge.test.mjs"
+            },
+            {
+              "type": "file",
+              "ref": "docs/adr/0022-vc-export-bridge.md"
+            }
+          ],
+          "notes": "not checked with an external VC library"
+        },
+        {
+          "id": "WS6-02",
+          "title": "in-toto predicate, OpenTelemetry conventions, OAuth and SPIFFE bindings, A2A and MCP metadata",
+          "status": "planned",
+          "evidence": []
+        },
+        {
+          "id": "WS6-03",
+          "title": "A third-party tool consumes each exported format",
+          "status": "planned",
+          "evidence": [],
+          "needsOutside": true
+        }
+      ]
+    },
+    {
+      "id": "WS7",
+      "title": "Regulator, auditor and insurer mapping",
+      "items": [
+        {
+          "id": "WS7-01",
+          "title": "KYC-to-agent control research note",
+          "status": "in-progress",
+          "evidence": [
+            {
+              "type": "file",
+              "ref": "docs/research/2026-10-14-kyc-to-kya-controls.md"
+            }
+          ],
+          "notes": "several primary texts still unfetched"
+        },
+        {
+          "id": "WS7-02",
+          "title": "Crosswalks to the EU AI Act, ISO/IEC 42001, NIST AI RMF and SOC 2",
+          "status": "planned",
+          "evidence": []
+        },
+        {
+          "id": "WS7-03",
+          "title": "Practitioner and legal review of each crosswalk",
+          "status": "planned",
+          "evidence": [],
+          "needsOutside": true
+        }
+      ]
+    },
+    {
+      "id": "WS8",
+      "title": "Assessor accountability and appeals",
+      "items": [
+        {
+          "id": "WS8-01",
+          "title": "Signed incident, resolution and appeal records",
+          "status": "implemented",
+          "evidence": [
+            {
+              "type": "test",
+              "ref": "test/incidents.test.mjs"
+            },
+            {
+              "type": "file",
+              "ref": "docs/adr/0014-signed-incident-and-appeal-records.md"
+            }
+          ],
+          "notes": "appeals are recorded but cannot reopen a resolution"
+        },
+        {
+          "id": "WS8-02",
+          "title": "Assessor independence criteria, conflict-of-interest records, accreditation",
+          "status": "planned",
+          "evidence": []
+        },
+        {
+          "id": "WS8-03",
+          "title": "Two assessors cross-assess one agent; an appeal is exercised end to end",
+          "status": "planned",
+          "evidence": [],
+          "needsOutside": true
+        }
+      ]
+    },
+    {
+      "id": "WS9",
+      "title": "Privacy by design",
+      "items": [
+        {
+          "id": "WS9-01",
+          "title": "Digest-only records with no personal-data fields",
+          "status": "in-progress",
+          "evidence": [
+            {
+              "type": "test",
+              "ref": "test/incidents.test.mjs"
+            }
+          ]
+        },
+        {
+          "id": "WS9-02",
+          "title": "Selective disclosure, DPIA template, automated personal-data leak check",
+          "status": "planned",
+          "evidence": []
+        },
+        {
+          "id": "WS9-03",
+          "title": "External privacy review and completed DPIA",
+          "status": "planned",
+          "evidence": [],
+          "needsOutside": true
+        }
+      ]
+    },
+    {
+      "id": "WS10",
+      "title": "Real usage data and a feedback loop",
+      "items": [
+        {
+          "id": "WS10-01",
+          "title": "Campaign harness with a signed planned-attempt ledger",
+          "status": "implemented",
+          "evidence": [
+            {
+              "type": "test",
+              "ref": "test/campaign-ledger.test.mjs"
+            },
+            {
+              "type": "file",
+              "ref": "docs/adr/0021-capture-issuer-role-and-campaign-ledger.md"
+            }
+          ],
+          "notes": "ledger slice of ADR-0017 only"
+        },
+        {
+          "id": "WS10-02",
+          "title": "Private campaign on three agent configurations",
+          "status": "planned",
+          "evidence": [],
+          "notes": "needs explicit owner go-ahead before any real vendor run"
+        },
+        {
+          "id": "WS10-03",
+          "title": "Three relying-party pilots with written case studies",
+          "status": "planned",
+          "evidence": [],
+          "needsOutside": true
+        },
+        {
+          "id": "WS10-04",
+          "title": "Pre-registered prospective calibration study design",
+          "status": "planned",
+          "evidence": []
+        }
+      ]
+    }
+  ]
+}
