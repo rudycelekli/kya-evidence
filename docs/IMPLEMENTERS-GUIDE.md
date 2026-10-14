@@ -92,3 +92,7 @@ A disagreement is a vector where your result differs from `expected`, or a requi
 ## Claiming conformance
 
 State: the implementation name, version and source digest; the vectors file digest; the harness version; the full report; and which requirements are `not-run` and why. Do not claim conformance to the standard, to Open-KYA, W3C VC, A2A or MCP, or independent review. A passing run claims only that those published vectors passed.
+
+## Second implementation findings
+
+A team-built second implementation (`interop/second-impl/`, not independent, written without reading the reference source) matches the decision and every semantic field of all 111 vectors and matches 43 of 111 byte for byte. The remaining digest gaps come from specification text that is missing: the blocker wording strings, the full `kya.currency/v1` result layout, the `evidenceBundleDigest` definition, the reason vocabulary for rejected evidence and ignored incidents, the blocker short circuit, future-dated recency, and validator grammars. See `interop/second-impl/AMBIGUITIES.md` for the vector-level table. Closing these gaps in `docs/SPECIFICATION.md` and `docs/SCORING.md` is open work.
