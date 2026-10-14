@@ -2,6 +2,7 @@
 import { readFile, writeFile, mkdir, lstat } from 'node:fs/promises';
 import { resolve, join } from 'node:path';
 import { generateKeyPairSync } from 'node:crypto';
+import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { assess, digest, hashBytes, keyId, signEvidence, parseJson, verifyEvidence, verifyAssessment, checkCurrency, importDeclarations, createUniverse, forkUniverse, verifyUniverse, compareUniverses, createDossier, verifyDossier, renderDossierMarkdown, renderDossierHtml, runOfflineBenchmarks, verifyBenchmarkRun, BENCHMARK_CATALOG } from '../src/index.mjs';
 import { inspectConfiguration } from '../src/identity/infrastructure/inspect.mjs';
@@ -24,6 +25,10 @@ const HELP=`KYA Evidence 0.1.0-alpha.3 — Know Your Agent
   kya assess --manifest FILE --profile FILE --policy FILE --evidence FILE --evaluator DIGEST [--now ISO] [--out DIRECTORY]
   kya currency --assessment FILE --manifest FILE --policy FILE [--incidents FILE] [--now ISO]
   kya verify FILE
+  kya check --assessment-inputs FILE [--incidents FILE] [--now ISO] [--fail-on MODE]   (CI gate; see docs/GITHUB-ACTION.md)
+  kya policy-init --template NAME --profile FILE --trust-key ROLE:PEM [--out FILE]   (see docs/POLICY-TEMPLATES.md)
+  kya campaign plan|run|verify-ledger|summary ...   (frozen campaigns with a signed ledger; ADR-0021)
+  kya vc did-key|export|verify|status-list ...   (W3C VC 2.0 bridge; docs/VC-BRIDGE.md)
   kya sign --input PAYLOAD --key PRIVATE_PEM [--out FILE]
   kya keygen DIRECTORY
   kya universe --inputs FILE --question TEXT [--out FILE]
@@ -77,8 +82,14 @@ async function fixtureAssessment(mode,now,privateKey,publicPem){
   const report=assess({manifest,profile:CORE_PROFILE,policy,evidence,evaluatorDigest:EVALUATOR_DIGEST,now});
   return {report,manifest,policy,evidence,observations:run.observations??run.results??[],run};
 }
+const DELEGATED=Object.freeze({check:'kya-check.mjs','policy-init':'kya-policy-init.mjs',campaign:'kya-campaign.mjs',vc:'kya-vc.mjs'});
 export async function main(argv=process.argv.slice(2)){
   if(!argv.length||argv[0]==='--help'||argv[0]==='help'){console.log(HELP);return;}
+  if(Object.hasOwn(DELEGATED,argv[0])){
+    // Standalone scripts own their flags, help and exit codes; this only forwards them.
+    const r=spawnSync(process.execPath,[fileURLToPath(new URL('../scripts/'+DELEGATED[argv[0]],import.meta.url)),...argv.slice(1)],{stdio:'inherit'});
+    process.exitCode=r.status??1;return;
+  }
   const command=argv[0],{positional,flags}=args(argv.slice(1));
   if(command==='demo'||command==='benchmark'){
     allow(flags,['out']);if(positional.length)throw Error('Unexpected positional argument');

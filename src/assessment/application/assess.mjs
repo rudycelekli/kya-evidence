@@ -35,6 +35,7 @@ export function assess({manifest,profile,evidence,policy,evaluatorDigest,now = n
       const e = verifyEvidence(capturedEvidence[index].data); p = e.payload;
       const k = trusted.get(e.keyId);
       insist(k,'Signer is not a relying-party trust anchor');
+      insist(k.role !== 'capture-issuer','A capture-issuer key cannot issue scoring evidence');
       insist(!subjectRevoked,'Subject is revoked'); insist(!subjectExpired,'Subject is expired'); insist(!subjectFuture,'Subject is not yet issued');
       insist(p.subjectDigest === subjectDigest,'Exact system digest differs');
       insist(p.scopeId === manifest.scope.id,'Evidence scope differs'); insist(p.profileDigest === profileDigest,'Frozen profile differs'); insist(p.evaluatorDigest === evaluatorDigest,'Evaluator digest differs');

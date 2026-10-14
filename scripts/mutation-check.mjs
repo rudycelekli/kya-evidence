@@ -39,17 +39,28 @@ const mutants=[
   ['report exit-code check removed',"else if (found[0].status === 'skip' || run.error || (run.exitCode !== 0 && !run.tests.some(x => x.status === 'fail'))) unknown = true;","else if (found[0].status === 'skip') unknown = true;",'src/conformance-report/report.mjs'],
   ['blocker-code critical count cross-check removed',"insist(c.filter(x => x === 'CRITICAL_CHECK_FAILED').length === failedCritical, 'Invalid blocker codes: critical failure count does not match the report checks');","",'src/assessment/application/codes.mjs'],
   ['unproven minimum named as failed',"else block('MANDATORY_MINIMUM_UNPROVEN',","else block('MANDATORY_MINIMUM_NOT_MET',",'src/assessment/application/assess.mjs'],
-  ['ambiguity judged only over live reports',"if ((counts.get(e.refId)??0)>1) ignored.push","if (targets.length>1) ignored.push",'src/assessment/application/currency.mjs']
+  ['ambiguity judged only over live reports',"if ((counts.get(e.refId)??0)>1) ignored.push","if (targets.length>1) ignored.push",'src/assessment/application/currency.mjs'],
+  ["ledger chain commitment removal","e.prevDigest !== previous","false","src/campaign/domain/ledger.mjs"],
+  ["ledger transition gate removal","if (!allowed.includes(state.status))","if (false)","src/campaign/domain/ledger.mjs"],
+  ["capture-issuer role requirement removal","anchor.role !== 'capture-issuer'","false","src/campaign/domain/ledger.mjs"],
+  ["unaccounted attempts leave denominator","planned: attempts.size","planned: attempts.size - open.length","src/campaign/domain/ledger.mjs"],
+  ["retry of non-errored attempt allowed","original.status !== 'errored' ||","false ||","src/campaign/domain/ledger.mjs"],
+  ["runner adapter source check removal","origin.source === declared.adapter.source &&","true &&","src/campaign/application/runner.mjs"],
+  ["runner adapter mode check removal","origin.mode === declared.adapter.mode","true","src/campaign/application/runner.mjs"],
+  ["private directory permission check removal","(stat.mode & 0o077) === 0","true","src/campaign/application/runner.mjs"],
+  ["bundle overwrite allowed","flag: 'wx'","flag: 'w'","src/campaign/application/runner.mjs"],
+  ["capture-issuer evidence-signer check removal","insist(!evidenceKeyIds.includes(id)","insist(true || !evidenceKeyIds.includes(id)","src/campaign/domain/roles.mjs"],
+  ["capture-issuer scoring evidence allowed","insist(k.role !== 'capture-issuer','A capture-issuer key cannot issue scoring evidence');","","src/assessment/application/assess.mjs"]
 ];
 const results=[];
 function failedNames(output){return [...output.matchAll(/^not ok \d+ - (.+)$/gm)].map(m=>m[1]).slice(0,5);}
 function counts(output){const get=name=>Number(new RegExp(`^# ${name} (\\d+)$`,'m').exec(output)?.[1]??NaN);return{tests:get('tests'),pass:get('pass'),fail:get('fail'),cancelled:get('cancelled'),skipped:get('skipped')};}
-function runTests(dir){const p=spawnSync(process.execPath,['--test','--test-reporter=tap','test/assessment.test.mjs','test/incidents.test.mjs','test/refusal-codes.test.mjs','test/mandatory-minimums.test.mjs','test/conformance-report.test.mjs'],{cwd:dir,encoding:'utf8',timeout:90000,maxBuffer:200000});if(p.error||p.signal)throw Error('Mutation test execution failed');return{process:p,counts:counts(p.stdout)};}
+function runTests(dir){const p=spawnSync(process.execPath,['--test','--test-reporter=tap','test/assessment.test.mjs','test/incidents.test.mjs','test/refusal-codes.test.mjs','test/mandatory-minimums.test.mjs','test/conformance-report.test.mjs','test/campaign-ledger.test.mjs','test/campaign-runner.test.mjs','test/capture-issuer-scoring.test.mjs'],{cwd:dir,encoding:'utf8',timeout:90000,maxBuffer:200000});if(p.error||p.signal)throw Error('Mutation test execution failed');return{process:p,counts:counts(p.stdout)};}
 for(const [name,from,to,target=source]of mutants){
   const base=target===source?original:await readFile(join(root,target),'utf8');
   if(!base.includes(from))throw Error('Mutation anchor drift: '+name);
   const dir=await mkdtemp(join(tmpdir(),'kya-mutant-'));
-  try{await cp(join(root,'src'),join(dir,'src'),{recursive:true});await cp(join(root,'test'),join(dir,'test'),{recursive:true});await cp(join(root,'package.json'),join(dir,'package.json'));await cp(join(root,'profiles'),join(dir,'profiles'),{recursive:true});for(const extra of ['dashboard','docs','schemas','scripts','evidence'])await cp(join(root,extra),join(dir,extra),{recursive:true});
+  try{await cp(join(root,'src'),join(dir,'src'),{recursive:true});await cp(join(root,'test'),join(dir,'test'),{recursive:true});await cp(join(root,'package.json'),join(dir,'package.json'));await cp(join(root,'profiles'),join(dir,'profiles'),{recursive:true});for(const extra of ['dashboard','docs','schemas','scripts','evidence','examples','suites','policies','action'])await cp(join(root,extra),join(dir,extra),{recursive:true});
     const baseline=runTests(dir);if(baseline.process.status!==0||!Number.isSafeInteger(baseline.counts.tests)||baseline.counts.tests<1||baseline.counts.fail!==0||baseline.counts.cancelled!==0||baseline.counts.skipped!==0)throw Error('Mutation baseline did not run cleanly: '+name);
     const mutated=base.replace(from,to);await writeFile(join(dir,target),mutated);const candidate=runTests(dir);
     if(candidate.counts.tests!==baseline.counts.tests||candidate.counts.cancelled!==0||candidate.counts.skipped!==0)throw Error('Mutant did not exercise identical complete test population: '+name);
