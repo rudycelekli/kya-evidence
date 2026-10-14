@@ -1,6 +1,6 @@
 import { createHmac, createPublicKey } from 'node:crypto';
 import { gzipSync, gunzipSync } from 'node:zlib';
-import { hash, timestamp } from '../identity/domain/services/validation.mjs';
+import { hash, validatePolicy } from '../identity/domain/services/validation.mjs';
 import { b64u } from './encoding.mjs';
 import { fail, signCompact, privateKeyObject, VcBridgeError } from './jws.mjs';
 import { openCredential, checkTime, VC_CONTEXT } from './open.mjs';
@@ -44,13 +44,16 @@ export function buildStatusListCredential({ issuerKey, id, purpose, indices, val
   if (size < MIN_STATUS_ENTRIES) fail('STATUS_LIST_INVALID', `Status list must have at least ${MIN_STATUS_ENTRIES} entries for herd privacy`);
   if (typeof id !== 'string' || !/^https?:\/\/\S+$/.test(id)) fail('STATUS_LIST_INVALID', 'id must be the URL where the list will be published (never fetched here)');
   const from = checkTime(validFrom, 'validFrom');
-  if (validUntil !== undefined && checkTime(validUntil, 'validUntil') <= from) fail('STATUS_LIST_INVALID', 'validUntil must follow validFrom');
+  // A list with no end of validity can never be recognised as stale, so a list that predates a revocation would stay acceptable forever.
+  if (validUntil === undefined) fail('STATUS_LIST_INVALID', 'validUntil is required so that a stale list can be refused');
+  if (checkTime(validUntil, 'validUntil') <= from) fail('STATUS_LIST_INVALID', 'validUntil must follow validFrom');
+  if (ttl !== undefined && !(Number.isSafeInteger(ttl) && ttl > 0)) fail('STATUS_LIST_INVALID', 'ttl must be a positive integer number of milliseconds');
   const bits = createBitstring(size);
   for (const i of indices) setBit(bits, i);
   const issuer = didKeyFromPublicKey(createPublicKey(privateKeyObject(issuerKey)));
   const credential = {
     '@context': [VC_CONTEXT], id, type: ['VerifiableCredential', 'BitstringStatusListCredential'], issuer, validFrom,
-    ...(validUntil === undefined ? {} : { validUntil }),
+    validUntil,
     credentialSubject: { id: `${id}#list`, type: 'BitstringStatusList', statusPurpose: purpose, encodedList: encodeList(bits), ...(ttl === undefined ? {} : { ttl }) }
   };
   return { jwt: signCompact(credential, issuerKey).token, credential, issuer };
@@ -73,11 +76,16 @@ export function checkStatus(listJwt, entry, { now, expectedIssuerKeys = [], mini
     try { return openCredential(listJwt, { now, expectedIssuerKeys }); }
     catch (e) {
       if (e.code === 'ISSUER_NOT_EXPECTED') fail('STATUS_VERIFICATION_ERROR', 'Status list issuer is not an expected issuer');
-      if (e.code === 'EXPIRED' || e.code === 'NOT_YET_VALID') fail('STATUS_VERIFICATION_ERROR', 'Status list is outside its validity window');
+      if (e.code === 'EXPIRED') fail('STATUS_LIST_EXPIRED', 'Status list has expired; a stale list may predate a revocation');
+      if (e.code === 'NOT_YET_VALID') fail('STATUS_VERIFICATION_ERROR', 'Status list is outside its validity window');
       throw e;
     }
   });
   const c = opened.credential;
+  if (c.validUntil === undefined) fail('STATUS_LIST_NO_EXPIRY', 'Status list has no validUntil; freshness cannot be enforced');
+  const ttl = c.credentialSubject?.ttl;
+  if (ttl !== undefined && !(Number.isSafeInteger(ttl) && ttl > 0)) fail('STATUS_VERIFICATION_ERROR', 'Status list ttl is malformed');
+  if (ttl !== undefined && checkTime(now, 'now') >= Date.parse(c.validFrom) + ttl) fail('STATUS_LIST_EXPIRED', 'Status list ttl has elapsed; refetch a fresh list');
   if (!c.type?.includes?.('BitstringStatusListCredential') || c.credentialSubject?.type !== 'BitstringStatusList') fail('STATUS_VERIFICATION_ERROR', 'Not a BitstringStatusListCredential');
   const url = expectedUrl ?? entry.statusListCredential;
   if (c.id !== url) fail('STATUS_VERIFICATION_ERROR', 'Status list credential id differs from the entry statusListCredential URL');
@@ -115,7 +123,10 @@ export function allocateStatusIndices({ secret, reportDigest, ledger, size = MIN
 }
 
 /** KYA revocation to status bits: a credential is revoked when its subject digest or any evidence ID it selected is revoked by policy. */
-export function revokedLedgerEntries(ledger, { revokedSubjectDigests, revokedEvidenceIds }) {
+export function revokedLedgerEntries(ledger, policy) {
+  // A missing or junk policy must never read as "nothing is revoked".
+  const { revokedSubjectDigests, revokedEvidenceIds } = validatePolicy(policy);
+  if (!Array.isArray(ledger) || !ledger.every(e => e && typeof e === 'object' && /^[a-f0-9]{64}$/.test(e.reportDigest) && /^[a-f0-9]{64}$/.test(e.subjectDigest) && Array.isArray(e.evidenceIds) && e.indices && Number.isSafeInteger(e.indices.revocation) && Number.isSafeInteger(e.indices.suspension))) fail('STATUS_INDEX_INVALID', 'Malformed ledger');
   const subjects = new Set(revokedSubjectDigests), evidence = new Set(revokedEvidenceIds);
   return ledger.filter(e => subjects.has(e.subjectDigest) || e.evidenceIds.some(x => evidence.has(x)));
 }

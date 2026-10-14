@@ -10,9 +10,9 @@ const HELP = `kya-vc: export KYA assessments as W3C VC 2.0 (vc+jwt, EdDSA, did:k
   kya-vc did-key --key PRIVATE_PEM | --public PUBLIC_PEM
   kya-vc export --assessment FILE --key PRIVATE_PEM [--valid-from ISO] [--valid-until ISO] [--out FILE]
                 [--revocation-list URL --suspension-list URL --status-secret-file FILE --ledger FILE]
-  kya-vc verify --jwt FILE --now ISO [--trust-did DID]... [--policy FILE] [--status-list URL=FILE]... [--require-status]
+  kya-vc verify --jwt FILE --now ISO [--trust-did DID]... [--policy FILE] [--status-list URL=FILE]... [--require-status] [--report FILE]
   kya-vc status-list --purpose revocation|suspension --url URL --ledger FILE --policy FILE --key PRIVATE_PEM
-                --now ISO [--suspended-subject DIGEST]... [--size N] [--out FILE]
+                --now ISO --valid-until ISO [--ttl-ms N] [--suspended-subject DIGEST]... [--size N] [--out FILE]
 
 A valid signature proves key possession, not truthful execution, human identity or authorization.
 `;
@@ -65,17 +65,17 @@ async function main() {
     need(f, 'jwt', 'now');
     const statusLists = {};
     for (const spec of f['status-list'] ?? []) { const i = spec.indexOf('='); if (i < 1) throw Error('--status-list needs URL=FILE'); statusLists[spec.slice(0, i)] = (await readFile(spec.slice(i + 1), 'utf8')).trim(); }
-    const result = verifyAssessmentCredential((await readFile(f.jwt, 'utf8')).trim(), { now: f.now, expectedIssuerKeys: f['trust-did'] ?? [], policy: f.policy ? await readJson(f.policy) : undefined, statusLists, requireStatusCheck: f['require-status'] === true });
+    const result = verifyAssessmentCredential((await readFile(f.jwt, 'utf8')).trim(), { now: f.now, expectedIssuerKeys: f['trust-did'] ?? [], policy: f.policy ? await readJson(f.policy) : undefined, statusLists, requireStatusCheck: f['require-status'] === true, ...(f.report ? { report: await readJson(f.report) } : {}) });
     await out(f, result);
     return result.valid ? 0 : 1;
   }
   if (cmd === 'status-list') {
-    need(f, 'purpose', 'url', 'ledger', 'policy', 'key', 'now');
+    need(f, 'purpose', 'url', 'ledger', 'policy', 'key', 'now', 'valid-until');
     const ledger = await readJson(f.ledger), policy = await readJson(f.policy);
     const hit = revokedLedgerEntries(ledger, policy);
     const suspended = new Set(f['suspended-subject'] ?? []);
     const chosen = f.purpose === 'revocation' ? hit : f.purpose === 'suspension' ? ledger.filter(e => suspended.has(e.subjectDigest)) : (() => { throw Error('--purpose must be revocation or suspension'); })();
-    const built = buildStatusListCredential({ issuerKey: createPrivateKey(await readFile(f.key)), id: f.url, purpose: f.purpose, indices: chosen.map(e => e.indices[f.purpose]), validFrom: f.now, ...(f.size ? { size: Number(f.size) } : {}) });
+    const built = buildStatusListCredential({ issuerKey: createPrivateKey(await readFile(f.key)), id: f.url, purpose: f.purpose, indices: chosen.map(e => e.indices[f.purpose]), validFrom: f.now, validUntil: f['valid-until'], ...(f['ttl-ms'] ? { ttl: Number(f['ttl-ms']) } : {}), ...(f.size ? { size: Number(f.size) } : {}) });
     if (f.out) { await writeFile(f.out, built.jwt + '\n'); await out({}, { out: f.out, purpose: f.purpose, setBits: chosen.length, issuer: built.issuer }); }
     else process.stdout.write(built.jwt + '\n');
     return 0;

@@ -104,5 +104,8 @@ Each requirement is traced to at least one test that must exist exactly once; th
 | KYA-CMP-016 | MUST | Ledger verification MUST require a capture-issuer policy or an explicit trust flag, MUST bind the supplied policy digest to the plan, and MUST report when the signer was not checked. | `campaign-ledger.test.mjs` |
 | KYA-CMP-017 | MUST | The campaign runner MUST refuse a private directory reached through a symlink into the repository and MUST refuse a signer that is not a capture issuer under the supplied policy. | `campaign-runner.test.mjs` |
 | KYA-CMP-018 | MUST | The campaign CLI MUST exit non-zero when an attempt ended errored or unaccounted, and MUST honour pinned head and entry-count expectations. | `campaign-runner.test.mjs` |
+| KYA-VCB-012 | MUST | Raw Ed25519 public keys MUST be rejected when non-canonical, off the curve or of small order, wherever a did:key or JWS verification key is admitted, so an identity-key forgery MUST NOT verify. | `vc-bridge.test.mjs` |
+| KYA-VCB-013 | MUST | A status list MUST carry validUntil, an expired or no-expiry list MUST be refused and reported distinctly, and revocation mapping MUST validate its policy and ledger and MUST NOT treat a junk policy as an empty revocation set. | `vc-bridge.test.mjs` |
+| KYA-VCB-014 | MUST | When the source report is supplied, verification MUST compare the credential to it field by field and MUST report any difference, and without the report the result MUST NOT claim more than internal consistency. | `vc-bridge.test.mjs` |
 
-Registry digest: `40bbad52443f06fe93d3b7a8ad86c6214b181adbf83dc3b5aedd2167589b2470`
+Registry digest: `b9dfc7cbac0dd3f359c19104f46c2466e322d151be3ed54030e21ea72caed560`

@@ -1956,6 +1956,61 @@
           "title": "campaign CLI exits 2 when an attempt is errored or unaccounted and pins head and entry count"
         }
       ]
+    },
+    {
+      "id": "KYA-VCB-012",
+      "level": "MUST",
+      "area": "vcb",
+      "section": "Records and bindings",
+      "statement": "Raw Ed25519 public keys MUST be rejected when non-canonical, off the curve or of small order, wherever a did:key or JWS verification key is admitted, so an identity-key forgery MUST NOT verify.",
+      "tests": [
+        {
+          "file": "test/vc-bridge.test.mjs",
+          "title": "small order and non canonical ed25519 public keys are rejected in did key decoding"
+        },
+        {
+          "file": "test/vc-bridge.test.mjs",
+          "title": "identity key forgery with base point R and S equal one is refused by credential and status list verification"
+        }
+      ]
+    },
+    {
+      "id": "KYA-VCB-013",
+      "level": "MUST",
+      "area": "vcb",
+      "section": "Records and bindings",
+      "statement": "A status list MUST carry validUntil, an expired or no-expiry list MUST be refused and reported distinctly, and revocation mapping MUST validate its policy and ledger and MUST NOT treat a junk policy as an empty revocation set.",
+      "tests": [
+        {
+          "file": "test/vc-bridge.test.mjs",
+          "title": "status lists must carry validUntil and an expired or stale list is reported as STATUS_LIST_EXPIRED"
+        },
+        {
+          "file": "test/vc-bridge.test.mjs",
+          "title": "credential verification reports an expired status list distinctly and a stale list never counts as checked"
+        },
+        {
+          "file": "test/vc-bridge.test.mjs",
+          "title": "revokedLedgerEntries validates the policy and the ledger and rejects junk"
+        },
+        {
+          "file": "test/vc-bridge.test.mjs",
+          "title": "status-list CLI refuses an empty policy and a missing valid until and signs a bounded list otherwise"
+        }
+      ]
+    },
+    {
+      "id": "KYA-VCB-014",
+      "level": "MUST",
+      "area": "vcb",
+      "section": "Records and bindings",
+      "statement": "When the source report is supplied, verification MUST compare the credential to it field by field and MUST report any difference, and without the report the result MUST NOT claim more than internal consistency.",
+      "tests": [
+        {
+          "file": "test/vc-bridge.test.mjs",
+          "title": "verification with the source report cross checks mode decision and digests and exposes a re-signed edit"
+        }
+      ]
     }
   ]
 }

@@ -12,7 +12,7 @@ A `KyaAssessmentCredential` states that an issuer holding one Ed25519 key signed
 - **No authorization.** A `qualified` decision is a local policy result, not a grant, and not a credit score for a person.
 - **Signature is not truth.** A valid signature proves possession of the issuer key and integrity of the bytes. `verifyAssessmentCredential` always returns `authenticated: false`.
 - **Issuer trust is policy-relative.** With no expected keys and no policy, `issuerTrust` is `unchecked`. `expected` means the issuer matched keys the caller named; `anchored` means it is a non-revoked trust anchor of a supplied KYA policy. Neither means the issuer is honest.
-- **Fixture stays fixture.** There is no option to set the evidence mode. Export refuses a report whose mode and fixture limitation disagree, and the verifier rejects a credential edited to say `runtime` even if re-signed by the same key.
+- **Fixture stays fixture, up to what is checked.** There is no export option to set the evidence mode, and export refuses a report whose mode and fixture limitation disagree. Without the source report the verifier checks only internal consistency: it rejects a credential whose mode and fixture limitation disagree, but a holder of the issuer key can change `evidenceMode` to `runtime`, delete the fixture limitation, re-sign, and the result still verifies as valid (with `authenticated: false`). To catch that, pass the original `kya.assessment/v1` report (`report` option, CLI `--report FILE`): the credential is then compared field by field (mode, decision, score, coverage, all digests, limitations, blocker codes, evidence digests, validity bounds) and any difference is `REPORT_MISMATCH`; a report that fails its own digest check is `REPORT_INVALID`. The result carries `reportChecked`. Without the report, treat the credential as exactly what the issuer key holder said.
 - **Not Data Integrity, not JCS.** KYA canonical JSON is not RFC 8785. It is used only so the JWS bytes are deterministic.
 
 ## Format
@@ -42,7 +42,11 @@ The inline context `{"@vocab":"urn:kya:vocab:v1:"}` only gives KYA terms an IRI.
 
 ## Revocation: Bitstring Status List
 
-`buildStatusListCredential` writes a `BitstringStatusListCredential` (`credentialSubject.type: BitstringStatusList`, `statusPurpose`, `encodedList`), secured the same way. Lists have at least 131,072 entries (16 KiB), index 0 is the leftmost bit, encoding is GZIP then multibase base64url with prefix `u`. `checkStatus` verifies the list, matches the purpose, enforces the minimum length, range-checks the index and decompresses with a 2 MiB ceiling (the specification sets none). `statusSize` other than 1 and purposes other than `revocation` and `suspension` are refused.
+`buildStatusListCredential` writes a `BitstringStatusListCredential` (`credentialSubject.type: BitstringStatusList`, `statusPurpose`, `encodedList`), secured the same way. Lists have at least 131,072 entries (16 KiB), index 0 is the leftmost bit, encoding is GZIP then multibase base64url with prefix `u`. `checkStatus` verifies the list, matches the purpose, enforces the minimum length, range-checks the index and decompresses with a 2 MiB ceiling (the specification sets none). **Freshness.** A list must carry `validUntil` (the builder and CLI require it) and may carry `ttl` in milliseconds from `validFrom`. `checkStatus` refuses a list with no `validUntil` (`STATUS_LIST_NO_EXPIRY`) and an expired list or one past its `ttl` (`STATUS_LIST_EXPIRED`, reported distinctly, and the status then counts as not checked). Otherwise a stale list that predates a revocation would stay acceptable forever. The `ttl` use here (a hard staleness limit) is this project's reading of the spec's refetch hint. `revokedLedgerEntries` and the CLI validate the policy with `validatePolicy`, so an empty or junk policy is an error rather than an empty revocation set.
+
+**Keys.** Every raw Ed25519 key admitted from a did:key or used to verify a JWS is decoded and checked with BigInt arithmetic (RFC 8032 point decoding): non-canonical `y`, points not on the curve and small-order points (8P is the identity) are refused. This closes the identity-key forgery in which an all-zero-order key accepts a signature over any payload. Mixed-order points that are not small-order are not separately rejected.
+
+`statusSize` other than 1 and purposes other than `revocation` and `suspension` are refused.
 
 **Index assignment.** `index = HMAC-SHA256(secret, "kya.vc.status-index/v1\n" + purpose + "\n" + reportDigest + "\n" + counter) mod size`, with the counter stepped up past indices the issuer ledger already holds. Earlier entries never move. The key is the report digest of the credential, not the subject digest, and the secret (at least 32 bytes) stays with the issuer, so a reader of the list cannot link a set bit to a subject. The issuer ledger holds report digest, subject digest, selected evidence IDs and indices.
 
@@ -54,8 +58,8 @@ The inline context `{"@vocab":"urn:kya:vocab:v1:"}` only gives KYA terms an IRI.
 kya-vc did-key --key PRIVATE_PEM | --public PUBLIC_PEM
 kya-vc export --assessment FILE --key PRIVATE_PEM [--valid-from ISO] [--valid-until ISO] [--out FILE]
               [--revocation-list URL --suspension-list URL --status-secret-file FILE --ledger FILE]
-kya-vc verify --jwt FILE --now ISO [--trust-did DID]... [--policy FILE] [--status-list URL=FILE]... [--require-status]
-kya-vc status-list --purpose revocation|suspension --url URL --ledger FILE --policy FILE --key PRIVATE_PEM --now ISO [--suspended-subject DIGEST]... [--size N] [--out FILE]
+kya-vc verify --jwt FILE --now ISO [--trust-did DID]... [--policy FILE] [--status-list URL=FILE]... [--require-status] [--report FILE]
+kya-vc status-list --purpose revocation|suspension --url URL --ledger FILE --policy FILE --key PRIVATE_PEM --now ISO --valid-until ISO [--ttl-ms N] [--suspended-subject DIGEST]... [--size N] [--out FILE]
 ```
 
 `verify` exits 0 when valid, 1 when not, 2 on a usage error.

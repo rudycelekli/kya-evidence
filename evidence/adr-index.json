@@ -267,7 +267,7 @@
       "title": "W3C VC 2.0 export bridge for assessment results",
       "status": "Implemented",
       "file": "docs/adr/0022-vc-export-bridge.md",
-      "contentDigest": "34b8bda711228e72ecdde78fcc6b73ae35f0c3163a1c068f1299586357d1d639",
+      "contentDigest": "45a5b9a7eed2f9fe4311849720567e7c89f65989f51e6d778664e669e13969cd",
       "related": [
         "ADR-0002",
         "ADR-0003",
@@ -290,6 +290,6 @@
       ]
     }
   ],
-  "digest": "bfe13bc41f95645baed0f70b524ccddfb239cbc5ab3581db5821cde3c690475f",
+  "digest": "3bb1535e289f016556fcaf95b9af3d53a6aa37d401390b6b4cba72d3c12ea356",
   "store": "portable local file; not a claim of AgentDB graph persistence"
 }
