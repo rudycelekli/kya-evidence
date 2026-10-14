@@ -1,0 +1,26 @@
+# Example workflow: gate a pull request on a KYA policy.
+# Copy to .github/workflows/kya-check.yml in the repository that holds your agent's KYA inputs.
+# OWNER/kya-evidence and COMMIT_SHA are placeholders: pin a full commit SHA you have reviewed.
+name: kya-check
+on:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  kya-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fix the clock once so the result is reproducible and recorded
+        run: echo "KYA_NOW=$(date -u +%Y-%m-%dT%H:%M:%S.000Z)" >> "$GITHUB_ENV"
+      - name: KYA check
+        id: kya
+        uses: OWNER/kya-evidence/action@COMMIT_SHA
+        with:
+          # One JSON file: manifest, profile, policy, evidence, evaluatorDigest.
+          assessment-inputs: kya/inputs.json
+          # incidents: kya/incidents.json
+          now: ${{ env.KYA_NOW }}
+          fail-on: unreliable
+      # Alternative without the action: check out kya-evidence next to your code and run
+      #   node kya-evidence/scripts/kya-check.mjs --assessment-inputs kya/inputs.json --now "$KYA_NOW"
