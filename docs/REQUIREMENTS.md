@@ -131,5 +131,6 @@ Each requirement is traced to at least one test that must exist exactly once; th
 | KYA-VEC-006 | MUST | The harness conformance report MUST mark a requirement pass only if all vectors citing it passed, fail if any failed, and not-run otherwise, using the portable-vector evidence class with vector IDs as executed IDs. | `assessment-vectors.test.mjs` |
 | KYA-VEC-007 | MUST | A deliberately weakened implementation, with one gate removed, MUST fail specific vectors and MUST NOT appear as pass for the requirement that gate enforces. | `assessment-vectors.test.mjs` |
 | KYA-VEC-008 | MUST NOT | A semantic-only run, which ignores digests, MUST NOT record any requirement as pass, and a vectors file with an unknown requirement, a duplicate ID or a foreign schema MUST be refused. | `assessment-vectors.test.mjs` |
+| KYA-VEC-009 | SHOULD | A team-built second implementation of assessment and currency semantics SHOULD reproduce the decision and every semantic field of all published assessment vectors, and any gap between its output and the byte-exact digests MUST be documented rather than hidden. It is not an independent implementation and MUST NOT be described as one. | `second-impl.test.mjs` |
 
-Registry digest: `f8bd9dbf6add97ceb6dee819dc5cdd1b653ad3f71d623708e42ad954984439a3`
+Registry digest: `5efb9c7c6a6f50de46da8ffc0f33aac8204b319fb5edb41c82344b6e64b5724d`

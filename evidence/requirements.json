@@ -2431,6 +2431,27 @@
           "title": "the harness rejects a vectors file with an unknown requirement or a duplicate vector ID"
         }
       ]
+    },
+    {
+      "id": "KYA-VEC-009",
+      "level": "SHOULD",
+      "area": "vectors",
+      "section": "Interoperability and versioning",
+      "statement": "A team-built second implementation of assessment and currency semantics SHOULD reproduce the decision and every semantic field of all published assessment vectors, and any gap between its output and the byte-exact digests MUST be documented rather than hidden. It is not an independent implementation and MUST NOT be described as one.",
+      "tests": [
+        {
+          "file": "test/second-impl.test.mjs",
+          "title": "second implementation matches the decision and every semantic field of all 111 vectors"
+        },
+        {
+          "file": "test/second-impl.test.mjs",
+          "title": "second implementation refuses every refusal vector and never crashes on an accepted vector"
+        },
+        {
+          "file": "test/second-impl.test.mjs",
+          "title": "second implementation digest failures are limited to the two digest fields and are listed honestly"
+        }
+      ]
     }
   ]
 }
