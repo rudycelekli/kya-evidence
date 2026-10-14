@@ -21,6 +21,7 @@
     "test:mutations": "node scripts/mutation-check.mjs",
     "requirements": "node scripts/requirements.mjs",
     "adr:index": "node scripts/adr-index.mjs",
+    "sbom": "node scripts/sbom.mjs",
     "conformance-report": "node scripts/conformance-report.mjs",
     "campaign": "node scripts/kya-campaign.mjs",
     "check:agent": "node scripts/kya-check.mjs",

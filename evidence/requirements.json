@@ -2211,6 +2211,82 @@
           "title": "every ADR has the five required sections and a Status line"
         }
       ]
+    },
+    {
+      "id": "KYA-SUP-001",
+      "level": "MUST",
+      "area": "release",
+      "section": "Interoperability and versioning",
+      "statement": "The SBOM generator MUST be deterministic for a given commit, MUST read no clock and no network, and MUST include a metadata timestamp only when one is supplied explicitly.",
+      "tests": [
+        {
+          "file": "test/sbom.test.mjs",
+          "title": "SBOM output is deterministic and has no timestamp unless one is supplied"
+        }
+      ]
+    },
+    {
+      "id": "KYA-SUP-002",
+      "level": "MUST",
+      "area": "release",
+      "section": "Interoperability and versioning",
+      "statement": "The SBOM generator MUST refuse a dirty tree (modified, staged or untracked files) and a package that declares dependencies it cannot enumerate, and MUST read committed blobs rather than the working tree.",
+      "tests": [
+        {
+          "file": "test/sbom.test.mjs",
+          "title": "SBOM refuses a dirty tree for modified, staged and untracked files"
+        },
+        {
+          "file": "test/sbom.test.mjs",
+          "title": "the SBOM command line refuses a dirty tree with a nonzero exit and prints a clean tree"
+        },
+        {
+          "file": "test/sbom.test.mjs",
+          "title": "SBOM refuses a package that declares dependencies it cannot inventory"
+        }
+      ]
+    },
+    {
+      "id": "KYA-SUP-003",
+      "level": "MUST",
+      "area": "release",
+      "section": "Interoperability and versioning",
+      "statement": "The SBOM MUST list exactly the frozen release file list in code-unit order with the SHA-256 digest and Git blob identifier of each committed file, and the Node.js engine requirement of the package.",
+      "tests": [
+        {
+          "file": "test/sbom.test.mjs",
+          "title": "SBOM file list is the frozen release list in code-unit order and digests match the Git blobs"
+        },
+        {
+          "file": "test/sbom.test.mjs",
+          "title": "SBOM of this repository matches an independent read of the frozen release list at HEAD"
+        }
+      ]
+    },
+    {
+      "id": "KYA-CRY-001",
+      "level": "MUST",
+      "area": "integrity",
+      "section": "Interoperability and versioning",
+      "statement": "Every signing domain prefix, hash or HMAC algorithm, holdout hash label and signing site without a KYA domain prefix used in src MUST be documented in docs/CRYPTO-AGILITY.md, and Ed25519 MUST remain the only accepted proof algorithm until an ADR-governed change.",
+      "tests": [
+        {
+          "file": "test/crypto-inventory.test.mjs",
+          "title": "every signing and keyed-hash domain prefix in src is documented in CRYPTO-AGILITY.md"
+        },
+        {
+          "file": "test/crypto-inventory.test.mjs",
+          "title": "every source file that signs or verifies is domain-separated or explicitly documented as exempt"
+        },
+        {
+          "file": "test/crypto-inventory.test.mjs",
+          "title": "every hash and HMAC algorithm and every holdout label used in src is documented"
+        },
+        {
+          "file": "test/crypto-inventory.test.mjs",
+          "title": "the only proof algorithm accepted in src is Ed25519 and the document says so"
+        }
+      ]
     }
   ]
 }

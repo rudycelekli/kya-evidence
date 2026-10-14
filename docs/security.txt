@@ -1,0 +1,11 @@
+# DRAFT security.txt for KYA Evidence. NOT PUBLISHED AND NOT VALID YET.
+# RFC 9116 (https://www.rfc-editor.org/rfc/rfc9116, fetched 2026-10-14) requires a Contact field and an
+# Expires field, and recommends an Expires value less than a year in the future. The owner must replace every
+# value in angle brackets, then publish the file at /.well-known/security.txt on the project's web site.
+# No email address has been invented. Do not publish this file with the placeholders in place.
+
+Contact: <SET-BY-OWNER: a URI such as a private reporting URL or a mailto: address the owner controls>
+Expires: <SET-BY-OWNER: date-time in ISO 8601 format, less than one year ahead>
+Preferred-Languages: en
+Policy: <SET-BY-OWNER: public URL of the adopted vulnerability disclosure policy>
+Canonical: <SET-BY-OWNER: https URL where this file is served>
