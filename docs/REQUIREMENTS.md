@@ -112,5 +112,9 @@ Each requirement is traced to at least one test that must exist exactly once; th
 | KYA-ACT-010 | MUST NOT | The CI gate MUST NOT cut a JSON output value mid-string; an oversized summary MUST be replaced by a compact valid object marked truncated. | `kya-check.test.mjs` |
 | KYA-CMP-019 | MUST | Campaign run IDs MUST be unique case-insensitively and an errored entry MUST NOT reuse another attempt's evidence bundle digest; the summary MUST report each attempt's final state so a successful retry supersedes an errored attempt without hiding it. | `campaign-ledger.test.mjs` |
 | KYA-CMP-020 | MUST | The campaign CLI MUST exit non-zero from run, summary and verify-ledger unless every planned attempt completed (an open ledger only exits 0 with an explicit flag that reports it as open). | `campaign-runner.test.mjs` |
+| KYA-ACT-011 | MUST | In currency-only mode the gate MUST withhold reliability with a named reason unless the assessment digest is pinned, MUST refuse a rewritten assessment before any output when pinned, and MUST refuse assessment-pin flags outside that mode. | `kya-check.test.mjs` |
+| KYA-ACT-012 | MUST | With require-pins the gate MUST refuse with a named error before any output unless every applicable pin is supplied, and manifest and evidence under test MUST be accepted from separate paths than the policy and profile. | `kya-check.test.mjs` |
+| KYA-ACT-013 | MUST | Gate outputs and the truncated summary MUST keep the evidence mode, the allow-fixture flag, the pins, the decision and capped blocker codes. | `kya-check.test.mjs` |
+| KYA-ACT-014 | MUST | The gate MUST flag a policy that is not built on the frozen core profile as a custom profile. | `kya-check.test.mjs` |
 
-Registry digest: `4375776885d55e11eaf488493fe1e4af85fdba4560f2a6ee4c15efbbdff7929f`
+Registry digest: `ce556b7b23adcf64b4c2546858e499afb7a2a326fdf47b709e0df471e48c9d77`

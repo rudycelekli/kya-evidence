@@ -2104,6 +2104,74 @@
           "title": "campaign CLI exit codes reflect final attempt state and open ledgers"
         }
       ]
+    },
+    {
+      "id": "KYA-ACT-011",
+      "level": "MUST",
+      "area": "adoption",
+      "section": "Reports and viewers",
+      "statement": "In currency-only mode the gate MUST withhold reliability with a named reason unless the assessment digest is pinned, MUST refuse a rewritten assessment before any output when pinned, and MUST refuse assessment-pin flags outside that mode.",
+      "tests": [
+        {
+          "file": "test/kya-check.test.mjs",
+          "title": "currency only mode withholds reliability without an assessment pin and names the reason"
+        },
+        {
+          "file": "test/kya-check.test.mjs",
+          "title": "an assessment pin accepts the pinned file and refuses a rewritten one before any output"
+        },
+        {
+          "file": "test/kya-check.test.mjs",
+          "title": "assessment flags are refused outside currency only mode"
+        }
+      ]
+    },
+    {
+      "id": "KYA-ACT-012",
+      "level": "MUST",
+      "area": "adoption",
+      "section": "Reports and viewers",
+      "statement": "With require-pins the gate MUST refuse with a named error before any output unless every applicable pin is supplied, and manifest and evidence under test MUST be accepted from separate paths than the policy and profile.",
+      "tests": [
+        {
+          "file": "test/kya-check.test.mjs",
+          "title": "require-pins refuses with PINS_REQUIRED before any output unless every pin is supplied"
+        },
+        {
+          "file": "test/kya-check.test.mjs",
+          "title": "manifest and evidence under test can come from separate paths than the policy and profile"
+        }
+      ]
+    },
+    {
+      "id": "KYA-ACT-013",
+      "level": "MUST",
+      "area": "adoption",
+      "section": "Reports and viewers",
+      "statement": "Gate outputs and the truncated summary MUST keep the evidence mode, the allow-fixture flag, the pins, the decision and capped blocker codes.",
+      "tests": [
+        {
+          "file": "test/kya-check.test.mjs",
+          "title": "github outputs carry the evidence mode and allow-fixture flag"
+        },
+        {
+          "file": "test/kya-check.test.mjs",
+          "title": "the truncated summary keeps evidence mode, allow-fixture, pins, decision and capped blocker codes"
+        }
+      ]
+    },
+    {
+      "id": "KYA-ACT-014",
+      "level": "MUST",
+      "area": "adoption",
+      "section": "Reports and viewers",
+      "statement": "The gate MUST flag a policy that is not built on the frozen core profile as a custom profile.",
+      "tests": [
+        {
+          "file": "test/kya-check.test.mjs",
+          "title": "a policy not built on the frozen core profile is flagged as a custom profile"
+        }
+      ]
     }
   ]
 }
