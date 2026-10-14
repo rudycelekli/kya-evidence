@@ -66,3 +66,7 @@ No adoption, standard or compliance claim is made until each item below exists w
 4. Recorded disagreements between implementations, with their resolution.
 
 Until then, documents say "reference implementation", and an ADR marked `Implemented` means that code exists, not that anyone independent accepted it.
+
+## Governance documents
+
+The written governance layer is drafted in [`governance/`](governance/): [CHARTER.md](governance/CHARTER.md), [IPR-POLICY.md](governance/IPR-POLICY.md), [TRADEMARK-AND-CLAIMS.md](governance/TRADEMARK-AND-CLAIMS.md), [VERSIONING.md](governance/VERSIONING.md), [EXTENSION-REGISTRY.md](governance/EXTENSION-REGISTRY.md) and [DECISION-PROCESS.md](governance/DECISION-PROCESS.md). The proposal to adopt them is recorded, as Proposed, in [ADR-0024](adr/0024-governance-charter-and-change-process.md). They are drafts for qualified legal counsel and are not adopted by any body. Contribution rules, including the DCO sign-off, are in [CONTRIBUTING.md](../CONTRIBUTING.md), and conduct rules are in [CODE_OF_CONDUCT.md](../CODE_OF_CONDUCT.md).
