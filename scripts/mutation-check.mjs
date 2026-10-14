@@ -56,7 +56,11 @@ const mutants=[
   ["pinned ledger head check removed","expectHead !== undefined && expectHead !== headDigest","false","src/campaign/domain/ledger.mjs"],
   ["duplicate evidence check removed","if (runIds.has(e.runId) || bundles.has(e.evidenceBundleDigest))","if (false)","src/campaign/domain/ledger.mjs"],
   ["fixture evidence counted as reliable","if (mode === 'fixture') return allowFixture ? null : 'FIXTURE_EVIDENCE_NOT_RELIABLE';","if (mode === 'fixture') return null;","scripts/kya-check.mjs"],
-  ["expired status list accepted","if (e.code === 'EXPIRED') fail('STATUS_LIST_EXPIRED'","if (false) fail('STATUS_LIST_EXPIRED'","src/vc-bridge/status.mjs"]
+  ["expired status list accepted","if (e.code === 'EXPIRED') fail('STATUS_LIST_EXPIRED'","if (false) fail('STATUS_LIST_EXPIRED'","src/vc-bridge/status.mjs"],
+  ["unpinned assessment counted as reliable","if (mode === 'currency-only' && !pins.assessmentPinned && !allowUnpinned) out.push('ASSESSMENT_NOT_PINNED');","","scripts/kya-check.mjs"],
+  ["assessment digest pin check removed","if (currencyOnly) checks.push(['expect-assessment-digest', input.assessment?.reportDigest, 'ASSESSMENT_DIGEST_MISMATCH', 'assessmentPinned', 'assessment']);","","scripts/kya-check.mjs"],
+  ["report mismatch not reported","if (diffs.length) errors.push({ code: 'REPORT_MISMATCH',","if (false) errors.push({ code: 'REPORT_MISMATCH',","src/vc-bridge/credential.mjs"],
+  ["open campaign ledger exits zero in summary","if (!summary.allCompleted) process.exitCode = 2;","","scripts/kya-campaign.mjs"]
 ];
 const results=[];
 function failedNames(output){return [...output.matchAll(/^not ok \d+ - (.+)$/gm)].map(m=>m[1]).slice(0,5);}
