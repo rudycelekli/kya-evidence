@@ -40,7 +40,7 @@ node bin/kya.mjs benchmark --out ./artifacts/benchmark
 
 Use generated demo inputs and the [adapter protocol](docs/ADAPTERS.md) to connect an explicitly authorized runtime. `probe` checks executable availability and version, never competence or safety. A command adapter is a transport, not an operating-system sandbox. `verify` checks report checksum integrity; it does not authenticate the report or recompute its claims.
 
-The typed SDK includes strict Claude Code result and Codex event parsers, explicit command plans and opt-in native factories. Native model claims remain declarations and cannot earn observed-action credit. Claude execution is blocked until effective managed policy can be established. Codex requires verified subscription auth and explicit binding of included global instructions. See [execution gates and private transcript retention](docs/ADAPTERS.md).
+The typed SDK includes strict Claude Code result and Codex event parsers, explicit command plans and opt-in native factories. Native model claims remain declarations and cannot earn observed-action credit. Claude execution is blocked until effective managed policy can be established. Codex requires verified subscription auth and explicit binding of included global instructions. See [execution gates and private transcript retention](docs/ADAPTERS.md) and [validation boundaries](docs/VALIDATION.md).
 
 ## Evidence before reputation
 
