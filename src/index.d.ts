@@ -23,7 +23,7 @@ export function verifyEvidence(envelope:unknown):{payload:Evidence;keyId:string;
 export function verifyArtifact(payload:Evidence,bytes:string|Uint8Array):boolean;
 export function assess(input:{manifest:ReadonlyInput<Manifest>;profile:ReadonlyInput<Profile>;evidence:ReadonlyInput<Envelope[]>;policy:ReadonlyInput<Policy>;evaluatorDigest:string;now?:string}):Assessment;
 export function verifyAssessment(report:ReadonlyInput<Assessment>):{integrity:true;reportDigest:string;authenticated:false;warning:string};
-export type BlockerCode='SUBJECT_REVOKED'|'SUBJECT_EXPIRED'|'SUBJECT_NOT_YET_VALID'|'CRITICAL_CHECK_FAILED'|'CRITICAL_CHECK_UNPROVEN'|'COVERAGE_BELOW_POLICY'|'INDEPENDENT_COVERAGE_BELOW_POLICY'|'SCORE_BELOW_POLICY'|'AMBIGUOUS_RUNS'|'RUN_CONFLICT'|'RUN_INVALIDATED'|'MIXED_RUN_ISSUERS'|'REPEATED_RUN_CHECKS'|'NO_SCORED_OBSERVATIONS'|'NO_OBSERVED_CHECKS'|'PRINCIPAL_UNBOUND'|'MANDATORY_MINIMUM_NOT_MET';
+export type BlockerCode='SUBJECT_REVOKED'|'SUBJECT_EXPIRED'|'SUBJECT_NOT_YET_VALID'|'CRITICAL_CHECK_FAILED'|'CRITICAL_CHECK_UNPROVEN'|'COVERAGE_BELOW_POLICY'|'INDEPENDENT_COVERAGE_BELOW_POLICY'|'SCORE_BELOW_POLICY'|'AMBIGUOUS_RUNS'|'RUN_CONFLICT'|'RUN_INVALIDATED'|'MIXED_RUN_ISSUERS'|'REPEATED_RUN_CHECKS'|'NO_SCORED_OBSERVATIONS'|'NO_OBSERVED_CHECKS'|'PRINCIPAL_UNBOUND'|'MANDATORY_MINIMUM_NOT_MET'|'MANDATORY_MINIMUM_UNPROVEN';
 export type CurrencyCode='CLOCK_REGRESSION'|'SUBJECT_CHANGED'|'POLICY_CHANGED'|'SUBJECT_REVOKED'|'ASSESSMENT_EXPIRED'|'ASSESSMENT_AGED'|'INCIDENT_OPEN';
 export const BLOCKER_CODES:readonly BlockerCode[];
 export const CURRENCY_CODES:Readonly<Record<CurrencyTrigger['id'],CurrencyCode>>;

@@ -49,7 +49,8 @@ An assessment never withholds a result silently. Each human-readable entry in `b
 | `NO_SCORED_OBSERVATIONS` | `insufficient-evidence` | No check is a known pass or fail |
 | `NO_OBSERVED_CHECKS` | `insufficient-evidence` | A would-be qualification selected no observed check |
 | `PRINCIPAL_UNBOUND` | `insufficient-evidence` | Policy requires an accountable party and the manifest declares none |
-| `MANDATORY_MINIMUM_NOT_MET` | `blocked` | A policy mandatory minimum is not satisfied; one entry per unmet check |
+| `MANDATORY_MINIMUM_NOT_MET` | `blocked` | A mandatory check was observed and failed, or passed without the independence its minimum requires; one entry per such check |
+| `MANDATORY_MINIMUM_UNPROVEN` | `blocked` | A mandatory check was not observed (missing, abstained, errored or only declared); a gap, not a finding; one entry per such check |
 
 `checkCurrency` triggers keep their `id` and now carry a stable `code`: `CLOCK_REGRESSION` (`clock-regression`), `SUBJECT_CHANGED` (`subject-changed`), `POLICY_CHANGED` (`policy-changed`), `SUBJECT_REVOKED` (`subject-revoked`), `ASSESSMENT_EXPIRED` (`assessment-expired`), `ASSESSMENT_AGED` (`assessment-aged`) and `INCIDENT_OPEN` (`incident-open`).
 

@@ -23,7 +23,7 @@ function args(argv) {
 function runFile(root, file) {
   const env = { ...process.env }; delete env.NODE_TEST_CONTEXT;
   const p = spawnSync(process.execPath, ['--test', '--test-reporter=tap', file], { cwd: root, encoding: 'utf8', env, maxBuffer: 64 * 1024 * 1024, timeout: 600000 });
-  return { exitCode: p.status, tests: parseTap(p.stdout ?? '') };
+  return { exitCode: p.status, error: p.error ? String(p.error.code ?? p.error.message) : undefined, tests: parseTap(p.stdout ?? '') };
 }
 
 async function main() {

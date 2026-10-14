@@ -178,3 +178,20 @@ test('the assessment schema type and docs name the code list', () => {
   for (const code of BLOCKER_CODES) assert.ok(docs.includes('`' + code + '`'), code);
   for (const code of Object.values(CURRENCY_CODES)) assert.ok(docs.includes('`' + code + '`'), code);
 });
+
+test('blocker codes are cross-checked against the report checks, so a resealed code swap is rejected', () => {
+  const i = inputs(); i.evidence = i.evidence.map(e => e); // keep inputs shape
+  const criticalFail = inputs();
+  criticalFail.evidence = criticalFail.evidence.slice();
+  const failing = assess({ ...criticalFail, evidence: criticalFail.evidence.map((e, n) => n === 0 ? signEvidence({ ...e.payload, outcome: 'fail' }, keys.privateKey) : e) });
+  assert.equal(failing.decision, 'blocked'); assert.ok(codes(failing).includes('CRITICAL_CHECK_FAILED'));
+  assert.equal(verifyAssessment(failing).integrity, true);
+  const nCritical = failing.checks.filter(c => c.critical && c.status === 'fail').length;
+  assert.ok(nCritical > 0);
+  // swapping every code for a different one, or hiding the critical failure code, must not verify
+  assert.throws(() => verifyAssessment(reseal(failing, x => { x.blockerCodes = x.blockerCodes.map(() => 'SCORE_BELOW_POLICY'); })), /blocker codes/i);
+  assert.throws(() => verifyAssessment(reseal(failing, x => { x.blockerCodes = x.blockerCodes.map(c => c === 'CRITICAL_CHECK_FAILED' ? 'COVERAGE_BELOW_POLICY' : c); })), /blocker codes/i);
+  // a qualified report cannot carry blockers or codes
+  const q = assess(inputs());
+  assert.throws(() => verifyAssessment(reseal(q, x => { x.blockers = ['x']; x.blockerCodes = ['SCORE_BELOW_POLICY']; })), /blocker codes/i);
+});

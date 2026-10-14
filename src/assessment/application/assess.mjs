@@ -141,7 +141,10 @@ export function assess({manifest,profile,evidence,policy,evaluatorDigest,now = n
     for (const m of policy.mandatoryMinimums ?? []) {
       const c = checks.find(x=>x.id===m.checkId);
       if (c.status==='pass' && (m.minimum==='pass' || c.independence==='independent')) continue;
-      decision='blocked'; block('MANDATORY_MINIMUM_NOT_MET',`Mandatory minimum not met: ${m.checkId} requires ${m.minimum}; observed ${c.status}`);
+      decision='blocked';
+      // Named separately: a failed (or not independently passed) check is a finding, an unobserved one is a gap.
+      if (['pass','fail'].includes(c.status)) block('MANDATORY_MINIMUM_NOT_MET',`Mandatory minimum not met: ${m.checkId} requires ${m.minimum}; observed ${c.status}`);
+      else block('MANDATORY_MINIMUM_UNPROVEN',`Mandatory minimum unproven: ${m.checkId} requires ${m.minimum}; observed ${c.status}`);
     }
   }
   if (!selected.size && decision==='qualified') { decision='insufficient-evidence'; block('NO_OBSERVED_CHECKS','No observed checks'); }

@@ -145,6 +145,18 @@ test('tap mapping passes only when every traced test passes and none is skipped'
   assert.equal(m['KYA-AAA-006'].result, 'not-run');
 });
 
+test('tap mapping never reports pass for a file that exited non-zero, timed out or errored', () => {
+  const reg = { requirements: [{ id: 'KYA-AAA-001', tests: [{ file: 'f', title: 'a' }] }] };
+  const pass = [{ title: 'a', status: 'pass' }];
+  assert.equal(mapTapToRequirements(reg, { f: { exitCode: 0, tests: pass } })['KYA-AAA-001'].result, 'pass');
+  for (const run of [{ exitCode: 1, tests: pass }, { exitCode: null, tests: pass }, { exitCode: 0, error: 'ETIMEDOUT', tests: pass }, { tests: pass }]) {
+    const r = mapTapToRequirements(reg, { f: run })['KYA-AAA-001'];
+    assert.equal(r.result, 'not-run', JSON.stringify({ exitCode: run.exitCode, error: run.error }));
+    assert.equal(r.evidence, null);
+  }
+  assert.equal(mapTapToRequirements(reg, { f: { exitCode: 1, tests: [{ title: 'a', status: 'fail' }] } })['KYA-AAA-001'].result, 'fail');
+});
+
 test('conformance CLI builds unsigned reports from traced tests and verifies them', () => {
   const root = mkdtempSync(join(tmpdir(), 'kya-conf-'));
   try {

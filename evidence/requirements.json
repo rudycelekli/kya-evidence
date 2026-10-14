@@ -743,7 +743,7 @@
       "level": "MUST",
       "area": "conformance",
       "section": "Interoperability and versioning",
-      "statement": "The reference report builder MUST mark a requirement pass only when every traced test passed and none was skipped, MUST mark a failing trace fail, and MUST treat skipped, absent or ambiguous traces as not-run.",
+      "statement": "The reference report builder MUST mark a requirement pass only when every traced test passed and none was skipped, MUST mark a failing trace fail, and MUST treat skipped, absent or ambiguous traces as not-run; a pass MUST NOT be reported for a test file whose process exited non-zero without a visible failing test, timed out or errored.",
       "tests": [
         {
           "file": "test/conformance-report.test.mjs",
@@ -756,6 +756,10 @@
         {
           "file": "test/conformance-report.test.mjs",
           "title": "conformance CLI builds unsigned reports from traced tests and verifies them"
+        },
+        {
+          "file": "test/conformance-report.test.mjs",
+          "title": "tap mapping never reports pass for a file that exited non-zero, timed out or errored"
         }
       ]
     },
@@ -818,7 +822,7 @@
       "level": "MUST",
       "area": "refusal",
       "section": "Reports and viewers",
-      "statement": "Assessment verification MUST reject a blockerCodes field that is not one known code per blocker, and MUST accept reports without the field and keep their original digests.",
+      "statement": "Assessment verification MUST reject a blockerCodes field that is not one known code per blocker, and MUST accept reports without the field and keep their original digests; the code list MUST NOT contradict the report's decision or critical-failure count.",
       "tests": [
         {
           "file": "test/refusal-codes.test.mjs",
@@ -827,6 +831,10 @@
         {
           "file": "test/refusal-codes.test.mjs",
           "title": "legacy reports without blocker codes still verify and keep their original digests"
+        },
+        {
+          "file": "test/refusal-codes.test.mjs",
+          "title": "blocker codes are cross-checked against the report checks, so a resealed code swap is rejected"
         }
       ]
     },
@@ -898,7 +906,7 @@
       "level": "MUST",
       "area": "minimums",
       "section": "Run selection and qualification",
-      "statement": "An unmet mandatory minimum, whether the check failed, is missing, abstained or errored, MUST cap the decision at blocked with one MANDATORY_MINIMUM_NOT_MET code per unmet check regardless of score, while revoked and expired decisions MUST keep their own code.",
+      "statement": "An unmet mandatory minimum, whether the check failed, is missing, abstained or errored, MUST cap the decision at blocked with one MANDATORY_MINIMUM_NOT_MET code per unmet check regardless of score, while revoked and expired decisions MUST keep their own code; a failed check and an unobserved check MUST carry different codes.",
       "tests": [
         {
           "file": "test/mandatory-minimums.test.mjs",
@@ -923,6 +931,10 @@
         {
           "file": "test/mandatory-minimums.test.mjs",
           "title": "a dossier built from a capped assessment validates"
+        },
+        {
+          "file": "test/mandatory-minimums.test.mjs",
+          "title": "a failed mandatory check and an unobserved one carry different codes"
         }
       ]
     },

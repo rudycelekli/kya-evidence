@@ -139,10 +139,14 @@ export function mapTapToRequirements(registry, runs) {
   for (const r of registry.requirements) {
     const executed = []; let failed = false, unknown = false;
     for (const t of r.tests) {
-      const found = (runs[t.file]?.tests ?? []).filter(x => x.title === t.title);
+      const run = runs[t.file], found = (run?.tests ?? []).filter(x => x.title === t.title);
       if (found.length !== 1) { unknown = true; continue; }
       if (found[0].status === 'fail') { failed = true; executed.push(`${t.file} :: ${t.title}`); }
-      else if (found[0].status === 'skip') unknown = true;
+      // A pass is trusted only when the process outcome agrees with the TAP output: a runner error or timeout
+      // never vouches, and a non-zero exit with no failing test in the file is unexplained (for example a
+      // process-level failure after the tests). A non-zero exit explained by a visible failing test leaves
+      // the other tests' own TAP results intact.
+      else if (found[0].status === 'skip' || run.error || (run.exitCode !== 0 && !run.tests.some(x => x.status === 'fail'))) unknown = true;
       else executed.push(`${t.file} :: ${t.title}`);
     }
     if (failed) out[r.id] = { result: 'fail', evidence: 'executed-test', executed };
