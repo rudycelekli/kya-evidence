@@ -50,12 +50,18 @@ const mutants=[
   ["private directory permission check removal","(stat.mode & 0o077) === 0","true","src/campaign/application/runner.mjs"],
   ["bundle overwrite allowed","flag: 'wx'","flag: 'w'","src/campaign/application/runner.mjs"],
   ["capture-issuer evidence-signer check removal","insist(!evidenceKeyIds.includes(id)","insist(true || !evidenceKeyIds.includes(id)","src/campaign/domain/roles.mjs"],
-  ["capture-issuer scoring evidence allowed","insist(k.role !== 'capture-issuer','A capture-issuer key cannot issue scoring evidence');","","src/assessment/application/assess.mjs"]
+  ["capture-issuer scoring evidence allowed","insist(k.role !== 'capture-issuer','A capture-issuer key cannot issue scoring evidence');","","src/assessment/application/assess.mjs"],
+  ["small-order key check removed","insist(!(q[0] === 0n && q[1] === 1n), 'Invalid Ed25519 public key: small-order point');","","src/vc-bridge/encoding.mjs"],
+  ["private directory real-path check removed","insist(!inside(repo, join(real, ...rest)), 'Private directory must be outside the repository');","","src/campaign/application/runner.mjs"],
+  ["pinned ledger head check removed","expectHead !== undefined && expectHead !== headDigest","false","src/campaign/domain/ledger.mjs"],
+  ["duplicate evidence check removed","if (runIds.has(e.runId) || bundles.has(e.evidenceBundleDigest))","if (false)","src/campaign/domain/ledger.mjs"],
+  ["fixture evidence counted as reliable","if (mode === 'fixture') return allowFixture ? null : 'FIXTURE_EVIDENCE_NOT_RELIABLE';","if (mode === 'fixture') return null;","scripts/kya-check.mjs"],
+  ["expired status list accepted","if (e.code === 'EXPIRED') fail('STATUS_LIST_EXPIRED'","if (false) fail('STATUS_LIST_EXPIRED'","src/vc-bridge/status.mjs"]
 ];
 const results=[];
 function failedNames(output){return [...output.matchAll(/^not ok \d+ - (.+)$/gm)].map(m=>m[1]).slice(0,5);}
 function counts(output){const get=name=>Number(new RegExp(`^# ${name} (\\d+)$`,'m').exec(output)?.[1]??NaN);return{tests:get('tests'),pass:get('pass'),fail:get('fail'),cancelled:get('cancelled'),skipped:get('skipped')};}
-function runTests(dir){const p=spawnSync(process.execPath,['--test','--test-reporter=tap','test/assessment.test.mjs','test/incidents.test.mjs','test/refusal-codes.test.mjs','test/mandatory-minimums.test.mjs','test/conformance-report.test.mjs','test/campaign-ledger.test.mjs','test/campaign-runner.test.mjs','test/capture-issuer-scoring.test.mjs'],{cwd:dir,encoding:'utf8',timeout:90000,maxBuffer:200000});if(p.error||p.signal)throw Error('Mutation test execution failed');return{process:p,counts:counts(p.stdout)};}
+function runTests(dir){const p=spawnSync(process.execPath,['--test','--test-reporter=tap','test/assessment.test.mjs','test/incidents.test.mjs','test/refusal-codes.test.mjs','test/mandatory-minimums.test.mjs','test/conformance-report.test.mjs','test/campaign-ledger.test.mjs','test/campaign-runner.test.mjs','test/capture-issuer-scoring.test.mjs','test/vc-bridge.test.mjs','test/kya-check.test.mjs'],{cwd:dir,encoding:'utf8',timeout:90000,maxBuffer:200000});if(p.error||p.signal)throw Error('Mutation test execution failed');return{process:p,counts:counts(p.stdout)};}
 for(const [name,from,to,target=source]of mutants){
   const base=target===source?original:await readFile(join(root,target),'utf8');
   if(!base.includes(from))throw Error('Mutation anchor drift: '+name);
