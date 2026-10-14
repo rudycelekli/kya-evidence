@@ -87,7 +87,7 @@ const TS = /^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d\.\d{3}Z$/;
 export const isTs = s => typeof s === 'string' && TS.test(s) && !Number.isNaN(Date.parse(s)) && new Date(s).toISOString() === s;
 export const ms = s => Date.parse(s);
 export const isStr = (s, max = 512) => typeof s === 'string' && s.length > 0 && s.length <= max && !/[\u0000-\u001f\u007f]/.test(s);
-export const isPem = s => typeof s === 'string' && s.length > 0 && s.length <= 4096;
+export const isPem = s => typeof s === 'string' && s.length > 0 && s.length <= 2000;
 export const isId = s => typeof s === 'string' && s.length <= 128 && /^[A-Za-z0-9][A-Za-z0-9:._\/-]*$/.test(s);
 export const exactKeys = (o, req, opt = []) => isObj(o) && req.every(k => Object.hasOwn(o, k)) && Object.keys(o).every(k => req.includes(k) || opt.includes(k));
 const uniqueStrs = a => Array.isArray(a) && a.every(x => isStr(x)) && new Set(a).size === a.length;
@@ -212,7 +212,7 @@ const LIMITATIONS = [
   'Signatures attest bytes and key possession, not truthful execution',
   'No universal predictive validation; public suites can be gamed'
 ];
-const FIXTURE_LIMITATION = 'Fixture evidence is synthetic; it does not describe real-world behavior';
+const FIXTURE_LIMITATION = 'Includes synthetic fixture evidence; not a real product benchmark';
 const r6 = x => Math.round(x * 1e6) / 1e6;
 export const T = {
   critFailed: c => `Critical check failed: ${c.id}`,

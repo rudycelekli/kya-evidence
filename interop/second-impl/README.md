@@ -15,12 +15,14 @@ This was written by the same team, in the same repository, by an agent that has 
 | Measure | Value |
 | :--- | :--- |
 | Vectors, decision and every semantic field (`--semantic-only`) | 111 of 111 |
-| Vectors, byte-exact including `reportDigest` and `resultDigest` | 79 of 111 (12 refusals plus 67 others) |
-| Digest-only failures | 32 |
+| Vectors, byte-exact including `reportDigest` and `resultDigest` | 111 of 111 |
+| Digest-only failures | 0 |
 
-The 32 failures differ only at `$.reportDigest` or `$.resultDigest`. After the spec-gaps-2 texts were implemented (and only those texts, not digest guessing) the remaining causes are the fixture limitation string, the trigger `detail` strings and the four `limits` strings of the currency result, none of which is written down (`AMBIGUITIES.md` section A). A semantic pass cannot make a requirement `pass` in the harness report, so this implementation does not claim any requirement as passed.
+After the `spec-gaps-2` texts (rounds 1 and 2) were implemented, and only those texts, every vector passes byte for byte. This is still a same-team second implementation: passing the published vectors shows the written text plus the vectors are enough to rebuild the reference output for these vectors, not that the specification is complete or that the expected values are right. Behaviour that no vector pins is still guesswork (`AMBIGUITIES.md` sections B and C).
 
 ## Sources used
+
+Round 2 added the trigger detail strings, `limits` strings, limitations list and grammar exemptions from `docs/SPECIFICATION.md` and `docs/SCORING.md` (merged from `spec-gaps-2`).
 
 Second pass: also `docs/SCORING.md` "Blocker wording in the reference" and `docs/SPECIFICATION.md` "Currency result layout and reason vocabulary" (merged from `spec-gaps-2`). Their companion tests `test/scoring-wording.test.mjs` and `test/spec-reason-vocabulary.test.mjs` were not opened.
 
@@ -39,4 +41,4 @@ The shape of the `kya.assessment/v1` report (field names, dimension fields, limi
 
 ## Tests
 
-`test/second-impl.test.mjs` runs the harness against the adapter. It asserts 111 of 111 semantic passes, 12 refusals, and that every non-passing vector fails only on a digest field with the byte-exact count (floor 79) not regressing. It deliberately does not assert that all vectors pass byte for byte, because they do not.
+`test/second-impl.test.mjs` runs the harness against the adapter. It asserts 111 of 111 semantic passes, 12 refusals, and that every non-passing vector fails only on a digest field with the byte-exact count (floor 111) not regressing. It deliberately does not assert that all vectors pass byte for byte, because they do not.

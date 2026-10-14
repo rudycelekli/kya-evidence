@@ -2,16 +2,16 @@
 
 Each entry: what was unspecified, how it was resolved (guess, or a vector), and the vector that decided or tests it. "Vector-resolved" means the specification, guide and contract did not determine the behaviour and a vector (input or expected value) was consulted. "Guess" means no vector pins it; another implementation could differ and still pass. "Unresolved" means the vectors fail on the digest for this reason.
 
-## A. Still failing byte-exact after the spec-gaps-2 texts (32 vectors)
+## A. Byte-exact failures after round 2 (none)
 
-Re-run after merging `origin/spec-gaps-2` and implementing only the newly documented texts (`docs/SCORING.md` "Blocker wording in the reference", `docs/SPECIFICATION.md` "Currency result layout and reason vocabulary"). Result: 111 of 111 semantic, 79 of 111 byte-exact (was 43). Every assess vector now matches except two; every non-refusal currency vector except one fails.
+After merging the round 2 `spec-gaps-2` texts (trigger detail strings, the four `limits` strings, the limitations list with the fixture string, the PEM exemption with a 2000 character bound, the wording-table order rule, the `SCORE_BELOW_POLICY` rule, `<status>` equal to `unknown`, and no 128 character cut) and applying only them: 111 of 111 vectors pass byte for byte and 111 of 111 pass semantically. The earlier gaps A1 (fixture limitation string), A2 (trigger detail), A3 (limits strings) and A4 (member set of the currency result) are closed by the text; the layout member set was confirmed by the digests now matching.
 
-| # | Documented statement that is missing, wrong or ambiguous | Vectors |
-| :-- | :--- | :--- |
-| (old) | MISSING: the extra limitation string added for fixture evidence, and its position in `limitations`. Neither new section mentions it. | `assess.fixture-allowed-by-policy`, `assess.mixed-fixture-and-runtime-labelled-mixed` |
-| A2 | MISSING: the `detail` text of each trigger. The layout says triggers are `{id, code, detail}` and "detail strings are informational", but they feed `resultDigest`, so informational is not enough for a byte-exact result. Needed for the 12 or so currency vectors that fire triggers. | e.g. `currency.subject-changed`, `currency.assessment-expired`, `currency.incident-open-high` |
-| A3 | MISSING: the "four fixed strings" in `limits`. The count is given, the strings are not. Every currency result carries them, so this alone fails every non-refusal currency vector, including those with no triggers. | all non-refusal `currency.*` except `currency.invalid-incident-record-ignored` (digest not compared) |
-| A4 | Unverified: `authenticated` (always false), member set and `incidents` shape could not be separately confirmed because A2 and A3 hide the digest. | same as A3 |
+For this vector set the documented text closes the digest gap. That shows the text is sufficient for these 111 vectors, not that it is complete: wording for paths no vector reaches (for example `NO_OBSERVED_CHECKS`, which is unreachable) was not exercised, and sections B and C below are still guesses or vector-resolved choices for behaviour the text leaves open.
+
+Remaining ambiguity noted while applying the text (no vector fails because of it):
+
+- The precedence among the `incidents.ignored` reasons when several apply to one incident record is not stated. I check shape and signature, key trust, key revocation, subject, then future date (see C7 to C9).
+- The PEM bound is 2000 characters in the text; Ed25519 SPKI PEM is far shorter, so the bound is not exercised by any vector.
 
 ## B. Vector-resolved (spec, guide and contract were insufficient)
 
@@ -42,7 +42,7 @@ Re-run after merging `origin/spec-gaps-2` and implementing only the newly docume
 | B23 | A medium or low trusted report is `observed`, not open. | `currency.incident-medium-observed-only` |
 | B24 | A resolution by a self-role key and a resolution by the reporter's own key give two different reasons, and a resolution dated at the same instant as the report is ignored. | `currency.resolution-by-self-role-key-ignored`, `currency.incident-cannot-resolve-own-report`, `currency.resolution-dated-same-instant-ignored` |
 
-## B2. Resolved by the new texts (previously guesses or vector-resolved)
+## B2. Resolved by the new texts (previously guesses or vector-resolved; N1 to N5 were closed in round 2)
 
 Blocker wording (every code), `evidenceBundleDigest`, the rejection reason order (B4 and C5 were wrong: subject status applies to every trusted receipt before the binding checks, declaration and source checks come after the check-in-profile check, and key-revoked comes after future and predates), recency (B7, C4 confirmed), blocker order and short circuit (B6), validator grammars (C1, partly) and trigger order. Revoked, expired and not-yet-valid subject reports now match byte for byte (old A4 closed).
 

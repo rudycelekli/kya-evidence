@@ -117,12 +117,25 @@ export function currencyResult(inp) {
   const inc = processIncidents(incidents, a, policy, nowMs);
   if (inc.open.length) fire('incident-open', 'INCIDENT_OPEN');
   const current = triggers.length === 0;
-  // Layout per docs/SPECIFICATION.md "Currency result layout and reason vocabulary". The trigger detail strings and the four
-  // `limits` strings are NOT documented; the values below are placeholders (see AMBIGUITIES.md), so resultDigest cannot match.
+  // Layout and fixed strings per docs/SPECIFICATION.md "Currency result layout and reason vocabulary".
+  const DETAIL = {
+    'clock-regression': 'Check time precedes the assessment time',
+    'subject-changed': 'Manifest no longer matches the assessed subject digest',
+    'policy-changed': 'Relying policy differs from the assessed policy',
+    'subject-revoked': 'Subject digest is revoked by the supplied policy',
+    'assessment-expired': 'Assessment validity interval has ended',
+    'assessment-aged': 'Assessment is older than the policy maximum age',
+    'incident-open': `${inc.open.length} unresolved high or critical incident record(s) for this subject`
+  };
   const full = {
     schema: 'kya.currency/v1', assessmentDigest: a.reportDigest, checkedAt: now, current, reliable: current && a.decision === 'qualified',
-    action: current ? 'none' : 'reassess', triggers: triggers.map(t => ({ ...t, detail: t.id })), incidents: inc, authenticated: false,
-    limits: ['UNDOCUMENTED 1', 'UNDOCUMENTED 2', 'UNDOCUMENTED 3', 'UNDOCUMENTED 4']
+    action: current ? 'none' : 'reassess', triggers: triggers.map(t => ({ ...t, detail: DETAIL[t.id] })), incidents: inc, authenticated: false,
+    limits: [
+      'Detects change against supplied manifest, policy and clock only; it does not observe runtime behavior',
+      'Report checksum is unauthenticated; recompute from trusted inputs before reliance',
+      'Incident records are trusted only through the supplied policy anchors; an omitted incident is undetectable',
+      'A passing check is not an authorization grant'
+    ]
   };
   return {
     schema: 'kya.impl-result/v1', operation: 'currency', current: full.current, reliable: full.reliable, action: full.action,
