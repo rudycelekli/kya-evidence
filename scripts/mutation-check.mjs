@@ -25,17 +25,27 @@ const mutants=[
   ['malformed validity accepted',"insist(timestamp(assessment.validUntil,'Assessment validity') >= timestamp(assessment.assessedAt,'Assessment time'),'Assessment validity precedes its assessment time');","",'src/assessment/application/currency.mjs'],
   ['future resolution honoured',"if (e.future) { ignored.push({id:e.id,reason:'Incident is dated in the future'}); continue; }","",'src/assessment/application/currency.mjs'],
   ['envelope dedupe removed',"if (seen.has(envelopeDigest)) continue;","",'src/assessment/application/currency.mjs'],
-  ['ambiguous-reference gate removed',"else if (targets.length>1) ignored.push","else if (false) ignored.push",'src/assessment/application/currency.mjs']
+  ['ambiguous-reference gate removed',"else if (targets.length>1) ignored.push","else if (false) ignored.push",'src/assessment/application/currency.mjs'],
+  ['mandatory-minimum gate removal',"if (decision!=='revoked' && decision!=='expired') {\n    for (const m of policy.mandatoryMinimums","if (false) {\n    for (const m of policy.mandatoryMinimums"],
+  ['mandatory-minimum unknown treated as met',"if (c.status==='pass' && (m.minimum==='pass'","if (c.status!=='fail' && (m.minimum==='pass'"],
+  ['independent-pass downgraded to pass',"(m.minimum==='pass' || c.independence==='independent')","(true)"],
+  ['mandatory-minimum overrides revoked subject',"if (decision!=='revoked' && decision!=='expired') {\n    for (const m of policy.mandatoryMinimums","if (true) {\n    for (const m of policy.mandatoryMinimums"],
+  ['mandatory-minimum profile binding removed',"for (const m of policy.mandatoryMinimums ?? []) insist(checkIds.has(m.checkId),'Mandatory minimum names a check outside the frozen profile');","/* mutation: skip minimum profile binding */"],
+  ['blocker code dropped from report',"blockers.push(text); blockerCodes.push(code);","blockers.push(text);"],
+  ['critical failure mislabelled',"block('CRITICAL_CHECK_FAILED',","block('SCORE_BELOW_POLICY',"],
+  ['blocker code validation removed',"if (!Object.hasOwn(report, 'blockerCodes')) return;","return;",'src/assessment/application/codes.mjs'],
+  ['duplicate minimum accepted',"insist(!seen.has(e.checkId),'Duplicate mandatory minimum check'); ","",'src/identity/domain/services/validation.mjs'],
+  ['currency trigger code removed',"code:CURRENCY_CODES[id],","",'src/assessment/application/currency.mjs']
 ];
 const results=[];
 function failedNames(output){return [...output.matchAll(/^not ok \d+ - (.+)$/gm)].map(m=>m[1]).slice(0,5);}
 function counts(output){const get=name=>Number(new RegExp(`^# ${name} (\\d+)$`,'m').exec(output)?.[1]??NaN);return{tests:get('tests'),pass:get('pass'),fail:get('fail'),cancelled:get('cancelled'),skipped:get('skipped')};}
-function runTests(dir){const p=spawnSync(process.execPath,['--test','--test-reporter=tap','test/assessment.test.mjs','test/incidents.test.mjs'],{cwd:dir,encoding:'utf8',timeout:20000,maxBuffer:200000});if(p.error||p.signal)throw Error('Mutation test execution failed');return{process:p,counts:counts(p.stdout)};}
+function runTests(dir){const p=spawnSync(process.execPath,['--test','--test-reporter=tap','test/assessment.test.mjs','test/incidents.test.mjs','test/refusal-codes.test.mjs','test/mandatory-minimums.test.mjs'],{cwd:dir,encoding:'utf8',timeout:20000,maxBuffer:200000});if(p.error||p.signal)throw Error('Mutation test execution failed');return{process:p,counts:counts(p.stdout)};}
 for(const [name,from,to,target=source]of mutants){
   const base=target===source?original:await readFile(join(root,target),'utf8');
   if(!base.includes(from))throw Error('Mutation anchor drift: '+name);
   const dir=await mkdtemp(join(tmpdir(),'kya-mutant-'));
-  try{await cp(join(root,'src'),join(dir,'src'),{recursive:true});await cp(join(root,'test'),join(dir,'test'),{recursive:true});await cp(join(root,'package.json'),join(dir,'package.json'));await cp(join(root,'profiles'),join(dir,'profiles'),{recursive:true});
+  try{await cp(join(root,'src'),join(dir,'src'),{recursive:true});await cp(join(root,'test'),join(dir,'test'),{recursive:true});await cp(join(root,'package.json'),join(dir,'package.json'));await cp(join(root,'profiles'),join(dir,'profiles'),{recursive:true});for(const extra of ['dashboard','docs','schemas'])await cp(join(root,extra),join(dir,extra),{recursive:true});
     const baseline=runTests(dir);if(baseline.process.status!==0||!Number.isSafeInteger(baseline.counts.tests)||baseline.counts.tests<1||baseline.counts.fail!==0||baseline.counts.cancelled!==0||baseline.counts.skipped!==0)throw Error('Mutation baseline did not run cleanly: '+name);
     const mutated=base.replace(from,to);await writeFile(join(dir,target),mutated);const candidate=runTests(dir);
     if(candidate.counts.tests!==baseline.counts.tests||candidate.counts.cancelled!==0||candidate.counts.skipped!==0)throw Error('Mutant did not exercise identical complete test population: '+name);
@@ -43,4 +53,4 @@ for(const [name,from,to,target=source]of mutants){
     if(!killed)throw Error('SURVIVING evaluator mutant: '+name);
   }finally{await rm(dir,{recursive:true,force:true});}
 }
-console.log(JSON.stringify({schema:'kya.mutation-controls/v1',baselineSourceDigest:hashBytes(original),controls:results,allKilled:true,limits:'Seventeen targeted gate mutations; not exhaustive security verification'},null,2));
+console.log(JSON.stringify({schema:'kya.mutation-controls/v1',baselineSourceDigest:hashBytes(original),controls:results,allKilled:true,limits:'Twenty-seven targeted gate mutations; not exhaustive security verification'},null,2));
