@@ -1,6 +1,6 @@
 # KYC controls and their stronger agent equivalents
 
-Date: 2026-10-14. Status: research input, not a specification. Two deep-research runs (about 40 sources, 156 claims extracted, 50 sent to three-vote adversarial verification, 8 killed). Several verifier votes in the second run state they relied on recollection or a secondary page rather than a fetched primary text; treat every row marked *needs primary re-check* accordingly. Jurisdiction is named for each rule; nothing here is universal law.
+Date: 2026-10-14. Status: research input, not a specification. Three deep-research runs (about 60 sources, 250 claims extracted, 75 sent to three-vote adversarial verification, 12 killed). The third run fetched primary texts where it could. Several verifier votes in the second run state they relied on recollection or a secondary page rather than a fetched primary text; treat every row marked *needs primary re-check* accordingly. Jurisdiction is named for each rule; nothing here is universal law.
 
 ## Verified regulatory mechanics
 
@@ -8,7 +8,7 @@ Date: 2026-10-14. Status: research input, not a specification. Two deep-research
 | :--- | :--- | :--- | :--- |
 | Reliance does not transfer liability | UK MLR 2017 reg 39 (legislation.gov.uk, HMRC ECSH33550) | A relevant person relying on a third party for CDD remains liable for failures. It must immediately obtain the CDD information and be able to obtain copies of identification data on request. | High (primary text fetched) |
 | Reliance limited to supervised parties | UK MLR 2017 reg 39 | The relied-on person must be supervised under MLR or equivalent. The high-risk-country carve-out detail was not fully verified. | Medium; *needs primary re-check* |
-| Reliance in US | 31 CFR 1010.230(j) | Reasonable reliance, an AML-program-regulated counterparty, and an annual contractual certification. | Medium; *needs primary re-check* |
+| Reliance in US | 31 CFR 1020.220(a)(6) (CIP, primary text read); 1010.230(j) parallel not directly read | Reasonable reliance, an AML-program-regulated counterparty under a federal functional regulator, and an annual contractual certification. | High for CIP; Medium for 1010.230(j) |
 | Ongoing monitoring | MAS Notice 626 (run 1); UK JMLSG 5.7.1 and 5.7.3 | Reliance is allowed for initial CDD but not for ongoing monitoring (MAS). A monitoring system must flag, be reviewed promptly by the right persons, and drive appropriate action (JMLSG, fetched). | High |
 | Beneficial ownership is for natural persons | 31 CFR 1010.230(d) | Ownership (25 percent or more) and control prongs name individuals. An agent cannot be a beneficial owner. | Medium; *needs primary re-check* |
 | Event-driven re-verification | FinCEN order FIN-2026-R001, 13 Feb 2026 | Relief from re-identification at every new account. Verification is retained at first account, when prior information is doubted, and under risk-based ongoing due diligence. A recorded customer confirmation can suffice. | High (order text read) |
@@ -21,6 +21,24 @@ Killed by verifiers: a two-step beneficial-owner determination attributed to a s
 
 ## Not established by either run
 FATF R.10/11/15/20/24 primary text (fetch failures), EU AMLR/eIDAS 2.0 article text (EUR-Lex fetch failed), Mastercard, Stripe and Coinbase mechanics, sanctions screening, SAR/STR specifics and the quantified KYC failure rates. Do not cite them from this note.
+
+## Third run: primary-source pass (2026-10-14)
+
+| Topic | Finding | Source | Confidence |
+| :--- | :--- | :--- | :--- |
+| US CIP reliance | 31 CFR 1020.220(a)(6) allows reliance on another institution only if reliance is reasonable, that institution is subject to a 31 U.S.C. 5318(h) AML program rule and a federal functional regulator, and a contract requires annual certification. An agent- or operator-issued credential is therefore a data input to the bank's own CIP, not reliance, unless the issuer is a regulated institution under contract. | Cornell LII and eCFR current text, matching the 2018 govinfo edition | High (3-0, three reads) |
+| US CIP minimums | Name, date of birth, address and identification number are collected before account opening; verification follows within a reasonable time. | 31 CFR 1020.220(a)(2) | High (collection); 2-1 on verification timing |
+| EU AMLR 2024/1624 | Art. 20(1) lists nine CDD measures, including verifying who acts on the customer's behalf. Art. 26(1) requires ongoing monitoring; Art. 26(2) caps data refresh at 1 year for higher risk and 5 years otherwise. Applies from 10 July 2027. Reliance (Art. 48-50) not reached. | Secondary mirror (springlex); EUR-Lex returned empty | Medium |
+| Stripe ACP | Public overview pages specify no operator vetting, principal binding, revocation or audit. The `delegate_payment` spec (2026-04-17) does carry scope limits: `max_amount`, `currency`, `expires_at`, `merchant_id`, `checkout_session_id`, `reason`. Vetting is delegated to each AI platform. | docs.stripe.com, agenticcommerce.dev, OpenAPI spec | High on the fetched pages |
+| Coinbase x402 | Pages read specify no identity, principal binding, operator vetting, revocation or audit logging. The facilitator screens addresses (OFAC, Know Your Transaction); that is transaction screening, not KYC of an operator. Absence claim limited to the pages read. | docs.cdp.coinbase.com | Medium |
+| Deepfakes against onboarding | FinCEN Alert FIN-2024-Alert004 (13 Nov 2024) reports a rise from 2023 into 2024 in SARs describing deepfakes used to defeat identity verification, used to open funnel accounts and to build synthetic identities. Qualitative; no counts. | FinCEN PDF | High |
+| De-risking | EBA Opinion EBA-Op-2022-01 (5 Jan 2022) finds unwarranted de-risking harms financial-crime fighting, inclusion and competition. No cost figures verified. | EBA press release | High |
+
+Refuted in this run: a "four conditions" form of the US reliance rule, ACP OAuth as its only principal-binding mechanism, and a claim that institutions mostly detected AI-generated IDs after onboarding.
+
+Still not established: FATF Recommendations text, AMLR reliance articles, eIDAS 2.0 wallet provisions, the 31 CFR 1010.230(j) text itself, Open-KYA repository contents, Mastercard Agent Pay, and quantified KYC-failure figures (BIS, FATF).
+
+Design consequence: vendor agentic-payment protocols today supply per-transaction scope limits and address screening, not accountable-principal binding or vetting, which supports the KYA gap analysis. It does not show those vendors lack such controls elsewhere.
 
 ## Mapping: KYC control to stronger agent equivalent
 
