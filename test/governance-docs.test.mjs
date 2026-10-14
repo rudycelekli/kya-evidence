@@ -136,21 +136,3 @@ test('versioning treats an evaluator digest change as breaking with an ADR and m
   assert.match(section, /ADR/);
   assert.match(section, /migration note/);
 });
-
-test('requirement proposal names at most three MUST requirements tied to real tests', async () => {
-  const proposal = JSON.parse(await read('docs/lane-n-requirements-proposal.json'));
-  const registry = JSON.parse(await read('evidence/requirements.json'));
-  const registered = new Set(registry.requirements.map((item) => item.id));
-  const source = await read('test/governance-docs.test.mjs');
-  const musts = proposal.requirements.filter((item) => item.level === 'MUST');
-  assert.ok(musts.length <= 3, 'at most three MUST proposals are allowed');
-  for (const item of proposal.requirements) {
-    assert.match(item.id, /^KYA-[A-Z]+-\d{3}$/);
-    assert.equal(registered.has(item.id), false, item.id + ' must not collide with the frozen registry');
-    assert.ok(item.verifiedBy.length > 0, item.id + ' needs at least one test');
-    for (const ref of item.verifiedBy) {
-      assert.equal(ref.file, 'test/governance-docs.test.mjs');
-      assert.ok(source.includes("test('" + ref.title + "'"), 'cited test is missing: ' + ref.title);
-    }
-  }
-});

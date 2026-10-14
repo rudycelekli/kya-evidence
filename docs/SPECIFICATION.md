@@ -58,3 +58,7 @@ The dashboard displays imported files as unverified claimed reports. Its presets
 ## Interoperability and versioning
 
 This is not an official implementation of Open-KYA, W3C VC, A2A or MCP. Credential/discovery bridges must preserve exact input digests, source class and limits. Compatibility needs executable multi-implementation tests. Alpha schema changes require explicit versioning and migration notes. Invalid top-level input fails; invalid individual receipts become rejections. Determinism requires frozen time and input files.
+
+## Governance documents
+
+The project's draft governance layer lives in [docs/governance](governance/CHARTER.md): charter, IPR policy, trademark and conformance-claim rules, versioning, extension registry and decision process. Each legal-style document opens with a draft-for-counsel notice and none has been adopted by any body. Requirements about these documents are checked by `test/governance-docs.test.mjs`.

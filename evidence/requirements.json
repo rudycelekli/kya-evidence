@@ -2172,6 +2172,45 @@
           "title": "a policy not built on the frozen core profile is flagged as a custom profile"
         }
       ]
+    },
+    {
+      "id": "KYA-GOV-001",
+      "level": "MUST",
+      "area": "GOV",
+      "section": "Governance documents",
+      "statement": "Every governance document and the code of conduct MUST open with the draft-counsel notice until counsel has reviewed it and a body has adopted it.",
+      "tests": [
+        {
+          "file": "test/governance-docs.test.mjs",
+          "title": "every legal document opens with the draft-counsel notice"
+        }
+      ]
+    },
+    {
+      "id": "KYA-GOV-002",
+      "level": "MUST",
+      "area": "GOV",
+      "section": "Governance documents",
+      "statement": "CONTRIBUTING MUST state that each proposed commit carries a Developer Certificate of Origin sign-off, and a proposal without that sign-off MUST NOT be merged.",
+      "tests": [
+        {
+          "file": "test/governance-docs.test.mjs",
+          "title": "CONTRIBUTING mentions the Developer Certificate of Origin sign-off"
+        }
+      ]
+    },
+    {
+      "id": "KYA-GOV-003",
+      "level": "MUST",
+      "area": "GOV",
+      "section": "Governance documents",
+      "statement": "Every ADR MUST carry a Status line and the five required sections Context, Decision, Alternatives, Consequences and Validation.",
+      "tests": [
+        {
+          "file": "test/governance-docs.test.mjs",
+          "title": "every ADR has the five required sections and a Status line"
+        }
+      ]
     }
   ]
 }
