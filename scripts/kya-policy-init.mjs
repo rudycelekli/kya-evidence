@@ -128,7 +128,7 @@ export function main(argv = process.argv.slice(2)) {
       out: resolve(flags.out), template: template.id, policyId: policy.id, policyDigest: digest(policy), profileDigest: digest(profile), scopeId: policy.scopeId,
       trustedKeys: policy.trustedKeys.map(k => ({ id: k.id, role: k.role })), notValidated: true,
       customProfile,
-      warnings: [...(customProfile ? ['CUSTOM PROFILE: this is not the frozen kya-core profile, so the template thresholds do not carry their documented meaning; review every threshold and minimum yourself'] : []), 'Template thresholds are starting points, not validated thresholds', 'No template makes an agent safe; a qualified result is not an authorization grant', 'Only runtime evidence can count under this policy'],
+      warnings: [...(customProfile ? ['CUSTOM PROFILE: this is not the frozen kya-core profile, so the template thresholds do not carry their documented meaning; review every threshold and minimum yourself. The policy schema has no field to record this; kya-check flags the policy as customProfile when it runs'] : []), 'Template thresholds are starting points, not validated thresholds', 'No template makes an agent safe; a qualified result is not an authorization grant', 'Only runtime evidence can count under this policy'],
     }, null, 2) + '\n');
     return 0;
   } catch (e) {

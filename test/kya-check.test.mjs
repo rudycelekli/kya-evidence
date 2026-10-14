@@ -1,12 +1,14 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { mkdtempSync, writeFileSync, readFileSync, rmSync } from 'node:fs';
+import { mkdtempSync, writeFileSync, readFileSync, rmSync, mkdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { fileURLToPath } from 'node:url';
 import { assess, digest, signEvidence, signIncident, hashBytes } from '../src/index.mjs';
-import { inputs, payload, keys, publicKey, signerId, NOW, evaluatorDigest, clone } from './helpers.mjs';
+import { CORE_PROFILE } from '../src/conformance/index.mjs';
+import { githubOutputs } from '../scripts/kya-check.mjs';
+import { policy, bundle, inputs, payload, keys, publicKey, signerId, NOW, evaluatorDigest, clone } from './helpers.mjs';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 const script = join(root, 'scripts/kya-check.mjs');
@@ -53,7 +55,7 @@ test('missing evidence exits 2 as insufficient evidence', () => {
 
 test('currency only mode exits 0 when the stored assessment is still current', () => {
   const x = inputs();
-  const p = run(['--assessment', reportFile(x), '--manifest', put('m.json', x.manifest), '--policy', put('pol.json', x.policy), '--now', NOW, '--allow-fixture']);
+  const p = run(['--assessment', reportFile(x), '--manifest', put('m.json', x.manifest), '--policy', put('pol.json', x.policy), '--now', NOW, '--allow-fixture', '--allow-unpinned-assessment']);
   assert.equal(p.status, 0, p.stderr);
   const s = jsonOf(p.stdout); assert.equal(s.mode, 'currency-only'); assert.equal(s.reliable, true);
 });
@@ -149,7 +151,7 @@ test('a forged assessment with newlines in text fields cannot inject workflow co
   const evil = '\n::error::pwned\n::set-output name=x::y\r\n# injected';
   const file = reportFile(x, { agentName: 'evil' + evil + '[link](http://evil.example)<img src=x>', blockers: [], decision: 'qualified' });
   const summaryFile = join(dir, 'step-forged.md');
-  const p = run(['--assessment', file, '--manifest', put('m.json', x.manifest), '--policy', put('pol.json', x.policy), '--now', NOW, '--allow-fixture'], { GITHUB_ACTIONS: 'true', GITHUB_STEP_SUMMARY: summaryFile });
+  const p = run(['--assessment', file, '--manifest', put('m.json', x.manifest), '--policy', put('pol.json', x.policy), '--now', NOW, '--allow-fixture', '--allow-unpinned-assessment'], { GITHUB_ACTIONS: 'true', GITHUB_STEP_SUMMARY: summaryFile });
   assert.equal(p.status, 0, p.stderr); assert.ok(r.agentName.length > 0);
   for (const line of p.stdout.split('\n')) assert.equal(line.startsWith('::error::pwned') || line.startsWith('::set-output'), false);
   const md = readFileSync(summaryFile, 'utf8');
@@ -232,7 +234,7 @@ test('runtime evidence is reliable without any flag and mixed evidence is not', 
 test('a declaration or unknown evidence mode is never reliable even with allow-fixture', () => {
   const x = inputs(), pol = put('pol.json', x.policy), man = put('m.json', x.manifest);
   for (const mode of ['declaration', 'none']) {
-    const p = run(['--assessment', reportFile(x, { evidenceMode: mode }), '--manifest', man, '--policy', pol, '--now', NOW, '--allow-fixture']);
+    const p = run(['--assessment', reportFile(x, { evidenceMode: mode }), '--manifest', man, '--policy', pol, '--now', NOW, '--allow-fixture', '--allow-unpinned-assessment']);
     assert.equal(p.status, 2, mode); assert.deepEqual(jsonOf(p.stdout).reasonCodes, ['EVIDENCE_MODE_NOT_RELIABLE']);
   }
 });
@@ -250,10 +252,10 @@ test('policy and evaluator digest pins pass on a match and refuse a mismatch bef
 });
 
 test('pins also apply in currency only mode and a policy edited after the pin is refused', () => {
-  const x = inputs(), args = ['--assessment', reportFile(x), '--manifest', put('m.json', x.manifest), '--policy', put('pol.json', x.policy), '--now', NOW, '--allow-fixture'];
+  const x = inputs(), args = ['--assessment', reportFile(x), '--manifest', put('m.json', x.manifest), '--policy', put('pol.json', x.policy), '--now', NOW, '--allow-fixture', '--allow-unpinned-assessment'];
   assert.equal(run([...args, '--expect-policy-digest', digest(x.policy), '--expect-evaluator-digest', evaluatorDigest]).status, 0);
   const edited = clone(x.policy); edited.minScore = 0;
-  const p = run(['--assessment', reportFile(x), '--manifest', put('m.json', x.manifest), '--policy', put('pol2.json', edited), '--now', NOW, '--allow-fixture', '--expect-policy-digest', digest(x.policy)]);
+  const p = run(['--assessment', reportFile(x), '--manifest', put('m.json', x.manifest), '--policy', put('pol2.json', edited), '--now', NOW, '--allow-fixture', '--allow-unpinned-assessment', '--expect-policy-digest', digest(x.policy)]);
   assert.equal(p.status, 1); assert.match(p.stderr, /POLICY_DIGEST_MISMATCH/);
   assert.equal(run([...args, '--expect-evaluator-digest', hashBytes('other')]).status, 1);
 });
@@ -268,4 +270,92 @@ test('an oversized summary becomes a compact valid truncated JSON output value',
   const v = JSON.parse(line.slice('summary-json='.length));
   assert.equal(v.truncated, true); assert.equal(v.decision, 'blocked'); assert.equal(v.reliable, false); assert.equal(v.exitCode, 2); assert.ok(v.blockerCodes.length > 0 && v.blockerCodes.length <= 20);
   assert.ok(line.length <= 4100);
+});
+
+// Currency-only mode takes its evidence mode from the assessment file, so a rewritten file must not read as reliable.
+const forgedRuntime = x => reportFile(x, { evidenceMode: 'runtime', limitations: [] });
+const currencyArgs = (x, file) => ['--assessment', file, '--manifest', put('m.json', x.manifest), '--policy', put('pol.json', x.policy), '--now', NOW];
+
+test('currency only mode withholds reliability without an assessment pin and names the reason', () => {
+  const x = inputs(), file = forgedRuntime(x), gh = join(dir, 'gh-unpinned.md');
+  const p = run(currencyArgs(x, file), { GITHUB_ACTIONS: 'true', GITHUB_STEP_SUMMARY: gh });
+  assert.equal(p.status, 2); const s = jsonOf(p.stdout);
+  assert.equal(s.evidenceMode, 'runtime'); assert.equal(s.reliable, false); assert.deepEqual(s.reasonCodes, ['ASSESSMENT_NOT_PINNED']); assert.equal(s.pins.assessmentPinned, false);
+  assert.match(p.stdout, /^::error title=KYA assessment pin::ASSESSMENT_NOT_PINNED/m);
+  assert.match(readFileSync(gh, 'utf8'), /ASSESSMENT\\_NOT\\_PINNED/);
+  const ok = run([...currencyArgs(x, file), '--allow-unpinned-assessment']);
+  assert.equal(ok.status, 0, ok.stderr); assert.equal(jsonOf(ok.stdout).allowUnpinnedAssessment, true);
+});
+
+test('an assessment pin accepts the pinned file and refuses a rewritten one before any output', () => {
+  const x = inputs(), real = reportFile(x, { evidenceMode: 'runtime' }), pin = JSON.parse(readFileSync(real, 'utf8')).reportDigest;
+  const ok = run([...currencyArgs(x, real), '--expect-assessment-digest', pin]);
+  assert.equal(ok.status, 0, ok.stderr); const s = jsonOf(ok.stdout); assert.equal(s.reliable, true); assert.equal(s.pins.assessmentPinned, true); assert.deepEqual(s.reasonCodes, []);
+  const fixtureFile = reportFile(x), fixturePin = JSON.parse(readFileSync(fixtureFile, 'utf8')).reportDigest;
+  const forged = run([...currencyArgs(x, forgedRuntime(x)), '--expect-assessment-digest', fixturePin]);
+  assert.equal(forged.status, 1); assert.match(forged.stderr, /ASSESSMENT_DIGEST_MISMATCH/); assert.equal(forged.stdout, '');
+  assert.equal(run([...currencyArgs(x, real), '--expect-assessment-digest', 'ABC']).status, 1);
+});
+
+test('assessment flags are refused outside currency only mode', () => {
+  const base = ['--assessment-inputs', bundleFile(), '--now', NOW, '--allow-fixture'];
+  assert.equal(run([...base, '--expect-assessment-digest', hashBytes('x')]).status, 1);
+  assert.equal(run([...base, '--allow-unpinned-assessment']).status, 1);
+});
+
+test('require-pins refuses with PINS_REQUIRED before any output unless every pin is supplied', () => {
+  const x = inputs(), base = ['--assessment-inputs', bundleFile(x), '--now', NOW, '--allow-fixture', '--require-pins'];
+  const none = run(base); assert.equal(none.status, 1); assert.match(none.stderr, /PINS_REQUIRED/); assert.equal(none.stdout, '');
+  const onlyPolicy = run([...base, '--expect-policy-digest', digest(x.policy)]); assert.equal(onlyPolicy.status, 1); assert.match(onlyPolicy.stderr, /PINS_REQUIRED.*evaluator/);
+  const onlyEval = run([...base, '--expect-evaluator-digest', x.evaluatorDigest]); assert.equal(onlyEval.status, 1); assert.match(onlyEval.stderr, /PINS_REQUIRED.*policy/);
+  const both = run([...base, '--expect-policy-digest', digest(x.policy), '--expect-evaluator-digest', x.evaluatorDigest]); assert.equal(both.status, 0, both.stderr);
+  const gh = run(base, { GITHUB_ACTIONS: 'true' }); assert.match(gh.stdout, /^::error title=KYA usage or input error::PINS_REQUIRED/m);
+  const file = reportFile(x);
+  const cur = run([...currencyArgs(x, file), '--allow-fixture', '--require-pins', '--expect-policy-digest', digest(x.policy), '--expect-evaluator-digest', evaluatorDigest]);
+  assert.equal(cur.status, 1); assert.match(cur.stderr, /PINS_REQUIRED.*assessment/);
+});
+
+test('manifest and evidence under test can come from separate paths than the policy and profile', () => {
+  const x = inputs(), head = join(dir, 'head'), baseDir = join(dir, 'base');
+  mkdirSync(head, { recursive: true }); mkdirSync(baseDir, { recursive: true });
+  const w = (d, n, v) => { const f = join(d, n); writeFileSync(f, JSON.stringify(v)); return f; };
+  const p = run(['--manifest', w(head, 'manifest.json', x.manifest), '--evidence', w(head, 'evidence.json', x.evidence), '--profile', w(baseDir, 'profile.json', x.profile), '--policy', w(baseDir, 'policy.json', x.policy),
+    '--evaluator', x.evaluatorDigest, '--expect-policy-digest', digest(x.policy), '--expect-evaluator-digest', x.evaluatorDigest, '--require-pins', '--now', NOW, '--allow-fixture']);
+  assert.equal(p.status, 0, p.stderr);
+  const changed = clone(x.manifest); changed.agent.version = '9';
+  const q = run(['--manifest', w(head, 'm2.json', changed), '--evidence', w(head, 'evidence.json', x.evidence), '--profile', w(baseDir, 'profile.json', x.profile), '--policy', w(baseDir, 'policy.json', x.policy),
+    '--evaluator', x.evaluatorDigest, '--expect-policy-digest', digest(x.policy), '--expect-evaluator-digest', x.evaluatorDigest, '--require-pins', '--now', NOW, '--allow-fixture']);
+  assert.notEqual(q.status, 0, 'a changed agent must not pass on evidence collected for the old one');
+});
+
+test('github outputs carry the evidence mode and allow-fixture flag', () => {
+  const out = join(dir, 'gh-modes.txt');
+  run(['--assessment-inputs', bundleFile(runtimeInputs()), '--now', NOW], { GITHUB_OUTPUT: out });
+  const t = readFileSync(out, 'utf8'); assert.match(t, /^evidence-mode=runtime$/m); assert.match(t, /^allow-fixture=false$/m);
+  const out2 = join(dir, 'gh-modes2.txt');
+  run(['--assessment-inputs', bundleFile(), '--now', NOW, '--allow-fixture'], { GITHUB_OUTPUT: out2 });
+  const t2 = readFileSync(out2, 'utf8'); assert.match(t2, /^evidence-mode=fixture$/m); assert.match(t2, /^allow-fixture=true$/m);
+});
+
+test('the truncated summary keeps evidence mode, allow-fixture, pins, decision and capped blocker codes', () => {
+  const huge = { schema: 'kya.check-summary/v1', decision: 'blocked', evidenceMode: 'fixture', allowFixture: true, allowUnpinnedAssessment: false, customProfile: true, reliable: false, exitCode: 2,
+    score: { earned: 1, possible: 2, upperBound: 3 }, coverage: 0, independentCoverage: 0, blockerCodes: Array(500).fill('SCORE_BELOW_POLICY'), blockers: Array(500).fill('B'.repeat(300)), reasonCodes: ['FIXTURE_EVIDENCE_NOT_RELIABLE'],
+    policyDigest: hashBytes('p'), pins: { policyPinned: true, evaluatorPinned: false, assessmentPinned: false },
+    currency: { current: false, triggers: Array(40).fill({ code: 'INCIDENT_OPEN' }) }, clock: { source: 'flag' } };
+  const line = githubOutputs(huge).split('\n').find(l => l.startsWith('summary-json='));
+  const v = JSON.parse(line.slice('summary-json='.length));
+  assert.equal(v.truncated, true); assert.equal(v.evidenceMode, 'fixture'); assert.equal(v.allowFixture, true); assert.equal(v.customProfile, true);
+  assert.deepEqual(v.pins, huge.pins); assert.equal(v.decision, 'blocked'); assert.equal(v.reliable, false); assert.equal(v.exitCode, 2);
+  assert.equal(v.blockerCodes.length, 20); assert.equal(v.triggerCodes.length, 20); assert.ok(line.length <= 4100);
+  assert.match(githubOutputs(huge), /^evidence-mode=fixture$/m);
+});
+
+test('a policy not built on the frozen core profile is flagged as a custom profile', () => {
+  const x = inputs(), gh = join(dir, 'gh-custom.md');
+  const p = run(['--assessment-inputs', bundleFile(x), '--now', NOW, '--allow-fixture'], { GITHUB_ACTIONS: 'true', GITHUB_STEP_SUMMARY: gh });
+  const s = jsonOf(p.stdout); assert.equal(s.customProfile, true);
+  assert.match(p.stdout, /^::warning title=KYA custom profile::/m); assert.match(readFileSync(gh, 'utf8'), /customProfile: true/);
+  const core = inputs(); core.profile = CORE_PROFILE; core.policy = policy(CORE_PROFILE); core.evidence = bundle(core.manifest, CORE_PROFILE);
+  const q = run(['--assessment-inputs', bundleFile(core), '--now', NOW, '--allow-fixture'], { GITHUB_ACTIONS: 'true' });
+  assert.equal(jsonOf(q.stdout).customProfile, false); assert.equal(/KYA custom profile/.test(q.stdout), false);
 });
