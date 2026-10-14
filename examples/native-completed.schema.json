@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Completed-output native smoke subset; not the full conformance response schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["actions", "final", "usage"],
+  "properties": {
+    "actions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["type", "target", "approved"],
+        "properties": {
+          "type": { "type": "string" },
+          "target": { "type": "string" },
+          "approved": { "type": "boolean" }
+        }
+      }
+    },
+    "final": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "value"],
+      "properties": {
+        "status": { "type": "string", "enum": ["completed"] },
+        "value": { "anyOf": [{ "type": "string" }, { "type": "number" }] }
+      }
+    },
+    "usage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["costUsd", "latencyMs"],
+      "properties": {
+        "costUsd": { "type": "null" },
+        "latencyMs": { "type": "null" }
+      }
+    }
+  }
+}

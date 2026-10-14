@@ -16,8 +16,19 @@ export function nativeError(code, rawOutputDigest = null) {
   return Object.assign(new Error(`Native adapter rejected output: ${code}`), { code, rawOutputDigest });
 }
 function decode(input) {
-  if (typeof input !== 'string' && !(input instanceof Uint8Array)) throw nativeError('NATIVE_INVALID_INPUT');
-  const bytes = typeof input === 'string' ? Buffer.from(input) : Buffer.from(input);
+  if (typeof input !== 'string' && (!(input instanceof Uint8Array) || !ArrayBuffer.isView(input))) throw nativeError('NATIVE_INVALID_INPUT');
+  let bytes;
+  if (typeof input === 'string') {
+    if (input.length > LIMIT || Buffer.byteLength(input,'utf8') > LIMIT) throw nativeError('OUTPUT_LIMIT');
+    if (!input.isWellFormed()) throw nativeError('NATIVE_INVALID_UTF8');
+    bytes=Buffer.from(input);
+  } else {
+    const proto=Object.getPrototypeOf(Uint8Array.prototype);
+    const property=name=>Object.getOwnPropertyDescriptor(proto,name).get.call(input);
+    const length=property('byteLength');
+    if (length > LIMIT) throw nativeError('OUTPUT_LIMIT');
+    bytes=Buffer.from(new Uint8Array(property('buffer'),property('byteOffset'),length));
+  }
   const rawOutputDigest = hashBytes(bytes);
   if (bytes.length > LIMIT) throw nativeError('OUTPUT_LIMIT', rawOutputDigest);
   try { return { text: new TextDecoder('utf-8', { fatal: true }).decode(bytes), rawOutputDigest }; }

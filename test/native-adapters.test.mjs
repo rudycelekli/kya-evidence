@@ -117,3 +117,24 @@ test('independent native transcript oracle detects weakened failure and tool gat
   const oracle=parser=>{assert.equal(parser(codex([{type:'error',message:'runtime failed'},final()])).accepted,false);assert.equal(parser(codex([{type:'item.completed',item:{id:'unsafe',type:'command_execution',status:'failed'}},final()])).accepted,false);};oracle(parseCodexEvents);
   for(const mutantSource of [source.replace("const failed = terminal === 'turn.failed' || sawError;",'const failed = false;'),source.replace("const accepted = status === 'completed' && violations.length === 0;","const accepted = status === 'completed';")]){assert.notEqual(mutantSource,source);const mutant=await import(`data:text/javascript;base64,${Buffer.from(mutantSource).toString('base64')}`);assert.throws(()=>oracle(mutant.parseCodexEvents),assert.AssertionError);}
 });
+test('native attempt slots are reserved before asynchronous preflight and count rejected attempts',async()=>{
+  const base=fileURLToPath(new URL('../.private/',import.meta.url));await mkdir(base,{recursive:true});const directory=await mkdtemp(join(base,'native-attempt-cap-'));
+  try{
+    const optionsWithMissingAuth={...options,auth:{home:directory,codexHome:directory}};
+    const concurrent=createCodexExecAdapter(optionsWithMissingAuth);
+    const results=await Promise.allSettled(Array.from({length:513},()=>concurrent.run({})));
+    assert.equal(results.filter(r=>r.reason?.code==='NATIVE_CONCURRENCY_LIMIT').length,512);
+    assert.equal(concurrent.inspectObservations().length,1);
+    const sequential=createCodexExecAdapter(optionsWithMissingAuth);
+    for(let i=0;i<512;i++)await assert.rejects(sequential.run({}),codeError('NATIVE_AUTH_MODE_UNVERIFIED'));
+    await assert.rejects(sequential.run({}),codeError('NATIVE_OBSERVATION_LIMIT'));
+  }finally{await rm(directory,{recursive:true,force:true});}
+});
+test('native byte bounds reject before allocating copies and refuse executable byte views',()=>{
+  assert.throws(()=>parseCodexEvents('x'.repeat(262145)),codeError('OUTPUT_LIMIT'));
+  assert.throws(()=>parseClaudeResult(new Uint8Array(262145)),codeError('OUTPUT_LIMIT'));
+  assert.throws(()=>parseClaudeResult(new Proxy(new Uint8Array(8),{})),codeError('NATIVE_INVALID_INPUT'));
+  assert.throws(()=>parseClaudeResult('\ud800'),codeError('NATIVE_INVALID_UTF8'));
+  const valid=Buffer.from(JSON.stringify(claude()));for(const key of ['length','byteLength','byteOffset','buffer'])Object.defineProperty(valid,key,{get(){throw Error('Executable byte getter must not run');}});
+  assert.equal(parseClaudeResult(valid).accepted,true);
+});

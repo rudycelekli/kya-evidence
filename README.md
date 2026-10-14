@@ -8,7 +8,7 @@ KYA Evidence is local-first open infrastructure for **Know Your Agent**: portabl
 
 Every person may eventually delegate to an agent. Every relying party will need a better answer than “trust the prompt.” Start with an exact question: **does this configuration meet this party's policy for this scope, on this evidence?** Keep the result portable, the decision explainable and the correction process open.
 
-[Specification](docs/SPECIFICATION.md) · [Scoring](docs/SCORING.md) · [Research universes](docs/UNIVERSES.md) · [Threat model](docs/THREAT-MODEL.md) · [Adapters](docs/ADAPTERS.md) · [Roadmap](docs/ROADMAP.md) · [Contribute](CONTRIBUTING.md)
+[Specification](docs/SPECIFICATION.md) · [Scoring](docs/SCORING.md) · [Research universes](docs/UNIVERSES.md) · [Byte interoperability](docs/INTEROPERABILITY.md) · [Threat model](docs/THREAT-MODEL.md) · [Adapters](docs/ADAPTERS.md) · [Roadmap](docs/ROADMAP.md) · [Contribute](CONTRIBUTING.md)
 
 ## Run from a checkout
 
@@ -39,6 +39,8 @@ node bin/kya.mjs benchmark --out ./artifacts/benchmark
 ```
 
 Use generated demo inputs and the [adapter protocol](docs/ADAPTERS.md) to connect an explicitly authorized runtime. `probe` checks executable availability and version, never competence or safety. A command adapter is a transport, not an operating-system sandbox. `verify` checks report checksum integrity; it does not authenticate the report or recompute its claims.
+
+The typed SDK includes strict Claude Code result and Codex event parsers, explicit command plans and opt-in native factories. Native model claims remain declarations and cannot earn observed-action credit. Claude execution is blocked until effective managed policy can be established. Codex requires verified subscription auth and explicit binding of included global instructions. See [execution gates and private transcript retention](docs/ADAPTERS.md).
 
 ## Evidence before reputation
 
@@ -85,6 +87,8 @@ node scripts/verify-release.mjs
 ```
 
 The package builder reads immutable Git blobs from a clean committed revision, fixes archive metadata, and records every file's SHA-256. Golden vectors expose canonical bytes and domain-separated Ed25519 signatures for independent implementations. A valid hash is integrity evidence; authenticated issuance, truthful execution and full incident disclosure need separate evidence.
+
+A secondary [Python byte checker](docs/INTEROPERABILITY.md) reconstructs the public vectors without forwarding expected answers. It verifies Ed25519 when an existing cryptographic backend is available and otherwise reports partial verification. Its supported numeric subset is explicit; unsupported doubles are refused. This is a second implementation by this project team, with external implementers and full semantic assessment parity still needed.
 
 Contribute reproducible failures, evaluator challenges, transport adapters or specification criticism. Read [CONTRIBUTING.md](CONTRIBUTING.md), [governance](docs/GOVERNANCE.md) and [SECURITY.md](SECURITY.md). Ongoing development uses bounded hypotheses, frozen comparisons, independent review and explicit `ACCEPT`, `REJECT` or `INCONCLUSIVE` outcomes. A roadmap does not imply a running scheduler. Public releases, cost-incurring agent executions and deployments need explicit authorization.
 

@@ -1,6 +1,7 @@
 # ADR-0007: Native CLI output remains declaration evidence
 
 **Status**: Implemented; independent review pending
+**Updated**: 2026-10-13 — Reserve lifetime attempt slots before asynchronous preflight, refuse simultaneous calls and bound native byte input before copying. Independent repair review follows.
 **Date**: 2026-10-13
 **Related**: ADR-0002, ADR-0003, ADR-0004, ADR-0006
 

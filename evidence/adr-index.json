@@ -66,8 +66,32 @@
         "ADR-0003",
         "ADR-0005"
       ]
+    },
+    {
+      "id": "ADR-0007",
+      "title": "Native CLI output remains declaration evidence",
+      "status": "Implemented; independent review pending",
+      "file": "docs/adr/0007-native-declaration-transports.md",
+      "contentDigest": "9e325fac31122fad644424ebe335e01d0bb866b55ea6be38d87b3481751116b8",
+      "related": [
+        "ADR-0002",
+        "ADR-0003",
+        "ADR-0004",
+        "ADR-0006"
+      ]
+    },
+    {
+      "id": "ADR-0008",
+      "title": "Verify portable protocol bytes in a secondary Python implementation",
+      "status": "Implemented",
+      "file": "docs/adr/0008-secondary-python-byte-portability.md",
+      "contentDigest": "1588bfa65905ac18f232d2cb2252abd8ebe2157c3a7e05a1bb162beda4939bbb",
+      "related": [
+        "ADR-0002",
+        "ADR-0006"
+      ]
     }
   ],
-  "digest": "3a60bdc00b6d380a9a08688ceab8218af2aca79089b35ceec4ca1969d8925bb7",
+  "digest": "082e06d2b0048d31c0ca85f81a281d0b420701804eae35c8a93fb62ddfd1852d",
   "store": "portable local file; not a claim of AgentDB graph persistence"
 }

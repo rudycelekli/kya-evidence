@@ -72,6 +72,7 @@ function adapter(options, provider, builder, parser) {
   const planOptions = {};
   for (const [key, descriptor] of Object.entries(descriptors)) if (key !== 'captureTranscript') Object.defineProperty(planOptions, key, descriptor);
   const fixedPlan = builder(planOptions), observations = [];
+  let attempts = 0, inFlight = false;
   const publicAdapter = {
     id: provider,
     commandPlan: fixedPlan,
@@ -79,9 +80,13 @@ function adapter(options, provider, builder, parser) {
     async run(request, { signal } = {}) {
       if (signal !== undefined && !(signal instanceof AbortSignal)) throw nativeError('NATIVE_INVALID_SIGNAL');
       if (!fixedPlan.authOptIn) throw nativeError('NATIVE_AUTH_REQUIRED');
-      if (observations.length >= 512) throw nativeError('NATIVE_OBSERVATION_LIMIT');
+      if (attempts >= 512) throw nativeError('NATIVE_OBSERVATION_LIMIT');
+      if (inFlight) throw nativeError('NATIVE_CONCURRENCY_LIMIT');
       const capturedRequest = parseJson(canonical(request));
       const requestDigest = digest(capturedRequest), commandPlanDigest = digest(fixedPlan);
+      // Reserve before the first await; failed preflights consume a lifetime
+      // attempt and simultaneous calls cannot multiply the provider budget.
+      attempts++; inFlight = true;
       let transport = null, recorded = false, transcriptCaptured = false;
       try {
         if (signal?.aborted) throw nativeError('ABORTED');
@@ -108,7 +113,7 @@ function adapter(options, provider, builder, parser) {
       } catch (error) {
         if (!recorded) observations.push({ schema: 'kya.native-observation/v1', provider, source: 'declaration', accepted: false, runtimeStatus: 'rejected', requestDigest, commandPlanDigest, rawOutputDigest: error.rawOutputDigest ?? transport?.rawOutputDigest ?? null, partialOutputDigest: error.partialOutputDigest ?? null, transcriptCaptured, violations: [typeof error.code === 'string' ? error.code : 'NATIVE_TRANSPORT_ERROR'], limitations: [...NATIVE_LIMITATIONS] });
         throw nativeError(typeof error.code === 'string' ? error.code : 'NATIVE_TRANSPORT_ERROR', error.rawOutputDigest ?? transport?.rawOutputDigest ?? null);
-      }
+      } finally { inFlight = false; }
     }
   };
   return markAdapter(publicAdapter, { source: 'declaration', id: provider, mode: null });
