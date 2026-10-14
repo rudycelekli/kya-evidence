@@ -401,6 +401,36 @@ test('status-list CLI refuses an empty policy and a missing valid until and sign
   const ok = run([...base, '--policy', good, '--valid-until', LU, '--out', join(dir, 'l.jwt')]);
   assert.equal(ok.status, 0, ok.stderr);
 });
+test('with the report the whole credential is compared to one rebuilt from it: five injected variants fail, the unmodified credential passes', () => {
+  const r = report(); const jwt = exportIt(r).jwt;
+  const ok = verifyAssessmentCredential(jwt, { now: AT, report: r });
+  assert.equal(ok.valid, true); assert.equal(ok.reportChecked, true);
+  const variants = {
+    notAsserted: [p => { p.credentialSubject.notAsserted = []; }, /credentialSubject/],
+    extraSubjectField: [p => { p.credentialSubject.authorized = true; }, /credentialSubject/],
+    credentialId: [p => { p.id = 'urn:kya:assessment:sha256:' + digest('other'); }, /\bid\b/],
+    extraEvidence: [p => { p.evidence.push({ type: 'KyaInputDigests', note: 'injected' }); }, /evidence/],
+    extraContext: [p => { p['@context'].push('https://example.test/extra'); }, /@context/]
+  };
+  for (const [name, [mutate, named]] of Object.entries(variants)) {
+    const forged = resign(jwt, (h, p) => mutate(p));
+    const alone = verifyAssessmentCredential(forged, { now: AT });
+    assert.equal(alone.reportChecked, false, name);
+    const res = verifyAssessmentCredential(forged, { now: AT, report: r });
+    assert.equal(res.valid, false, name);
+    const e = res.errors.find(x => x.code === 'REPORT_MISMATCH');
+    assert.ok(e, name);
+    assert.match(e.message, named, name);
+  }
+});
+test('report comparison rebuilds status entries exactly: a status-bearing credential passes, an injected status field fails', () => {
+  const r = report();
+  const jwt = exportIt(r, { status: { revocation: { statusListCredential: listUrl, statusListIndex: 5 } } }).jwt;
+  assert.equal(verifyAssessmentCredential(jwt, { now: AT, report: r }).valid, true);
+  const forged = resign(jwt, (h, p) => { p.credentialStatus[0].extra = 'x'; });
+  const res = verifyAssessmentCredential(forged, { now: AT, report: r });
+  assert.ok(res.errors.some(e => e.code === 'REPORT_MISMATCH' && /credentialStatus/.test(e.message)));
+});
 test('verification with the source report cross checks mode decision and digests and exposes a re-signed edit', () => {
   const r = report(); const jwt = exportIt(r).jwt;
   const edit = (h, p) => { p.credentialSubject.evidenceMode = 'runtime'; p.credentialSubject.limitations = p.credentialSubject.limitations.filter(l => !/fixture/.test(l)); };
