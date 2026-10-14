@@ -47,3 +47,15 @@ test('the gate rejects traces to skipped, todo, commented-out or non-exact test 
   await run(src=>src.replace(`test('${title}',`,`/* test('${title}',`).replace('\n});\n','\n}); */\n'),/trace missing/);
   await rejects(reg=>{reg.requirements[0].tests=[{file:'test/canonical.test.mjs',title:'canonical ordering'}];},/trace missing/);
 });
+
+test('the gate fails closed on option variables, obfuscated skips, dynamic titles and unflagged host-conditional skips',async()=>{
+  const title='canonical ordering and hash are deterministic across member insertion order',head=`test('${title}',`;
+  const trace=(extra={})=>reg=>{reg.requirements[0].tests=[{file:'test/canonical.test.mjs',title,...extra}];};
+  const mutate=(transform,extra,pattern)=>rejects(async(reg,dir)=>{trace(extra)(reg);const f=join(dir,'test/canonical.test.mjs');await writeFile(f,transform(await readFile(f,'utf8')));},pattern);
+  await mutate(src=>'const o={skip:true};\n'+src.replace(head,`test('${title}',o,`),{},/trace missing/);
+  for(const opt of ['{skip:!0}','{skip:(true)}',"{'skip':true}",'{todo:1}'])await mutate(src=>src.replace(head,`test('${title}',${opt},`),{},/trace missing/);
+  await mutate(src=>src.replace(head,`test('${title}',{skip:!process.env.X},`),{},/host-conditional/);
+  {const dir=await sandbox(async(reg,d)=>{reg.requirements[0].tests=[{file:'test/canonical.test.mjs',title,hostConditional:true}];const f=join(d,'test/canonical.test.mjs');await writeFile(f,(await readFile(f,'utf8')).replace(head,`test('${title}',{skip:!process.env.X},`));});
+   try{assert.equal((await loadRequirements(dir)).reg.requirements[0].tests[0].hostConditional,true);}finally{await rm(dir,{recursive:true,force:true});}}
+  await rejects(async(reg)=>{reg.requirements[0].tests=[{file:'test/canonical.test.mjs',title,hostConditional:true}];},/not host-conditional/);
+});

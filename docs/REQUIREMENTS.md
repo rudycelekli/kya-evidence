@@ -7,9 +7,9 @@ Each requirement is traced to at least one test that must exist exactly once; th
 | ID | Level | Requirement | Verified by |
 | :--- | :--- | :--- | :--- |
 | KYA-INT-001 | MUST | Canonicalization MUST be deterministic regardless of member insertion order, and MUST reject accessors, cycles, symbols, non-enumerable data and resource-exhausting input without invoking untrusted code. | `canonical.test.mjs` |
-| KYA-INT-002 | MUST | Strict parsing MUST reject duplicate object members and out-of-bound input, and MUST preserve string escapes and supported numbers exactly. | `canonical.test.mjs`, `interop.test.mjs` |
+| KYA-INT-002 | MUST | Strict parsing MUST reject duplicate object members and out-of-bound input, and MUST preserve string escapes and supported numbers exactly. | `canonical.test.mjs`, `interop.test.mjs` (host-conditional) |
 | KYA-INT-003 | MUST | Published golden vectors MUST reproduce the exact canonical bytes, SHA-256 digests and domain-separated Ed25519 signing input. | `vectors.test.mjs`, `canonical.test.mjs` |
-| KYA-INT-004 | MUST | A second implementation MUST reconstruct every published vector and MUST refuse, not approximate, inputs outside its supported subset. | `interop.test.mjs` |
+| KYA-INT-004 | MUST | A second implementation MUST reconstruct every published vector and MUST refuse, not approximate, inputs outside its supported subset. | `interop.test.mjs` (host-conditional) |
 | KYA-BND-001 | MUST | The subject digest MUST bind the complete manifest; changing a tool, model, configuration, principal or artifact field MUST invalidate prior receipts. | `assessment.test.mjs` |
 | KYA-BND-002 | MUST | Manifests MUST reject semantically conflicting permissions, duplicate identifiers and temporal inconsistency. | `assessment.test.mjs` |
 | KYA-BND-003 | MUST | Comparison MUST require identical policy, profile, evaluator, full-scope digest and complete check populations; equal scope names with different purpose or permissions MUST NOT compare. | `assessment.test.mjs`, `dossier.test.mjs` |
@@ -42,7 +42,8 @@ Each requirement is traced to at least one test that must exist exactly once; th
 | KYA-INC-001 | MUST | Incident records MUST be strict, signed under a domain-separated Ed25519 context and MUST carry only a details digest, never narrative text. | `incidents.test.mjs` |
 | KYA-INC-002 | MUST | A trusted unresolved high or critical incident MUST trigger reassessment, a future-dated trusted blocking report MUST stay open, and untrusted, revoked, misdirected or malformed records MUST NOT trigger and MUST be listed as ignored. | `incidents.test.mjs` |
 | KYA-INC-003 | MUST | Only an independent trusted key MAY resolve an incident, never its own report, and only with a resolution dated strictly after the incident; an appeal MUST be recorded without clearing the trigger. | `incidents.test.mjs` |
-| KYA-INC-004 | MUST | Incident records MUST be namespaced by signing key; duplicate or conflicting IDs MUST fail closed, so one key MUST NOT erase, downgrade or reopen another key's record, and an identical envelope delivered twice MUST NOT quarantine itself. | `incidents.test.mjs` |
-| KYA-MON-003 | MUST | A currency check MUST reject an assessment whose validity, subject, policy or decision fields are missing or malformed rather than treating it as current. | `assessment.test.mjs` |
+| KYA-INC-004 | MUST | Every distinct trusted report record MUST be retained; duplicate or conflicting IDs MUST fail closed (reports stay open, a resolution targets only an unambiguous reference), no key MUST be able to hide, downgrade or clear another record by reusing its ID, input order MUST NOT change the outcome, and an identical envelope delivered twice MUST NOT quarantine itself. | `incidents.test.mjs` |
+| KYA-MON-003 | MUST | A currency check MUST reject an assessment whose validity, scope, subject, policy or decision fields are missing or malformed, or whose validity precedes its assessment time, rather than treating it as current. | `assessment.test.mjs` |
+| KYA-REQ-001 | MUST | The traceability gate MUST treat dynamic titles, option variables, obfuscated or unconditional skip/todo as untraceable, MUST require an explicit hostConditional flag for host-conditional skips, and CI MUST fail on any skipped or todo test. | `requirements.test.mjs` |
 
-Registry digest: `01ad619133a7624dfb689b85a338e1a2346cf9d09f9fda2ba451f04b45cd084b`
+Registry digest: `0991a9ded05f3e50c1d42935c79536dbb2b7ee4d9b130b86c00ebab44bcbac74`

@@ -21,8 +21,11 @@ const mutants=[
   ['independent-resolution requirement removal',"else if (e.role!=='independent') ignored.push","else if (false) ignored.push",'src/assessment/application/currency.mjs'],
   ['incident trust-anchor bypass',"if (!roles.has(keyId)) skip(","if (false) skip(",'src/assessment/application/currency.mjs'],
   ['blocking-severity downgrade',"const BLOCKING = ['high','critical'];","const BLOCKING = ['critical'];",'src/assessment/application/currency.mjs'],
-  ['reporter self-resolution allowed',"if (t.keyId===e.keyId) ignored.push","if (false) ignored.push",'src/assessment/application/currency.mjs'],
-  ['malformed validity accepted',"timestamp(assessment.validUntil,'Assessment validity');","",'src/assessment/application/currency.mjs']
+  ['reporter self-resolution allowed',"else if (targets[0].keyId===e.keyId) ignored.push","else if (false) ignored.push",'src/assessment/application/currency.mjs'],
+  ['malformed validity accepted',"insist(timestamp(assessment.validUntil,'Assessment validity') >= timestamp(assessment.assessedAt,'Assessment time'),'Assessment validity precedes its assessment time');","",'src/assessment/application/currency.mjs'],
+  ['future resolution honoured',"if (e.future) { ignored.push({id:e.id,reason:'Incident is dated in the future'}); continue; }","",'src/assessment/application/currency.mjs'],
+  ['envelope dedupe removed',"if (seen.has(envelopeDigest)) continue;","",'src/assessment/application/currency.mjs'],
+  ['ambiguous-reference gate removed',"else if (targets.length>1) ignored.push","else if (false) ignored.push",'src/assessment/application/currency.mjs']
 ];
 const results=[];
 function failedNames(output){return [...output.matchAll(/^not ok \d+ - (.+)$/gm)].map(m=>m[1]).slice(0,5);}
@@ -40,4 +43,4 @@ for(const [name,from,to,target=source]of mutants){
     if(!killed)throw Error('SURVIVING evaluator mutant: '+name);
   }finally{await rm(dir,{recursive:true,force:true});}
 }
-console.log(JSON.stringify({schema:'kya.mutation-controls/v1',baselineSourceDigest:hashBytes(original),controls:results,allKilled:true,limits:'Fourteen targeted gate mutations; not exhaustive security verification'},null,2));
+console.log(JSON.stringify({schema:'kya.mutation-controls/v1',baselineSourceDigest:hashBytes(original),controls:results,allKilled:true,limits:'Seventeen targeted gate mutations; not exhaustive security verification'},null,2));

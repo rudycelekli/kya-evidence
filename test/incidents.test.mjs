@@ -6,9 +6,11 @@ import { inputs, keys, NOW, clone } from './helpers.mjs';
 
 const reviewer=generateKeyPairSync('ed25519'),reviewerPem=reviewer.publicKey.export({format:'pem',type:'spki'}).toString();
 const stranger=generateKeyPairSync('ed25519');
+const reviewer2=generateKeyPairSync('ed25519'),reviewer2Pem=reviewer2.publicKey.export({format:'pem',type:'spki'}).toString();
 const later='2026-10-13T12:30:00.000Z',CHECK='2026-10-13T13:00:00.000Z';
-function setup(){
+function setup(second=false){
   const i=inputs();i.policy.trustedKeys.push({id:keyId(reviewerPem),publicKey:reviewerPem,role:'independent'});
+  if(second)i.policy.trustedKeys.push({id:keyId(reviewer2Pem),publicKey:reviewer2Pem,role:'independent'});
   const report=assess(i);
   const inc=(patch={},key=keys.privateKey)=>signIncident({schema:'kya.incident/v1',id:'inc:1',subjectDigest:report.subjectDigest,kind:'report',severity:'critical',refId:null,reportedAt:later,detailsDigest:hashBytes('private incident detail'),...patch},key);
   const ctx=(incidents,policy=i.policy)=>({manifest:i.manifest,policy,now:CHECK,incidents});
@@ -74,4 +76,28 @@ test('only an independent trusted key can resolve; self resolution and appeals c
   assert(checkCurrency(report,ctx(own)).incidents.ignored.some(x=>/reporter/i.test(x.reason)));
   const equal=[inc(),mk(reviewer.privateKey,{reportedAt:later})];assert.deepEqual(ids(checkCurrency(report,ctx(equal))),['incident-open']);
   assert.throws(()=>checkCurrency(report,ctx('not-an-array')));
+});
+
+const setup2=()=>setup(true);
+const res2=(inc,patch={})=>inc({id:'res:1',kind:'resolution',severity:'low',refId:'inc:1',reportedAt:'2026-10-13T12:45:00.000Z',...patch},reviewer2.privateKey);
+
+test('same-key equivocation cannot hide a later unresolved report, in either input order',()=>{
+  const {report,inc,ctx}=setup2(),A=reviewer.privateKey;
+  const r1=inc({reportedAt:'2026-10-13T12:10:00.000Z'},A),r2=inc({severity:'high',reportedAt:'2026-10-13T12:50:00.000Z',detailsDigest:hashBytes('second')},A);
+  const resolution=res2(inc,{reportedAt:'2026-10-13T12:30:00.000Z'});
+  for(const order of [[r1,r2,resolution],[r2,r1,resolution],[resolution,r2,r1]]){const r=checkCurrency(report,ctx(order));assert.deepEqual(ids(r),['incident-open']);assert.equal(r.reliable,false);}
+  const r3=inc({reportedAt:'2026-10-13T12:50:00.000Z',detailsDigest:hashBytes('third')},A);
+  for(const order of [[r1,r3,resolution],[r3,r1,resolution]])assert.deepEqual(ids(checkCurrency(report,ctx(order))),['incident-open']);
+});
+test('a resolution cannot clear a report from a different key that shares its reference ID',()=>{
+  const {report,inc,ctx}=setup2(),a=inc({},reviewer.privateKey),c=inc({reportedAt:'2026-10-13T12:20:00.000Z',detailsDigest:hashBytes('c')},keys.privateKey);
+  const r=checkCurrency(report,ctx([a,c,res2(inc)]));assert.deepEqual(ids(r),['incident-open']);assert.deepEqual(r.incidents.open,['inc:1']);assert.deepEqual(r.incidents.resolved,[]);
+  assert(r.incidents.ignored.some(x=>/ambiguous|conflict/i.test(x.reason)));
+  // unambiguous reference still resolves
+  assert.deepEqual(ids(checkCurrency(report,ctx([a,res2(inc)]))),[]);
+});
+test('a resolution delivered twice still resolves, and a future-dated resolution never does',()=>{
+  const {report,inc,ctx}=setup2(),a=inc({},keys.privateKey),r=res2(inc);
+  assert.deepEqual(ids(checkCurrency(report,ctx([a,r,r]))),[]);
+  assert.deepEqual(ids(checkCurrency(report,ctx([a,res2(inc,{reportedAt:'2026-10-14T00:00:00.000Z'})]))),['incident-open']);
 });

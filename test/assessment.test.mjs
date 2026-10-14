@@ -221,7 +221,7 @@ test('currency rejects a resealed assessment with missing or malformed validity 
   const i=inputs(),good=assess(i),ctx={manifest:i.manifest,policy:i.policy,now:'2030-01-01T00:00:00.000Z'};
   assert.deepEqual(checkCurrency(good,ctx).triggers.map(t=>t.id),['assessment-expired']);
   const reseal=edit=>{const r=clone(good);delete r.reportDigest;edit(r);return {...r,reportDigest:digest(r)};};
-  for(const edit of [r=>{delete r.validUntil;},r=>{r.validUntil='never';},r=>{r.assessedAt='soon';},r=>{r.subjectDigest='x';},r=>{r.policyDigest=7;},r=>{r.decision='great';}])
+  for(const edit of [r=>{delete r.validUntil;},r=>{r.validUntil='never';},r=>{r.assessedAt='soon';},r=>{r.subjectDigest='x';},r=>{r.policyDigest=7;},r=>{r.decision='great';},r=>{r.scopeDigest='zz';},r=>{r.validUntil=new Date(Date.parse(r.assessedAt)-1000).toISOString();}])
     assert.throws(()=>checkCurrency(reseal(edit),ctx));
 });
 test('an agent cannot be its own accountable party under case or whitespace variation',()=>{

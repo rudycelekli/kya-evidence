@@ -37,7 +37,8 @@
         },
         {
           "file": "test/interop.test.mjs",
-          "title": "Python rejects duplicate members and bounded input abuse"
+          "title": "Python rejects duplicate members and bounded input abuse",
+          "hostConditional": true
         }
       ]
     },
@@ -67,15 +68,18 @@
       "tests": [
         {
           "file": "test/interop.test.mjs",
-          "title": "Python reconstructs every published vector and records optional signature availability"
+          "title": "Python reconstructs every published vector and records optional signature availability",
+          "hostConditional": true
         },
         {
           "file": "test/interop.test.mjs",
-          "title": "Python explicitly refuses unsupported JS doubles rather than claiming agreement"
+          "title": "Python explicitly refuses unsupported JS doubles rather than claiming agreement",
+          "hostConditional": true
         },
         {
           "file": "test/interop.test.mjs",
-          "title": "independently corrupted canonical/hash/signing-input vectors fail"
+          "title": "independently corrupted canonical/hash/signing-input vectors fail",
+          "hostConditional": true
         }
       ]
     },
@@ -612,11 +616,23 @@
       "level": "MUST",
       "area": "incidents",
       "section": "Reports and viewers",
-      "statement": "Incident records MUST be namespaced by signing key; duplicate or conflicting IDs MUST fail closed, so one key MUST NOT erase, downgrade or reopen another key's record, and an identical envelope delivered twice MUST NOT quarantine itself.",
+      "statement": "Every distinct trusted report record MUST be retained; duplicate or conflicting IDs MUST fail closed (reports stay open, a resolution targets only an unambiguous reference), no key MUST be able to hide, downgrade or clear another record by reusing its ID, input order MUST NOT change the outcome, and an identical envelope delivered twice MUST NOT quarantine itself.",
       "tests": [
         {
           "file": "test/incidents.test.mjs",
           "title": "duplicate and conflicting IDs fail closed: they can never erase or downgrade a trusted blocking report"
+        },
+        {
+          "file": "test/incidents.test.mjs",
+          "title": "same-key equivocation cannot hide a later unresolved report, in either input order"
+        },
+        {
+          "file": "test/incidents.test.mjs",
+          "title": "a resolution cannot clear a report from a different key that shares its reference ID"
+        },
+        {
+          "file": "test/incidents.test.mjs",
+          "title": "a resolution delivered twice still resolves, and a future-dated resolution never does"
         }
       ]
     },
@@ -625,11 +641,28 @@
       "level": "MUST",
       "area": "monitoring",
       "section": "Reports and viewers",
-      "statement": "A currency check MUST reject an assessment whose validity, subject, policy or decision fields are missing or malformed rather than treating it as current.",
+      "statement": "A currency check MUST reject an assessment whose validity, scope, subject, policy or decision fields are missing or malformed, or whose validity precedes its assessment time, rather than treating it as current.",
       "tests": [
         {
           "file": "test/assessment.test.mjs",
           "title": "currency rejects a resealed assessment with missing or malformed validity fields instead of treating it as current"
+        }
+      ]
+    },
+    {
+      "id": "KYA-REQ-001",
+      "level": "MUST",
+      "area": "requirements",
+      "section": "Reports and viewers",
+      "statement": "The traceability gate MUST treat dynamic titles, option variables, obfuscated or unconditional skip/todo as untraceable, MUST require an explicit hostConditional flag for host-conditional skips, and CI MUST fail on any skipped or todo test.",
+      "tests": [
+        {
+          "file": "test/requirements.test.mjs",
+          "title": "the gate fails closed on option variables, obfuscated skips, dynamic titles and unflagged host-conditional skips"
+        },
+        {
+          "file": "test/requirements.test.mjs",
+          "title": "the gate rejects traces to skipped, todo, commented-out or non-exact test titles"
         }
       ]
     }

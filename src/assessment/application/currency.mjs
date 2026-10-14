@@ -25,13 +25,14 @@ function evaluateIncidents(envelopes, assessment, policy, at) {
     else if (payload.subjectDigest !== assessment.subjectDigest) skip('Incident concerns a different subject');
     else eligible.push({...payload,keyId,role:roles.get(keyId),future:Date.parse(payload.reportedAt) > at});
   }
-  const groups=new Map(); for (const e of eligible) { const k=e.keyId+'|'+e.id; groups.set(k,[...(groups.get(k)??[]),e]); }
-  const reports=[], others=[];
-  for (const g of groups.values()) {
-    if (g.length>1) for (const e of g) ignored.push({id:e.id,reason:'Conflicting records share one key and ID; most severe report kept, resolutions not honoured'});
-    const rs=g.filter(e=>e.kind==='report').sort((x,y)=>SEVERITY[y.severity]-SEVERITY[x.severity]);
-    if (rs.length) reports.push(rs[0]); else if (g.length===1) others.push(g[0]);
-  }
+  // Every report record is kept: nothing a key signs can hide another report of the same ID. A
+  // resolution may target a report only when exactly one report carries that ID, so equivocation
+  // and cross-key ID reuse fail closed (reports stay open, resolutions are listed as ambiguous).
+  const reports=eligible.filter(e=>e.kind==='report'), counts=new Map();
+  for (const e of reports) counts.set(e.id,(counts.get(e.id)??0)+1);
+  for (const [id,n] of counts) if (n>1) ignored.push({id,reason:'Conflicting records share an ID; reports kept open, resolutions cannot target them'});
+  const groups=new Map(); for (const e of eligible.filter(e=>e.kind!=='report')) { const k=e.keyId+'|'+e.id; groups.set(k,[...(groups.get(k)??[]),e]); }
+  const others=[]; for (const g of groups.values()) { if (g.length>1) for (const e of g) ignored.push({id:e.id,reason:'Conflicting records share one key and ID; not honoured'}); else others.push(g[0]); }
   const live=[]; for (const e of reports) {
     if (e.future && !BLOCKING.includes(e.severity)) ignored.push({id:e.id,reason:'Incident is dated in the future'});
     else { if (e.future) ignored.push({id:e.id,reason:'Blocking incident is dated in the future (clock skew or misdated); kept open'}); live.push(e); }
@@ -41,13 +42,12 @@ function evaluateIncidents(envelopes, assessment, policy, at) {
     if (e.future) { ignored.push({id:e.id,reason:'Incident is dated in the future'}); continue; }
     const targets=live.filter(r=>r.id===e.refId);
     if (!targets.length) ignored.push({id:e.id,reason:'References unknown incident'});
-    else if (e.kind==='appeal') targets.forEach(t=>appealed.add(t.id));
+    else if (targets.length>1) ignored.push({id:e.id,reason:'Ambiguous reference: several reports share this ID'});
+    else if (e.kind==='appeal') appealed.add(targets[0].id);
     else if (e.role!=='independent') ignored.push({id:e.id,reason:'Resolution requires an independent trusted key'});
-    else for (const t of targets) {
-      if (t.keyId===e.keyId) ignored.push({id:e.id,reason:'Reporter cannot resolve its own report'});
-      else if (Date.parse(e.reportedAt) <= Date.parse(t.reportedAt)) ignored.push({id:e.id,reason:'Resolution must be dated after the incident'});
-      else resolved.add(t.keyId+'|'+t.id);
-    }
+    else if (targets[0].keyId===e.keyId) ignored.push({id:e.id,reason:'Reporter cannot resolve its own report'});
+    else if (Date.parse(e.reportedAt) <= Date.parse(targets[0].reportedAt)) ignored.push({id:e.id,reason:'Resolution must be dated after the incident'});
+    else resolved.add(targets[0].keyId+'|'+targets[0].id);
   }
   const blocking=live.filter(r=>BLOCKING.includes(r.severity)), isResolved=r=>resolved.has(r.keyId+'|'+r.id);
   const idsOf=list=>[...new Set(list.map(r=>r.id))].sort();
@@ -58,7 +58,7 @@ function evaluateIncidents(envelopes, assessment, policy, at) {
 export function checkCurrency(assessment, {manifest, policy, now, incidents = []} = {}) {
   assessment=JSON.parse(canonical(assessment)); verifyAssessment(assessment);
   // A resealed or truncated report must not read as current: NaN comparisons would silently never fire.
-  timestamp(assessment.assessedAt,'Assessment time'); timestamp(assessment.validUntil,'Assessment validity'); hash(assessment.subjectDigest,'Assessment subject'); hash(assessment.policyDigest,'Assessment policy');
+  insist(timestamp(assessment.validUntil,'Assessment validity') >= timestamp(assessment.assessedAt,'Assessment time'),'Assessment validity precedes its assessment time'); hash(assessment.subjectDigest,'Assessment subject'); hash(assessment.policyDigest,'Assessment policy'); hash(assessment.scopeDigest,'Assessment scope');
   insist(DECISIONS.includes(assessment.decision),'Unknown assessment decision');
   manifest=validateManifest(manifest); policy=validatePolicy(policy);
   const at=timestamp(now,'Currency check time'), assessedAt=Date.parse(assessment.assessedAt), validUntil=Date.parse(assessment.validUntil);
