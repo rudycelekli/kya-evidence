@@ -12,12 +12,13 @@ import { createPlan, openLedger, verifyLedger, summarizeCampaign, runCampaign, c
 const HELP = `kya-campaign: frozen-campaign harness with a signed, append-only planned-attempt ledger
 
   kya-campaign plan --campaign-id ID --use-case TEXT --manifest FILE[,FILE] --attempts N --adapter reference|command --policy FILE --key PRIVATE_PEM --now ISO --out LEDGER
-  kya-campaign run --ledger LEDGER --manifest FILE[,FILE] --private-dir ABSOLUTE_DIR --adapter reference|command --policy FILE --key PRIVATE_PEM --now ISO
-  kya-campaign verify-ledger --ledger LEDGER --policy FILE [--require-closed true] [--expect-head DIGEST] [--expect-entries N]
+  kya-campaign run --ledger LEDGER --manifest FILE[,FILE] --private-dir ABSOLUTE_DIR --adapter reference|command --policy FILE --key PRIVATE_PEM --now ISO [--expect-head DIGEST] [--expect-entries N]
+  kya-campaign verify-ledger --ledger LEDGER --policy FILE [--require-closed true] [--allow-open true] [--expect-head DIGEST] [--expect-entries N]
   kya-campaign summary --ledger LEDGER --policy FILE [--expect-head DIGEST] [--expect-entries N]
 
 run, verify-ledger and summary need --policy (the signer must be a capture-issuer anchor and the policy digest must match the plan),
-or the explicit, reported-as-unsafe --trust-plan-signer true. run exits 2 unless every attempt completed.
+or the explicit, reported-as-unsafe --trust-plan-signer true.
+Exit 2 means incomplete: run and summary exit 2 unless every planned attempt completed (an errored attempt later retried by a completed amendment does not count against it); verify-ledger exits 2 for an open ledger unless --allow-open true. Exit 1 means invalid or refused.
 Without an externally pinned --expect-head, a rolled-back or forked ledger cannot be detected.
 
 Only the owned reference and command fixtures are wired. No model, vendor CLI or network call is made.
@@ -97,26 +98,30 @@ const commands = {
   },
   async run(flags) {
     const names = ['ledger', 'manifest', 'private-dir', 'adapter', 'key', 'now'];
-    allow(flags, [...names, 'policy', 'trust-plan-signer']); need(flags, names);
+    allow(flags, [...names, 'policy', 'trust-plan-signer', 'expect-head', 'expect-entries']); need(flags, names);
     timestamp(flags.now, '--now');
     const trust = await signerTrust(flags);
     const path = resolve(flags.ledger), ledger = await jsonFile(path);
     const manifests = await manifestsFrom(flags.manifest), key = await privateKeyFrom(flags.key);
-    const result = await runCampaign({ plan: ledger.plan, ledger, adapter: adapterChoice(flags.adapter).create(), manifests, ...trust, privateKey: key, privateDir: flags['private-dir'], clock: () => flags.now, persist: l => saveAtomic(path, l) });
+    const result = await runCampaign({ plan: ledger.plan, ledger, adapter: adapterChoice(flags.adapter).create(), manifests, ...trust, ...pins(flags), privateKey: key, privateDir: flags['private-dir'], clock: () => flags.now, persist: l => saveAtomic(path, l) });
     const summary = summarizeCampaign(result.ledger);
     const out = { campaignId: ledger.plan.payload.campaignId, results: result.results.map(({ bundlePath, ...r }) => r), summary };
     if (trust.trustPlanSigner) out.warnings = ['Signer was NOT checked against a capture-issuer anchor (--trust-plan-signer)'];
     print(out);
-    if (summary.errored > 0 || summary.unaccounted > 0) process.exitCode = 2;
+    if (!summary.allCompleted) process.exitCode = 2;
   },
   async 'verify-ledger'(flags) {
-    allow(flags, ['ledger', 'policy', 'trust-plan-signer', 'require-closed', 'expect-head', 'expect-entries']); need(flags, ['ledger']);
+    allow(flags, ['ledger', 'policy', 'trust-plan-signer', 'require-closed', 'expect-head', 'expect-entries', 'allow-open']); need(flags, ['ledger']);
+    if (flags['allow-open'] !== undefined && !['true', 'false'].includes(flags['allow-open'])) throw Error('--allow-open must be true or false');
     const options = { requireClosed: flags['require-closed'] === 'true', ...pins(flags) };
     if (flags['require-closed'] !== undefined && !['true', 'false'].includes(flags['require-closed'])) throw Error('--require-closed must be true or false');
     const trust = flags.policy || flags['trust-plan-signer'] !== undefined ? await signerTrust(flags) : {};
     const result = verifyLedger(await jsonFile(resolve(flags.ledger)), { ...options, ...trust });
+    const allowOpen = flags['allow-open'] === 'true';
+    if (result.valid && !result.closed && allowOpen) result.warnings.push('Ledger is OPEN: attempts remain unaccounted (--allow-open)');
     print(result);
     if (!result.valid) process.exitCode = 1;
+    else if (!result.closed && !allowOpen) process.exitCode = 2;
   },
   async summary(flags) {
     allow(flags, ['ledger', 'policy', 'trust-plan-signer', 'expect-head', 'expect-entries']); need(flags, ['ledger']);
@@ -124,6 +129,7 @@ const commands = {
     const result = verifyLedger(ledger, { ...(await signerTrust(flags)), ...pins(flags) });
     if (!result.valid) throw Error(`Ledger failed verification: ${result.problems.map(p => `${p.code} (${p.message})`).join('; ')}`);
     print({ ...result.summary, ...(result.warnings.length ? { warnings: result.warnings } : {}) });
+    if (!result.summary.allCompleted) process.exitCode = 2;
   }
 };
 

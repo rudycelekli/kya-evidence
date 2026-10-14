@@ -80,12 +80,16 @@ function replay(ledger, { policy, requireClosed = false, expectHead, expectEntri
       return;
     }
     if (!state) { problems.push(problem('not-planned', `Entry ${i}: Attempt is not planned`)); return; }
+    if (e.kind === 'errored' && e.evidenceBundleDigest !== null) {
+      if (bundles.has(e.evidenceBundleDigest)) problems.push(problem('duplicate-evidence', `Entry ${i}: Duplicate evidence bundle digest across attempts`));
+      bundles.add(e.evidenceBundleDigest);
+    }
     const allowed = { started: ['planned'], completed: ['started'], errored: ['started'], abandoned: ['planned', 'started'] }[e.kind];
     if (!allowed.includes(state.status)) { problems.push(problem('bad-transition', `Entry ${i}: Invalid transition ${state.status} to ${e.kind}`)); return; }
     state.status = e.kind === 'started' ? 'started' : e.kind;
     if (e.kind === 'completed') {
-      if (runIds.has(e.runId) || bundles.has(e.evidenceBundleDigest)) problems.push(problem('duplicate-evidence', `Entry ${i}: Duplicate run ID or evidence bundle digest across completions`));
-      runIds.add(e.runId); bundles.add(e.evidenceBundleDigest);
+      if (runIds.has(e.runId.toLowerCase()) || bundles.has(e.evidenceBundleDigest)) problems.push(problem('duplicate-evidence', `Entry ${i}: Duplicate run ID or evidence bundle digest across completions`));
+      runIds.add(e.runId.toLowerCase()); bundles.add(e.evidenceBundleDigest);
       state.runId = e.runId; state.evidenceBundleDigest = e.evidenceBundleDigest;
     }
   }
@@ -99,13 +103,14 @@ function replay(ledger, { policy, requireClosed = false, expectHead, expectEntri
 
 function summarize(plan, attempts, headDigest, entryCount) {
   const counts = { completed: 0, errored: 0, abandoned: 0 }, open = [];
-  let amendments = 0;
+  let amendments = 0, superseded = 0;
   for (const [id, s] of attempts) {
     if (TERMINAL.has(s.status)) counts[s.status] += 1; else open.push(id);
     if (s.amended) amendments += 1;
+    if (s.status === 'errored' && s.retriedBy !== null) superseded += 1;
   }
   // Unaccounted attempts stay in the denominator: planned is never reduced by non-completion.
-  return { campaignId: plan.campaignId, planned: attempts.size, ...counts, unaccounted: open.length, unaccountedAttemptIds: open, amendments, closed: open.length === 0, headDigest, entryCount };
+  return { campaignId: plan.campaignId, planned: attempts.size, ...counts, unaccounted: open.length, unaccountedAttemptIds: open, amendments, closed: open.length === 0, superseded, allCompleted: open.length === 0 && counts.completed === attempts.size - superseded, headDigest, entryCount };
 }
 
 export function verifyLedger(ledger, options = {}) {

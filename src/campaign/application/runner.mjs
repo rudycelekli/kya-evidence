@@ -53,12 +53,12 @@ function bundleName(attemptId) {
  * Raw evidence goes only to the caller-supplied private directory; the ledger records digests and codes.
  * An errored attempt is never retried here: a retry is a new planned attempt added by a signed amendment.
  */
-export async function runCampaign({ plan, ledger, adapter, manifests, policy, trustPlanSigner = false, privateKey, privateDir, clock, persist, signal } = {}) {
+export async function runCampaign({ plan, ledger, adapter, manifests, policy, trustPlanSigner = false, expectHead, expectEntries, privateKey, privateDir, clock, persist, signal } = {}) {
   insist(adapter && typeof adapter.run === 'function', 'Adapter must expose run(request, {signal})');
   insist(typeof clock === 'function', 'An explicit clock function is required');
   insist(persist === undefined || typeof persist === 'function', 'persist must be a function');
   insist(plan && digest(plan) === digest(ledger?.plan), 'Plan does not match the ledger plan');
-  const verification = verifyLedger(ledger, { policy, trustPlanSigner });
+  const verification = verifyLedger(ledger, { policy, trustPlanSigner, expectHead, expectEntries });
   if (!verification.valid) throw new Error(`Ledger failed verification: ${verification.problems[0]?.message}`);
   const declared = plan.payload, key = privateKeyObject(privateKey);
   insist(keyId(publicPem(key)) === plan.proof.keyId, 'Signing key is not the campaign capture issuer');

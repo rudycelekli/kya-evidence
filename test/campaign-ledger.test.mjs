@@ -121,7 +121,7 @@ test('campaign summary keeps unaccounted attempts in the denominator', () => {
   let ledger = opened();
   const { headDigest, entryCount, ...counts } = summarizeCampaign(ledger);
   assert.equal(entryCount, 3); assert.match(headDigest, /^[a-f0-9]{64}$/);
-  assert.deepEqual(counts, { campaignId: 'campaign:pilot-1', planned: 3, completed: 0, errored: 0, abandoned: 0, unaccounted: 3, unaccountedAttemptIds: ['a-1', 'a-2', 'a-3'], amendments: 0, closed: false });
+  assert.deepEqual(counts, { campaignId: 'campaign:pilot-1', planned: 3, completed: 0, errored: 0, abandoned: 0, unaccounted: 3, unaccountedAttemptIds: ['a-1', 'a-2', 'a-3'], amendments: 0, closed: false, superseded: 0, allCompleted: false });
   ledger = run(ledger, 'a-1', T1);
   ledger = run(ledger, 'a-2', T2, 'errored');
   ledger = add(ledger, { kind: 'started', attemptId: 'a-3', at: T3 });
@@ -254,4 +254,24 @@ test('campaign verification requires a capture issuer policy or an explicit trus
   const other = { ...asIssuer, id: 'a-different-policy' };
   assert.ok(codes(verifyStrict(bound, { policy: other })).includes('policy-mismatch'));
   assert.ok(codes(verifyStrict(opened(), { policy: asIssuer })).includes('policy-mismatch'));
+});
+
+test('campaign run IDs are unique case-insensitively and errored entries cannot reuse a bundle digest', () => {
+  const ledger = run(opened(), 'a-1', T1);
+  const started = add(ledger, { kind: 'started', attemptId: 'a-2', at: T2 });
+  assert.throws(() => add(started, { kind: 'completed', attemptId: 'a-2', at: T2, runId: 'RUN-A-1', evidenceBundleDigest: hashBytes('bundle-a-2') }), /duplicate/i);
+  assert.throws(() => add(started, { kind: 'errored', attemptId: 'a-2', at: T2, errorCode: 'TIMEOUT', evidenceBundleDigest: hashBytes('bundle-a-1') }), /duplicate/i);
+  assert.equal(verifyLedger(add(started, { kind: 'errored', attemptId: 'a-2', at: T2, errorCode: 'TIMEOUT', evidenceBundleDigest: hashBytes('bundle-a-2') })).valid, true);
+});
+
+test('campaign summary reports the final state per attempt so a successful retry supersedes an errored attempt', () => {
+  let ledger = run(opened(), 'a-1', T1, 'errored');
+  ledger = add(ledger, { kind: 'amended', attemptId: 'a-1b', retryOf: 'a-1', subjectDigest: subject, scenarioSetDigest, seed: null, at: T2 });
+  assert.equal(summarizeCampaign(ledger).superseded, 1);
+  assert.equal(summarizeCampaign(ledger).allCompleted, false);
+  ledger = run(ledger, 'a-1b', T2);
+  ledger = run(run(ledger, 'a-2', T3), 'a-3', T3);
+  const s = summarizeCampaign(ledger);
+  assert.deepEqual([s.planned, s.errored, s.completed, s.superseded, s.allCompleted], [4, 1, 3, 1, true]);
+  assert.equal(summarizeCampaign(add(run(opened(), 'a-1', T1), { kind: 'abandoned', attemptId: 'a-2', at: T2, reasonCode: 'operator-abandon' })).allCompleted, false);
 });

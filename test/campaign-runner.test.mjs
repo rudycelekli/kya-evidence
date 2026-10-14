@@ -237,14 +237,58 @@ test('campaign CLI exits 2 when an attempt is errored or unaccounted and pins he
     assert.equal(JSON.parse(ran.stdout).summary.unaccounted, 1);
     const summary = JSON.parse(cli(['summary', '--ledger', ledgerFile, '--policy', policyFile]).stdout);
     assert.match(summary.headDigest, /^[a-f0-9]{64}$/); assert.equal(summary.entryCount, 5);
-    assert.equal(cli(['summary', '--ledger', ledgerFile, '--policy', policyFile, '--expect-head', summary.headDigest, '--expect-entries', '5']).status, 0);
+    assert.equal(cli(['summary', '--ledger', ledgerFile, '--policy', policyFile, '--expect-head', summary.headDigest, '--expect-entries', '5']).status, 2, 'matching pins on an open ledger still exit 2');
     const wrongHead = cli(['summary', '--ledger', ledgerFile, '--policy', policyFile, '--expect-head', hashBytes('x')]);
     assert.notEqual(wrongHead.status, 0); assert.match(wrongHead.stderr, /head-mismatch/);
     const wrongCount = cli(['verify-ledger', '--ledger', ledgerFile, '--policy', policyFile, '--expect-entries', '2']);
     assert.equal(wrongCount.status, 1); assert.ok(JSON.parse(wrongCount.stdout).problems.some(p => p.code === 'entry-count-mismatch'));
     const bare = cli(['verify-ledger', '--ledger', ledgerFile]);
     assert.equal(bare.status, 1); assert.ok(JSON.parse(bare.stdout).problems.some(p => p.code === 'policy-required'));
-    const trusted = cli(['verify-ledger', '--ledger', ledgerFile, '--trust-plan-signer', 'true']);
+    const trusted = cli(['verify-ledger', '--ledger', ledgerFile, '--trust-plan-signer', 'true', '--allow-open', 'true']);
     assert.equal(trusted.status, 0); assert.equal(JSON.parse(trusted.stdout).signerTrust, 'plan-signer-unverified');
   } finally { await rm(dir, { recursive: true, force: true }); }
 });
+
+test('campaign CLI exit codes reflect final attempt state and open ledgers', async () => {
+  const dir = await scratch();
+  try {
+    const keyFile = join(dir, 'issuer.pem'), manifestFile = join(dir, 'manifest.json'), policyFile = join(dir, 'policy.json'), ledgerFile = join(dir, 'ledger.json'), priv = join(dir, 'private');
+    await writeFile(keyFile, issuer.privateKey.export({ format: 'pem', type: 'pkcs8' }), { mode: 0o600 });
+    await writeFile(manifestFile, JSON.stringify(manifest)); await writeFile(policyFile, JSON.stringify(capturePolicy));
+    const runArgs = extra => ['run', '--ledger', ledgerFile, '--manifest', manifestFile, '--private-dir', priv, '--adapter', 'reference', '--policy', policyFile, '--key', keyFile, '--now', T1, ...extra];
+    // W1: every attempt abandoned is not success.
+    const abandoned = appendEntry({ ledger: ledgerFor(['a-1']), privateKey: issuer.privateKey, entry: { kind: 'abandoned', attemptId: 'a-1', at: T0, reasonCode: 'operator-abandon' } });
+    await writeFile(ledgerFile, JSON.stringify(abandoned));
+    const ranAbandoned = cli(runArgs([]));
+    assert.equal(ranAbandoned.status, 2, ranAbandoned.stderr);
+    assert.equal(JSON.parse(ranAbandoned.stdout).summary.abandoned, 1);
+    // W2: summary and verify-ledger on an open ledger.
+    const open = ledgerFor(['a-1', 'a-2']);
+    await writeFile(ledgerFile, JSON.stringify(open));
+    const summary = cli(['summary', '--ledger', ledgerFile, '--policy', policyFile]);
+    assert.equal(summary.status, 2); assert.equal(JSON.parse(summary.stdout).unaccounted, 2);
+    const verifyOpen = cli(['verify-ledger', '--ledger', ledgerFile, '--policy', policyFile]);
+    assert.equal(verifyOpen.status, 2); assert.equal(JSON.parse(verifyOpen.stdout).valid, true); assert.equal(JSON.parse(verifyOpen.stdout).closed, false);
+    const allowed = cli(['verify-ledger', '--ledger', ledgerFile, '--policy', policyFile, '--allow-open', 'true']);
+    assert.equal(allowed.status, 0); assert.ok(JSON.parse(allowed.stdout).warnings.some(w => /open/i.test(w)));
+    // I2: pins on run are checked before anything is appended or written.
+    const head = JSON.parse(summary.stdout).headDigest;
+    const fresh = join(dir, 'fresh-private');
+    const badPin = cli(runArgs(['--expect-head', hashBytes('not the head')]).map(v => v === priv ? fresh : v));
+    assert.notEqual(badPin.status, 0); assert.match(badPin.stderr, /head-mismatch|head digest/i);
+    assert.equal(existsSync(fresh), false);
+    assert.equal(cli(runArgs(['--expect-head', head, '--expect-entries', '2'])).status, 0);
+    // W1: a successfully retried errored attempt is not a failure.
+    let retried = run0(ledgerFor(['a-1']));
+    await writeFile(ledgerFile, JSON.stringify(retried));
+    const ranRetry = cli(runArgs([]));
+    assert.equal(ranRetry.status, 0, ranRetry.stdout + ranRetry.stderr);
+    assert.equal(JSON.parse(ranRetry.stdout).summary.superseded, 1);
+  } finally { await rm(dir, { recursive: true, force: true }); }
+});
+function run0(ledger) {
+  const k = issuer.privateKey;
+  ledger = appendEntry({ ledger, privateKey: k, entry: { kind: 'started', attemptId: 'a-1', at: T0 } });
+  ledger = appendEntry({ ledger, privateKey: k, entry: { kind: 'errored', attemptId: 'a-1', at: T0, errorCode: 'TIMEOUT', evidenceBundleDigest: null } });
+  return appendEntry({ ledger, privateKey: k, entry: { kind: 'amended', attemptId: 'a-1b', retryOf: 'a-1', subjectDigest, scenarioSetDigest: digests.scenarioSetDigest, seed: null, at: T0 } });
+}
