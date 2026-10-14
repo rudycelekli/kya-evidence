@@ -48,7 +48,7 @@ Order of judgement: malformed suite or response is `error`; canary echo is `fail
 
 ## Protected holdout with commit-reveal
 
-1. Before any campaign, the holder picks the hidden cases and a fresh salt (`generateSalt()`), calls `commitHoldout(cases, {salt, suiteId, createdAt})`, publishes or anchors only the `commitment` (ADR-0020 style, or the planned-attempt ledger of ADR-0017), and keeps the `opening` private.
+1. Before any campaign, the holder picks the hidden cases and a fresh salt (`generateSalt()`), calls `commitHoldout(cases, {salt, suiteId, createdAt})`, publishes or anchors only the `commitment` (ADR-0020 style, or the signed planned-attempt ledger of ADR-0021), and keeps the `opening` private.
 2. During the campaign cases are used privately. To audit one case, `revealCase(opening, i)` gives the case and a proof; anyone runs `verifyReveal(commitment, case, proof)`. Other cases and the master salt stay hidden; per-case salts stop sibling hashes from confirming guesses.
 3. After the campaign the holder discloses the whole opening. `verifyFullReveal(commitment, opening)` checks count, salt commitment, duplicates and root. It reports `case-count-mismatch`, `salt-mismatch`, `duplicate-case`, `root-mismatch` and similar.
 
