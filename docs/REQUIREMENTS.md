@@ -133,5 +133,6 @@ Each requirement is traced to at least one test that must exist exactly once; th
 | KYA-VEC-008 | MUST NOT | A semantic-only run, which ignores digests, MUST NOT record any requirement as pass, and a vectors file with an unknown requirement, a duplicate ID or a foreign schema MUST be refused. | `assessment-vectors.test.mjs` |
 | KYA-VEC-009 | SHOULD | A team-built second implementation of assessment and currency semantics SHOULD reproduce the decision and every semantic field of all published assessment vectors, and any gap between its output and the byte-exact digests MUST be documented rather than hidden. It is not an independent implementation and MUST NOT be described as one. | `second-impl.test.mjs` |
 | KYA-SCO-003 | SHOULD | The scoring document SHOULD state the reference wording of every blocker and the order in which blockers appear, so that an implementer can reproduce report digests; relying software MUST branch on blocker codes, not wording. | `scoring-wording.test.mjs` |
+| KYA-RPT-005 | SHOULD | The specification SHOULD state the full currency result layout, the trigger firing order, the rejected-evidence and ignored-incident reason vocabularies and the identifier, text, hash and timestamp grammars, so that an implementer can reproduce report digests; relying software MUST branch on codes, not on reason or detail text. | `spec-reason-vocabulary.test.mjs` |
 
-Registry digest: `ff5caca916f7e03bfbb356b66172963960f394f6d8275b6dd602c7ad60826273`
+Registry digest: `8015105e14c0bc4483e5c571c5361726bc5a86d636cc3cc454c3b6da31c108a9`

@@ -2469,6 +2469,31 @@
           "title": "every documented blocker wording is the string the reference emits"
         }
       ]
+    },
+    {
+      "id": "KYA-RPT-005",
+      "level": "SHOULD",
+      "area": "reporting",
+      "section": "Reports and viewers",
+      "statement": "The specification SHOULD state the full currency result layout, the trigger firing order, the rejected-evidence and ignored-incident reason vocabularies and the identifier, text, hash and timestamp grammars, so that an implementer can reproduce report digests; relying software MUST branch on codes, not on reason or detail text.",
+      "tests": [
+        {
+          "file": "test/spec-reason-vocabulary.test.mjs",
+          "title": "the specification lists every rejected evidence reason the reference emits"
+        },
+        {
+          "file": "test/spec-reason-vocabulary.test.mjs",
+          "title": "the specification lists every ignored incident reason the reference emits"
+        },
+        {
+          "file": "test/spec-reason-vocabulary.test.mjs",
+          "title": "the specification names every member and trigger of the currency result in order"
+        },
+        {
+          "file": "test/spec-reason-vocabulary.test.mjs",
+          "title": "the specification states the identifier text hash and timestamp grammars the validators enforce"
+        }
+      ]
     }
   ]
 }
