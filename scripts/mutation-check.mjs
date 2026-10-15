@@ -70,7 +70,7 @@ const mutants=[
   ["standing declarer trust check removed","const trustedDeclarer = r.keyId !== d.assessorKeyId && P.declarers.has(r.keyId);","const trustedDeclarer = r.keyId !== d.assessorKeyId;","src/assessor/standing.mjs"],
   ["standing self-declaration allowed","const trustedDeclarer = r.keyId !== d.assessorKeyId && P.declarers.has(r.keyId);","const trustedDeclarer = P.declarers.has(r.keyId);","src/assessor/standing.mjs"],
   ["standing declarer revocation ignored","if (P.revoked.has(r.keyId)) {","if (false) {","src/assessor/standing.mjs"],
-  ["standing forged withdrawal honoured","} else if (r.keyId !== d.assessorKeyId) {","} else if (r.keyId !== d.assessorKeyId && d.kind !== 'withdrawal') {","src/assessor/standing.mjs"],
+  ["standing forged withdrawal honoured","if (target.keyId !== w.keyId) { ignored.push({ index: w.index, reason: 'signer-mismatch' }); continue; }","if (false) { ignored.push({ index: w.index, reason: 'signer-mismatch' }); continue; }","src/assessor/standing.mjs"],
   ["standing disclosure signer-match removed","} else if (r.keyId !== d.assessorKeyId) {","} else if (r.keyId !== d.assessorKeyId && d.kind !== 'disclosure') {","src/assessor/standing.mjs"],
   ["standing disclosure expiry boundary inclusive","const live = tops.map(e => e.r).filter(r => Date.parse(r.payload.expiresAt) > t);","const live = tops.map(e => e.r).filter(r => Date.parse(r.payload.expiresAt) >= t);","src/assessor/standing.mjs"],
   ["standing disclosure start boundary exclusive","const started = slot.own.filter(r => Date.parse(r.payload.issuedAt) <= t);","const started = slot.own.filter(r => Date.parse(r.payload.issuedAt) < t);","src/assessor/standing.mjs"],
