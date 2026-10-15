@@ -4,7 +4,7 @@ Generated from [evidence/world-class-status.json](../evidence/world-class-status
 
 An item is verified only when linked evidence of the right kind exists: a requirement, test or file for CI verification, and a named outside party with an https link and a date for external review, independent implementation or real use. Work that needs an outside party cannot be marked verified on internal evidence.
 
-Totals: 34 items; 15 planned, 11 in progress, 5 implemented, 3 verified. Items that need an outside party: 11; verified by an outside party: 0.
+Totals: 34 items; 14 planned, 12 in progress, 5 implemented, 3 verified. Items that need an outside party: 11; verified by an outside party: 0.
 
 ## WS1 Narrow, precise problem
 
@@ -88,4 +88,4 @@ Totals: 34 items; 15 planned, 11 in progress, 5 implemented, 3 verified. Items t
 | WS10-01 Campaign harness with a signed planned-attempt ledger (ledger slice of ADR-0017 only) | implemented |  | `test/campaign-ledger.test.mjs`, `docs/adr/0021-capture-issuer-role-and-campaign-ledger.md` |  |
 | WS10-02 Private campaign on three agent configurations (needs explicit owner go-ahead before any real vendor run) | planned |  |  |  |
 | WS10-03 Three relying-party pilots with written case studies | planned |  |  | yes |
-| WS10-04 Pre-registered prospective calibration study design | planned |  |  |  |
+| WS10-04 Pre-registered prospective calibration study design | in progress |  |  |  |
