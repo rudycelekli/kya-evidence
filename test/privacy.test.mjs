@@ -58,7 +58,7 @@ test('privacy scan flags IP addresses and home directory paths', () => {
 
 test('privacy scan flags a PEM private key block but not a public key', () => {
   const body = 'A'.repeat(64);
-  assert.deepEqual(rules('-----BEGIN PRIVATE KEY-----\n' + body + '\n-----END PRIVATE KEY-----'), ['private-key-material']);
+  assert.deepEqual(rules('-----BEGIN ' + 'PRIVATE KEY-----\n' + body + '\n-----END PRIVATE KEY-----'), ['private-key-material']);
   assert.deepEqual(rules('-----BEGIN PUBLIC KEY-----\n' + body + '\n-----END PUBLIC KEY-----'), []);
 });
 
