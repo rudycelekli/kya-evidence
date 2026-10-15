@@ -3616,7 +3616,7 @@
       "level": "MUST",
       "area": "vcb",
       "section": "Interoperability and versioning",
-      "statement": "`kya-vc verify` MUST require `--trust-did` or `--policy`, or the explicit `--allow-untrusted-issuer` flag.",
+      "statement": "`kya vc verify` MUST require `--trust-did` or `--policy`, or the explicit `--allow-untrusted-issuer` flag.",
       "tests": [
         {
           "file": "test/vc-cli-trust.test.mjs",

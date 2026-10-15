@@ -194,6 +194,6 @@ Each requirement is traced to at least one test that must exist exactly once; th
 | KYA-CAM-021 | MUST | A campaign run MUST hold an exclusive lock file beside the ledger for its whole duration, MUST NOT remove a lock it does not own, and MUST refuse to replace the ledger when the on-disk head differs from the head it last wrote. | `campaign-hardening.test.mjs` |
 | KYA-CAM-022 | MUST | The private directory check MUST treat a child whose name begins with two dots as inside the repository. | `campaign-hardening.test.mjs` |
 | KYA-GOV-004 | MUST | Status ledger evidence paths MUST be compared by path segments, not string prefix. | `world-class-path.test.mjs` |
-| KYA-VCB-015 | MUST | `kya-vc verify` MUST require `--trust-did` or `--policy`, or the explicit `--allow-untrusted-issuer` flag. | `vc-cli-trust.test.mjs` |
+| KYA-VCB-015 | MUST | `kya vc verify` MUST require `--trust-did` or `--policy`, or the explicit `--allow-untrusted-issuer` flag. | `vc-cli-trust.test.mjs` |
 
-Registry digest: `5c1ec011f7bf7b2d07131f2c2735e8aed160ca18945e2a20f8572fe82333b1bc`
+Registry digest: `bb130c484aebc7f6346964b467f101c22296549e1516b529c08dec0299b16ae9`
