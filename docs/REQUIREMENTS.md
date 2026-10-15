@@ -167,5 +167,10 @@ Each requirement is traced to at least one test that must exist exactly once; th
 | KYA-CAL-004 | MUST NOT | A calibration document MUST NOT claim predictive validity outside a negation. | `calibration-docs.test.mjs` |
 | KYA-CAL-005 | MUST | The template MUST describe the freeze-and-hash step using existing campaign plan and ledger concepts and no new ledger kind. | `calibration-docs.test.mjs` |
 | KYA-CAL-006 | MUST | The calibration documents MUST be plain ASCII. | `calibration-docs.test.mjs` |
+| KYA-CLB-001 | MUST | Every limit string emitted by a scanned module MUST be covered by a registry code. | `claim-boundaries.test.mjs` |
+| KYA-CLB-002 | MUST | The claim boundary registry MUST NOT contain a string that src no longer emits. | `claim-boundaries.test.mjs` |
+| KYA-CLB-003 | MUST | Claim boundary codes MUST be unique, upper snake case and append-only. | `claim-boundaries.test.mjs` |
+| KYA-CLB-004 | MUST | codesForLimitStrings MUST throw on an unknown string and MUST cover the outputs of assess and checkCurrency. | `claim-boundaries.test.mjs` |
+| KYA-CLB-005 | MUST | The benchmark verifier inline limitation list MUST equal the emitted list. | `claim-boundaries.test.mjs` |
 
-Registry digest: `39cb2eb327b7c76d11a71794af63dfb0fc7436d3d8438b0f4b2ca6e73c91fae0`
+Registry digest: `be4a41112c56444ca93e8dcf96d8aa3d7f8363edc6701b77c93939d590a86f9b`

@@ -4,14 +4,14 @@ Generated from [evidence/world-class-status.json](../evidence/world-class-status
 
 An item is verified only when linked evidence of the right kind exists: a requirement, test or file for CI verification, and a named outside party with an https link and a date for external review, independent implementation or real use. Work that needs an outside party cannot be marked verified on internal evidence.
 
-Totals: 34 items; 14 planned, 12 in progress, 5 implemented, 3 verified. Items that need an outside party: 11; verified by an outside party: 0.
+Totals: 34 items; 13 planned, 13 in progress, 5 implemented, 3 verified. Items that need an outside party: 11; verified by an outside party: 0.
 
 ## WS1 Narrow, precise problem
 
 | Item | Status | Verifier | Evidence | Needs outsiders |
 | :--- | :--- | :--- | :--- | :--- |
 | WS1-01 Problem statement and explicit non-goals (README states what this is not; no standalone one-page statement yet) | in progress |  | `README.md`, `docs/SPECIFICATION.md` |  |
-| WS1-02 Machine-readable claim-boundary codes on every artifact | planned |  |  |  |
+| WS1-02 Machine-readable claim-boundary codes on every artifact | in progress |  |  |  |
 | WS1-03 Comprehension test with three outside readers | planned |  |  | yes |
 
 ## WS2 Core plus profiles

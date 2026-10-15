@@ -381,8 +381,20 @@
         "ADR-0023",
         "ADR-0024"
       ]
+    },
+    {
+      "id": "ADR-0031",
+      "title": "Machine-readable claim-boundary codes",
+      "status": "Proposed",
+      "file": "docs/adr/0031-claim-boundary-codes.md",
+      "contentDigest": "41cdbbb383b65c8511b41c74058556ef78e6caa6f0dfc9f4ee4062ee67abdd51",
+      "related": [
+        "ADR-0016",
+        "ADR-0027",
+        "ADR-0028"
+      ]
     }
   ],
-  "digest": "079d5aa8f993b135bd0449958eed2e01352161cd9e79c8dd9e89e015153c4dfc",
+  "digest": "8a2c369560cb46efecd9a7058fc947a2811a130ebc7f2644672cfc5bdb907422",
   "store": "portable local file; not a claim of AgentDB graph persistence"
 }
