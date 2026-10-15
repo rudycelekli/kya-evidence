@@ -14,7 +14,7 @@ const pem = k => k.publicKey.export({ format: 'pem', type: 'spki' }).toString();
 const A = generateKeyPairSync('ed25519'), B = generateKeyPairSync('ed25519'), D = generateKeyPairSync('ed25519');
 const idA = keyId(pem(A)), idB = keyId(pem(B)), idD = keyId(pem(D));
 const OP = hashBytes('operator'), NOW = '2026-10-20T00:00:00.000Z';
-const base = (patch = {}) => ({ schema: 'kya.assessor-disclosure/v1', id: 'disc:1', kind: 'disclosure', assessorKeyId: idA, operatorDigest: OP, relationships: ['none'], priorEngagementEndedAt: null, refId: null, issuedAt: '2026-10-01T00:00:00.000Z', expiresAt: '2027-03-01T00:00:00.000Z', detailsDigest: hashBytes('private'), ...patch });
+const base = (patch = {}) => ({ schema: 'kya.assessor-disclosure/v1', id: 'disc:1', kind: 'disclosure', assessorKeyId: idA, operatorDigest: OP, relationships: ['none'], priorEngagementEndedAt: null, refDigest: null, refId: null, issuedAt: '2026-10-01T00:00:00.000Z', expiresAt: '2027-03-01T00:00:00.000Z', detailsDigest: hashBytes('private'), ...patch });
 const disc = (patch, key = A.privateKey) => signDisclosure(base(patch), key);
 const policy = (patch = {}) => ({ operatorDigest: OP, assessorKeyIds: [idA], declarerKeyIds: [idD], ...patch });
 const stand = (recs, pol = policy(), now = NOW) => checkAssessorStanding(recs, pol, now).standings[0];
