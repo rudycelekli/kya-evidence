@@ -60,7 +60,7 @@ export function currencyFromAttributes(a) {
 
 /** Emit a plain attribute map (no OpenTelemetry package). Fails closed like every export. */
 export function exportOtelAttributes(assessment, options = {}) {
-  checkOptions(options);
+  options = checkOptions(options);
   const { report, currency } = gate(assessment, options);
   return buildAttributes(report, currency);
 }

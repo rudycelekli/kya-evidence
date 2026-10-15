@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { digest, hashBytes } from '../src/index.mjs';
-import { validateProfileMetadata, validateProfileRegistry, validateProfileId, profileStats } from '../src/profiles/validate-metadata.mjs';
+import { validateProfileMetadata, validateProfileRegistry, validateProfileId, profileStats, digestsVerified } from '../src/profiles/validate-metadata.mjs';
 import { generate } from '../scripts/profile-registry.mjs';
 
 const CORE = JSON.parse(await readFile(new URL('../profiles/core-v1.json', import.meta.url), 'utf8'));
@@ -165,4 +165,82 @@ test('registry entries out of order are refused', () => {
 
 test('a malformed registry document is refused', () => {
   for (const bad of [null, [], 'x', { ...clone(REGISTRY), schema: 'x' }, { ...clone(REGISTRY), profiles: 'x' }, { ...clone(REGISTRY), extra: 1 }]) refuses(() => validateProfileRegistry(bad));
+});
+
+// ---- fix lane: adversarial review findings ----
+const SIGN = { reviewer: 'A. Reviewer', role: 'domain expert', date: '2026-10-14', evidenceDigest: hashBytes('review record') };
+const reviewedThird = (patch = {}) => { const p = thirdProfile(), e = thirdEntry(p); e.status = 'deprecated'; e.deprecation = { date: '2026-10-15', reason: 'Replaced by a newer profile.', supersededBy: null }; e.signOff = { ...SIGN, ...patch }; return { p, e }; };
+
+test('metadata without a profile reports that digests were not verified and can be made to require one', () => {
+  const e = entry();
+  assert.equal(digestsVerified(validateProfileMetadata(e)), false);
+  assert.equal(digestsVerified(validateProfileMetadata(e, { profile: CORE })), true);
+  refuses(() => validateProfileMetadata(e, { requireProfile: true }), /Profile is required/);
+  const wrong = entry(); wrong.profileDigest = hashBytes('other');
+  assert.equal(digestsVerified(validateProfileMetadata(wrong)), false);
+  refuses(() => validateProfileMetadata(wrong, { requireProfile: true }), /Profile is required/);
+  assert.equal(Object.keys(validateProfileMetadata(e)).includes('digestsVerified'), false);
+});
+
+test('a registry without profiles reports unverified digests and can be made to require them', () => {
+  assert.equal(digestsVerified(validateProfileRegistry(clone(REGISTRY))), false);
+  assert.equal(digestsVerified(validateProfileRegistry(clone(REGISTRY), { profiles: profiles() })), true);
+  refuses(() => validateProfileRegistry(clone(REGISTRY), { requireProfiles: true }), /Profiles are required/);
+});
+
+test('a supplied profiles map may not hold files the registry does not list', () => {
+  const m = profiles(); m.set('profiles/extra.json', clone(CORE));
+  refuses(() => validateProfileRegistry(clone(REGISTRY), { profiles: m }), /not listed in the registry/);
+});
+
+test('a sign-off dated after the supplied now is refused and an unreasonable evidence digest is refused', () => {
+  const { p, e } = reviewedThird({ date: '2026-12-31' });
+  validateProfileMetadata(e, { profile: p });
+  refuses(() => validateProfileMetadata(e, { profile: p, now: '2026-10-14T00:00:00.000Z' }), /dated in the future/);
+  const ok = reviewedThird();
+  validateProfileMetadata(ok.e, { profile: ok.p, now: '2026-10-15T00:00:00.000Z' });
+  refuses(() => validateProfileMetadata(ok.e, { profile: ok.p, now: 'tomorrow' }), /now/);
+  for (const d of ['0'.repeat(64), 'f'.repeat(64), 'ab'.repeat(32), '0123'.repeat(16), '01234567'.repeat(8)]) {
+    const r = reviewedThird({ evidenceDigest: d });
+    refuses(() => validateProfileMetadata(r.e, { profile: r.p }), /Sign-off evidence digest is not a real digest/, d);
+  }
+});
+
+test('sign-off claims are found despite spacing case and other verbs and in every free text field', () => {
+  const phrases = ['Approved by the standards board.', 'Endorsed by an expert panel.', 'Validated by domain experts.', 'Audited by a third party.', 'Attested by the owner.', 'Signed  off by a reviewer.', 'S i g n e d   o f f.', 'SIGNED-OFF.', 'signed\u2003off', 'Expert reviewed.', 'Independently certified.', 'Ratified by the board.'];
+  for (const s of phrases) {
+    for (const where of ['purpose', 'intendedScope', 'knownGaps', 'changeLog']) {
+      const e = entry();
+      if (where === 'knownGaps') e.knownGaps = [...e.knownGaps, s]; else if (where === 'changeLog') e.changeLog[0].summary = s; else e[where] = s;
+      refuses(() => validateProfileMetadata(e), /claims (review or )?sign-off without evidence/, where + ' ' + s);
+    }
+  }
+  const dep = thirdEntry(); dep.status = 'deprecated'; dep.deprecation = { date: '2026-10-15', reason: 'Approved by the board for retirement.', supersededBy: null };
+  refuses(() => validateProfileMetadata(dep), /claims review or sign-off without evidence/);
+  validateProfileMetadata(entry());
+});
+
+test('reserved namespaces and bare names are refused for third parties', () => {
+  for (const id of ['core.example:x', 'reference.example:x', 'fixture.example:x', 'registrant.example:kya', 'registrant.example:core.thing', 'registrant.example:reference.thing', 'registrant.example:fixture.thing'])
+    refuses(() => validateProfileId(id, 'third-party'), /reserved/, id);
+  validateProfileId('registrant.example:kyanite', 'third-party');
+});
+
+test('owner contacts may not carry an email address in any encoding', () => {
+  for (const c of ['https://registrant.example/c?e=a%40b.example', 'https://registrant.example/c?e=a%2540b.example', 'https://registrant.example/c?e=a@b.example', 'https://registrant.example/c#me@b.example', 'https://registrant.example/c?mailto=a%40b', 'https://user:pw@registrant.example/c']) {
+    const e = entry(); e.owner.contact = c; refuses(() => validateProfileMetadata(e), /contact/i, c);
+  }
+  const ok = entry(); ok.owner.contact = 'https://registrant.example/contact?team=profiles'; validateProfileMetadata(ok);
+});
+
+test('a profile cannot be superseded by itself and a deprecation cannot predate its registration', () => {
+  const { p, e } = reviewedThird(); e.signOff = null;
+  e.deprecation.supersededBy = e.profileId;
+  refuses(() => validateProfileMetadata(e, { profile: p }), /cannot supersede itself/);
+  e.deprecation.supersededBy = e.profileId.toUpperCase();
+  refuses(() => validateProfileMetadata(e, { profile: p }), /cannot supersede itself|lowercase/);
+  const f = reviewedThird(); f.e.signOff = null; f.e.deprecation.date = '2026-10-13';
+  refuses(() => validateProfileMetadata(f.e, { profile: f.p }), /Deprecation date precedes/);
+  const g = reviewedThird(); g.e.signOff = null; g.e.deprecation.date = '2026-10-14';
+  validateProfileMetadata(g.e, { profile: g.p });
 });

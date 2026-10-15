@@ -51,10 +51,10 @@ The code does not require that a profile cover every dimension, contain a critic
 Identifiers follow `docs/governance/EXTENSION-REGISTRY.md`, section 2 and 3, as narrowed by the validator in `src/profiles/validate-metadata.mjs`.
 
 1. **Project profiles** (owner kind `project`): the id is `kya-core`, or `core-<name>` in lowercase with `.` and `-` only. These are the only ids that may use a reserved prefix. The reference profile is `kya-core` at version `1.0.0`, shipped as `profiles/core-v1.json`. The extension registry table lists it as `core-v1` after the file name; the id in the document is `kya-core`, and the registry file uses the document id.
-2. **Third-party profiles** (owner kind `third-party`): `<namespace>:<name>`. The namespace is a lowercase DNS name the registrant controls (at least two labels). The name is lowercase kebab-case with optional `.`, at most 64 characters. Neither part may start with `kya.`, `kya-`, `core-`, `reference-`, `fixture-` or `local.`.
+2. **Third-party profiles** (owner kind `third-party`): `<namespace>:<name>`. The namespace is a lowercase DNS name the registrant controls (at least two labels). The name is lowercase kebab-case with optional `.`, at most 64 characters. Neither part may start with `kya.`, `kya-`, `core-`, `core.`, `reference-`, `reference.`, `fixture-`, `fixture.` or `local.`, and the name may not be exactly `kya`, `core`, `reference`, `fixture` or `local`.
 3. An id is lowercase. Collisions are compared in lowercase. The same lowercase id and version cannot be registered twice. The same digest cannot be registered under two ids.
 4. A withdrawn id is retired, not reused.
-5. Namespace ownership is claimed, not verified, as in the extension registry.
+5. Namespace ownership is claimed, not verified, as in the extension registry. Likewise `owner.kind` is a self-declared member of the document, not an authenticated fact: the validator uses it to decide which id form and whether `reference` status is allowed, but nothing proves that a document saying `project` is project-owned. The registry in this repository is trusted because it is reviewed and committed here; a registry from elsewhere must be authenticated by other means before its `project` or `reference` claims are believed.
 
 ## 5. Required metadata
 
@@ -69,9 +69,9 @@ Each registry entry is a `kya.profile-metadata/v1` document. All of these are re
 | `intendedScope` | The kind of agent, tools and setting it is meant for |
 | `knownGaps` | At least one stated limit or omission. A registry entry with no known gaps is refused. |
 | `changeLog` | At least one entry (`version`, `date`, `summary`), including one for the registered version |
-| `owner` | `kind` (`project` or `third-party`) and `contact`. The contact is the placeholder `<owner-contact-placeholder>` or an https URL; an email address is refused. |
+| `owner` | `kind` (`project` or `third-party`) and `contact`. The contact is the placeholder `<owner-contact-placeholder>` or an https URL; an email address is refused, including a percent-encoded one in the path, query or fragment. |
 | `signOff` | `null`, or a record with `reviewer`, `role`, `date` and `evidenceDigest` |
-| `deprecation` | Present only for deprecated or retired entries: `date`, `reason`, `supersededBy` (an id or `null`) |
+| `deprecation` | Present only for deprecated or retired entries: `date`, `reason`, `supersededBy` (an id other than the entry own id, or `null`); the deprecation date may not precede the change-log date of the registered version |
 
 The owner contact is a placeholder until a maintainer assigns one. Nothing in this repository names a reviewer.
 
@@ -89,7 +89,7 @@ There is deliberately no `approved`, `accepted`, `certified` or `reviewed` statu
 A profile and its metadata MAY NOT claim:
 
 1. that a domain expert has reviewed, signed off or accepted the checks, weights, critical flags or thresholds. Domain-expert sign-off is an outside item (`docs/WORLD-CLASS-PLAN.md`, WS2). Until it exists, every profile is a draft proposal even when its status is `reference`;
-2. a sign-off without evidence. `signOff` is `null` unless it names a reviewer, a role, a date and the SHA-256 of the review record. A draft cannot carry one. Prose in `purpose`, `intendedScope` or a change-log summary that says "signed off", "expert reviewed", "certified" or "accepted by" is refused when `signOff` is `null`. The validator checks form, not truth: a well-formed sign-off record shows only that someone wrote it;
+2. a sign-off without evidence. `signOff` is `null` unless it names a reviewer, a role, a date and the SHA-256 of the review record. A draft cannot carry one. Prose in `purpose`, `intendedScope`, any `knownGaps` entry, a change-log summary or the deprecation reason that says "signed off", "expert reviewed", "certified", or "approved", "endorsed", "validated", "audited", "attested", "ratified" or "accepted" followed by "by" is refused when `signOff` is `null`; text is compared after Unicode compatibility folding, case folding and whitespace collapsing, and with spaces removed between single letters, but a paraphrase the patterns do not cover is not detected. A sign-off evidence digest that is one repeated block of up to eight characters (all zero, all `f`, `abab...`) is refused, and when the caller passes `now` a sign-off dated after it is refused; without `now` no clock is read and a future date is not detected. The validator checks form, not truth: a well-formed sign-off record shows only that someone wrote it;
 3. that a score is a prediction of safety, a credit score or an authorization grant;
 4. that fixture or declared evidence scores a commercial product;
 5. any change to the core profile, the evaluator identity or `src/conformance/`; an extension may not move evaluator logic or change a critical gate or mandatory minimum of the core profile (`EXTENSION-REGISTRY.md`, section 8).
@@ -106,7 +106,7 @@ A profile that overlaps another does not inherit its claims. Results under diffe
 ## 8. Checking
 
 - `node scripts/profile-registry.mjs --check` recomputes every digest and compares the committed registry.
-- `validateProfileMetadata(doc, { profile })` and `validateProfileRegistry(registry, { profiles })` in `src/profiles/validate-metadata.mjs` apply sections 3 to 7 and throw on any breach. They fail closed: an unexpected member, a missing field, an unknown status, a digest mismatch, a duplicate id or an unevidenced sign-off all refuse.
+- `validateProfileMetadata(doc, { profile })` and `validateProfileRegistry(registry, { profiles })` in `src/profiles/validate-metadata.mjs` apply sections 3 to 7 and throw on any breach. They fail closed: an unexpected member, a missing field, an unknown status, a digest mismatch, a duplicate id or an unevidenced sign-off all refuse. The digest, counts, id and version are recomputed only when the profile (or the `profiles` map) is supplied. Without it the structural rules still apply but the digests are not checked: `digestsVerified(result)` is `false`, and `requireProfile: true` or `requireProfiles: true` refuses that case (`scripts/profile-registry.mjs` passes both). A supplied `profiles` map may not contain a file the registry does not list. Pass `now` to refuse a sign-off dated in the future.
 - `test/profiles.test.mjs` holds the negative cases.
 
 ## 9. Not established

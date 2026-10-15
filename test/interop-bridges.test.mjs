@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { mkdtempSync, writeFileSync, readFileSync } from 'node:fs';
+import { mkdtempSync, writeFileSync, readFileSync, symlinkSync, linkSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { assess, digest } from '../src/index.mjs';
@@ -346,4 +346,168 @@ test('cli exports each kind reproducibly verifies it against the report and refu
   assert.equal(cli('export', 'spiffe', '--assessment', a, ...cur2).status, 2);
   assert.equal(cli('export', 'bogus', '--assessment', a).status, 2);
   assert.equal(cli('--help').status, 0);
+});
+
+// ---- fix lane: adversarial review findings ----
+const reseal = r => { const { reportDigest, ...b } = r; return { ...b, reportDigest: digest(b) }; };
+const noCheck = { allowNotCurrent: true };
+
+test('cross check refuses a self contradictory currency block when currency is not rechecked', () => {
+  const r = report();
+  const unchecked = () => clone(exportInTotoStatement(r, noCheck));
+  const checked = () => clone(exportInTotoStatement(r, cur()));
+  const mutations = [
+    ['unchecked but current true', unchecked, x => { x.predicate.currency.current = true; x.predicate.qualified = true; }],
+    ['unchecked with trigger codes', unchecked, x => { x.predicate.currency.triggerCodes = ['SUBJECT_CHANGED']; }],
+    ['unchecked with a digest', unchecked, x => { x.predicate.currency.digest = 'a'.repeat(64); }],
+    ['unchecked without the override', unchecked, x => { x.predicate.currency.overrides = []; }],
+    ['current with trigger codes', checked, x => { x.predicate.currency.triggerCodes = ['SUBJECT_CHANGED']; }],
+    ['not current without trigger codes', checked, x => { x.predicate.currency.current = false; x.predicate.qualified = false; }],
+    ['junk checked at', checked, x => { x.predicate.currency.checkedAt = 'yesterday'; }],
+    ['junk digest', checked, x => { x.predicate.currency.digest = 'zz'; }],
+    ['unknown trigger code', checked, x => { x.predicate.currency.current = false; x.predicate.currency.triggerCodes = ['MADE_UP']; x.predicate.qualified = false; }]
+  ];
+  for (const [name, make, mutate] of mutations) {
+    const x = make(); mutate(x);
+    const v = verifyBridgeExport('intoto', x, { report: r });
+    assert.equal(v.valid, false, name);
+    assert.equal(v.errors[0].code, 'MALFORMED', name);
+  }
+  const o = clone(exportOAuthClaims(r, noCheck)); o.kya.currency.current = true; o.kya.qualified = true;
+  assert.equal(verifyBridgeExport('oauth', o, { report: r }).valid, false);
+  assert.equal(verifyBridgeExport('intoto', unchecked(), { report: r }).valid, true);
+  assert.equal(verifyBridgeExport('intoto', checked(), { report: r }).valid, true);
+});
+
+test('export options are read as own properties only', () => {
+  const r = report();
+  refused(() => exportOtelAttributes(r, Object.create({ allowNotCurrent: true })), 'CURRENCY_NOT_CHECKED');
+  Object.prototype.allowNotCurrent = true;
+  try { refused(() => exportOtelAttributes(r, {}), 'CURRENCY_NOT_CHECKED'); refused(() => exportOtelAttributes(r), 'CURRENCY_NOT_CHECKED'); }
+  finally { delete Object.prototype.allowNotCurrent; }
+  Object.prototype.allowNonQualified = true;
+  try { refused(() => exportOtelAttributes(notQualified(), cur()), 'NOT_QUALIFIED'); }
+  finally { delete Object.prototype.allowNonQualified; }
+  const inherited = Object.create({ assessmentUrl: 'https://bad.example/x' });
+  Object.assign(inherited, cur());
+  assert.equal(exportMcpMeta(r, inherited)._meta[MCP_META_KEY].assessmentUrl, undefined);
+});
+
+const cliDir = mkdtempSync(join(tmpdir(), 'kya-bridge-fix-'));
+const cput = (name, v) => { const p = join(cliDir, name); writeFileSync(p, JSON.stringify(v)); return p; };
+const cliFix = (...args) => spawnSync(process.execPath, [join(process.cwd(), 'scripts/kya-bridge.mjs'), ...args], { encoding: 'utf8', shell: false, timeout: 20000 });
+
+test('cli refuses unknown flags per command', () => {
+  const i = base(), r = assess(i);
+  const a = cput('a.json', r), m = cput('m.json', i.manifest), p = cput('p.json', i.policy);
+  const c = ['--manifest', m, '--policy', p, '--now', CHECK];
+  assert.equal(cliFix('export', 'otel', '--assessment', a, ...c, '--incident', a).status, 2);
+  assert.equal(cliFix('export', 'otel', '--assessment', a, ...c, '--export', a).status, 2);
+  const e = cliFix('export', 'otel', '--assessment', a, ...c);
+  const ef = join(cliDir, 'otel.json'); writeFileSync(ef, e.stdout);
+  assert.equal(cliFix('verify', 'otel', '--export', ef, '--assessment', a, ...c, '--incidnts', a).status, 2);
+  assert.equal(cliFix('verify', 'otel', '--export', ef, '--assessment', a, '--allow-not-current').status, 2);
+  assert.equal(cliFix('verify', 'otel', '--export', ef, '--assessment', a, '--out', join(cliDir, 'zz.json')).status, 2);
+  assert.equal(cliFix('verify', 'otel', '--export', ef, '--assessment', a, ...c).status, 0);
+});
+
+test('cli treats empty valued flags as present and requires recheck inputs together', () => {
+  const i = base(), r = assess(i);
+  const a = cput('a2.json', r), m = cput('m2.json', i.manifest), p = cput('p2.json', i.policy), inc = cput('inc2.json', []);
+  const c = ['--manifest', m, '--policy', p, '--now', CHECK];
+  const ef = join(cliDir, 'otel2.json'); writeFileSync(ef, cliFix('export', 'otel', '--assessment', a, ...c).stdout);
+  assert.equal(cliFix('verify', 'otel', '--export', ef, '--assessment', a, '--manifest', '', '--policy', p, '--now', CHECK).status, 2);
+  assert.equal(cliFix('verify', 'otel', '--export', ef, '--assessment', a, '--manifest', '').status, 2);
+  assert.equal(cliFix('verify', 'otel', '--export', ef, '--assessment', a, '--incidents', inc).status, 2);
+  assert.equal(cliFix('verify', 'otel', '--export', ef, '--assessment', a, '--manifest', m).status, 2);
+  assert.equal(cliFix('export', 'otel', '--assessment', a, '--incidents', inc, '--allow-not-current').status, 2);
+  assert.equal(cliFix('export', 'otel', '--assessment', a, '--allow-not-current', '--now', '').status, 2);
+  assert.equal(cliFix('verify', 'otel', '--export', ef, '--assessment', a, ...c, '--incidents', inc).status, 0);
+});
+
+test('library refuses incidents without the other currency inputs', () => {
+  const r = report();
+  refused(() => exportOtelAttributes(r, { incidents: [], allowNotCurrent: true }), 'CURRENCY_INPUTS_INCOMPLETE');
+  const out = exportOtelAttributes(r, cur());
+  assert.equal(verifyBridgeExport('otel', out, { report: r, incidents: [] }).errors[0].code, 'CURRENCY_INPUTS_INCOMPLETE');
+});
+
+test('timestamps in the report are validated even when currency is not checked', () => {
+  const r = report();
+  for (const [k, v] of [['validUntil', 'garbage'], ['validUntil', '2026-10-14 12:00:00'], ['validUntil', '2026-10-14T12:00:00'], ['assessedAt', 'garbage']]) {
+    const bad = reseal({ ...clone(r), [k]: v });
+    assert.throws(() => exportOAuthClaims(bad, noCheck), /Assessment|timestamp/, k + v);
+    assert.equal(verifyBridgeExport('oauth', exportOAuthClaims(r, noCheck), { report: bad }).errors[0].code, 'REPORT_INVALID', k + v);
+  }
+});
+
+test('a non ISO validity is refused identically under different time zones', () => {
+  const r = reseal({ ...clone(report()), validUntil: '2026-10-14T12:00:00' });
+  const script = 'import { exportOAuthClaims } from ' + JSON.stringify(new URL('../src/interop-bridges/index.mjs', import.meta.url).href) + '; try { exportOAuthClaims(JSON.parse(process.argv[1]), { allowNotCurrent: true }); console.log("EXPORTED"); } catch (e) { console.log("REFUSED"); }';
+  for (const tz of ['UTC', 'Asia/Tokyo']) {
+    const out = spawnSync(process.execPath, ['--input-type=module', '-e', script, JSON.stringify(r)], { encoding: 'utf8', env: { ...process.env, TZ: tz } });
+    assert.equal(out.stdout.trim(), 'REFUSED', tz + ' ' + out.stderr);
+  }
+});
+
+test('cross check never throws on unusual export values', () => {
+  const r = report();
+  const good = () => clone(exportOtelAttributes(r, cur()));
+  const cyc = good(); cyc.self = cyc;
+  const own = JSON.parse('{"__proto__":{"x":1}}');
+  const withProto = good(); Object.defineProperty(withProto, '__proto__', { value: 1, enumerable: true, configurable: true, writable: true });
+  const cases = [{ ...good(), 'kya.score.earned': NaN }, { ...good(), extra: 10n }, cyc, own, withProto, { ...good(), nested: { a: Infinity } }];
+  for (const kind of BRIDGE_KINDS) for (const x of cases) {
+    let v; assert.doesNotThrow(() => { v = verifyBridgeExport(kind, x, { report: r }); }, kind);
+    assert.equal(v.valid, false, kind);
+  }
+  for (const x of cases) assert.doesNotThrow(() => verifyBridgeExport('otel', x, { report: r, ...cur() }));
+  assert.doesNotThrow(() => verifyBridgeExport('otel', good(), null));
+  assert.doesNotThrow(() => verifyBridgeExport('otel', good(), 5));
+  assert.equal(verifyBridgeExport('otel', cases[0], { report: r }).errors[0].code, 'MALFORMED');
+});
+
+test('spiffe trust domains need dns label like labels', () => {
+  for (const bad of ['.', '..', '-', 'a..b', 'a.', '.a', '-a', 'a-', 'a.-b', 'a_.b', 'A.b', 'a' + '.b'.repeat(200)])
+    assert.throws(() => exportSpiffeBinding(report(), 'spiffe://' + bad + '/x', cur()), /SPIFFE/, bad);
+  for (const ok of ['example.test', 'example', 'a-b.c_d.e1', 'x.y.z']) exportSpiffeBinding(report(), 'spiffe://' + ok + '/x', cur());
+});
+
+test('assessment urls with userinfo or fragments are refused and the url can be pinned in the cross check', () => {
+  const r = report();
+  for (const bad of ['https://user@example.test/a', 'https://user:pw@example.test/a', 'https://@example.test/a', 'https://:@example.test/a', 'https://example.test/a#frag', 'https://example.test/a#', 'https://', 'https:///a'])
+    for (const fn of [exportA2aExtension, exportMcpMeta]) assert.throws(() => fn(r, cur({ assessmentUrl: bad })), /https URL/, bad);
+  const url = 'https://example.test/kya/a.json';
+  const out = exportA2aExtension(r, cur({ assessmentUrl: url }));
+  assert.equal(verifyBridgeExport('a2a', out, { report: r, assessmentUrl: url }).valid, true);
+  const other = verifyBridgeExport('a2a', out, { report: r, assessmentUrl: 'https://example.test/other.json' });
+  assert.equal(other.valid, false); assert.equal(other.errors[0].code, 'REPORT_MISMATCH');
+  assert.equal(verifyBridgeExport('a2a', out, { report: r, assessmentUrl: 'http://x' }).valid, false);
+  assert.equal(verifyBridgeExport('otel', exportOtelAttributes(r, cur()), { report: r, assessmentUrl: url }).valid, false);
+  const forged = clone(out); forged.params.assessmentUrl = 'https://user@example.test/a';
+  assert.equal(verifyBridgeExport('a2a', forged, { report: r }).valid, false);
+});
+
+test('cli refuses to overwrite inputs or symlinks and uses exclusive create unless force is given', () => {
+  const i = base(), r = assess(i);
+  const a = cput('a3.json', r), m = cput('m3.json', i.manifest), p = cput('p3.json', i.policy);
+  const c = ['--manifest', m, '--policy', p, '--now', CHECK];
+  const before = readFileSync(a, 'utf8');
+  assert.equal(cliFix('export', 'otel', '--assessment', a, ...c, '--out', a).status, 2);
+  assert.equal(cliFix('export', 'otel', '--assessment', a, ...c, '--out', a, '--force').status, 2);
+  assert.equal(cliFix('export', 'otel', '--assessment', a, ...c, '--out', join(cliDir, '.', 'a3.json')).status, 2);
+  assert.equal(readFileSync(a, 'utf8'), before);
+  const link = join(cliDir, 'link.json'); symlinkSync(a, link);
+  assert.equal(cliFix('export', 'otel', '--assessment', a, ...c, '--out', link).status, 2);
+  assert.equal(cliFix('export', 'otel', '--assessment', a, ...c, '--out', link, '--force').status, 2);
+  assert.equal(readFileSync(a, 'utf8'), before);
+  const hard = join(cliDir, 'hard.json'); linkSync(a, hard);
+  assert.equal(cliFix('export', 'otel', '--assessment', a, ...c, '--out', hard, '--force').status, 2);
+  assert.equal(readFileSync(a, 'utf8'), before);
+  const out = join(cliDir, 'fresh.json');
+  assert.equal(cliFix('export', 'otel', '--assessment', a, ...c, '--out', out).status, 0);
+  assert.equal(cliFix('export', 'otel', '--assessment', a, ...c, '--out', out).status, 2);
+  writeFileSync(out, 'old');
+  assert.equal(cliFix('export', 'otel', '--assessment', a, ...c, '--out', out, '--force').status, 0);
+  assert.notEqual(readFileSync(out, 'utf8'), 'old');
 });

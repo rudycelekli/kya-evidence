@@ -6,11 +6,11 @@ These are **export bindings**. Each takes a `kya.assessment/v1` report and produ
 
 ## Rules shared by every export
 
-1. **Fail closed.** The report checksum is verified first. A decision other than `qualified` is refused with `NOT_QUALIFIED` unless the caller passes `allowNonQualified`. Currency (`checkCurrency`, ADR-0013) is evaluated at an explicit `now` against the supplied manifest, policy and incidents; a fired trigger is `NOT_CURRENT`, missing inputs are `CURRENCY_NOT_CHECKED`, and a partial set is `CURRENCY_INPUTS_INCOMPLETE`, all refused unless the caller passes `allowNotCurrent`.
+1. **Fail closed.** The report checksum is verified first. A decision other than `qualified` is refused with `NOT_QUALIFIED` unless the caller passes `allowNonQualified`. Currency (`checkCurrency`, ADR-0013) is evaluated at an explicit `now` against the supplied manifest, policy and incidents; a fired trigger is `NOT_CURRENT`, missing inputs are `CURRENCY_NOT_CHECKED`, and a partial set (including `incidents` without the other three) is `CURRENCY_INPUTS_INCOMPLETE`. `NOT_CURRENT` and `CURRENCY_NOT_CHECKED` are refused unless the caller passes `allowNotCurrent`; `CURRENCY_INPUTS_INCOMPLETE` is always refused, with or without `allowNotCurrent`, because a half-supplied check is a caller error rather than an absent one. Options are read as own properties only, so an inherited or polluted `Object.prototype` member never acts as a flag. `assessedAt` and `validUntil` must be ISO UTC timestamps (`YYYY-MM-DDTHH:mm:ss.sssZ`) whether or not currency is checked.
 2. **Overrides are visible.** An override only appears in the output when it was needed (`overrides` lists `allowNonQualified` and `allowNotCurrent`). `qualified` is true only when the decision is `qualified` **and** a currency check ran and passed; an export made with an override never reads as qualified-and-current.
 3. **Byte for byte reproducible.** Same report and same options give the same bytes. Serialization is KYA canonical JSON (sorted keys) plus one newline (`serialize`). This is not RFC 8785.
 4. **Limits travel with the data.** Every export carries the limit list: not an authorization grant; unauthenticated report checksum; unsigned; currency evaluated once at the stated time; no third-party tool has consumed the format and no conformance claim. OpenTelemetry attributes carry `kya.authorization.granted` and `kya.assessment.authenticated` as constant `false`.
-5. **No identity.** No principal, agent name or agent id is exported. The subject is the manifest digest.
+5. **No principal or agent name is exported by the exporters themselves.** The subject is the manifest digest. Members copied verbatim from the report (`scopeId`, `profileId`, `selectedRunId` and `limitations` in the in-toto predicate) and operator-chosen free text in the report can still embed a name, an email address or another identifier if the operator put one there; review the report before exporting it. The exports do not hash or redact these values.
 6. **Evidence mode is copied, never chosen.** There is no option to set it.
 
 ## Report-style cross-check
@@ -18,6 +18,8 @@ These are **export bindings**. Each takes a `kya.assessment/v1` report and produ
 `verifyBridgeExport(kind, output, { report, manifest, policy, now, incidents })`, CLI `kya-bridge verify KIND --export F --assessment F`. It rebuilds the export from the source report with the exporter's own construction and compares the whole object in canonical form; any difference is `REPORT_MISMATCH` naming the member. It never throws on bad input. Limits of the check:
 
 - Without `manifest`, `policy` and `now`, the currency block is taken from the export itself (`currencyRechecked: false`), so a forged currency block is **not** detected. Pass the three to re-derive it; an override recorded in the output is honoured only if the recomputation also needed it.
+- When the currency block is taken from the export, its internal invariants are checked first and a contradictory block is `MALFORMED` (unchecked means no result, no digest, no trigger codes and the `allowNotCurrent` override; checked means `current` equals "no trigger codes", a 64-hex digest, an ISO checked time and known sorted trigger codes). This still does not detect a coherent but false block; only the recheck does.
+- `incidents` without `manifest`, `policy` and `now` is `CURRENCY_INPUTS_INCOMPLETE`. An optional `assessmentUrl` option is compared with the URL in an `a2a` or `mcp` export (`REPORT_MISMATCH`); for other kinds it is `OPTION_NOT_APPLICABLE`. The check also returns `MALFORMED` rather than throwing for NaN, bigint, cyclic or `__proto__` members.
 - It proves consistency with the supplied report, not that the report is truthful or authentic (`authenticated` is always `false`).
 
 ## 1. in-toto Statement v1
@@ -73,7 +75,7 @@ A test keeps this table and `OTEL_ATTRIBUTES` in sync. Blocker codes and currenc
 
 How a relying party uses it: the token issuer (or an introspection endpoint) copies the `kya` claim into an access token or introspection response; a resource server compares `assessment_digest` and `subject_digest` against values it pins itself, and treats `decision` as an input to its own policy, never as a grant. The claim is only as trustworthy as the token that carries it.
 
-`exportSpiffeBinding(assessment, spiffeId, options)` returns a `kya.spiffe-binding/v1` record: the SPIFFE ID (validated as `spiffe://trust-domain/path`; no query, fragment, userinfo, dot segments, empty or trailing-slash segments, uppercase trust domain), the same `kya` claims, and `bindingDigest`, the SHA-256 of the (SPIFFE ID, assessment digest, subject digest) triple. Carry it as workload-registration metadata or alongside an SVID. It is **not embedded in an SVID** and creates no trust relationship: `association` is `asserted-not-proven`. Nothing proves that the workload holding the SVID runs the manifest named by `subject_digest`; the relying party must establish that out of band (for example by attesting the artifact digest the manifest names).
+`exportSpiffeBinding(assessment, spiffeId, options)` returns a `kya.spiffe-binding/v1` record: the SPIFFE ID (validated as `spiffe://trust-domain/path` where the trust domain is dot-separated lowercase DNS-label-like labels; no query, fragment, userinfo, dot segments, empty or trailing-slash segments, uppercase trust domain), the same `kya` claims, and `bindingDigest`, the SHA-256 of the (SPIFFE ID, assessment digest, subject digest) triple. Carry it as workload-registration metadata or alongside an SVID. It is **not embedded in an SVID** and creates no trust relationship: `association` is `asserted-not-proven`. Nothing proves that the workload holding the SVID runs the manifest named by `subject_digest`; the relying party must establish that out of band (for example by attesting the artifact digest the manifest names).
 
 ## 4. A2A agent card and MCP metadata
 
@@ -86,7 +88,7 @@ How a relying party uses it: the token issuer (or an introspection endpoint) cop
 | `currencyCheck.schema` | `kya.currency/v1`, the check the relying party should run itself |
 | `currencyCheck.asOfExport` | what the exporter saw at `checkedAt`: `checked`, `current`, `triggerCodes`, `digest`, `overrides` |
 | `currencyCheck.how` | instruction to re-run the check with the relying party's own inputs |
-| `assessmentUrl` | optional https URL hint; never fetched; the digest is what binds |
+| `assessmentUrl` | optional https URL hint with a host, no userinfo and no fragment; never fetched; the digest is what binds |
 | `authorizationGranted`, `limits` | `false`; the shared limit list |
 
 A client that finds this must fetch the assessment itself, verify its checksum and digest against the pointer, and run the currency check; the pointer alone is advertising, not evidence.
@@ -98,6 +100,8 @@ node scripts/kya-bridge.mjs export intoto --assessment a.json --manifest m.json 
 node scripts/kya-bridge.mjs export spiffe --assessment a.json --manifest m.json --policy p.json --now ISO --spiffe-id spiffe://example.test/agent/one
 node scripts/kya-bridge.mjs verify intoto --export out.json --assessment a.json --manifest m.json --policy p.json --now ISO
 ```
+
+Each command accepts only its own flags; an unknown flag, a flag with an empty value, `--incidents` without `--manifest`, `--policy` and `--now`, or a partial set of those three exits 2. `--out` creates the file exclusively and refuses an existing file unless `--force` is given; it always refuses a symbolic link and any input file (same path, or the same file by device and inode).
 
 Kinds: `intoto`, `otel`, `oauth`, `spiffe`, `a2a`, `mcp`. Exit 0 ok, 1 cross-check found a problem, 2 refused or usage error. Refusals print `{error, code}` on stderr and nothing on stdout.
 
