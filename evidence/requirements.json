@@ -2611,6 +2611,14 @@
         {
           "file": "test/assessor.test.mjs",
           "title": "an undisclosed conflict declared by a trusted other party removes standing"
+        },
+        {
+          "file": "test/assessor.test.mjs",
+          "title": "an adverse newer disclosure cannot be laundered by letting it expire"
+        },
+        {
+          "file": "test/assessor.test.mjs",
+          "title": "withdrawing an adverse newer disclosure does not revive an older none disclosure"
         }
       ]
     },
@@ -2632,6 +2640,18 @@
         {
           "file": "test/assessor.test.mjs",
           "title": "a withdrawal by the same key ends a disclosure and cannot be forged by another key"
+        },
+        {
+          "file": "test/assessor.test.mjs",
+          "title": "withdrawal time must not precede its target or lie in the future"
+        },
+        {
+          "file": "test/assessor.test.mjs",
+          "title": "a withdrawal binds to the target envelope digest and not to the record id alone"
+        },
+        {
+          "file": "test/assessor.test.mjs",
+          "title": "a declarer can withdraw its own declaration but not another key"
         }
       ]
     },
@@ -2787,6 +2807,18 @@
         {
           "file": "test/privacy.test.mjs",
           "title": "privacy scan exit code is 1 on findings, 0 when clean and 2 on usage errors"
+        },
+        {
+          "file": "test/privacy.test.mjs",
+          "title": "privacy scan keeps two different files with the same base name outside cwd"
+        },
+        {
+          "file": "test/privacy.test.mjs",
+          "title": "privacy scan reports unreadable files without echoing the path and strips control characters"
+        },
+        {
+          "file": "test/privacy.test.mjs",
+          "title": "privacy scan exits 2 when nothing was scanned and normalizes extensions"
         }
       ]
     },
@@ -2800,6 +2832,14 @@
         {
           "file": "test/privacy.test.mjs",
           "title": "privacy scan reports structural violations in coded and digest-only fields"
+        },
+        {
+          "file": "test/privacy.test.mjs",
+          "title": "privacy scan applies the coded-field rule to any key ending in Id"
+        },
+        {
+          "file": "test/privacy.test.mjs",
+          "title": "privacy scan uses the strict parser, strips a BOM and checks nested narrative fields"
         }
       ]
     },
@@ -2855,6 +2895,14 @@
         {
           "file": "test/privacy.test.mjs",
           "title": "field commitment refuses weak salts, bad names and unsupported values and openField never throws"
+        },
+        {
+          "file": "test/privacy.test.mjs",
+          "title": "field commitment derives a distinct salt per field and an opened field does not leak the master"
+        },
+        {
+          "file": "test/privacy.test.mjs",
+          "title": "field commitment refuses constant salts, short salts, a public salt parameter and null input"
         }
       ]
     },

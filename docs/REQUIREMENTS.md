@@ -162,4 +162,4 @@ Each requirement is traced to at least one test that must exist exactly once; th
 | KYA-IBR-007 | MUST | The bridge cross-check MUST rebuild an export from the source report, report any difference as REPORT_MISMATCH naming the member, never throw on malformed input, and state when the currency block was not re-derived. | `interop-bridges.test.mjs` |
 | KYA-IBR-008 | SHOULD | The kya-bridge CLI SHOULD export and cross-check every kind offline and refuse unsafe exports with exit code 2 and no output on stdout. | `interop-bridges.test.mjs` |
 
-Registry digest: `ef7312449471178edc0e624694090062681bdd365491b685e74b310d0b8f65f8`
+Registry digest: `06cc7c5ec9baf4c63937089fc4b928487daaeb92d8c949b7dbd75f7996bd2f13`
