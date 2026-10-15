@@ -3224,6 +3224,110 @@
           "title": "benchmark verifier inline limitation list matches the emitted list"
         }
       ]
+    },
+    {
+      "id": "KYA-DOC-001",
+      "level": "MUST",
+      "area": "docs",
+      "section": "Interoperability and versioning",
+      "statement": "The action README usage example MUST carry the pin inputs and MUST say a bare call exits 1 with `PINS_REQUIRED`.",
+      "tests": [
+        {
+          "file": "test/docs-claims.test.mjs",
+          "title": "the action README example carries the pin inputs and says a bare call needs pins"
+        }
+      ]
+    },
+    {
+      "id": "KYA-DOC-002",
+      "level": "MUST",
+      "area": "docs",
+      "section": "Interoperability and versioning",
+      "statement": "The policy pin MUST be described as the canonical policy digest, not the file hash.",
+      "tests": [
+        {
+          "file": "test/docs-claims.test.mjs",
+          "title": "the policy pin is described as the canonical policy digest and not the file hash"
+        }
+      ]
+    },
+    {
+      "id": "KYA-DOC-003",
+      "level": "MUST",
+      "area": "docs",
+      "section": "Governance documents",
+      "statement": "Markdown files MUST NOT reference a nonexistent lane integration or requirements proposal note.",
+      "tests": [
+        {
+          "file": "test/docs-claims.test.mjs",
+          "title": "no markdown file references a nonexistent docs lane integration or requirements proposal note"
+        }
+      ]
+    },
+    {
+      "id": "KYA-DOC-004",
+      "level": "MUST",
+      "area": "docs",
+      "section": "Interoperability and versioning",
+      "statement": "Documentation MUST NOT describe the manifest as a passport.",
+      "tests": [
+        {
+          "file": "test/docs-claims.test.mjs",
+          "title": "README does not call the manifest a passport or promise portable passports"
+        }
+      ]
+    },
+    {
+      "id": "KYA-DOC-005",
+      "level": "MUST",
+      "area": "docs",
+      "section": "Interoperability and versioning",
+      "statement": "The conformance document MUST NOT say no second implementation has run the vectors, and MUST say none is independent.",
+      "tests": [
+        {
+          "file": "test/docs-claims.test.mjs",
+          "title": "CONFORMANCE no longer says no second implementation has run the vectors"
+        }
+      ]
+    },
+    {
+      "id": "KYA-DOC-006",
+      "level": "MUST",
+      "area": "docs",
+      "section": "Interoperability and versioning",
+      "statement": "A detection result that is not reproducible from the repository MUST be labelled so and MUST point at the mutation check.",
+      "tests": [
+        {
+          "file": "test/docs-claims.test.mjs",
+          "title": "the six-gate detection claim is labelled as not reproducible from the repository"
+        }
+      ]
+    },
+    {
+      "id": "KYA-DOC-007",
+      "level": "MUST",
+      "area": "docs",
+      "section": "Interoperability and versioning",
+      "statement": "The stated mutation control count MUST match the mutation check script.",
+      "tests": [
+        {
+          "file": "test/docs-claims.test.mjs",
+          "title": "the stated mutation control count matches the mutation check script"
+        }
+      ]
+    },
+    {
+      "id": "KYA-DOC-008",
+      "level": "MUST",
+      "area": "docs",
+      "section": "Interoperability and versioning",
+      "statement": "Documented VC bridge commands MUST resolve to an existing script or the `kya vc` subcommand.",
+      "tests": [
+        {
+          "file": "test/docs-claims.test.mjs",
+          "title": "every VC bridge command in the documentation resolves to an existing script or subcommand"
+        }
+      ]
     }
   ]
 }

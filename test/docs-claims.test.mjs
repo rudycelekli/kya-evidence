@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync, readdirSync, existsSync } from 'node:fs';
+import { readFileSync, existsSync } from 'node:fs';
 import { join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { spawnSync } from 'node:child_process';
@@ -11,14 +11,11 @@ const root = fileURLToPath(new URL('../', import.meta.url));
 const read = (p) => readFileSync(join(root, p), 'utf8');
 const SKIP = new Set(['node_modules', '.git', '.claude', 'dist', 'artifacts']);
 
-function markdownFiles(dir = root, out = []) {
-  for (const e of readdirSync(dir, { withFileTypes: true })) {
-    if (SKIP.has(e.name)) continue;
-    const full = join(dir, e.name);
-    if (e.isDirectory()) markdownFiles(full, out);
-    else if (e.isFile() && e.name.endsWith('.md')) out.push(full);
-  }
-  return out;
+// Only tracked files count: scratch copies and other tools' working folders are not part of the repository.
+function markdownFiles() {
+  const r = spawnSync('git', ['ls-files', '*.md'], { cwd: root, encoding: 'utf8' });
+  assert.equal(r.status, 0, 'git ls-files failed');
+  return r.stdout.split('\n').filter(Boolean).filter(f => !SKIP.has(f.split('/')[0])).map(f => join(root, f));
 }
 const files = markdownFiles();
 

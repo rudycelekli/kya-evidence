@@ -172,5 +172,13 @@ Each requirement is traced to at least one test that must exist exactly once; th
 | KYA-CLB-003 | MUST | Claim boundary codes MUST be unique, upper snake case and append-only. | `claim-boundaries.test.mjs` |
 | KYA-CLB-004 | MUST | codesForLimitStrings MUST throw on an unknown string and MUST cover the outputs of assess and checkCurrency. | `claim-boundaries.test.mjs` |
 | KYA-CLB-005 | MUST | The benchmark verifier inline limitation list MUST equal the emitted list. | `claim-boundaries.test.mjs` |
+| KYA-DOC-001 | MUST | The action README usage example MUST carry the pin inputs and MUST say a bare call exits 1 with `PINS_REQUIRED`. | `docs-claims.test.mjs` |
+| KYA-DOC-002 | MUST | The policy pin MUST be described as the canonical policy digest, not the file hash. | `docs-claims.test.mjs` |
+| KYA-DOC-003 | MUST | Markdown files MUST NOT reference a nonexistent lane integration or requirements proposal note. | `docs-claims.test.mjs` |
+| KYA-DOC-004 | MUST | Documentation MUST NOT describe the manifest as a passport. | `docs-claims.test.mjs` |
+| KYA-DOC-005 | MUST | The conformance document MUST NOT say no second implementation has run the vectors, and MUST say none is independent. | `docs-claims.test.mjs` |
+| KYA-DOC-006 | MUST | A detection result that is not reproducible from the repository MUST be labelled so and MUST point at the mutation check. | `docs-claims.test.mjs` |
+| KYA-DOC-007 | MUST | The stated mutation control count MUST match the mutation check script. | `docs-claims.test.mjs` |
+| KYA-DOC-008 | MUST | Documented VC bridge commands MUST resolve to an existing script or the `kya vc` subcommand. | `docs-claims.test.mjs` |
 
-Registry digest: `be4a41112c56444ca93e8dcf96d8aa3d7f8363edc6701b77c93939d590a86f9b`
+Registry digest: `5dcef46aa4d0b53c58e78fe50c3c9ed3d3e88f3c5f267bb032382226f3965008`
