@@ -168,4 +168,4 @@ Each requirement is traced to at least one test that must exist exactly once; th
 | KYA-CAL-005 | MUST | The template MUST describe the freeze-and-hash step using existing campaign plan and ledger concepts and no new ledger kind. | `calibration-docs.test.mjs` |
 | KYA-CAL-006 | MUST | The calibration documents MUST be plain ASCII. | `calibration-docs.test.mjs` |
 
-Registry digest: `3de82925a2b9bc62d9e12dc9d84318a248aa18a00c45a50ec309b6c0b830ebea`
+Registry digest: `39cb2eb327b7c76d11a71794af63dfb0fc7436d3d8438b0f4b2ca6e73c91fae0`

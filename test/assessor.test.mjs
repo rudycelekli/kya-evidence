@@ -8,8 +8,9 @@ const pem = k => k.publicKey.export({ format: 'pem', type: 'spki' }).toString();
 const A = generateKeyPairSync('ed25519'), B = generateKeyPairSync('ed25519'), D = generateKeyPairSync('ed25519'), X = generateKeyPairSync('ed25519');
 const idA = keyId(pem(A)), idB = keyId(pem(B)), idD = keyId(pem(D));
 const OP = hashBytes('operator'), NOW = '2026-10-20T00:00:00.000Z';
-const base = (patch = {}) => ({ schema: 'kya.assessor-disclosure/v1', id: 'disc:1', kind: 'disclosure', assessorKeyId: idA, operatorDigest: OP, relationships: ['none'], priorEngagementEndedAt: null, refId: null, issuedAt: '2026-10-01T00:00:00.000Z', expiresAt: '2027-03-01T00:00:00.000Z', detailsDigest: hashBytes('private'), ...patch });
+const base = (patch = {}) => ({ schema: 'kya.assessor-disclosure/v1', id: 'disc:1', kind: 'disclosure', assessorKeyId: idA, operatorDigest: OP, relationships: ['none'], priorEngagementEndedAt: null, refId: null, refDigest: null, issuedAt: '2026-10-01T00:00:00.000Z', expiresAt: '2027-03-01T00:00:00.000Z', detailsDigest: hashBytes('private'), ...patch });
 const disc = (patch, key = A.privateKey) => signDisclosure(base(patch), key);
+const wd = (target, patch = {}, key = A.privateKey) => signDisclosure(base({ id: 'wd:' + target.payload.id, kind: 'withdrawal', relationships: [], refId: target.payload.id, refDigest: verifyDisclosure(target).envelopeDigest, ...patch }), key);
 const policy = (patch = {}) => ({ operatorDigest: OP, assessorKeyIds: [idA], declarerKeyIds: [idD], ...patch });
 const stand = (recs, pol = policy(), now = NOW) => checkAssessorStanding(recs, pol, now).standings[0];
 
@@ -94,9 +95,9 @@ test('a disclosure for another operator is ignored and corrupt records are liste
 });
 
 test('a withdrawal by the same key ends a disclosure and cannot be forged by another key', () => {
-  const w = disc({ id: 'wd:1', kind: 'withdrawal', relationships: [], refId: 'disc:1' });
+  const w = wd(disc());
   assert.deepEqual(stand([disc(), w]).reasons, ['no-disclosure']);
-  const forged = disc({ id: 'wd:2', kind: 'withdrawal', relationships: [], refId: 'disc:1' }, B.privateKey);
+  const forged = wd(disc(), { id: 'wd:2' }, B.privateKey);
   assert.equal(stand([disc(), forged]).standing, 'good');
 });
 
@@ -120,4 +121,46 @@ test('standing policy and input are validated strictly', () => {
   assert.throws(() => checkAssessorStanding({}, policy(), NOW));
   assert.throws(() => checkAssessorStanding([], policy(), 'yesterday'));
   assert.throws(() => checkAssessorStanding(Array(1025).fill(disc()), policy(), NOW));
+});
+
+test('an adverse newer disclosure cannot be laundered by letting it expire', () => {
+  const none = disc({ issuedAt: '2026-01-01T00:00:00.000Z', expiresAt: '2026-12-31T00:00:00.000Z' });
+  const bad = disc({ id: 'disc:bad', relationships: ['financial'], issuedAt: '2026-10-01T00:00:00.000Z', expiresAt: '2026-10-10T00:00:00.000Z' });
+  assert.deepEqual(stand([none, bad]).reasons, ['disclosure-expired']);
+});
+
+test('withdrawing an adverse newer disclosure does not revive an older none disclosure', () => {
+  const none = disc({ issuedAt: '2026-01-01T00:00:00.000Z', expiresAt: '2026-12-31T00:00:00.000Z' });
+  const bad = disc({ id: 'disc:bad', relationships: ['financial'], issuedAt: '2026-10-01T00:00:00.000Z' });
+  const w = wd(bad, { issuedAt: '2026-10-05T00:00:00.000Z' });
+  assert.deepEqual(stand([none, bad, w]).reasons, ['no-disclosure']);
+  const fresh = disc({ id: 'disc:fresh', issuedAt: '2026-10-06T00:00:00.000Z' });
+  assert.equal(stand([none, bad, w, fresh]).standing, 'good');
+});
+
+test('withdrawal time must not precede its target or lie in the future', () => {
+  const t = disc();
+  const early = wd(t, { id: 'wd:early', issuedAt: '2026-09-01T00:00:00.000Z', expiresAt: '2026-12-01T00:00:00.000Z' });
+  const r = checkAssessorStanding([t, early], policy(), NOW);
+  assert.equal(r.standings[0].standing, 'good'); assert.equal(r.ignored[0].reason, 'withdrawal-time-invalid');
+  const late = wd(t, { id: 'wd:late', issuedAt: '2026-11-01T00:00:00.000Z', expiresAt: '2026-12-01T00:00:00.000Z' });
+  const r2 = checkAssessorStanding([t, late], policy(), NOW);
+  assert.equal(r2.standings[0].standing, 'good'); assert.equal(r2.ignored[0].reason, 'withdrawal-time-invalid');
+});
+
+test('a withdrawal binds to the target envelope digest and not to the record id alone', () => {
+  const t = disc();
+  const other = disc({ detailsDigest: hashBytes('different details') });
+  const w = wd(other);
+  const r = checkAssessorStanding([t, w], policy(), NOW);
+  assert.equal(r.standings[0].standing, 'good'); assert.equal(r.ignored[0].reason, 'withdrawal-target-unknown');
+  assert.throws(() => disc({ id: 'wd:x', kind: 'withdrawal', relationships: [], refId: 'disc:1', refDigest: null }));
+});
+
+test('a declarer can withdraw its own declaration but not another key', () => {
+  const decl = disc({ id: 'decl:9', kind: 'conflict-declaration', relationships: ['financial'] }, D.privateKey);
+  assert.equal(stand([disc(), decl]).standing, 'not-standing');
+  assert.equal(stand([disc(), decl, wd(decl, {}, D.privateKey)]).standing, 'good');
+  const r = checkAssessorStanding([disc(), decl, wd(decl, {}, A.privateKey)], policy(), NOW);
+  assert.equal(r.standings[0].standing, 'not-standing'); assert.equal(r.ignored[0].reason, 'signer-mismatch');
 });

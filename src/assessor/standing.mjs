@@ -3,7 +3,7 @@ import { hash, timestamp } from '../identity/domain/services/validation.mjs';
 import { RELATIONSHIPS, verifyDisclosure } from './disclosure.mjs';
 
 export const STANDING_REASONS = Object.freeze(['no-disclosure', 'disclosure-expired', 'disclosure-not-yet-valid', 'key-revoked', 'blocking-relationship', 'undisclosed-conflict-declared-by-other-party', 'cooling-off-not-elapsed', 'conflicting-disclosures']);
-export const IGNORED_REASONS = Object.freeze(['invalid-record', 'signer-mismatch', 'untrusted-declarer', 'declarer-revoked', 'different-operator', 'withdrawal-target-unknown', 'unrelated-key']);
+export const IGNORED_REASONS = Object.freeze(['invalid-record', 'signer-mismatch', 'untrusted-declarer', 'declarer-revoked', 'different-operator', 'withdrawal-target-unknown', 'withdrawal-time-invalid', 'unrelated-key']);
 export const DEFAULT_BLOCKING = Object.freeze(['authorship', 'control', 'employment', 'financial']);
 const DAY = 86_400_000, MAX_RECORDS = 1024;
 
@@ -35,40 +35,60 @@ export function checkAssessorStanding(disclosures, policy, now) {
     let v; try { v = verifyDisclosure(env); } catch { ignored.push({ index, reason: 'invalid-record' }); return; }
     if (!seen.has(v.envelopeDigest)) { seen.add(v.envelopeDigest); valid.push({ ...v, index }); } // identical redelivery collapses
   });
-  const byAssessor = new Map(P.assessors.map(k => [k, { own: [], declarations: [], withdrawn: new Set() }]));
+  const byAssessor = new Map(P.assessors.map(k => [k, { own: [], declarations: [], withdrawals: [] }]));
   for (const r of valid) {
     const d = r.payload, slot = byAssessor.get(d.assessorKeyId);
     if (!slot) { ignored.push({ index: r.index, reason: 'unrelated-key' }); continue; }
     if (d.operatorDigest !== P.operatorDigest) { ignored.push({ index: r.index, reason: 'different-operator' }); continue; }
+    const trustedDeclarer = r.keyId !== d.assessorKeyId && P.declarers.has(r.keyId);
     if (d.kind === 'conflict-declaration') {
-      if (r.keyId === d.assessorKeyId || !P.declarers.has(r.keyId)) { ignored.push({ index: r.index, reason: 'untrusted-declarer' }); continue; }
+      if (!trustedDeclarer) { ignored.push({ index: r.index, reason: 'untrusted-declarer' }); continue; }
       if (P.revoked.has(r.keyId)) { ignored.push({ index: r.index, reason: 'declarer-revoked' }); continue; }
       slot.declarations.push(r);
+    } else if (d.kind === 'withdrawal') {
+      if (r.keyId !== d.assessorKeyId && !trustedDeclarer) { ignored.push({ index: r.index, reason: 'signer-mismatch' }); continue; }
+      if (r.keyId !== d.assessorKeyId && P.revoked.has(r.keyId)) { ignored.push({ index: r.index, reason: 'declarer-revoked' }); continue; }
+      slot.withdrawals.push(r);
     } else if (r.keyId !== d.assessorKeyId) {
       ignored.push({ index: r.index, reason: 'signer-mismatch' });
-    } else if (d.kind === 'withdrawal') slot.withdrawn.add(d.refId);
-    else slot.own.push(r);
+    } else slot.own.push(r);
   }
   const standings = P.assessors.map(keyId => {
     const slot = byAssessor.get(keyId), reasons = new Set(), rels = new Set();
     if (P.revoked.has(keyId)) reasons.add('key-revoked');
-    const known = new Set(slot.own.map(r => r.payload.id));
-    for (const id of slot.withdrawn) if (!known.has(id)) ignored.push({ keyId, refId: id, reason: 'withdrawal-target-unknown' });
-    const live = slot.own.filter(r => !slot.withdrawn.has(r.payload.id));
-    const started = live.filter(r => Date.parse(r.payload.issuedAt) <= t);
-    const current = started.filter(r => Date.parse(r.payload.expiresAt) > t);
-    if (live.length === 0) reasons.add('no-disclosure');
-    else if (current.length === 0) reasons.add(started.length === 0 ? 'disclosure-not-yet-valid' : 'disclosure-expired');
+    // A withdrawal binds to the target envelope digest, must come from the target signer and must not predate the target or lie in the future.
+    // An effective withdrawal of an own disclosure is itself a timeline event: it supersedes everything issued before it.
+    const tombstones = [], withdrawnDecl = new Set();
+    for (const w of slot.withdrawals) {
+      const target = [...slot.own, ...slot.declarations].find(r => r.envelopeDigest === w.payload.refDigest && r.payload.id === w.payload.refId);
+      if (!target) { ignored.push({ index: w.index, reason: 'withdrawal-target-unknown' }); continue; }
+      if (target.keyId !== w.keyId) { ignored.push({ index: w.index, reason: 'signer-mismatch' }); continue; }
+      const at = Date.parse(w.payload.issuedAt);
+      if (at < Date.parse(target.payload.issuedAt) || at > t) { ignored.push({ index: w.index, reason: 'withdrawal-time-invalid' }); continue; }
+      if (target.payload.kind === 'disclosure') tombstones.push(at); else withdrawnDecl.add(target.envelopeDigest);
+    }
+    const started = slot.own.filter(r => Date.parse(r.payload.issuedAt) <= t);
+    const events = [...started.map(r => ({ at: Date.parse(r.payload.issuedAt), r })), ...tombstones.map(at => ({ at, r: null }))];
+    if (slot.own.length === 0 && tombstones.length === 0) reasons.add('no-disclosure');
+    else if (events.length === 0) reasons.add('disclosure-not-yet-valid');
     else {
-      const latest = Math.max(...current.map(r => Date.parse(r.payload.issuedAt)));
-      const tops = current.filter(r => Date.parse(r.payload.issuedAt) === latest);
-      // two different same-time disclosures cannot be ordered: fail closed
-      if (new Set(tops.map(r => canonical(r.payload))).size > 1) reasons.add('conflicting-disclosures');
-      for (const r of tops) r.payload.relationships.forEach(x => rels.add(x));
-      for (const r of tops) if (r.payload.priorEngagementEndedAt !== null && t < Date.parse(r.payload.priorEngagementEndedAt) + P.cool * DAY) reasons.add('cooling-off-not-elapsed');
+      const latest = Math.max(...events.map(e => e.at));
+      const tops = events.filter(e => e.at === latest);
+      if (tops.some(e => e.r === null)) reasons.add('no-disclosure'); // withdrawal ties fail closed
+      else {
+        const live = tops.map(e => e.r).filter(r => Date.parse(r.payload.expiresAt) > t);
+        if (live.length === 0) reasons.add('disclosure-expired'); // the latest statement governs even after it expires
+        else {
+          // two different same-time disclosures cannot be ordered: fail closed
+          if (new Set(live.map(r => canonical(r.payload))).size > 1) reasons.add('conflicting-disclosures');
+          for (const r of live) r.payload.relationships.forEach(x => rels.add(x));
+          for (const r of live) if (r.payload.priorEngagementEndedAt !== null && t < Date.parse(r.payload.priorEngagementEndedAt) + P.cool * DAY) reasons.add('cooling-off-not-elapsed');
+        }
+      }
     }
     const disclosed = new Set(rels);
     for (const dec of slot.declarations) {
+      if (withdrawnDecl.has(dec.envelopeDigest)) continue;
       if (!(Date.parse(dec.payload.issuedAt) <= t && Date.parse(dec.payload.expiresAt) > t)) continue;
       for (const x of dec.payload.relationships) { rels.add(x); if (!disclosed.has(x)) reasons.add('undisclosed-conflict-declared-by-other-party'); }
       if (dec.payload.priorEngagementEndedAt !== null && t < Date.parse(dec.payload.priorEngagementEndedAt) + P.cool * DAY) reasons.add('cooling-off-not-elapsed');
