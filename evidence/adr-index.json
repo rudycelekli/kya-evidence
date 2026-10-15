@@ -349,7 +349,7 @@
       "title": "Assessor disclosure records and standing check",
       "status": "Proposed",
       "file": "docs/adr/0028-assessor-disclosure.md",
-      "contentDigest": "f3fa8306fb7e178cb42b43b340eb38ad4ba9b5fb7e25264151bf7d30f4fd91f7",
+      "contentDigest": "93149a2b4cd740b90005cf7c7f7b4d7bee4e73156d9e5ccbe54b7a39fea18519",
       "related": [
         "ADR-0004",
         "ADR-0012",
@@ -383,6 +383,6 @@
       ]
     }
   ],
-  "digest": "1a6ac8f121ec8c24c384bb85a9443c70fac2ee2eda2b4e65858e43d846237ca1",
+  "digest": "079d5aa8f993b135bd0449958eed2e01352161cd9e79c8dd9e89e015153c4dfc",
   "store": "portable local file; not a claim of AgentDB graph persistence"
 }
