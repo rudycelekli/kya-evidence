@@ -172,6 +172,14 @@ Each requirement is traced to at least one test that must exist exactly once; th
 | KYA-CLB-003 | MUST | Claim boundary codes MUST be unique, upper snake case and append-only. | `claim-boundaries.test.mjs` |
 | KYA-CLB-004 | MUST | codesForLimitStrings MUST throw on an unknown string and MUST cover the outputs of assess and checkCurrency. | `claim-boundaries.test.mjs` |
 | KYA-CLB-005 | MUST | The benchmark verifier inline limitation list MUST equal the emitted list. | `claim-boundaries.test.mjs` |
+| KYA-CAP-001 | MUST | A capture transcript MUST be an ordered hash chain of every call crossing the tool proxy, including denied and failed calls, the agent MUST receive only a call function, and tool results MUST be immutable copies. | `capture-cell.test.mjs` |
+| KYA-CAP-002 | MUST | A capture MUST detect a planted canary in tool arguments across common encodings, deny it on outbound tools, detect canary tampering, and MUST NOT contain the raw canary value. | `capture-cell.test.mjs` |
+| KYA-CAP-003 | MUST | A capture MUST record before and after world digests and MUST flag state changes not declared by an allowed call and changes outside the permitted scope. | `capture-cell.test.mjs` |
+| KYA-CAP-004 | MUST | A probe set MUST test forbidden and permitted actions, a harness MUST refuse to sign a one directional set, and an agent that refuses everything MUST fail the permitted probes. | `capture-cell.test.mjs` |
+| KYA-CAP-005 | MUST | A kya.capture/v1 record MUST have exact keys, canonical bytes within size limits, a declared simulated cell with no isolation claim and a mandatory unobserved list. | `capture-cell.test.mjs` |
+| KYA-CAP-006 | MUST | A capture MUST verify only when signed by a trusted unrevoked capture-issuer key that is not the evaluator key, and edits, reordering, dropped entries and inconsistent re-signed sections MUST be detected by signature or recomputation. | `capture-cell.test.mjs` |
+| KYA-CAP-007 | MUST | The capture adapter MUST produce only unsigned evidence candidates from a verified capture, with source fixture, and an agent self-report MUST be reconciled against the measured transcript. | `capture-cell.test.mjs` |
+| KYA-CAP-008 | SHOULD | The reference cell SHOULD be deterministic for identical inputs and expose a CLI whose exit codes separate invalid, flagged and clean captures. | `capture-cell.test.mjs` |
 | KYA-CLI-001 | MUST | A CLI entry point MUST run its main function when started through a symbolic link (npm bin link), comparing real paths of the entry file and the module. | `symlink-entry.test.mjs` |
 | KYA-ENV-001 | MUST | A public key in a proof or trust anchor MUST be the canonical SPKI PEM export of the parsed key; any other PEM or DER spelling MUST be refused so one signed payload has one envelope digest. | `envelope-canonical.test.mjs` |
 | KYA-ENV-002 | MUST | Core verifiers MUST refuse small-order, off-curve and non-canonical Ed25519 public keys (not only the VC bridge). | `envelope-canonical.test.mjs` |
@@ -180,4 +188,4 @@ Each requirement is traced to at least one test that must exist exactly once; th
 | KYA-GOV-004 | MUST | Status ledger evidence paths MUST be compared by path segments, not string prefix. | `world-class-path.test.mjs` |
 | KYA-VCB-015 | MUST | `kya-vc verify` MUST require `--trust-did` or `--policy`, or the explicit `--allow-untrusted-issuer` flag. | `vc-cli-trust.test.mjs` |
 
-Registry digest: `91c5865ce65fa80fd47c15aebe324371ac22444fa38b97f82a98a6aad6b68f8f`
+Registry digest: `40794904669687924c458a3e863e74a4b4d2066ce4a94b339df762aa6da1fa99`
