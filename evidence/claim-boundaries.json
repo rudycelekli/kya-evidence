@@ -1,0 +1,439 @@
+{
+  "schema": "kya.claim-boundaries/v1",
+  "note": "A claim-boundary code states something an artifact does NOT show. Append-only: never remove or rename a code.",
+  "committedCodes": [
+    "ASSOCIATION_ASSERTED_NOT_PROVEN",
+    "CAPTURE_COMPLETENESS_NOT_ESTABLISHED",
+    "CHECKSUM_UNAUTHENTICATED",
+    "CONTENT_NOT_EMITTED",
+    "COST_UNMEASURED",
+    "CURRENCY_POINT_IN_TIME",
+    "ISSUER_ROLE_POLICY_ASSIGNED",
+    "ISSUER_TRUST_RELATIVE",
+    "NOT_AUTHORIZATION_GRANT",
+    "NOT_CONFORMANCE_CLAIM",
+    "NOT_HUMAN_CREDIT_SCORE",
+    "NOT_INDEPENDENT_ASSESSMENT",
+    "NOT_LEGAL_RIGHTS_VERIFICATION",
+    "NO_CAUSAL_CLAIM",
+    "NO_COMMERCIAL_QUALITY_MEASURE",
+    "NO_CURRENCY_CONVERSION",
+    "NO_EXECUTION_ATTESTATION",
+    "NO_EXTERNAL_ANCHOR",
+    "NO_EXTERNAL_RESOLUTION",
+    "NO_IDENTITY_VERIFICATION",
+    "NO_RUNTIME_OBSERVATION",
+    "NO_SCORE_PRODUCED",
+    "NO_SIDE_EFFECT_VERIFICATION",
+    "NO_THIRD_PARTY_CONSUMER",
+    "NO_UNIVERSAL_PREDICTIVE_VALIDITY",
+    "OMITTED_INCIDENT_UNDETECTABLE",
+    "PARTIAL_INVENTORY",
+    "PARTIAL_MAPPING",
+    "PUBLIC_CATALOG_CONTAMINATION",
+    "RAW_EVIDENCE_OMITTED",
+    "SIGNATURE_NOT_TRUTHFUL_EXECUTION",
+    "SOURCE_BYTES_NOT_VERIFIED",
+    "SYNTHETIC_FIXTURE_EVIDENCE",
+    "UNSIGNED_EXPORT",
+    "UNSIGNED_RECORD",
+    "UPPER_BOUND_NOT_CONFIDENCE_INTERVAL"
+  ],
+  "codes": [
+    {
+      "code": "ASSOCIATION_ASSERTED_NOT_PROVEN",
+      "meaning": "The association between the identity and the manifest is asserted by the builder, not proven.",
+      "artifactKinds": [
+        "spiffe-binding"
+      ],
+      "strings": [
+        "Association asserted by whoever built this record. Nothing here proves that the SVID holder runs the manifest named by subject_digest; the relying party must establish that link out of band."
+      ]
+    },
+    {
+      "code": "CAPTURE_COMPLETENESS_NOT_ESTABLISHED",
+      "meaning": "It is not shown that all relevant activity was captured.",
+      "artifactKinds": [
+        "dossier"
+      ],
+      "strings": [
+        "Signature integrity, policy-assigned issuer roles, capture completeness and execution truth are separate."
+      ]
+    },
+    {
+      "code": "CHECKSUM_UNAUTHENTICATED",
+      "meaning": "The checksum detects change to bytes but does not show who produced them.",
+      "artifactKinds": [
+        "bridge-export",
+        "currency",
+        "dossier"
+      ],
+      "strings": [
+        "Report checksum is unauthenticated; recompute from trusted inputs before reliance",
+        "Standalone dossier checksums are unauthenticated; recompute from frozen authorized inputs.",
+        "The report checksum is unauthenticated; it detects change, not who produced the report"
+      ]
+    },
+    {
+      "code": "CONTENT_NOT_EMITTED",
+      "meaning": "Configuration values, environment, auth files and file contents are not emitted.",
+      "artifactKinds": [
+        "inventory"
+      ],
+      "strings": [
+        "No config values, environment variables, auth files or file contents are emitted"
+      ]
+    },
+    {
+      "code": "COST_UNMEASURED",
+      "meaning": "Monetary cost was not measured.",
+      "artifactKinds": [
+        "benchmark-run"
+      ],
+      "strings": [
+        "Monetary cost is unmeasured; elapsed case duration is a local observation."
+      ]
+    },
+    {
+      "code": "CURRENCY_POINT_IN_TIME",
+      "meaning": "Currency was evaluated once at the stated time and is not live.",
+      "artifactKinds": [
+        "bridge-export"
+      ],
+      "strings": [
+        "Currency was evaluated once, at the stated check time, against the supplied manifest, policy and incidents; it is not live"
+      ]
+    },
+    {
+      "code": "ISSUER_ROLE_POLICY_ASSIGNED",
+      "meaning": "Issuer roles and independence come from the relying policy, not from the evidence itself.",
+      "artifactKinds": [
+        "dossier"
+      ],
+      "strings": [
+        "Signature integrity, policy-assigned issuer roles, capture completeness and execution truth are separate."
+      ]
+    },
+    {
+      "code": "ISSUER_TRUST_RELATIVE",
+      "meaning": "Issuer trust is relative to the relying party policy.",
+      "artifactKinds": [
+        "vc-credential"
+      ],
+      "strings": [
+        "A valid signature proves possession of the issuer key and integrity of these bytes. It does not prove truthful execution, human identity, authorization, or independent review. Issuer trust is relative to the relying party policy."
+      ]
+    },
+    {
+      "code": "NOT_AUTHORIZATION_GRANT",
+      "meaning": "The artifact does not grant or imply any permission; the relying party decides what it permits.",
+      "artifactKinds": [
+        "assessment",
+        "bridge-export",
+        "currency",
+        "declaration-import",
+        "dossier"
+      ],
+      "strings": [
+        "A passing check is not an authorization grant",
+        "Local policy result; not an authorization grant",
+        "No score or permission grant is produced",
+        "Not an authorization grant; a relying party decides what an assessment permits",
+        "Supplied-bundle policy result; not an authorization grant or a human credit score."
+      ]
+    },
+    {
+      "code": "NOT_CONFORMANCE_CLAIM",
+      "meaning": "No conformance with any outside specification or standard is claimed.",
+      "artifactKinds": [
+        "bridge-export",
+        "declaration-import"
+      ],
+      "strings": [
+        "No third-party tool has consumed this format; this is not a conformance claim with any outside specification",
+        "Partial declaration mapping only; no standards conformance asserted"
+      ]
+    },
+    {
+      "code": "NOT_HUMAN_CREDIT_SCORE",
+      "meaning": "The result is not a credit score or rating of a person.",
+      "artifactKinds": [
+        "dossier"
+      ],
+      "strings": [
+        "Supplied-bundle policy result; not an authorization grant or a human credit score."
+      ]
+    },
+    {
+      "code": "NOT_INDEPENDENT_ASSESSMENT",
+      "meaning": "Ephemeral self-signed integrity is not an independent assessment.",
+      "artifactKinds": [
+        "benchmark-run"
+      ],
+      "strings": [
+        "Ephemeral self-signing keys provide fixture integrity, not independent assessment."
+      ]
+    },
+    {
+      "code": "NOT_LEGAL_RIGHTS_VERIFICATION",
+      "meaning": "Declared redistribution rights were not legally verified.",
+      "artifactKinds": [
+        "universe"
+      ],
+      "strings": [
+        "Declared redistribution rights are not a legal rights verification"
+      ]
+    },
+    {
+      "code": "NO_CAUSAL_CLAIM",
+      "meaning": "No causal root cause or causal improvement is established.",
+      "artifactKinds": [
+        "dossier",
+        "universe"
+      ],
+      "strings": [
+        "Failures identify a predicate; causal root cause is not established.",
+        "Forks preserve history but cannot prove a causal improvement"
+      ]
+    },
+    {
+      "code": "NO_COMMERCIAL_QUALITY_MEASURE",
+      "meaning": "No commercial agent quality or runtime isolation was measured.",
+      "artifactKinds": [
+        "benchmark-catalog",
+        "benchmark-run"
+      ],
+      "strings": [
+        "Fixture controls measure local gate behavior, not commercial runtime quality or OS isolation.",
+        "Public fixture controls test local gates; they do not measure commercial agent quality."
+      ]
+    },
+    {
+      "code": "NO_CURRENCY_CONVERSION",
+      "meaning": "Monetary units were retained without conversion.",
+      "artifactKinds": [
+        "declaration-import"
+      ],
+      "strings": [
+        "Transaction units are retained without currency conversion"
+      ]
+    },
+    {
+      "code": "NO_EXECUTION_ATTESTATION",
+      "meaning": "No authenticated observer or execution attestation backs the record.",
+      "artifactKinds": [
+        "benchmark-run",
+        "universe"
+      ],
+      "strings": [
+        "A local immutable research snapshot; no external timestamp, signer or execution attestation",
+        "Unsigned local replay record; no authenticated observer or execution attestation."
+      ]
+    },
+    {
+      "code": "NO_EXTERNAL_ANCHOR",
+      "meaning": "No external timestamp or signer anchors the record.",
+      "artifactKinds": [
+        "universe"
+      ],
+      "strings": [
+        "A local immutable research snapshot; no external timestamp, signer or execution attestation"
+      ]
+    },
+    {
+      "code": "NO_EXTERNAL_RESOLUTION",
+      "meaning": "No scripts, URLs or credentials were executed or resolved.",
+      "artifactKinds": [
+        "declaration-import",
+        "inventory"
+      ],
+      "strings": [
+        "No source code or repository scripts were executed",
+        "No source scripts, URLs or credentials are executed or resolved"
+      ]
+    },
+    {
+      "code": "NO_IDENTITY_VERIFICATION",
+      "meaning": "No identity was verified.",
+      "artifactKinds": [
+        "inventory"
+      ],
+      "strings": [
+        "No quality score or identity verification was performed"
+      ]
+    },
+    {
+      "code": "NO_RUNTIME_OBSERVATION",
+      "meaning": "Nothing was observed at runtime; only supplied inputs were compared.",
+      "artifactKinds": [
+        "currency"
+      ],
+      "strings": [
+        "Detects change against supplied manifest, policy and clock only; it does not observe runtime behavior"
+      ]
+    },
+    {
+      "code": "NO_SCORE_PRODUCED",
+      "meaning": "No score or quality judgement was produced.",
+      "artifactKinds": [
+        "declaration-import",
+        "inventory"
+      ],
+      "strings": [
+        "No quality score or identity verification was performed",
+        "No score or permission grant is produced"
+      ]
+    },
+    {
+      "code": "NO_SIDE_EFFECT_VERIFICATION",
+      "meaning": "Tool side effects and actual effects were not verified.",
+      "artifactKinds": [
+        "dossier"
+      ],
+      "strings": [
+        "Structured-response replay does not verify tool side effects or omitted incidents."
+      ]
+    },
+    {
+      "code": "NO_THIRD_PARTY_CONSUMER",
+      "meaning": "No third-party tool has consumed this format.",
+      "artifactKinds": [
+        "bridge-export"
+      ],
+      "strings": [
+        "No third-party tool has consumed this format; this is not a conformance claim with any outside specification"
+      ]
+    },
+    {
+      "code": "NO_UNIVERSAL_PREDICTIVE_VALIDITY",
+      "meaning": "Results are not shown to predict behavior outside the assessed scope, and public suites can be gamed.",
+      "artifactKinds": [
+        "assessment"
+      ],
+      "strings": [
+        "No universal predictive validation; public suites can be gamed"
+      ]
+    },
+    {
+      "code": "OMITTED_INCIDENT_UNDETECTABLE",
+      "meaning": "An incident left out of the supplied records cannot be detected.",
+      "artifactKinds": [
+        "currency",
+        "dossier"
+      ],
+      "strings": [
+        "Incident records are trusted only through the supplied policy anchors; an omitted incident is undetectable",
+        "Structured-response replay does not verify tool side effects or omitted incidents."
+      ]
+    },
+    {
+      "code": "PARTIAL_INVENTORY",
+      "meaning": "Only allowlisted file digests were inventoried; not an exact executable or configuration attestation.",
+      "artifactKinds": [
+        "inventory"
+      ],
+      "strings": [
+        "Allowlisted file digests only; not an exact executable or full configuration attestation"
+      ]
+    },
+    {
+      "code": "PARTIAL_MAPPING",
+      "meaning": "Only part of the source declaration was mapped.",
+      "artifactKinds": [
+        "declaration-import"
+      ],
+      "strings": [
+        "Partial declaration mapping only; no standards conformance asserted"
+      ]
+    },
+    {
+      "code": "PUBLIC_CATALOG_CONTAMINATION",
+      "meaning": "A fixed public catalog can be contaminated and is not a protected holdout.",
+      "artifactKinds": [
+        "benchmark-catalog"
+      ],
+      "strings": [
+        "A fixed public catalog is vulnerable to contamination and is not a protected holdout."
+      ]
+    },
+    {
+      "code": "RAW_EVIDENCE_OMITTED",
+      "meaning": "Raw responses and private detail are withheld; original bytes live in authorized private storage.",
+      "artifactKinds": [
+        "dossier"
+      ],
+      "strings": [
+        "Raw responses and private error prose are omitted; original bytes belong in authorized private storage."
+      ]
+    },
+    {
+      "code": "SIGNATURE_NOT_TRUTHFUL_EXECUTION",
+      "meaning": "A valid signature shows byte integrity and key possession, not that the signed claims or the execution were truthful.",
+      "artifactKinds": [
+        "assessment",
+        "dossier",
+        "vc-credential"
+      ],
+      "strings": [
+        "A valid signature proves possession of the issuer key and integrity of these bytes. It does not prove truthful execution, human identity, authorization, or independent review. Issuer trust is relative to the relying party policy.",
+        "Signature integrity, policy-assigned issuer roles, capture completeness and execution truth are separate.",
+        "Signatures attest bytes and key possession, not truthful execution"
+      ]
+    },
+    {
+      "code": "SOURCE_BYTES_NOT_VERIFIED",
+      "meaning": "Source hashes are references; original bytes were not verified.",
+      "artifactKinds": [
+        "universe"
+      ],
+      "strings": [
+        "Source hashes are references; verify original bytes separately"
+      ]
+    },
+    {
+      "code": "SYNTHETIC_FIXTURE_EVIDENCE",
+      "meaning": "The evidence or control is synthetic fixture material, not a measurement of a real product.",
+      "artifactKinds": [
+        "assessment",
+        "benchmark-catalog",
+        "benchmark-run",
+        "vc-credential"
+      ],
+      "strings": [
+        "Fixture controls measure local gate behavior, not commercial runtime quality or OS isolation.",
+        "Includes synthetic fixture evidence; not a real product benchmark",
+        "Public fixture controls test local gates; they do not measure commercial agent quality."
+      ]
+    },
+    {
+      "code": "UNSIGNED_EXPORT",
+      "meaning": "The export is unsigned; any signature or envelope is the caller responsibility.",
+      "artifactKinds": [
+        "bridge-export"
+      ],
+      "strings": [
+        "The export is unsigned; any signature, token or attestation envelope is the caller responsibility"
+      ]
+    },
+    {
+      "code": "UNSIGNED_RECORD",
+      "meaning": "The record carries no signature authenticating its producer.",
+      "artifactKinds": [
+        "benchmark-run"
+      ],
+      "strings": [
+        "Unsigned local replay record; no authenticated observer or execution attestation."
+      ]
+    },
+    {
+      "code": "UPPER_BOUND_NOT_CONFIDENCE_INTERVAL",
+      "meaning": "The score upper bound is a policy ceiling, not a statistical confidence interval.",
+      "artifactKinds": [
+        "dossier"
+      ],
+      "strings": [
+        "Score upperBound is not a statistical confidence interval."
+      ]
+    }
+  ]
+}
