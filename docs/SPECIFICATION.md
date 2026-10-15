@@ -23,6 +23,8 @@ Strict JSON rejects duplicate members, unsupported values, prototype keys, exces
 
 The subject is the full-manifest digest. It binds harness/version, model, artifact/configuration digests, tool identities/versions/permissions and explicit scope. A manifest MAY declare `principal.accountableParty` as `{kind:'natural-person'|'legal-entity', ref}`, a pseudonymous reference to who answers for the agent; it admits no personal-data fields and an agent can never be its own accountable party. A policy MAY set `requirePrincipalBinding`; when true, a manifest without that declaration cannot qualify. The declaration is an unverified claim: it makes accountability inspectable and bound to the subject digest, and does not prove identity, authority or legal liability. Relying on an issuer's evidence never transfers the relying party's own accountability. Tool permissions must be allowed in scope. Allowed and forbidden permissions cannot overlap. Changing a manifest field creates a new subject and invalidates old evidence for it.
 
+Records are digest-only and carry no personal-data fields. [PRIVACY.md](PRIVACY.md) describes the data flow, redaction before hashing and a scanner (`scripts/privacy-scan.mjs`); a clean scan is not evidence that no personal data is present.
+
 ## Trust and eligibility
 
 Receipt outcomes are `pass`, `fail`, `abstain`, `error`. Sources are `runtime`, `fixture`, `declaration`; declarations never satisfy scored checks. A response cannot elevate fixture origin to runtime origin. An Ed25519 proof authenticates bytes and key possession, not truthful observation.

@@ -2772,6 +2772,91 @@
           "title": "every policy template targets a registered profile id"
         }
       ]
+    },
+    {
+      "id": "KYA-PRV-001",
+      "level": "SHOULD",
+      "area": "privacy",
+      "section": "Records and bindings",
+      "statement": "A deployer SHOULD scan artifacts for personal-data shapes before signing and before publishing; the scanner MUST NOT print a matched value.",
+      "tests": [
+        {
+          "file": "test/privacy.test.mjs",
+          "title": "privacy scan never echoes a raw matched value in any output form"
+        },
+        {
+          "file": "test/privacy.test.mjs",
+          "title": "privacy scan exit code is 1 on findings, 0 when clean and 2 on usage errors"
+        }
+      ]
+    },
+    {
+      "id": "KYA-PRV-002",
+      "level": "SHOULD",
+      "area": "privacy",
+      "section": "Records and bindings",
+      "statement": "Identifier and digest fields SHOULD be coded or 64-hex digests; incident, evidence and receipt records SHOULD carry no narrative text.",
+      "tests": [
+        {
+          "file": "test/privacy.test.mjs",
+          "title": "privacy scan reports structural violations in coded and digest-only fields"
+        }
+      ]
+    },
+    {
+      "id": "KYA-PRV-003",
+      "level": "SHOULD",
+      "area": "privacy",
+      "section": "Records and bindings",
+      "statement": "The scanner report SHOULD be deterministic and SHOULD state its false-positive and false-negative limits.",
+      "tests": [
+        {
+          "file": "test/privacy.test.mjs",
+          "title": "privacy scan report is byte-stable across runs and input ordering"
+        },
+        {
+          "file": "test/privacy.test.mjs",
+          "title": "privacy scan documentation states false positives and false negatives and the report carries them"
+        }
+      ]
+    },
+    {
+      "id": "KYA-PRV-004",
+      "level": "MUST",
+      "area": "privacy",
+      "section": "Records and bindings",
+      "statement": "The repository example artifacts and fixtures MUST scan clean.",
+      "tests": [
+        {
+          "file": "test/privacy.test.mjs",
+          "title": "repository example artifacts and golden fixtures scan clean"
+        }
+      ]
+    },
+    {
+      "id": "KYA-PRV-005",
+      "level": "MAY",
+      "area": "privacy",
+      "section": "Records and bindings",
+      "statement": "A per-field salted commitment helper MAY be used; the commitment MUST be domain separated by record ID and field name and MUST open only with the matching salt and value.",
+      "tests": [
+        {
+          "file": "test/privacy.test.mjs",
+          "title": "field commitment opens with the right salt and value and is deterministic for a fixed salt"
+        },
+        {
+          "file": "test/privacy.test.mjs",
+          "title": "field commitment rejects a wrong value, wrong salt, other field or other record"
+        },
+        {
+          "file": "test/privacy.test.mjs",
+          "title": "field commitment is domain separated by record ID and field name with unambiguous framing"
+        },
+        {
+          "file": "test/privacy.test.mjs",
+          "title": "field commitment refuses weak salts, bad names and unsupported values and openField never throws"
+        }
+      ]
     }
   ]
 }

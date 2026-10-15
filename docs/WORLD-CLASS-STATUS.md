@@ -4,7 +4,7 @@ Generated from [evidence/world-class-status.json](../evidence/world-class-status
 
 An item is verified only when linked evidence of the right kind exists: a requirement, test or file for CI verification, and a named outside party with an https link and a date for external review, independent implementation or real use. Work that needs an outside party cannot be marked verified on internal evidence.
 
-Totals: 34 items; 17 planned, 9 in progress, 5 implemented, 3 verified. Items that need an outside party: 11; verified by an outside party: 0.
+Totals: 34 items; 16 planned, 10 in progress, 5 implemented, 3 verified. Items that need an outside party: 11; verified by an outside party: 0.
 
 ## WS1 Narrow, precise problem
 
@@ -78,7 +78,7 @@ Totals: 34 items; 17 planned, 9 in progress, 5 implemented, 3 verified. Items th
 | Item | Status | Verifier | Evidence | Needs outsiders |
 | :--- | :--- | :--- | :--- | :--- |
 | WS9-01 Digest-only records with no personal-data fields | in progress |  | `test/incidents.test.mjs` |  |
-| WS9-02 Selective disclosure, DPIA template, automated personal-data leak check | planned |  |  |  |
+| WS9-02 Selective disclosure, DPIA template, automated personal-data leak check | in progress |  |  |  |
 | WS9-03 External privacy review and completed DPIA | planned |  |  | yes |
 
 ## WS10 Real usage data and a feedback loop
