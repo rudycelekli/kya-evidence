@@ -75,6 +75,8 @@ Within the incident reasons, a record gets the first that applies in this order:
 
 Validator grammars: an identifier is 1 to 128 characters of the form `[A-Za-z0-9][A-Za-z0-9:._/-]*`; text is 1 to 512 characters (unless a field says otherwise) with no control characters, except that a public key field holds a PEM SPKI public key of at most 2000 characters with line breaks and is validated by its own rule; a hash is 64 lowercase hexadecimal characters; a timestamp is the exact `YYYY-MM-DDTHH:MM:SS.mmmZ` form that round-trips through `Date#toISOString`.
 
+Bindings that export an assessment into other ecosystems (in-toto, OpenTelemetry-style attributes, OAuth claims, SPIFFE, A2A and MCP metadata) are described in [INTEROP-BRIDGES.md](INTEROP-BRIDGES.md). They are unsigned, fail closed on non-qualified or non-current input, claim no conformance with the target specifications and have not been consumed by any third-party tool.
+
 ## Research replay and branching
 
 [Universes](UNIVERSES.md) freeze all six assessment inputs including explicit time, current implementation inventory, computed report, question and source references. Forks clone inputs and name their parent and hypothesis. Verification recomputes the complete assessment under the matching archived implementation. Parent/correction graphs detect missing references and expose affected descendants; correction references remain declarations separate from revocation authority. Hash equality proves matching bytes, not who issued them, when they existed or whether observations were truthful. Comparisons require compatible complete populations and make no causal improvement claim.

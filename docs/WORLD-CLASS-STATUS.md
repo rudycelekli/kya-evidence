@@ -4,7 +4,7 @@ Generated from [evidence/world-class-status.json](../evidence/world-class-status
 
 An item is verified only when linked evidence of the right kind exists: a requirement, test or file for CI verification, and a named outside party with an https link and a date for external review, independent implementation or real use. Work that needs an outside party cannot be marked verified on internal evidence.
 
-Totals: 34 items; 16 planned, 10 in progress, 5 implemented, 3 verified. Items that need an outside party: 11; verified by an outside party: 0.
+Totals: 34 items; 15 planned, 11 in progress, 5 implemented, 3 verified. Items that need an outside party: 11; verified by an outside party: 0.
 
 ## WS1 Narrow, precise problem
 
@@ -54,7 +54,7 @@ Totals: 34 items; 16 planned, 10 in progress, 5 implemented, 3 verified. Items t
 | Item | Status | Verifier | Evidence | Needs outsiders |
 | :--- | :--- | :--- | :--- | :--- |
 | WS6-01 W3C VC 2.0 export with Bitstring Status List (not checked with an external VC library) | implemented |  | `test/vc-bridge.test.mjs`, `docs/adr/0022-vc-export-bridge.md` |  |
-| WS6-02 in-toto predicate, OpenTelemetry conventions, OAuth and SPIFFE bindings, A2A and MCP metadata | planned |  |  |  |
+| WS6-02 in-toto predicate, OpenTelemetry conventions, OAuth and SPIFFE bindings, A2A and MCP metadata | in progress |  |  |  |
 | WS6-03 A third-party tool consumes each exported format | planned |  |  | yes |
 
 ## WS7 Regulator, auditor and insurer mapping
