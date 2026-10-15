@@ -35,7 +35,7 @@ The demo prints a qualified fixture decision:
 }
 ```
 
-The folder holds `manifest.json`, `policy.json`, `evidence.json`, `profile.json`, `assessment.json` and `assessment.html`.
+The folder holds seven files: `manifest.json`, `policy.json`, `evidence.json`, `observations.json`, `profile.json`, `assessment.json` and `assessment.html`.
 
 Use the same `NOW` value for every later step. The demo's manifest is valid from its issue time, so an earlier `--now` makes the assessment read as "not yet valid".
 
@@ -143,6 +143,23 @@ node "$KYA/bin/kya.mjs" currency \
 ```
 
 Exit code: 0.
+
+### Authenticate a received assessment
+
+An `assessment.json` handed to you is a report with an unauthenticated checksum; its `reportDigest` proves nothing about who made it. To authenticate it, re-run `assess` yourself on inputs you trust, with the received `assessedAt` as `--now`, and compare `reportDigest`:
+
+```sh
+node "$KYA/bin/kya.mjs" assess \
+  --manifest "$WORK/demo/manifest.json" \
+  --profile "$WORK/demo/profile.json" \
+  --policy "$WORK/policy-incident.json" \
+  --evidence "$WORK/demo/evidence.json" \
+  --evaluator d0bc7f7840e5ddf1a71eb3b9ac92e5c4d0be5d156eea2c6f4f909f7066b5e31b \
+  --now <assessedAt from the received assessment.json> \
+  --out "$WORK/assess-recheck"
+```
+
+Then compare `reportDigest` in `$WORK/assess-recheck/assessment.json` with the one in the received file. Assessment is deterministic for a fixed clock, so identical inputs and the same `assessedAt` give the same digest (tried with the demo inputs: the digests were equal). A match shows the received report is what your policy and the evidence produce; it does not show that the evidence is honest. A mismatch means some input, the evaluator or the clock differs; it does not say which.
 
 ## 5. Check currency with an open high-severity incident
 

@@ -19,7 +19,7 @@ WS6 of the world-class plan asks for bindings into the ecosystems that incumbent
 5. A report-style cross-check (`verifyBridgeExport`) rebuilds each export from the source report with the exporter's own construction and compares the whole object. Without currency inputs it cannot see a forged currency block; that is stated in the result and in the docs, and the check can re-run currency when given them.
 6. The SPIFFE record and the OAuth claim are associations asserted by the builder; they do not prove that a workload runs the assessed manifest. A2A and MCP pointers bind by digest; the URL is an unfetched hint and `required` is false.
 7. Names this project invents (predicate URN, `kya.` attribute names, `kya` claim, `dev.kya-evidence/assessment` meta key, `urn:kya:extension:assessment:v1`) are proposals, not registrations.
-8. The CLI lives only in `scripts/kya-bridge.mjs`. Shared files (package scripts, requirements, specification, CI) are not edited by this change; proposals are in `docs/lane-q-integration.md`.
+8. The CLI lives only in `scripts/kya-bridge.mjs`. Shared files (package scripts, requirements, specification, CI) are not edited by this change; proposals were in a working note that was not retained.
 
 ## Alternatives
 

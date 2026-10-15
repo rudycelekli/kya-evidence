@@ -180,6 +180,14 @@ Each requirement is traced to at least one test that must exist exactly once; th
 | KYA-CAP-006 | MUST | A capture MUST verify only when signed by a trusted unrevoked capture-issuer key that is not the evaluator key, and edits, reordering, dropped entries and inconsistent re-signed sections MUST be detected by signature or recomputation. | `capture-cell.test.mjs` |
 | KYA-CAP-007 | MUST | The capture adapter MUST produce only unsigned evidence candidates from a verified capture, with source fixture, and an agent self-report MUST be reconciled against the measured transcript. | `capture-cell.test.mjs` |
 | KYA-CAP-008 | SHOULD | The reference cell SHOULD be deterministic for identical inputs and expose a CLI whose exit codes separate invalid, flagged and clean captures. | `capture-cell.test.mjs` |
+| KYA-DOC-001 | MUST | The action README usage example MUST carry the pin inputs and MUST say a bare call exits 1 with `PINS_REQUIRED`. | `docs-claims.test.mjs` |
+| KYA-DOC-002 | MUST | The policy pin MUST be described as the canonical policy digest, not the file hash. | `docs-claims.test.mjs` |
+| KYA-DOC-003 | MUST | Markdown files MUST NOT reference a nonexistent lane integration or requirements proposal note. | `docs-claims.test.mjs` |
+| KYA-DOC-004 | MUST | Documentation MUST NOT describe the manifest as a passport. | `docs-claims.test.mjs` |
+| KYA-DOC-005 | MUST | The conformance document MUST NOT say no second implementation has run the vectors, and MUST say none is independent. | `docs-claims.test.mjs` |
+| KYA-DOC-006 | MUST | A detection result that is not reproducible from the repository MUST be labelled so and MUST point at the mutation check. | `docs-claims.test.mjs` |
+| KYA-DOC-007 | MUST | The stated mutation control count MUST match the mutation check script. | `docs-claims.test.mjs` |
+| KYA-DOC-008 | MUST | Documented VC bridge commands MUST resolve to an existing script or the `kya vc` subcommand. | `docs-claims.test.mjs` |
 | KYA-CLI-001 | MUST | A CLI entry point MUST run its main function when started through a symbolic link (npm bin link), comparing real paths of the entry file and the module. | `symlink-entry.test.mjs` |
 | KYA-ENV-001 | MUST | A public key in a proof or trust anchor MUST be the canonical SPKI PEM export of the parsed key; any other PEM or DER spelling MUST be refused so one signed payload has one envelope digest. | `envelope-canonical.test.mjs` |
 | KYA-ENV-002 | MUST | Core verifiers MUST refuse small-order, off-curve and non-canonical Ed25519 public keys (not only the VC bridge). | `envelope-canonical.test.mjs` |
@@ -188,4 +196,4 @@ Each requirement is traced to at least one test that must exist exactly once; th
 | KYA-GOV-004 | MUST | Status ledger evidence paths MUST be compared by path segments, not string prefix. | `world-class-path.test.mjs` |
 | KYA-VCB-015 | MUST | `kya-vc verify` MUST require `--trust-did` or `--policy`, or the explicit `--allow-untrusted-issuer` flag. | `vc-cli-trust.test.mjs` |
 
-Registry digest: `40794904669687924c458a3e863e74a4b4d2066ce4a94b339df762aa6da1fa99`
+Registry digest: `5c1ec011f7bf7b2d07131f2c2735e8aed160ca18945e2a20f8572fe82333b1bc`

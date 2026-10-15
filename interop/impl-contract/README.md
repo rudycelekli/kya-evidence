@@ -18,7 +18,7 @@ The command is split on whitespace (single or double quotes group an argument) a
 | Refusal or crash | A **non-zero exit code**. Stdout is ignored. Messages go to stderr (the first line is shown in failures). |
 | Timeout | 15 s per vector by default (`--timeout-ms`). A timeout is a failure. |
 | Statelessness | Each vector is a fresh process. No state between vectors, no network, no clock: every time is in the input. |
-| Unsupported | An implementation that does not implement an operation exits 0 with `{"schema":"kya.impl-result/v1","operation":"<op>","unsupported":true}`. The vector is then **not-run**, never pass. |
+| Unsupported | An implementation that does not implement an operation exits 0 with `{"schema":"kya.impl-result/v1","operation":"<op>","unsupported":true}`. The vector is then **not-run**, never pass. This does not apply to a vector whose expected result is a refusal: an `unsupported` reply exits 0, so it is a **fail** there. Refuse with a non-zero exit instead. |
 
 The harness does not give the vector ID, description, rationale or expected value to the command. Switching on input content to return memorised answers defeats the purpose; see the limits in [`docs/IMPLEMENTERS-GUIDE.md`](../../docs/IMPLEMENTERS-GUIDE.md).
 

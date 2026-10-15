@@ -24,7 +24,7 @@ Put profile metadata inside the profile file: rejected, the profile schema is ex
 
 ## Consequences
 
-A reader can see which profile exists, which bytes it is, what its limits are and that nobody has reviewed it. Adding a profile file requires metadata, a registry regeneration and a change log, so freezing is visible in review. The validator cannot show that a profile is good; a well-formed entry is not an endorsement. Registry rules are not yet linked to specification requirements, package scripts or CI; proposals are in `docs/lane-u-integration.md`. Once flagship profiles exist they enter as `draft` and stay there until a sign-off record with evidence is added by a maintainer.
+A reader can see which profile exists, which bytes it is, what its limits are and that nobody has reviewed it. Adding a profile file requires metadata, a registry regeneration and a change log, so freezing is visible in review. The validator cannot show that a profile is good; a well-formed entry is not an endorsement. Registry rules are not yet linked to specification requirements, package scripts or CI; proposals were in a working note that was not retained. Once flagship profiles exist they enter as `draft` and stay there until a sign-off record with evidence is added by a maintainer.
 
 ## Validation
 

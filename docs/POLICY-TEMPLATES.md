@@ -17,7 +17,7 @@ node scripts/kya-policy-init.mjs \
   --out policy.json
 ```
 
-The output binds the real digest of the profile you pass, uses the scope `local-readonly` unless you give `--scope-id`, and is checked with `validatePolicy` before it is written. Generation is deterministic: the same inputs give the same bytes, with no clock and no key material beyond the public keys you name. `--out` must not exist.
+The output binds the real digest of the profile you pass, uses the scope `local-readonly` unless you give `--scope-id`, and is checked with `validatePolicy` before it is written. `--scope-id` must equal the `scope.id` of the manifest you will assess, otherwise the assessment is refused with `Policy does not bind this scope`. Generation is deterministic: the same inputs give the same bytes, with no clock and no key material beyond the public keys you name. `--out` must not exist.
 
 Flags: `--template`, `--profile`, `--trust-key ROLE:PUBLIC_PEM` (repeatable; ROLE is `self` or `independent`), `--out`, and optionally `--scope-id`, `--id`, `--require-principal-binding`, `--mandatory-minimum CHECK:pass|independent-pass` (repeatable) and `--max-assessment-age-seconds N`.
 

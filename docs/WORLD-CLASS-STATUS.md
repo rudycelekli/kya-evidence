@@ -4,7 +4,7 @@ Generated from [evidence/world-class-status.json](../evidence/world-class-status
 
 An item is verified only when linked evidence of the right kind exists: a requirement, test or file for CI verification, and a named outside party with an https link and a date for external review, independent implementation or real use. Work that needs an outside party cannot be marked verified on internal evidence.
 
-Totals: 34 items; 13 planned, 13 in progress, 5 implemented, 3 verified. Items that need an outside party: 11; verified by an outside party: 0.
+Totals: 34 items; 12 planned, 12 in progress, 7 implemented, 3 verified. Items that need an outside party: 11; verified by an outside party: 0.
 
 ## WS1 Narrow, precise problem
 
@@ -23,13 +23,13 @@ Totals: 34 items; 13 planned, 13 in progress, 5 implemented, 3 verified. Items t
 | WS2-03 Profile specification and registry rules | in progress |  |  |  |
 | WS2-04 Domain-expert sign-off for each flagship profile | planned |  |  | yes |
 
-## WS3 Two independent implementations
+## WS3 Second implementations (independent ones are WS3-04)
 
 | Item | Status | Verifier | Evidence | Needs outsiders |
 | :--- | :--- | :--- | :--- | :--- |
-| WS3-01 Golden assessment vectors for assessment semantics (Lane K) | in progress |  |  |  |
+| WS3-01 Golden assessment vectors for assessment semantics (111 public vectors; expected values come from the JavaScript reference; not verified by anyone outside the project) | implemented |  | `evidence/assessment-vectors.json`, `test/assessment-vectors.test.mjs` |  |
 | WS3-02 Byte-level canonical and signature vectors, JavaScript and Python (team-built Python checker, restricted subset) | VERIFIED | CI | `KYA-INT-003`, `KYA-INT-004` |  |
-| WS3-03 Implementer's guide and language-neutral harness | planned |  |  |  |
+| WS3-03 Implementer's guide and language-neutral harness (run only by the project team; no outside implementer has used it) | implemented |  | `docs/IMPLEMENTERS-GUIDE.md`, `scripts/run-vectors.mjs`, `interop/impl-contract/README.md` |  |
 | WS3-04 Two outside implementations pass all normative vectors | planned |  |  | yes |
 
 ## WS4 Neutral governance
