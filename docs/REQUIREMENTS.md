@@ -134,5 +134,10 @@ Each requirement is traced to at least one test that must exist exactly once; th
 | KYA-VEC-009 | SHOULD | A team-built second implementation of assessment and currency semantics SHOULD reproduce the decision and every semantic field of all published assessment vectors, and any gap between its output and the byte-exact digests MUST be documented rather than hidden. It is not an independent implementation and MUST NOT be described as one. | `second-impl.test.mjs` |
 | KYA-SCO-003 | SHOULD | The scoring document SHOULD state the reference wording of every blocker and the order in which blockers appear, so that an implementer can reproduce report digests; relying software MUST branch on blocker codes, not wording. | `scoring-wording.test.mjs` |
 | KYA-RPT-005 | SHOULD | The specification SHOULD state the full currency result layout, the trigger firing order, the rejected-evidence and ignored-incident reason vocabularies and the identifier, text, hash and timestamp grammars, so that an implementer can reproduce report digests; relying software MUST branch on codes, not on reason or detail text. | `spec-reason-vocabulary.test.mjs` |
+| KYA-XWK-001 | MUST | Every KYA requirement ID cited in a crosswalk MUST exist in the requirements registry. | `crosswalks.test.mjs` |
+| KYA-XWK-002 | MUST | Every crosswalk file MUST open with the draft, not-legal-advice, not-a-compliance-claim notice. | `crosswalks.test.mjs` |
+| KYA-XWK-003 | MUST | Every crosswalk row MUST carry a status from the allowed set and MUST be flagged for primary re-check when its basis is not primary text. | `crosswalks.test.mjs` |
+| KYA-XWK-004 | MUST | A crosswalk MUST NOT state compliance, certification or guarantees except in a negation. | `crosswalks.test.mjs` |
+| KYA-XWK-005 | SHOULD | The crosswalk index SHOULD list every framework file. | `crosswalks.test.mjs` |
 
-Registry digest: `ea8f7663093f7404eaeaf1dfc62154db08fa9ff36efcd81961b6c9b00de236ca`
+Registry digest: `a223cb71e344f4cfac8728ddc56868f87ab4bc1efb8a56b30e595d7f90dcf655`

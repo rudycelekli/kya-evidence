@@ -2498,6 +2498,71 @@
           "title": "the specification states the fixed trigger detail limits and limitations strings of the reference"
         }
       ]
+    },
+    {
+      "id": "KYA-XWK-001",
+      "level": "MUST",
+      "area": "crosswalks",
+      "section": "Governance documents",
+      "statement": "Every KYA requirement ID cited in a crosswalk MUST exist in the requirements registry.",
+      "tests": [
+        {
+          "file": "test/crosswalks.test.mjs",
+          "title": "every requirement ID cited by a crosswalk exists in the registry"
+        }
+      ]
+    },
+    {
+      "id": "KYA-XWK-002",
+      "level": "MUST",
+      "area": "crosswalks",
+      "section": "Governance documents",
+      "statement": "Every crosswalk file MUST open with the draft, not-legal-advice, not-a-compliance-claim notice.",
+      "tests": [
+        {
+          "file": "test/crosswalks.test.mjs",
+          "title": "every crosswalk file opens with the disclaimer"
+        }
+      ]
+    },
+    {
+      "id": "KYA-XWK-003",
+      "level": "MUST",
+      "area": "crosswalks",
+      "section": "Governance documents",
+      "statement": "Every crosswalk row MUST carry a status from the allowed set and MUST be flagged for primary re-check when its basis is not primary text.",
+      "tests": [
+        {
+          "file": "test/crosswalks.test.mjs",
+          "title": "every crosswalk row has an allowed status and a flag when its basis is secondary"
+        }
+      ]
+    },
+    {
+      "id": "KYA-XWK-004",
+      "level": "MUST",
+      "area": "crosswalks",
+      "section": "Governance documents",
+      "statement": "A crosswalk MUST NOT state compliance, certification or guarantees except in a negation.",
+      "tests": [
+        {
+          "file": "test/crosswalks.test.mjs",
+          "title": "no crosswalk claims compliance or certification outside a negation"
+        }
+      ]
+    },
+    {
+      "id": "KYA-XWK-005",
+      "level": "SHOULD",
+      "area": "crosswalks",
+      "section": "Governance documents",
+      "statement": "The crosswalk index SHOULD list every framework file.",
+      "tests": [
+        {
+          "file": "test/crosswalks.test.mjs",
+          "title": "the crosswalk index lists every framework file"
+        }
+      ]
     }
   ]
 }
