@@ -4,7 +4,7 @@ Generated from [evidence/world-class-status.json](../evidence/world-class-status
 
 An item is verified only when linked evidence of the right kind exists: a requirement, test or file for CI verification, and a named outside party with an https link and a date for external review, independent implementation or real use. Work that needs an outside party cannot be marked verified on internal evidence.
 
-Totals: 34 items; 20 planned, 6 in progress, 5 implemented, 3 verified. Items that need an outside party: 11; verified by an outside party: 0.
+Totals: 34 items; 19 planned, 7 in progress, 5 implemented, 3 verified. Items that need an outside party: 11; verified by an outside party: 0.
 
 ## WS1 Narrow, precise problem
 
@@ -62,7 +62,7 @@ Totals: 34 items; 20 planned, 6 in progress, 5 implemented, 3 verified. Items th
 | Item | Status | Verifier | Evidence | Needs outsiders |
 | :--- | :--- | :--- | :--- | :--- |
 | WS7-01 KYC-to-agent control research note (several primary texts still unfetched) | in progress |  | `docs/research/2026-10-14-kyc-to-kya-controls.md` |  |
-| WS7-02 Crosswalks to the EU AI Act, ISO/IEC 42001, NIST AI RMF and SOC 2 | planned |  |  |  |
+| WS7-02 Crosswalks to the EU AI Act, ISO/IEC 42001, NIST AI RMF and SOC 2 | in progress |  |  |  |
 | WS7-03 Practitioner and legal review of each crosswalk | planned |  |  | yes |
 
 ## WS8 Assessor accountability and appeals

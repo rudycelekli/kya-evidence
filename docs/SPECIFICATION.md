@@ -81,4 +81,4 @@ This is not an official implementation of Open-KYA, W3C VC, A2A or MCP. Credenti
 
 ## Governance documents
 
-The project's draft governance layer lives in [docs/governance](governance/CHARTER.md): charter, IPR policy, trademark and conformance-claim rules, versioning, extension registry and decision process. Each legal-style document opens with a draft-for-counsel notice and none has been adopted by any body. Requirements about these documents are checked by `test/governance-docs.test.mjs`.
+The project's draft governance layer lives in [docs/governance](governance/CHARTER.md): charter, IPR policy, trademark and conformance-claim rules, versioning, extension registry and decision process. Each legal-style document opens with a draft-for-counsel notice and none has been adopted by any body. Requirements about these documents are checked by `test/governance-docs.test.mjs`. Regulatory crosswalks in [docs/crosswalks](crosswalks/README.md) are informative drafts: each carries the same notice, marks rows that rest on secondary sources, and makes no compliance claim; they are checked by `test/crosswalks.test.mjs`.
