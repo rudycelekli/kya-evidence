@@ -331,6 +331,20 @@
       ]
     },
     {
+      "id": "ADR-0027",
+      "title": "Interop bridges for in-toto, OpenTelemetry, OAuth and SPIFFE, A2A and MCP",
+      "status": "Proposed",
+      "file": "docs/adr/0027-interop-bridges.md",
+      "contentDigest": "e374bfe6db66223e92616cd6b5c518ec82793c4ed9b14adf55c4666b597a5806",
+      "related": [
+        "ADR-0002",
+        "ADR-0003",
+        "ADR-0013",
+        "ADR-0016",
+        "ADR-0022"
+      ]
+    },
+    {
       "id": "ADR-0028",
       "title": "Assessor disclosure records and standing check",
       "status": "Proposed",
@@ -369,6 +383,6 @@
       ]
     }
   ],
-  "digest": "98c7d7c82c304798899244774b478e65c6c9b6fae77784c6cdf62cfd63dfe2cd",
+  "digest": "1a6ac8f121ec8c24c384bb85a9443c70fac2ee2eda2b4e65858e43d846237ca1",
   "store": "portable local file; not a claim of AgentDB graph persistence"
 }

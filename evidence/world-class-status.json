@@ -244,7 +244,7 @@
         {
           "id": "WS6-02",
           "title": "in-toto predicate, OpenTelemetry conventions, OAuth and SPIFFE bindings, A2A and MCP metadata",
-          "status": "planned",
+          "status": "in-progress",
           "evidence": []
         },
         {
