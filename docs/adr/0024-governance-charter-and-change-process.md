@@ -25,7 +25,7 @@ Add a governance layer under `docs/governance/`, each document marked as a draft
 
 `CONTRIBUTING.md` gains the DCO, the test-first expectation, the rule that code under `src/conformance/` changes only with an ADR, and links to these documents. `docs/GOVERNANCE.md` gains cross-links only. `CODE_OF_CONDUCT.md` adapts a widely used covenant, with its enforcement contact left as a placeholder that the owner must set. `test/governance-docs.test.mjs` checks the structure of these files.
 
-No registry entry, requirement, schema, evaluator file or evidence file changes. Requirement proposals are recorded separately in `docs/lane-n-requirements-proposal.json` and are not added to `evidence/requirements.json`.
+No registry entry, requirement, schema, evaluator file or evidence file changes. Requirement proposals were recorded in a working note that was not retained and are not added to `evidence/requirements.json`.
 
 ## Alternatives
 

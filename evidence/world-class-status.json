@@ -91,14 +91,23 @@
     },
     {
       "id": "WS3",
-      "title": "Two independent implementations",
+      "title": "Second implementations (independent ones are WS3-04)",
       "items": [
         {
           "id": "WS3-01",
           "title": "Golden assessment vectors for assessment semantics",
-          "status": "in-progress",
-          "evidence": [],
-          "notes": "Lane K"
+          "status": "implemented",
+          "evidence": [
+            {
+              "type": "file",
+              "ref": "evidence/assessment-vectors.json"
+            },
+            {
+              "type": "test",
+              "ref": "test/assessment-vectors.test.mjs"
+            }
+          ],
+          "notes": "111 public vectors; expected values come from the JavaScript reference; not verified by anyone outside the project"
         },
         {
           "id": "WS3-02",
@@ -120,8 +129,22 @@
         {
           "id": "WS3-03",
           "title": "Implementer's guide and language-neutral harness",
-          "status": "planned",
-          "evidence": []
+          "status": "implemented",
+          "evidence": [
+            {
+              "type": "file",
+              "ref": "docs/IMPLEMENTERS-GUIDE.md"
+            },
+            {
+              "type": "file",
+              "ref": "scripts/run-vectors.mjs"
+            },
+            {
+              "type": "file",
+              "ref": "interop/impl-contract/README.md"
+            }
+          ],
+          "notes": "run only by the project team; no outside implementer has used it"
         },
         {
           "id": "WS3-04",

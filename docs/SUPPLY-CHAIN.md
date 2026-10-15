@@ -11,14 +11,14 @@ Status: partly implemented, partly a plan. This document says which is which. No
 | Reproducibility check | Implemented in CI. The workflow packs twice and compares `archiveSha256` | `.github/workflows/ci.yml` |
 | Release receipt | Implemented but unsigned. `dist/release-receipt.json` has status `prepared-local-unpublished` and states "no publisher authorization or artifact signature" | `scripts/pack.mjs`, `scripts/verify-release.mjs` |
 | Receipt verifier | Implemented. Frozen regular-file subset, rejects duplicate paths, traversal, checksum and padding changes | `scripts/lib/ustar.mjs`, KYA-REL-001 |
-| SBOM | Implemented by this change: `scripts/sbom.mjs` | `test/sbom.test.mjs` |
+| SBOM | Implemented: `scripts/sbom.mjs` | `test/sbom.test.mjs` |
 | Least-privilege CI token | Implemented: `permissions: contents: read` | `.github/workflows/ci.yml` |
 | Action input handling | Implemented: inputs reach the script through environment variables, not shell interpolation | `action/action.yml`, KYA-ACT-003 |
 | One pinned third-party action | `action/action.yml` pins `actions/setup-node` to a full commit SHA with a version comment | `action/action.yml` |
 
 ## Known gaps
 
-1. **Mutable action references in the project's own CI.** `.github/workflows/ci.yml` uses `actions/checkout@v4` and `actions/setup-node@v4`, which are tags a maintainer of those actions can move. Pin both to full commit SHAs, as `action/action.yml` already does for setup-node. Not changed here because `.github/**` is outside this change; see `docs/lane-o-integration.md`.
+1. **Project CI action references are pinned.** `.github/workflows/ci.yml` pins `actions/checkout` and `actions/setup-node` to full commit SHAs with a version comment, as `action/action.yml` does for setup-node. Re-resolve and review the SHAs before bumping them.
 2. **No signed tags.** Nothing proves which maintainer created a release tag.
 3. **No build provenance.** There is no attestation linking the archive digest to the workflow run and source commit.
 4. **No signed release receipt.** The receipt is an inventory, not a statement by a publisher.

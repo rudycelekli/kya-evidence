@@ -1,6 +1,6 @@
 # Gate a pipeline with `kya-check`
 
-`scripts/kya-check.mjs` runs `assess` and/or `checkCurrency` and prints one compact JSON summary. Under GitHub Actions it also writes workflow annotations, a Markdown step summary and step outputs. `action/action.yml` wraps it as a composite action. Nothing is published; wire it up yourself.
+`scripts/kya-check.mjs` runs `assess` and/or `checkCurrency` and prints one JSON summary (multi-line, indented). Only the `summary-json` step output is a single line. Under GitHub Actions it also writes workflow annotations, a Markdown step summary and step outputs. `action/action.yml` wraps it as a composite action. Nothing is published; wire it up yourself.
 
 This is a local policy check. It is not an authorization grant.
 
@@ -34,8 +34,8 @@ Two kinds of input, two sources:
 
 The base-side inputs are held in place by three pin flags, each an exact 64 character lowercase SHA-256 digest:
 
-- `--expect-policy-digest DIGEST` exits 1 with `POLICY_DIGEST_MISMATCH` unless the supplied policy hashes to the pin.
-- `--expect-evaluator-digest DIGEST` exits 1 with `EVALUATOR_DIGEST_MISMATCH` unless the evaluator digest matches.
+- `--expect-policy-digest DIGEST` exits 1 with `POLICY_DIGEST_MISMATCH` unless the supplied policy hashes to the pin. The pin is the canonical `policyDigest` that `kya policy-init` prints and that the `kya check` summary reports, not the `sha256sum` of the file.
+- `--expect-evaluator-digest DIGEST` exits 1 with `EVALUATOR_DIGEST_MISMATCH` unless the evaluator digest matches. Take it from `kya init DIR` or from the `evaluatorDigest` field of an assessment (the reference value is in `evidence/evaluator-identity.json`).
 - `--expect-assessment-digest DIGEST` (currency-only mode only) exits 1 with `ASSESSMENT_DIGEST_MISMATCH` unless the assessment's `reportDigest` matches.
 
 All pins are checked before anything is assessed or printed. `--require-pins` (Action input `require-pins`, default `true`) goes further: it exits 1 with `PINS_REQUIRED` when the policy or evaluator pin is missing, and in currency-only mode when the assessment pin is missing. An unset repository variable therefore fails the job instead of quietly running unpinned. Without `--require-pins` the summary shows the missing pin as `pins.policyPinned: false` and Actions raises a `KYA pins` warning.

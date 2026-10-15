@@ -25,7 +25,7 @@ Target: a profile mechanism and three flagship profiles that domain experts acce
 Deliverables: profile specification (frozen checks, policy template, scenario suite, evaluator digest, minimum capture tier, minimum independence class); profile registry rules; flagship profiles for code agents, agentic payments, and read-only enterprise assistants, built with the scenario-suite and policy-template lanes; per-profile golden vectors.
 Verified by: CI (each profile has vectors and templates validating) and XREV (one domain expert signs off each profile's checks and thresholds as reasonable starting points).
 
-### WS3 Two independent implementations (today: team-built byte subset only)
+### WS3 Second implementations (independent ones are WS3-04; today: two same-team implementations only)
 Target: at least two implementations by different teams pass 100% of normative vectors.
 Deliverables: **golden assessment vectors** (inputs to expected report digests, including adversarial cases), because today's vectors cover bytes and signatures, not assessment semantics; an implementer's guide; a language-neutral conformance harness using the conformance-report format; an internal clean-room third-language implementation written from the spec only, to flush ambiguity (labelled not independent); an outreach and incentive plan (grants or bounties) for outside implementers. Delivered: the golden assessment vectors, implementer guide and language-neutral harness (ADR-0026). Still open: the clean-room third-language implementation and any outside implementer.
 Verified by: CI (vectors, harness) and **XIMP** (two outside implementations pass; every disagreement is logged and resolved in an ADR). **EXT.**

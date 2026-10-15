@@ -16,7 +16,7 @@ WS9 asks for privacy to be a testable property. The specification keeps incident
 2. `--rules pii` runs content rules only. It exists because vector files deliberately contain malformed records as refusal cases; the structural rules would flag those on purpose.
 3. `src/privacy/index.mjs` provides `commitField` and `openField`: HMAC-SHA-256 keyed with a secret salt over a domain label, record ID, field name and canonical value, with length prefixes. It is a design reference; no signed record embeds commitments yet and it is not exported from `src/index.mjs`.
 4. `docs/PRIVACY.md` records the data flow per artifact, redaction before hashing, retention, selective-disclosure options and limits; `docs/DPIA-TEMPLATE.md` gives deployers a template marked as draft input for a qualified professional.
-5. Wiring into package scripts, CI, the requirements registry and the specification is proposed in `docs/lane-t-integration.md`, not done here.
+5. Wiring into package scripts, CI, the requirements registry and the specification was proposed in a working note that was not retained, not done here.
 
 ## Alternatives
 

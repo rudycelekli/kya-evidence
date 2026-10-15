@@ -1,6 +1,6 @@
 # From useful implementation to credible open standard
 
-The ambition is neutral infrastructure for portable passports, independently assessed evidence, explicit relying-party policy and contestable agent assurance. The alpha demonstrates a rigorous local core. Becoming a standard needs multiple implementations and real evidence of use, not a declaration by its author.
+The ambition is neutral infrastructure for signed check receipts over an exact agent manifest (a declaration, not a passport or identity credential), independently assessed evidence, explicit relying-party policy and contestable agent assurance. The alpha demonstrates a rigorous local core. Becoming a standard needs multiple implementations and real evidence of use, not a declaration by its author.
 
 | Stage | Deliverable | Evidence required for promotion |
 | :--- | :--- | :--- |
@@ -25,7 +25,7 @@ Alpha3 adds response-bound [diagnostic dossiers](DOSSIERS.md), [16 frozen public
 | 3 · Stronger capture | Open | No tool side-effect capture. Currency and incident records are offline checks over supplied data |
 | 4 · Protected evaluation | Open | Public controls only |
 | 5 · Multi-implementation protocol | Open | The team-built Python checker reconstructs vectors for a restricted subset, including incident-record vectors per [INTEROPERABILITY](INTEROPERABILITY.md). It is not an independent implementation |
-| 6 · Portable ecosystem | Open | No credential bridge. No correction, revocation or appeal interoperability |
+| 6 · Portable ecosystem | Open | W3C VC 2.0 export bridge implemented (`kya vc`, not validated by any external VC library). No correction, revocation or appeal interoperability |
 | 7 · Empirical assurance | Open | No outcome validation or calibration |
 
 ## Done and next (2026-10-14)
