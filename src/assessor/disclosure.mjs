@@ -15,7 +15,7 @@ const DAY = 86_400_000;
 export function validateDisclosure(v) {
   v = JSON.parse(canonical(v));
   insist(Buffer.byteLength(canonical(v), 'utf8') <= MAX_RECORD_BYTES, 'Disclosure too large');
-  exactKeys(v, ['schema', 'id', 'kind', 'assessorKeyId', 'operatorDigest', 'relationships', 'priorEngagementEndedAt', 'refId', 'issuedAt', 'expiresAt', 'detailsDigest'], 'Disclosure');
+  exactKeys(v, ['schema', 'id', 'kind', 'assessorKeyId', 'operatorDigest', 'relationships', 'priorEngagementEndedAt', 'refId', 'refDigest', 'issuedAt', 'expiresAt', 'detailsDigest'], 'Disclosure');
   insist(v.schema === DISCLOSURE_SCHEMA, 'Unsupported disclosure schema'); identifier(v.id, 'Disclosure ID');
   insist(DISCLOSURE_KINDS.includes(v.kind), 'Unknown disclosure kind');
   hash(v.assessorKeyId, 'Assessor key'); hash(v.operatorDigest, 'Operator digest'); hash(v.detailsDigest, 'Details digest');
@@ -27,9 +27,9 @@ export function validateDisclosure(v) {
   insist(expires > issued && expires - issued <= MAX_VALIDITY_DAYS * DAY, 'Invalid validity window');
   if (v.priorEngagementEndedAt !== null) timestamp(v.priorEngagementEndedAt, 'Prior engagement end');
   insist((v.priorEngagementEndedAt !== null) === v.relationships.includes('prior-engagement'), 'prior-engagement requires an end time and nothing else may carry one');
-  if (v.kind === 'disclosure') { insist(v.relationships.length > 0, 'A disclosure must list relationships or none'); insist(v.refId === null, 'A disclosure cannot reference a record'); }
-  else if (v.kind === 'conflict-declaration') { insist(v.relationships.length > 0 && !v.relationships.includes('none'), 'A conflict declaration must name a relationship'); insist(v.refId === null, 'A declaration cannot reference a record'); }
-  else { insist(v.relationships.length === 0 && v.priorEngagementEndedAt === null, 'A withdrawal carries no relationships'); identifier(v.refId, 'Withdrawn record'); insist(v.refId !== v.id, 'A record cannot withdraw itself'); }
+  if (v.kind === 'disclosure') { insist(v.relationships.length > 0, 'A disclosure must list relationships or none'); insist(v.refId === null && v.refDigest === null, 'A disclosure cannot reference a record'); }
+  else if (v.kind === 'conflict-declaration') { insist(v.relationships.length > 0 && !v.relationships.includes('none'), 'A conflict declaration must name a relationship'); insist(v.refId === null && v.refDigest === null, 'A declaration cannot reference a record'); }
+  else { insist(v.relationships.length === 0 && v.priorEngagementEndedAt === null, 'A withdrawal carries no relationships'); identifier(v.refId, 'Withdrawn record'); hash(v.refDigest, 'Withdrawn envelope digest'); insist(v.refId !== v.id, 'A record cannot withdraw itself'); }
   return v;
 }
 

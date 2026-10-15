@@ -22,6 +22,8 @@ const IP4 = [203, 0, 113, 77].join('.');
 const IP6 = '2001:db8:85a3:0:0:8a2e:370:7334';
 const HOME = '/Users/' + 'janedoe' + '/Documents/x';
 const PHONE = '+1 415 555 0132';
+const SALT = Array.from({ length: 32 }, (_, i) => ((i * 37 + 11) % 256).toString(16).padStart(2, '0')).join('');
+const SALT2 = Array.from({ length: 32 }, (_, i) => ((i * 53 + 7) % 256).toString(16).padStart(2, '0')).join('');
 
 test('privacy scan flags an email address and a phone number', () => {
   assert.deepEqual(rules('contact ' + EMAIL + ' please'), ['email']);
@@ -158,9 +160,9 @@ test('privacy scan documentation states false positives and false negatives and 
 });
 
 test('field commitment opens with the right salt and value and is deterministic for a fixed salt', () => {
-  const salt = 'ab'.repeat(32);
-  const a = commitField({ recordId: 'rec:1', field: 'contact', value: EMAIL, salt });
-  const b = commitField({ recordId: 'rec:1', field: 'contact', value: EMAIL, salt });
+  const masterSalt = SALT;
+  const a = commitField({ recordId: 'rec:1', field: 'contact', value: EMAIL, masterSalt });
+  const b = commitField({ recordId: 'rec:1', field: 'contact', value: EMAIL, masterSalt });
   assert.deepEqual(a, b);
   assert.deepEqual(openField(a.commitment, a.opening), { ok: true });
   assert.ok(!JSON.stringify(a.commitment).includes('jane'));
@@ -170,31 +172,141 @@ test('field commitment opens with the right salt and value and is deterministic 
 });
 
 test('field commitment rejects a wrong value, wrong salt, other field or other record', () => {
-  const salt = 'cd'.repeat(32);
-  const c = commitField({ recordId: 'rec:1', field: 'contact', value: { a: 1, b: [2] }, salt });
+  const c = commitField({ recordId: 'rec:1', field: 'contact', value: { a: 1, b: [2] }, masterSalt: SALT });
+  const salt = c.opening.salt;
   assert.equal(openField(c.commitment, { salt, value: { b: [2], a: 1 } }).ok, true);
   assert.equal(openField(c.commitment, { salt, value: { a: 2, b: [2] } }).ok, false);
-  assert.equal(openField(c.commitment, { salt: 'ce'.repeat(32), value: c.opening.value }).ok, false);
+  assert.equal(openField(c.commitment, { salt: SALT2, value: c.opening.value }).ok, false);
   assert.equal(openField({ ...c.commitment, field: 'other' }, c.opening).ok, false);
   assert.equal(openField({ ...c.commitment, recordId: 'rec:2' }, c.opening).ok, false);
   assert.equal(openField({ ...c.commitment, digest: '0'.repeat(64) }, c.opening).ok, false);
 });
 
 test('field commitment is domain separated by record ID and field name with unambiguous framing', () => {
-  const salt = 'ef'.repeat(32);
-  const d = (recordId, field, value) => commitField({ recordId, field, value, salt }).commitment.digest;
+  const d = (recordId, field, value) => commitField({ recordId, field, value, masterSalt: SALT }).commitment.digest;
   const set = new Set([d('a:1', 'b', 'v'), d('a:1', 'c', 'v'), d('a:2', 'b', 'v'), d('a', '1:b', 'v'), d('a:1', 'b', 'w')]);
   assert.equal(set.size, 5);
   assert.notEqual(d('ab', 'c', 'v'), d('a', 'bc', 'v'));
 });
 
 test('field commitment refuses weak salts, bad names and unsupported values and openField never throws', () => {
-  assert.throws(() => commitField({ recordId: 'r:1', field: 'f', value: 1, salt: 'aa' }), /Salt/);
-  assert.throws(() => commitField({ recordId: 'r:1', field: 'f', value: 1, salt: 'AB'.repeat(16) }), /Salt/);
+  assert.throws(() => commitField({ recordId: 'r:1', field: 'f', value: 1, masterSalt: 'aa' }), /Salt/);
+  assert.throws(() => commitField({ recordId: 'r:1', field: 'f', value: 1, masterSalt: 'AB'.repeat(32) }), /Salt/);
   assert.throws(() => commitField({ recordId: 'has space', field: 'f', value: 1 }), /recordId/);
   assert.throws(() => commitField({ recordId: 'r:1', field: '', value: 1 }), /field/);
   assert.throws(() => commitField({ recordId: 'r:1', field: 'f', value: undefined }));
   for (const bad of [undefined, null, 1, {}, { schema: 'x' }]) assert.equal(openField(bad, { salt: 'ab'.repeat(32), value: 1 }).ok, false);
   const c = commitField({ recordId: 'r:1', field: 'f', value: 1 });
   for (const bad of [undefined, null, 'x', {}, { salt: 'zz', value: 1 }]) assert.equal(openField(c.commitment, bad).ok, false);
+});
+
+test('field commitment derives a distinct salt per field and an opened field does not leak the master', () => {
+  const a = commitField({ recordId: 'r:1', field: 'a', value: 'x', masterSalt: SALT });
+  const b = commitField({ recordId: 'r:1', field: 'b', value: 'x', masterSalt: SALT });
+  assert.notEqual(a.opening.salt, b.opening.salt);
+  assert.notEqual(a.opening.salt, SALT);
+  assert.notEqual(a.commitment.digest, b.commitment.digest);
+  assert.equal(openField(b.commitment, { salt: a.opening.salt, value: 'x' }).ok, false);
+});
+
+test('field commitment refuses constant salts, short salts, a public salt parameter and null input', () => {
+  for (const bad of ['00'.repeat(32), 'ff'.repeat(32), 'ab'.repeat(32), SALT.slice(0, 62), SALT + '00', 'ab'.repeat(16)])
+    assert.throws(() => commitField({ recordId: 'r:1', field: 'f', value: 1, masterSalt: bad }), /Salt/);
+  assert.throws(() => commitField({ recordId: 'r:1', field: 'f', value: 1, salt: SALT }), /Salt/);
+  assert.throws(() => commitField(null), /commitField needs an object/);
+  assert.throws(() => commitField(), /commitField needs an object/);
+  const c = commitField({ recordId: 'r:1', field: 'f', value: 1, masterSalt: SALT });
+  assert.equal(openField(c.commitment, { salt: '00'.repeat(32), value: 1 }).ok, false);
+  assert.equal(openField(c.commitment, { salt: c.opening.salt + '00', value: 1 }).ok, false);
+  assert.equal(openField(c.commitment, { salt: c.opening.salt.slice(0, 62), value: 1 }).ok, false);
+});
+
+// ---- adversarial review fixes ----
+test('privacy scan flags long home paths, slugs and hyphenated card or SSN strings', () => {
+  assert.deepEqual(rules('/Users/' + 'janedoe/' + 'Documents/' + 'a'.repeat(30)), ['home-path']);
+  assert.deepEqual(rules('export_for_user_ssn_' + SSN + '_q3_report_final'), ['national-id-us-ssn']);
+  assert.deepEqual(rules('payment-4111-1111-1111-1111-for-order-12345678901'), ['card']);
+  assert.deepEqual(rules('QWxhZGRpbjpvcGVuIHNlc2FtZQQWxhZGRpbjpvcGVuIHNlc2FtZQ' + 'x'.repeat(10)), []);
+  assert.deepEqual(rules('A'.repeat(20) + '0123456789'.repeat(3) + 'abc/+def=='), []);
+});
+
+test('privacy scan keeps two different files with the same base name outside cwd', async () => {
+  const cwd = tmp(), a = tmp(), b = tmp();
+  writeFileSync(join(a, 'same.json'), JSON.stringify({ x: EMAIL }));
+  writeFileSync(join(b, 'same.json'), JSON.stringify({ x: IP4 }));
+  const r = await scanPaths([join(a, 'same.json'), join(b, 'same.json')], { cwd });
+  assert.equal(r.scanned.length, 2);
+  assert.deepEqual(r.findings.map(f => f.rule).sort(), ['email', 'ipv4']);
+  assert.equal(new Set(r.scanned.map(x => x.file)).size, 2);
+  assert.ok(!JSON.stringify(r).includes(a) && !JSON.stringify(r).includes(b));
+  const again = await scanPaths([join(a, 'same.json'), join(a, '.', 'same.json')], { cwd });
+  assert.equal(again.scanned.length, 1);
+});
+
+test('privacy scan exits 2 when nothing was scanned and normalizes extensions', () => {
+  const dir = tmp();
+  writeFileSync(join(dir, 'a.txt'), 'hello');
+  const none = spawnSync(process.execPath, [script, dir], { encoding: 'utf8' });
+  assert.equal(none.status, 2);
+  assert.equal(JSON.parse(none.stdout).clean, false);
+  writeFileSync(join(dir, 'b.json'), JSON.stringify({ x: EMAIL }));
+  assert.equal(spawnSync(process.execPath, [script, '--ext', 'json', dir], { encoding: 'utf8' }).status, 1);
+  assert.equal(spawnSync(process.execPath, [script, '--ext', 'txt', dir], { encoding: 'utf8' }).status, 0);
+  assert.equal(spawnSync(process.execPath, [script, '--ext', 'a/b', dir], { encoding: 'utf8' }).status, 2);
+  assert.equal(spawnSync(process.execPath, [script, join(dir, 'nothing-here')], { encoding: 'utf8' }).status, 2);
+});
+
+test('privacy scan scans numbers in JSON and flags bare identifiers under identifying keys', () => {
+  const r = scanContent(JSON.stringify({ card: 4111111111111111, ssn: 123456789, phone: 4155550132, count: 123456789, list: [4111111111111111] })).findings;
+  assert.deepEqual(r.map(f => f.path + ' ' + f.rule).sort(), ['$.card card', '$.list[0] card', '$.phone numeric-identifier-by-key', '$.ssn numeric-identifier-by-key']);
+});
+
+test('privacy scan applies the coded-field rule to any key ending in Id', () => {
+  const f = scanContent(JSON.stringify({ assessorKeyId: 'has free text', accountablePartyId: 'two words', fine: 'two words' })).findings;
+  assert.deepEqual(f.map(x => x.path).sort(), ['$.accountablePartyId', '$.assessorKeyId']);
+});
+
+test('privacy scan finishes 300k character adversarial inputs in under one second', () => {
+  const n = 300000;
+  const inputs = ['-----BEGIN X-----\n'.repeat(Math.ceil(n / 18)), '-----BEGIN PRIVATE KEY-----\n'.repeat(Math.ceil(n / 28)), 'a@b.co '.repeat(Math.ceil(n / 7)),
+    '1 '.repeat(n / 2), '1.2.3.4 '.repeat(Math.ceil(n / 8)), '/Users/a '.repeat(Math.ceil(n / 9)), 'a'.repeat(n), 'a.'.repeat(n / 2) + '@', '1-'.repeat(n / 2), '+1 (555) '.repeat(Math.ceil(n / 9)), 'a%40b.co '.repeat(Math.ceil(n / 9)), ':'.repeat(n)];
+  const t0 = process.cpuUsage();
+  for (const s of inputs) scanString(s);
+  const cpu = process.cpuUsage(t0), total = (cpu.user + cpu.system) / 1000; // CPU time, so machine load does not flake the bound
+  assert.ok(total < 1000, 'took ' + total + ' ms');
+});
+
+test('privacy scan reports unreadable files without echoing the path and strips control characters', async () => {
+  const dir = tmp();
+  writeFileSync(join(dir, 'locked.json'), JSON.stringify({ x: 1 }), { mode: 0o000 });
+  writeFileSync(join(dir, 'ok.json'), JSON.stringify({ x: 1 }));
+  const r = await scanPaths([dir], { cwd: dir });
+  const euid = typeof process.geteuid === 'function' ? process.geteuid() : 1;
+  if (euid !== 0) { assert.equal(r.errors.length, 1); assert.ok(/unreadable/.test(r.errors[0].error)); assert.equal(r.errors[0].path, 'locked.json'); assert.equal(r.clean, false); }
+  assert.ok(!JSON.stringify(r).includes(dir));
+  const esc = scanString('/Users/' + 'jane\x1b[31mdoe\x07/x');
+  assert.ok(esc.length >= 1);
+  for (const f of esc) assert.ok(!/[\x00-\x1f\x7f]/.test(f.redacted), 'control char in mask');
+  const bad = await scanPaths([join(dir, 'missing-dir', 'x.json')], { cwd: dir });
+  assert.ok(!JSON.stringify(bad).includes(dir));
+});
+
+test('privacy scan uses the strict parser, strips a BOM and checks nested narrative fields', () => {
+  assert.equal(scanContent('{"a":"x","a":"y"}').kind, 'text');
+  assert.equal(scanContent('{"__proto__":{"x":1}}').kind, 'text');
+  const bom = scanContent('﻿' + JSON.stringify({ x: EMAIL }));
+  assert.equal(bom.kind, 'json'); assert.deepEqual(bom.findings.map(f => f.rule), ['email']);
+  const nested = scanContent(JSON.stringify({ schema: 'kya.incident/v1', inner: { deeper: [{ note: 'some free text' }] } })).findings;
+  assert.deepEqual(nested.map(f => f.rule), ['digest-only-free-text']);
+  const jl = scanContent('﻿' + JSON.stringify({ m: EMAIL }) + '\n', '.jsonl');
+  assert.deepEqual(jl.findings.map(f => f.rule), ['email']);
+});
+
+test('privacy scan flags dotted phone numbers, percent encoded and unicode emails but not version strings', () => {
+  assert.deepEqual(rules('555.123.4567'), ['phone']);
+  assert.deepEqual(rules('1.2.3'), []);
+  assert.deepEqual(rules('10.0.19041.1234'), []);
+  assert.deepEqual(rules('jane.doe%40mail' + '.test.org'), ['email']);
+  assert.deepEqual(rules('jürgen.müller' + '@' + 'beispiel.de'), ['email']);
+  assert.deepEqual(rules('jane.doe' + '＠' + 'mail.test.org'), ['email']);
 });
