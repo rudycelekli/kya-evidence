@@ -4,7 +4,7 @@ Generated from [evidence/world-class-status.json](../evidence/world-class-status
 
 An item is verified only when linked evidence of the right kind exists: a requirement, test or file for CI verification, and a named outside party with an https link and a date for external review, independent implementation or real use. Work that needs an outside party cannot be marked verified on internal evidence.
 
-Totals: 34 items; 18 planned, 8 in progress, 5 implemented, 3 verified. Items that need an outside party: 11; verified by an outside party: 0.
+Totals: 34 items; 17 planned, 9 in progress, 5 implemented, 3 verified. Items that need an outside party: 11; verified by an outside party: 0.
 
 ## WS1 Narrow, precise problem
 
@@ -20,7 +20,7 @@ Totals: 34 items; 18 planned, 8 in progress, 5 implemented, 3 verified. Items th
 | :--- | :--- | :--- | :--- | :--- |
 | WS2-01 Conservative policy templates for three use cases (thresholds are unvalidated starting points) | implemented |  | `test/policy-templates.test.mjs`, `docs/POLICY-TEMPLATES.md` |  |
 | WS2-02 Scenario suite family with synthetic incident reconstructions (no external fidelity review) | implemented |  | `test/suites.test.mjs`, `docs/adr/0023-scenario-suites-and-holdout-commitments.md` |  |
-| WS2-03 Profile specification and registry rules | planned |  |  |  |
+| WS2-03 Profile specification and registry rules | in progress |  |  |  |
 | WS2-04 Domain-expert sign-off for each flagship profile | planned |  |  | yes |
 
 ## WS3 Two independent implementations

@@ -26,6 +26,7 @@ jobs:
           grep -qx '# todo 0' "$RUNNER_TEMP/tap.txt"
       - run: node scripts/mutation-check.mjs
       - run: node scripts/adr-index.mjs
+      - run: node scripts/profile-registry.mjs --check
       - run: node scripts/pack.mjs
       - run: node scripts/verify-release.mjs
       - name: Verify reproducible package bytes

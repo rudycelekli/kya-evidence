@@ -22,6 +22,8 @@
     "requirements": "node scripts/requirements.mjs",
     "adr:index": "node scripts/adr-index.mjs",
     "sbom": "node scripts/sbom.mjs",
+    "profiles:registry": "node scripts/profile-registry.mjs",
+    "profiles:registry:check": "node scripts/profile-registry.mjs --check",
     "vectors:assessment": "node scripts/assessment-vectors.mjs",
     "vectors:assessment:check": "node scripts/assessment-vectors.mjs --check",
     "vectors:run": "node scripts/run-vectors.mjs",

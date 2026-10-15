@@ -37,7 +37,7 @@ The tables list what is registered. The core items are shown for reference and c
 
 | Identifier | Status | Notes |
 | :--- | :--- | :--- |
-| `core-v1` | Core, reserved | Shipped in `profiles/core-v1.json` |
+| `kya-core` | Core, reserved | Document id of the profile shipped in `profiles/core-v1.json`; see [PROFILES.md](../PROFILES.md) |
 | (none registered) | | |
 
 ### 4.2 Check identifiers

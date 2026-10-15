@@ -143,5 +143,10 @@ Each requirement is traced to at least one test that must exist exactly once; th
 | KYA-ASR-002 | MUST | Standing MUST be reported per key with named reason codes and MUST fail closed on expiry, revocation, a blocking relationship, unfinished cooling-off and an undisclosed conflict declared by a trusted other party. | `assessor.test.mjs` |
 | KYA-ASR-003 | MUST | A disclosure MUST NOT grant standing to a key other than its signer, and a declaration MUST NOT count unless signed by a trusted declarer other than the assessor. | `assessor.test.mjs` |
 | KYA-ASR-004 | SHOULD | Standing results SHOULD be independent of record order and duplicate delivery and equal-time disagreement SHOULD fail closed. | `assessor.test.mjs` |
+| KYA-PRF-001 | MUST | A profile's identity MUST be the digest of its canonical form, and a registry entry whose digest differs from the profile bytes MUST be refused. | `profiles.test.mjs` |
+| KYA-PRF-002 | MUST | A registry MUST NOT list the same profile id and version twice, MUST NOT list one digest under two ids, and MUST refuse ids that break the naming and reserved-prefix rules. | `profiles.test.mjs` |
+| KYA-PRF-003 | MUST | Profile metadata MUST state known gaps, a change log, an owner and a purpose; an entry missing any of them, with an unknown status, or with unknown members MUST be refused. | `profiles.test.mjs` |
+| KYA-PRF-004 | MUST NOT | A profile entry MUST NOT claim review or sign-off without a sign-off record carrying reviewer, role, date and evidence digest, and a draft MUST NOT carry one. | `profiles.test.mjs` |
+| KYA-PRF-005 | SHOULD | The committed profile registry SHOULD match the generator output, and every policy template SHOULD target a registered profile. | `profiles.test.mjs` |
 
-Registry digest: `2d8f53927e05008d6aae5557b59ab23933b006286b183eff58428972e32e7d8d`
+Registry digest: `6816ace5a0e0a71998c0d68e44771accad764e537aae1ba96af76196c65ab6c3`

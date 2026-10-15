@@ -342,8 +342,21 @@
         "ADR-0014",
         "ADR-0021"
       ]
+    },
+    {
+      "id": "ADR-0030",
+      "title": "Profile registry and metadata rules",
+      "status": "Proposed",
+      "file": "docs/adr/0030-profile-registry.md",
+      "contentDigest": "6e9e8157419c5fe1c86bff43b39dd56524ef64f55662e85007c7b8ae942b3086",
+      "related": [
+        "ADR-0003",
+        "ADR-0016",
+        "ADR-0023",
+        "ADR-0024"
+      ]
     }
   ],
-  "digest": "a416c7e04539342e9b8d55376a3fa71180e26ed18e63f4b7845f3e55f740b3b9",
+  "digest": "4f6e8a18ed902c4dc9a9c68b3d8838b9afc4dbb439ec6df37c7539137f5c80c6",
   "store": "portable local file; not a claim of AgentDB graph persistence"
 }
