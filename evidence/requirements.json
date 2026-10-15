@@ -2651,6 +2651,127 @@
           "title": "duplicate delivery of one envelope is harmless and results do not depend on order"
         }
       ]
+    },
+    {
+      "id": "KYA-PRF-001",
+      "level": "MUST",
+      "area": "PRF",
+      "section": "Records and bindings",
+      "statement": "A profile's identity MUST be the digest of its canonical form, and a registry entry whose digest differs from the profile bytes MUST be refused.",
+      "tests": [
+        {
+          "file": "test/profiles.test.mjs",
+          "title": "a digest mismatch between metadata and the profile is refused"
+        },
+        {
+          "file": "test/profiles.test.mjs",
+          "title": "a profile edited after registration no longer matches its recorded digest"
+        },
+        {
+          "file": "test/profiles.test.mjs",
+          "title": "the registry digest for the core profile is recomputed from the frozen file"
+        }
+      ]
+    },
+    {
+      "id": "KYA-PRF-002",
+      "level": "MUST",
+      "area": "PRF",
+      "section": "Interoperability and versioning",
+      "statement": "A registry MUST NOT list the same profile id and version twice, MUST NOT list one digest under two ids, and MUST refuse ids that break the naming and reserved-prefix rules.",
+      "tests": [
+        {
+          "file": "test/profiles.test.mjs",
+          "title": "a duplicate profile id and version in the registry is refused"
+        },
+        {
+          "file": "test/profiles.test.mjs",
+          "title": "the same digest under another id is refused"
+        },
+        {
+          "file": "test/profiles.test.mjs",
+          "title": "an id differing only by case collides with an existing id"
+        },
+        {
+          "file": "test/profiles.test.mjs",
+          "title": "profile id naming and namespace rules"
+        }
+      ]
+    },
+    {
+      "id": "KYA-PRF-003",
+      "level": "MUST",
+      "area": "PRF",
+      "section": "Governance documents",
+      "statement": "Profile metadata MUST state known gaps, a change log, an owner and a purpose; an entry missing any of them, with an unknown status, or with unknown members MUST be refused.",
+      "tests": [
+        {
+          "file": "test/profiles.test.mjs",
+          "title": "a missing known gaps field is refused"
+        },
+        {
+          "file": "test/profiles.test.mjs",
+          "title": "an empty known gaps list is refused"
+        },
+        {
+          "file": "test/profiles.test.mjs",
+          "title": "a missing change log or owner or purpose is refused"
+        },
+        {
+          "file": "test/profiles.test.mjs",
+          "title": "an unknown status is refused"
+        },
+        {
+          "file": "test/profiles.test.mjs",
+          "title": "unknown extra fields and a wrong schema are refused"
+        }
+      ]
+    },
+    {
+      "id": "KYA-PRF-004",
+      "level": "MUST NOT",
+      "area": "PRF",
+      "section": "Governance documents",
+      "statement": "A profile entry MUST NOT claim review or sign-off without a sign-off record carrying reviewer, role, date and evidence digest, and a draft MUST NOT carry one.",
+      "tests": [
+        {
+          "file": "test/profiles.test.mjs",
+          "title": "a sign-off object without evidence fields is refused"
+        },
+        {
+          "file": "test/profiles.test.mjs",
+          "title": "a sign-off with a malformed evidence digest is refused"
+        },
+        {
+          "file": "test/profiles.test.mjs",
+          "title": "a draft profile cannot carry a sign-off"
+        },
+        {
+          "file": "test/profiles.test.mjs",
+          "title": "prose claiming expert sign-off without evidence is refused"
+        },
+        {
+          "file": "test/profiles.test.mjs",
+          "title": "every registry entry is draft or reference with no sign-off set"
+        }
+      ]
+    },
+    {
+      "id": "KYA-PRF-005",
+      "level": "SHOULD",
+      "area": "PRF",
+      "section": "Governance documents",
+      "statement": "The committed profile registry SHOULD match the generator output, and every policy template SHOULD target a registered profile.",
+      "tests": [
+        {
+          "file": "test/profiles.test.mjs",
+          "title": "the committed profile registry matches the generator byte for byte"
+        },
+        {
+          "file": "test/profiles.test.mjs",
+          "title": "every policy template targets a registered profile id"
+        }
+      ]
     }
   ]
 }
