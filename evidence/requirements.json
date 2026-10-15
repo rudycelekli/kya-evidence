@@ -3224,6 +3224,125 @@
           "title": "benchmark verifier inline limitation list matches the emitted list"
         }
       ]
+    },
+    {
+      "id": "KYA-CLI-001",
+      "level": "MUST",
+      "area": "cli",
+      "section": "Interoperability and versioning",
+      "statement": "A CLI entry point MUST run its main function when started through a symbolic link (npm bin link), comparing real paths of the entry file and the module.",
+      "tests": [
+        {
+          "file": "test/symlink-entry.test.mjs",
+          "title": "symlinked entries run main and fail on a bad flag"
+        },
+        {
+          "file": "test/symlink-entry.test.mjs",
+          "title": "symlinked entries run main and print the same check output"
+        }
+      ]
+    },
+    {
+      "id": "KYA-ENV-001",
+      "level": "MUST",
+      "area": "envelope",
+      "section": "Records and bindings",
+      "statement": "A public key in a proof or trust anchor MUST be the canonical SPKI PEM export of the parsed key; any other PEM or DER spelling MUST be refused so one signed payload has one envelope digest.",
+      "tests": [
+        {
+          "file": "test/envelope-canonical.test.mjs",
+          "title": "only the canonical SPKI PEM spelling of a key is accepted"
+        },
+        {
+          "file": "test/envelope-canonical.test.mjs",
+          "title": "re-encoded public key spellings do not verify as a disclosure envelope"
+        },
+        {
+          "file": "test/envelope-canonical.test.mjs",
+          "title": "re-encoded public key spellings do not verify as an evidence envelope"
+        },
+        {
+          "file": "test/envelope-canonical.test.mjs",
+          "title": "a re-encoded copy of a conflict declaration cannot dodge its digest-bound withdrawal"
+        }
+      ]
+    },
+    {
+      "id": "KYA-ENV-002",
+      "level": "MUST",
+      "area": "envelope",
+      "section": "Records and bindings",
+      "statement": "Core verifiers MUST refuse small-order, off-curve and non-canonical Ed25519 public keys (not only the VC bridge).",
+      "tests": [
+        {
+          "file": "test/envelope-canonical.test.mjs",
+          "title": "a small order public key is refused by the core key checks"
+        },
+        {
+          "file": "test/envelope-canonical.test.mjs",
+          "title": "the identity point signature does not verify any envelope"
+        }
+      ]
+    },
+    {
+      "id": "KYA-CAM-021",
+      "level": "MUST",
+      "area": "campaign",
+      "section": "Run selection and qualification",
+      "statement": "A campaign run MUST hold an exclusive lock file beside the ledger for its whole duration, MUST NOT remove a lock it does not own, and MUST refuse to replace the ledger when the on-disk head differs from the head it last wrote.",
+      "tests": [
+        {
+          "file": "test/campaign-hardening.test.mjs",
+          "title": "two concurrent campaign runs on one ledger execute the attempts once and the other refuses"
+        },
+        {
+          "file": "test/campaign-hardening.test.mjs",
+          "title": "a stale lock is reported and never silently stolen"
+        }
+      ]
+    },
+    {
+      "id": "KYA-CAM-022",
+      "level": "MUST",
+      "area": "campaign",
+      "section": "Run selection and qualification",
+      "statement": "The private directory check MUST treat a child whose name begins with two dots as inside the repository.",
+      "tests": [
+        {
+          "file": "test/campaign-hardening.test.mjs",
+          "title": "a private directory named with two leading dots inside the repository is refused"
+        }
+      ]
+    },
+    {
+      "id": "KYA-GOV-004",
+      "level": "MUST",
+      "area": "GOV",
+      "section": "Governance documents",
+      "statement": "Status ledger evidence paths MUST be compared by path segments, not string prefix.",
+      "tests": [
+        {
+          "file": "test/world-class-path.test.mjs",
+          "title": "a repository file whose name starts with two dots is accepted as inside the repository"
+        },
+        {
+          "file": "test/world-class-path.test.mjs",
+          "title": "a file under a linked directory that resolves to a sibling with the same prefix is refused"
+        }
+      ]
+    },
+    {
+      "id": "KYA-VCB-015",
+      "level": "MUST",
+      "area": "vcb",
+      "section": "Interoperability and versioning",
+      "statement": "`kya-vc verify` MUST require `--trust-did` or `--policy`, or the explicit `--allow-untrusted-issuer` flag.",
+      "tests": [
+        {
+          "file": "test/vc-cli-trust.test.mjs",
+          "title": "kya-vc verify without a trust source refuses unless untrusted issuers are explicitly allowed"
+        }
+      ]
     }
   ]
 }

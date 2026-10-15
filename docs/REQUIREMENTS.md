@@ -172,5 +172,12 @@ Each requirement is traced to at least one test that must exist exactly once; th
 | KYA-CLB-003 | MUST | Claim boundary codes MUST be unique, upper snake case and append-only. | `claim-boundaries.test.mjs` |
 | KYA-CLB-004 | MUST | codesForLimitStrings MUST throw on an unknown string and MUST cover the outputs of assess and checkCurrency. | `claim-boundaries.test.mjs` |
 | KYA-CLB-005 | MUST | The benchmark verifier inline limitation list MUST equal the emitted list. | `claim-boundaries.test.mjs` |
+| KYA-CLI-001 | MUST | A CLI entry point MUST run its main function when started through a symbolic link (npm bin link), comparing real paths of the entry file and the module. | `symlink-entry.test.mjs` |
+| KYA-ENV-001 | MUST | A public key in a proof or trust anchor MUST be the canonical SPKI PEM export of the parsed key; any other PEM or DER spelling MUST be refused so one signed payload has one envelope digest. | `envelope-canonical.test.mjs` |
+| KYA-ENV-002 | MUST | Core verifiers MUST refuse small-order, off-curve and non-canonical Ed25519 public keys (not only the VC bridge). | `envelope-canonical.test.mjs` |
+| KYA-CAM-021 | MUST | A campaign run MUST hold an exclusive lock file beside the ledger for its whole duration, MUST NOT remove a lock it does not own, and MUST refuse to replace the ledger when the on-disk head differs from the head it last wrote. | `campaign-hardening.test.mjs` |
+| KYA-CAM-022 | MUST | The private directory check MUST treat a child whose name begins with two dots as inside the repository. | `campaign-hardening.test.mjs` |
+| KYA-GOV-004 | MUST | Status ledger evidence paths MUST be compared by path segments, not string prefix. | `world-class-path.test.mjs` |
+| KYA-VCB-015 | MUST | `kya-vc verify` MUST require `--trust-did` or `--policy`, or the explicit `--allow-untrusted-issuer` flag. | `vc-cli-trust.test.mjs` |
 
-Registry digest: `be4a41112c56444ca93e8dcf96d8aa3d7f8363edc6701b77c93939d590a86f9b`
+Registry digest: `91c5865ce65fa80fd47c15aebe324371ac22444fa38b97f82a98a6aad6b68f8f`

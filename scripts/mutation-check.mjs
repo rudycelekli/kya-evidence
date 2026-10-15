@@ -51,7 +51,7 @@ const mutants=[
   ["bundle overwrite allowed","flag: 'wx'","flag: 'w'","src/campaign/application/runner.mjs"],
   ["capture-issuer evidence-signer check removal","insist(!evidenceKeyIds.includes(id)","insist(true || !evidenceKeyIds.includes(id)","src/campaign/domain/roles.mjs"],
   ["capture-issuer scoring evidence allowed","insist(k.role !== 'capture-issuer','A capture-issuer key cannot issue scoring evidence');","","src/assessment/application/assess.mjs"],
-  ["small-order key check removed","insist(!(q[0] === 0n && q[1] === 1n), 'Invalid Ed25519 public key: small-order point');","","src/vc-bridge/encoding.mjs"],
+  ["small-order key check removed","insist(!(q[0] === 0n && q[1] === 1n), 'Invalid Ed25519 public key: small-order point');","","src/shared/ed25519-point.mjs"],
   ["private directory real-path check removed","insist(!inside(repo, join(real, ...rest)), 'Private directory must be outside the repository');","","src/campaign/application/runner.mjs"],
   ["pinned ledger head check removed","expectHead !== undefined && expectHead !== headDigest","false","src/campaign/domain/ledger.mjs"],
   ["duplicate evidence check removed","if (runIds.has(e.runId.toLowerCase()) || bundles.has(e.evidenceBundleDigest))","if (false)","src/campaign/domain/ledger.mjs"],

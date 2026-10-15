@@ -22,20 +22,20 @@ function viaLink(entry, args) {
   } finally { rmSync(dir, { recursive: true, force: true }); }
 }
 
-for (const entry of BAD_FLAG) {
-  test(`symlinked entry runs main and fails on bad flag: ${entry}`, () => {
+test('symlinked entries run main and fail on a bad flag', () => {
+  for (const entry of BAD_FLAG) {
     const { direct, linked } = viaLink(entry, ['--no-such-flag-zz']);
-    assert.notEqual(direct.status, 0, 'direct run must fail on a bad flag');
-    assert.equal(linked.status, direct.status, 'symlinked run must behave like the direct run');
-    assert.ok(linked.stderr.length > 0, 'symlinked run must write to stderr');
-  });
-}
+    assert.notEqual(direct.status, 0, entry + ': direct run must fail on a bad flag');
+    assert.equal(linked.status, direct.status, entry + ': symlinked run must behave like the direct run');
+    assert.ok(linked.stderr.length > 0, entry + ': symlinked run must write to stderr');
+  }
+});
 
-for (const entry of CHECK) {
-  test(`symlinked entry runs main and prints check output: ${entry}`, () => {
+test('symlinked entries run main and print the same check output', () => {
+  for (const entry of CHECK) {
     const { direct, linked } = viaLink(entry, ['--check']);
-    assert.ok(direct.stdout.length > 0);
-    assert.equal(linked.status, direct.status);
-    assert.equal(linked.stdout, direct.stdout, 'symlinked run must print the same output as the direct run');
-  });
-}
+    assert.ok(direct.stdout.length > 0, entry + ': direct run prints output');
+    assert.equal(linked.status, direct.status, entry + ': exit status matches');
+    assert.equal(linked.stdout, direct.stdout, entry + ': symlinked run must print the same output as the direct run');
+  }
+});
