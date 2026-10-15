@@ -161,5 +161,11 @@ Each requirement is traced to at least one test that must exist exactly once; th
 | KYA-IBR-006 | MUST | The A2A and MCP exports MUST bind by assessment and subject digest, MUST point at the currency check without claiming it as proof, MUST mark the A2A extension not required and MUST accept only https URL hints that are never fetched. | `interop-bridges.test.mjs` |
 | KYA-IBR-007 | MUST | The bridge cross-check MUST rebuild an export from the source report, report any difference as REPORT_MISMATCH naming the member, never throw on malformed input, and state when the currency block was not re-derived. | `interop-bridges.test.mjs` |
 | KYA-IBR-008 | SHOULD | The kya-bridge CLI SHOULD export and cross-check every kind offline and refuse unsafe exports with exit code 2 and no output on stdout. | `interop-bridges.test.mjs` |
+| KYA-CAL-001 | MUST | The calibration study design and the pre-registration template MUST each contain every required section heading. | `calibration-docs.test.mjs` |
+| KYA-CAL-002 | MUST | Both documents MUST state that no data exists and that nothing in them is evidence of predictive validity. | `calibration-docs.test.mjs` |
+| KYA-CAL-003 | MUST | The design MUST define ACCEPT, REJECT and INCONCLUSIVE before data. | `calibration-docs.test.mjs` |
+| KYA-CAL-004 | MUST NOT | A calibration document MUST NOT claim predictive validity outside a negation. | `calibration-docs.test.mjs` |
+| KYA-CAL-005 | MUST | The template MUST describe the freeze-and-hash step using existing campaign plan and ledger concepts and no new ledger kind. | `calibration-docs.test.mjs` |
+| KYA-CAL-006 | MUST | The calibration documents MUST be plain ASCII. | `calibration-docs.test.mjs` |
 
-Registry digest: `ef7312449471178edc0e624694090062681bdd365491b685e74b310d0b8f65f8`
+Registry digest: `3de82925a2b9bc62d9e12dc9d84318a248aa18a00c45a50ec309b6c0b830ebea`

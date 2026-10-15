@@ -3067,10 +3067,10 @@
     },
     {
       "id": "KYA-CAL-004",
-      "level": "MUST",
+      "level": "MUST NOT",
       "area": "calibration",
       "section": "Governance documents",
-      "statement": "No calibration document may claim predictive validity outside a negation.",
+      "statement": "A calibration document MUST NOT claim predictive validity outside a negation.",
       "tests": [
         {
           "file": "test/calibration-docs.test.mjs",

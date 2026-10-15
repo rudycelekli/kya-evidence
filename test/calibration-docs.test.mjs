@@ -8,8 +8,7 @@ const read = (path) => readFile(new URL(path, ROOT), 'utf8');
 
 const STUDY = 'docs/CALIBRATION-STUDY.md';
 const TEMPLATE = 'docs/CALIBRATION-PREREGISTRATION-TEMPLATE.md';
-const INTEGRATION = 'docs/calibration-integration.md';
-const ALL = [STUDY, TEMPLATE, INTEGRATION];
+const ALL = [STUDY, TEMPLATE];
 
 const DISCLAIMER = 'No data exists yet, and nothing in';
 const STUDY_HEADINGS = [
