@@ -62,12 +62,45 @@ const mutants=[
   ["report mismatch not reported","if (diffs.length) errors.push({ code: 'REPORT_MISMATCH',","if (false) errors.push({ code: 'REPORT_MISMATCH',","src/vc-bridge/credential.mjs"],
   ["open campaign ledger exits zero in summary","if (!summary.allCompleted) process.exitCode = 2;","","scripts/kya-campaign.mjs"],
   ["run ID case-insensitivity removed","runIds.has(e.runId.toLowerCase())","runIds.has(e.runId)","src/campaign/domain/ledger.mjs"],
-  ["errored entry bundle reuse allowed","if (bundles.has(e.evidenceBundleDigest)) problems.push(problem('duplicate-evidence', `Entry ${i}: Duplicate evidence bundle digest across attempts`));","","src/campaign/domain/ledger.mjs"]
+  ["errored entry bundle reuse allowed","if (bundles.has(e.evidenceBundleDigest)) problems.push(problem('duplicate-evidence', `Entry ${i}: Duplicate evidence bundle digest across attempts`));","","src/campaign/domain/ledger.mjs"],
+  ["disclosure signature domain prefix removed on verify","verify(null, Buffer.from(DISCLOSURE_DOMAIN + canonical(payload))","verify(null, Buffer.from(canonical(payload))","src/assessor/disclosure.mjs"],
+  ["disclosure domain constant emptied","export const DISCLOSURE_DOMAIN = 'kya.assessor-disclosure/v1\\n';","export const DISCLOSURE_DOMAIN = '';","src/assessor/disclosure.mjs"],
+  ["disclosure signature verification skipped","insist(verify(null, Buffer.from(DISCLOSURE_DOMAIN","insist(true || verify(null, Buffer.from(DISCLOSURE_DOMAIN","src/assessor/disclosure.mjs"],
+  ["disclosure proof key fingerprint check removed","insist(keyId(p.publicKey) === p.keyId, 'Proof key fingerprint differs');","","src/assessor/disclosure.mjs"],
+  ["standing declarer trust check removed","const trustedDeclarer = r.keyId !== d.assessorKeyId && P.declarers.has(r.keyId);","const trustedDeclarer = r.keyId !== d.assessorKeyId;","src/assessor/standing.mjs"],
+  ["standing self-declaration allowed","const trustedDeclarer = r.keyId !== d.assessorKeyId && P.declarers.has(r.keyId);","const trustedDeclarer = P.declarers.has(r.keyId);","src/assessor/standing.mjs"],
+  ["standing declarer revocation ignored","if (P.revoked.has(r.keyId)) {","if (false) {","src/assessor/standing.mjs"],
+  ["standing forged withdrawal honoured","if (target.keyId !== w.keyId) { ignored.push({ index: w.index, reason: 'signer-mismatch' }); continue; }","if (false) { ignored.push({ index: w.index, reason: 'signer-mismatch' }); continue; }","src/assessor/standing.mjs"],
+  ["standing disclosure signer-match removed","} else if (r.keyId !== d.assessorKeyId) {","} else if (r.keyId !== d.assessorKeyId && d.kind !== 'disclosure') {","src/assessor/standing.mjs"],
+  ["standing disclosure expiry boundary inclusive","const live = tops.map(e => e.r).filter(r => Date.parse(r.payload.expiresAt) > t);","const live = tops.map(e => e.r).filter(r => Date.parse(r.payload.expiresAt) >= t);","src/assessor/standing.mjs"],
+  ["standing disclosure start boundary exclusive","const started = slot.own.filter(r => Date.parse(r.payload.issuedAt) <= t);","const started = slot.own.filter(r => Date.parse(r.payload.issuedAt) < t);","src/assessor/standing.mjs"],
+  ["standing declaration expiry boundary inclusive","Date.parse(dec.payload.expiresAt) > t","Date.parse(dec.payload.expiresAt) >= t","src/assessor/standing.mjs"],
+  ["standing cooling-off boundary inclusive","if (r.payload.priorEngagementEndedAt !== null && t < Date.parse(r.payload.priorEngagementEndedAt) + P.cool * DAY)","if (r.payload.priorEngagementEndedAt !== null && t <= Date.parse(r.payload.priorEngagementEndedAt) + P.cool * DAY)","src/assessor/standing.mjs"],
+  ["bridge gate NOT_QUALIFIED refusal removed","if (options.allowNonQualified !== true) fail('NOT_QUALIFIED'","if (false) fail('NOT_QUALIFIED'","src/interop-bridges/gate.mjs"],
+  ["bridge gate NOT_CURRENT refusal removed","if (options.allowNotCurrent !== true) fail('NOT_CURRENT'","if (false) fail('NOT_CURRENT'","src/interop-bridges/gate.mjs"],
+  ["bridge gate CURRENCY_NOT_CHECKED refusal removed","if (options.allowNotCurrent !== true) fail('CURRENCY_NOT_CHECKED'","if (false) fail('CURRENCY_NOT_CHECKED'","src/interop-bridges/gate.mjs"],
+  ["bridge gate partial currency inputs accepted","if (have.some(Boolean)) fail('CURRENCY_INPUTS_INCOMPLETE'","if (false) fail('CURRENCY_INPUTS_INCOMPLETE'","src/interop-bridges/gate.mjs"],
+  ["bridge gate non-qualified override unrecorded","    overrides.push('allowNonQualified');\n","","src/interop-bridges/gate.mjs"],
+  ["bridge gate not-current override unrecorded","      overrides.push('allowNotCurrent');\n    }\n    currency = { checked: true","    }\n    currency = { checked: true","src/interop-bridges/gate.mjs"],
+  ["bridge gate unchecked-currency override unrecorded","    overrides.push('allowNotCurrent');\n    currency = { checked: false","    currency = { checked: false","src/interop-bridges/gate.mjs"],
+  ["bridge gate qualified without passing currency","r.decision === 'qualified' && currency.current === true","r.decision === 'qualified' && currency.current !== false","src/interop-bridges/gate.mjs"],
+  ["profile metadata digest mismatch accepted","insist(digest(p) === v.profileDigest, 'Profile digest mismatch');","","src/profiles/validate-metadata.mjs"],
+  ["change-log sign-off claim without evidence accepted","insist(!SIGNOFF_CLAIM.test(c.summary) || v.signOff !== null, 'Change log claims sign-off without evidence');","","src/profiles/validate-metadata.mjs"],
+  ["purpose and scope sign-off claim without evidence accepted","insist(typeof t !== 'string' || !SIGNOFF_CLAIM.test(t), `${k} claims review or sign-off without evidence`);","void 0;","src/profiles/validate-metadata.mjs"],
+  ["sign-off evidence digest unchecked","hash(v.signOff.evidenceDigest, 'Sign-off evidence digest');","","src/profiles/validate-metadata.mjs"],
+  ["sign-off record shape unchecked","exactKeys(v.signOff, ['reviewer', 'role', 'date', 'evidenceDigest'], 'Sign-off');","","src/profiles/validate-metadata.mjs"],
+  ["draft profile sign-off allowed","insist(v.status !== 'draft', 'A draft profile cannot carry a sign-off; set the status through review');","","src/profiles/validate-metadata.mjs"],
+  ["privacy scan echoes matched value","redacted: shapeMask(m[0]) });","redacted: m[0] });","scripts/privacy-scan.mjs"],
+  ["privacy scan echoes malformed structural value","length: v.length, redacted: shapeMask(v) });\n      else if (ID_KEY","length: v.length, redacted: v });\n      else if (ID_KEY","scripts/privacy-scan.mjs"],
+  ["privacy scan shape mask leaks digits","/[0-9]/.test(ch) ? '9'","/[0-9]/.test(ch) ? ch","scripts/privacy-scan.mjs"],
+  ["privacy scan echoes sensitive object keys in paths","return SAFE_KEY.test(key) && scanString(key).length === 0 ?","return true ?","scripts/privacy-scan.mjs"],
+  ["privacy scan echoes malformed coded value","rule: 'coded-field-free-text', category: 'structure', offset: 0, length: v.length, redacted: shapeMask(v)","rule: 'coded-field-free-text', category: 'structure', offset: 0, length: v.length, redacted: v","scripts/privacy-scan.mjs"],
+  ["privacy scan echoes narrative value","rule: 'digest-only-free-text', category: 'structure', offset: 0, length: v.length, redacted: shapeMask(v)","rule: 'digest-only-free-text', category: 'structure', offset: 0, length: v.length, redacted: v","scripts/privacy-scan.mjs"]
 ];
 const results=[];
 function failedNames(output){return [...output.matchAll(/^not ok \d+ - (.+)$/gm)].map(m=>m[1]).slice(0,5);}
 function counts(output){const get=name=>Number(new RegExp(`^# ${name} (\\d+)$`,'m').exec(output)?.[1]??NaN);return{tests:get('tests'),pass:get('pass'),fail:get('fail'),cancelled:get('cancelled'),skipped:get('skipped')};}
-function runTests(dir){const p=spawnSync(process.execPath,['--test','--test-reporter=tap','test/assessment.test.mjs','test/incidents.test.mjs','test/refusal-codes.test.mjs','test/mandatory-minimums.test.mjs','test/conformance-report.test.mjs','test/campaign-ledger.test.mjs','test/campaign-runner.test.mjs','test/capture-issuer-scoring.test.mjs','test/vc-bridge.test.mjs','test/kya-check.test.mjs'],{cwd:dir,encoding:'utf8',timeout:90000,maxBuffer:200000});if(p.error||p.signal)throw Error('Mutation test execution failed');return{process:p,counts:counts(p.stdout)};}
+function runTests(dir){const p=spawnSync(process.execPath,['--test','--test-reporter=tap','test/assessment.test.mjs','test/incidents.test.mjs','test/refusal-codes.test.mjs','test/mandatory-minimums.test.mjs','test/conformance-report.test.mjs','test/campaign-ledger.test.mjs','test/campaign-runner.test.mjs','test/capture-issuer-scoring.test.mjs','test/vc-bridge.test.mjs','test/kya-check.test.mjs','test/assessor.test.mjs','test/interop-bridges.test.mjs','test/profiles.test.mjs','test/privacy.test.mjs','test/security-gates.test.mjs'],{cwd:dir,encoding:'utf8',timeout:300000,maxBuffer:16000000});if(p.error||p.signal)throw Error('Mutation test execution failed');return{process:p,counts:counts(p.stdout)};}
 // Fail fast: report every drifted anchor before spending minutes on test runs.
 {const drift=[];for(const [name,from,,target=source]of mutants){const text=target===source?original:await readFile(join(root,target),'utf8');if(!text.includes(from))drift.push(name+' ('+target+')');}if(drift.length)throw Error('Mutation anchor drift in '+drift.length+' control(s): '+drift.join('; '));
   // A mutant must stay syntactically valid; otherwise the test file crashes at import and nothing is measured.
