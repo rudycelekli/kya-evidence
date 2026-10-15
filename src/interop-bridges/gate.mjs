@@ -1,6 +1,7 @@
 import { canonical, digest, insist } from '../shared/canonical.mjs';
 import { verifyAssessment } from '../assessment/application/assess.mjs';
 import { checkCurrency } from '../assessment/application/currency.mjs';
+import { timestamp } from '../identity/domain/services/validation.mjs';
 
 export class BridgeError extends Error {
   constructor(code, message) { super(`${code}: ${message}`); this.name = 'BridgeError'; this.code = code; }
@@ -19,11 +20,28 @@ export const LIMITS = Object.freeze([
 export const GATE_FLAGS = Object.freeze(['allowNonQualified', 'allowNotCurrent']);
 const SHARED_OPTIONS = ['manifest', 'policy', 'now', 'incidents', ...GATE_FLAGS];
 
+/** Copy only own enumerable string-keyed members into a null-prototype object, so a polluted Object.prototype or an inherited member never counts as an option. */
+export function ownOptions(options) {
+  const o = Object.create(null);
+  if (options === null || typeof options !== 'object') return o;
+  for (const k of Object.keys(options)) o[k] = options[k];
+  return o;
+}
+
+/** Validates the option names and flag types and returns the own-property copy that every later read must use. */
 export function checkOptions(options, extra = []) {
   insist(options && typeof options === 'object' && !Array.isArray(options), 'Options must be an object');
+  const o = ownOptions(options);
   const allowed = new Set([...SHARED_OPTIONS, ...extra]);
-  for (const k of Object.keys(options)) insist(allowed.has(k), `Unknown option ${k}`);
-  for (const f of GATE_FLAGS) insist(options[f] === undefined || typeof options[f] === 'boolean', `${f} must be a boolean`);
+  for (const k of Object.keys(o)) insist(allowed.has(k), `Unknown option ${k}`);
+  for (const f of GATE_FLAGS) insist(o[f] === undefined || typeof o[f] === 'boolean', `${f} must be a boolean`);
+  return o;
+}
+
+/** Report timestamps are validated whether or not currency is checked: a non-ISO or timezone dependent string must never reach an export. */
+export function checkReportTimes(r) {
+  timestamp(r.assessedAt, 'Assessment time');
+  timestamp(r.validUntil, 'Assessment validity');
 }
 
 /**
@@ -32,9 +50,11 @@ export function checkOptions(options, extra = []) {
  * check is CURRENCY_NOT_CHECKED or NOT_CURRENT unless allowNotCurrent. Any override actually used is recorded in currency.overrides.
  * There is no default clock: now is always explicit so output is reproducible.
  */
-export function gate(assessment, options = {}) {
+export function gate(assessment, rawOptions = {}) {
+  const options = ownOptions(rawOptions);
   const r = JSON.parse(canonical(assessment));
   verifyAssessment(r);
+  checkReportTimes(r);
   const overrides = [];
   if (r.decision !== 'qualified') {
     if (options.allowNonQualified !== true) fail('NOT_QUALIFIED', `Assessment decision is ${r.decision}; pass allowNonQualified to export it anyway`);
@@ -52,6 +72,7 @@ export function gate(assessment, options = {}) {
     currency = { checked: true, current: c.current, reliable: c.reliable, checkedAt: c.checkedAt, triggerCodes, digest: digest(c), overrides: [] };
   } else {
     if (have.some(Boolean)) fail('CURRENCY_INPUTS_INCOMPLETE', 'manifest, policy and now must be supplied together');
+    if (options.incidents !== undefined) fail('CURRENCY_INPUTS_INCOMPLETE', 'incidents need manifest, policy and now; they are not used on their own');
     if (options.allowNotCurrent !== true) fail('CURRENCY_NOT_CHECKED', 'No currency inputs supplied; pass manifest, policy and now, or allowNotCurrent');
     overrides.push('allowNotCurrent');
     currency = { checked: false, current: null, reliable: null, checkedAt: null, triggerCodes: [], digest: null, overrides: [] };
@@ -72,7 +93,10 @@ export function inputDigests(r) {
 export const blockerCodesOf = r => Object.hasOwn(r, 'blockerCodes') ? [...r.blockerCodes] : null;
 
 export function checkUrl(v, label) {
-  insist(typeof v === 'string' && /^https:\/\/[^\s"<>]+$/.test(v) && v.length <= 2048, `${label} must be an https URL`);
+  const ok = typeof v === 'string' && /^https:\/\/[^\s"<>#/?]+[^\s"<>#]*$/.test(v) && v.length <= 2048 && !/^https:\/\/[^/?]*@/.test(v);
+  let host = '';
+  if (ok) { try { const u = new URL(v); host = u.hostname; if (u.username || u.password || u.hash) host = ''; } catch { host = ''; } }
+  insist(ok && host !== '', `${label} must be an https URL with a host, no userinfo and no fragment`);
   return v;
 }
 

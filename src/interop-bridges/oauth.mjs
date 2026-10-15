@@ -1,11 +1,12 @@
 import { insist, digest } from '../shared/canonical.mjs';
 import { gate, checkOptions, isQualified, blockerCodesOf, LIMITS, NOT_ASSERTED } from './gate.mjs';
 
-const SPIFFE_ID = /^spiffe:\/\/([a-z0-9._-]{1,255})(\/[A-Za-z0-9._~-]+(?:\/[A-Za-z0-9._~-]+)*)?$/;
+// Trust domain: dot-separated labels, each starting and ending with a lowercase letter or digit (dash and underscore inside), at most 63 characters.
+const SPIFFE_ID = /^spiffe:\/\/((?:[a-z0-9](?:[a-z0-9_-]{0,61}[a-z0-9])?)(?:\.[a-z0-9](?:[a-z0-9_-]{0,61}[a-z0-9])?)*)(\/[A-Za-z0-9._~-]+(?:\/[A-Za-z0-9._~-]+)*)?$/;
 export function checkSpiffeId(id) {
   insist(typeof id === 'string' && id.length <= 2048, 'SPIFFE ID must be a string of at most 2048 characters');
   const m = SPIFFE_ID.exec(id);
-  insist(m, 'SPIFFE ID must be spiffe://trust-domain/path with no query, fragment or userinfo');
+  insist(m && m[1].length <= 255, 'SPIFFE ID must be spiffe://trust-domain/path with a DNS-label trust domain and no query, fragment or userinfo');
   for (const seg of (m[2] ?? '').split('/').slice(1)) insist(seg !== '.' && seg !== '..', 'SPIFFE ID path must not contain dot segments');
   return id;
 }
@@ -32,7 +33,7 @@ export function buildSpiffeBinding(r, c, spiffeId) {
  * which should keep exp at or below kya.valid_until_epoch. Claim names are private-use names, not registered with IANA.
  */
 export function exportOAuthClaims(assessment, options = {}) {
-  checkOptions(options);
+  options = checkOptions(options);
   const { report, currency } = gate(assessment, options);
   return buildOAuthClaims(report, currency);
 }
@@ -43,7 +44,7 @@ export function exportOAuthClaims(assessment, options = {}) {
  * the (spiffeId, assessment digest, subject digest) triple so a changed association is detectable.
  */
 export function exportSpiffeBinding(assessment, spiffeId, options = {}) {
-  checkOptions(options);
+  options = checkOptions(options);
   checkSpiffeId(spiffeId);
   const { report, currency } = gate(assessment, options);
   return buildSpiffeBinding(report, currency, spiffeId);

@@ -3073,6 +3073,84 @@
           "title": "cli exports each kind reproducibly verifies it against the report and refuses unsafe exports with exit 2"
         }
       ]
+    },
+    {
+      "id": "KYA-CAL-001",
+      "level": "MUST",
+      "area": "calibration",
+      "section": "Governance documents",
+      "statement": "The calibration study design and the pre-registration template MUST each contain every required section heading.",
+      "tests": [
+        {
+          "file": "test/calibration-docs.test.mjs",
+          "title": "calibration docs contain every required section heading"
+        }
+      ]
+    },
+    {
+      "id": "KYA-CAL-002",
+      "level": "MUST",
+      "area": "calibration",
+      "section": "Governance documents",
+      "statement": "Both documents MUST state that no data exists and that nothing in them is evidence of predictive validity.",
+      "tests": [
+        {
+          "file": "test/calibration-docs.test.mjs",
+          "title": "calibration docs state that no data exists"
+        }
+      ]
+    },
+    {
+      "id": "KYA-CAL-003",
+      "level": "MUST",
+      "area": "calibration",
+      "section": "Governance documents",
+      "statement": "The design MUST define ACCEPT, REJECT and INCONCLUSIVE before data.",
+      "tests": [
+        {
+          "file": "test/calibration-docs.test.mjs",
+          "title": "calibration docs define ACCEPT REJECT and INCONCLUSIVE"
+        }
+      ]
+    },
+    {
+      "id": "KYA-CAL-004",
+      "level": "MUST NOT",
+      "area": "calibration",
+      "section": "Governance documents",
+      "statement": "A calibration document MUST NOT claim predictive validity outside a negation.",
+      "tests": [
+        {
+          "file": "test/calibration-docs.test.mjs",
+          "title": "calibration docs never claim predictive validity outside a negation"
+        }
+      ]
+    },
+    {
+      "id": "KYA-CAL-005",
+      "level": "MUST",
+      "area": "calibration",
+      "section": "Records and bindings",
+      "statement": "The template MUST describe the freeze-and-hash step using existing campaign plan and ledger concepts and no new ledger kind.",
+      "tests": [
+        {
+          "file": "test/calibration-docs.test.mjs",
+          "title": "preregistration template freezes through the existing campaign ledger"
+        }
+      ]
+    },
+    {
+      "id": "KYA-CAL-006",
+      "level": "MUST",
+      "area": "calibration",
+      "section": "Governance documents",
+      "statement": "The calibration documents MUST be plain ASCII.",
+      "tests": [
+        {
+          "file": "test/calibration-docs.test.mjs",
+          "title": "calibration docs are plain ASCII"
+        }
+      ]
     }
   ]
 }
