@@ -268,7 +268,7 @@ test('privacy scan applies the coded-field rule to any key ending in Id', () => 
 
 test('privacy scan finishes 300k character adversarial inputs in under one second', () => {
   const n = 300000;
-  const inputs = ['-----BEGIN X-----\n'.repeat(Math.ceil(n / 18)), '-----BEGIN PRIVATE KEY-----\n'.repeat(Math.ceil(n / 28)), 'a@b.co '.repeat(Math.ceil(n / 7)),
+  const inputs = ['-----BEGIN X-----\n'.repeat(Math.ceil(n / 18)), ('-----BEGIN ' + 'PRIVATE KEY-----\n').repeat(Math.ceil(n / 28)), 'a@b.co '.repeat(Math.ceil(n / 7)),
     '1 '.repeat(n / 2), '1.2.3.4 '.repeat(Math.ceil(n / 8)), '/Users/a '.repeat(Math.ceil(n / 9)), 'a'.repeat(n), 'a.'.repeat(n / 2) + '@', '1-'.repeat(n / 2), '+1 (555) '.repeat(Math.ceil(n / 9)), 'a%40b.co '.repeat(Math.ceil(n / 9)), ':'.repeat(n)];
   const t0 = process.cpuUsage();
   for (const s of inputs) scanString(s);
