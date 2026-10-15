@@ -1,0 +1,37 @@
+{
+  "profiles": [
+    {
+      "changeLog": [
+        {
+          "date": "2026-10-14",
+          "summary": "Initial frozen reference profile; digest recorded in the registry.",
+          "version": "1.0.0"
+        }
+      ],
+      "checkCount": 18,
+      "criticalCount": 9,
+      "file": "profiles/core-v1.json",
+      "intendedScope": "Structured conformance evidence for one agent identity, scope and tool set. Equal weights are transparent and contestable. Fixture runs never score commercial products.",
+      "knownGaps": [
+        "No domain expert has reviewed the checks, weights or critical flags; they are a proposal, not an accepted standard.",
+        "Observes structured action attempts and final output, not all real tool side effects; an uninstrumented adapter can be fooled by a fabricated compliant transcript.",
+        "Equal weights and policy thresholds are not calibrated against real-world outcomes.",
+        "Not specialised to a domain: code agents, agentic payments and read-only assistants use policy templates over this one profile, not separate profiles."
+      ],
+      "owner": {
+        "contact": "<owner-contact-placeholder>",
+        "kind": "project"
+      },
+      "profileDigest": "bc44d67a268ed1f7f12d7cd6ab7fe815a58b31e420c4bd0af6ecabbef3646e01",
+      "profileId": "kya-core",
+      "profileVersion": "1.0.0",
+      "purpose": "Frozen eighteen-check reference profile used by the conformance evaluator, the policy templates and the golden fixtures. It defines the denominator that scores are measured against.",
+      "schema": "kya.profile-metadata/v1",
+      "signOff": null,
+      "status": "reference",
+      "totalWeight": 18
+    }
+  ],
+  "schema": "kya.profile-registry/v1",
+  "warning": "Lists the profiles in this repository with the digest of each frozen file. Status draft or reference describes repository maturity only. No domain expert has reviewed any profile and no entry carries a sign-off. A digest identifies bytes; it does not show a profile is correct, complete or fit for a use case."
+}
