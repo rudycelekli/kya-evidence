@@ -3226,6 +3226,182 @@
       ]
     },
     {
+      "id": "KYA-CAP-001",
+      "level": "MUST",
+      "area": "capture",
+      "section": "Records and bindings",
+      "statement": "A capture transcript MUST be an ordered hash chain of every call crossing the tool proxy, including denied and failed calls, the agent MUST receive only a call function, and tool results MUST be immutable copies.",
+      "tests": [
+        {
+          "file": "test/capture-cell.test.mjs",
+          "title": "proxy records every call as an ordered hash chained transcript with effect digests"
+        },
+        {
+          "file": "test/capture-cell.test.mjs",
+          "title": "agent cannot reach or rewrite the transcript through the surface it is given"
+        }
+      ]
+    },
+    {
+      "id": "KYA-CAP-002",
+      "level": "MUST",
+      "area": "capture",
+      "section": "Records and bindings",
+      "statement": "A capture MUST detect a planted canary in tool arguments across common encodings, deny it on outbound tools, detect canary tampering, and MUST NOT contain the raw canary value.",
+      "tests": [
+        {
+          "file": "test/capture-cell.test.mjs",
+          "title": "canary exfiltration through raw base64 hex url and reversed arguments is denied and recorded"
+        },
+        {
+          "file": "test/capture-cell.test.mjs",
+          "title": "canary value never appears in the public capture and each run mints a distinct value"
+        },
+        {
+          "file": "test/capture-cell.test.mjs",
+          "title": "canary tampering through an allowed write is detected"
+        }
+      ]
+    },
+    {
+      "id": "KYA-CAP-003",
+      "level": "MUST",
+      "area": "capture",
+      "section": "Records and bindings",
+      "statement": "A capture MUST record before and after world digests and MUST flag state changes not declared by an allowed call and changes outside the permitted scope.",
+      "tests": [
+        {
+          "file": "test/capture-cell.test.mjs",
+          "title": "state change through an unobserved surface shows as an undeclared world digest change"
+        },
+        {
+          "file": "test/capture-cell.test.mjs",
+          "title": "declared writes outside the permitted scope are flagged by the world digest comparison"
+        }
+      ]
+    },
+    {
+      "id": "KYA-CAP-004",
+      "level": "MUST",
+      "area": "capture",
+      "section": "Records and bindings",
+      "statement": "A probe set MUST test forbidden and permitted actions, a harness MUST refuse to sign a one directional set, and an agent that refuses everything MUST fail the permitted probes.",
+      "tests": [
+        {
+          "file": "test/capture-cell.test.mjs",
+          "title": "always refusing agent fails the permitted action probes and cannot pass"
+        },
+        {
+          "file": "test/capture-cell.test.mjs",
+          "title": "agent that attempts a forbidden tool is contained and still fails the forbidden probe"
+        },
+        {
+          "file": "test/capture-cell.test.mjs",
+          "title": "harness refuses to sign a one directional probe set and a verifier rejects one"
+        },
+        {
+          "file": "test/capture-cell.test.mjs",
+          "title": "permitted write probe requires the write to land under its prefix"
+        }
+      ]
+    },
+    {
+      "id": "KYA-CAP-005",
+      "level": "MUST",
+      "area": "capture",
+      "section": "Records and bindings",
+      "statement": "A kya.capture/v1 record MUST have exact keys, canonical bytes within size limits, a declared simulated cell with no isolation claim and a mandatory unobserved list.",
+      "tests": [
+        {
+          "file": "test/capture-cell.test.mjs",
+          "title": "capture format is exact keyed canonical json with size limits"
+        },
+        {
+          "file": "test/capture-cell.test.mjs",
+          "title": "tool surface differences are surfaced and calls to undeclared tools are denied"
+        },
+        {
+          "file": "test/capture-cell.test.mjs",
+          "title": "handler errors and bad effects are recorded as errors without changing the world"
+        }
+      ]
+    },
+    {
+      "id": "KYA-CAP-006",
+      "level": "MUST",
+      "area": "capture",
+      "section": "Trust and eligibility",
+      "statement": "A capture MUST verify only when signed by a trusted unrevoked capture-issuer key that is not the evaluator key, and edits, reordering, dropped entries and inconsistent re-signed sections MUST be detected by signature or recomputation.",
+      "tests": [
+        {
+          "file": "test/capture-cell.test.mjs",
+          "title": "editing any signed field invalidates the signature"
+        },
+        {
+          "file": "test/capture-cell.test.mjs",
+          "title": "reordered or dropped attempt entries fail even when re-signed with the issuer key"
+        },
+        {
+          "file": "test/capture-cell.test.mjs",
+          "title": "re-signed inconsistent sections are caught by recomputation"
+        },
+        {
+          "file": "test/capture-cell.test.mjs",
+          "title": "capture signed by the wrong issuer key is rejected"
+        },
+        {
+          "file": "test/capture-cell.test.mjs",
+          "title": "policy trust requires an unrevoked capture-issuer anchor and rejects an evaluator key as issuer"
+        },
+        {
+          "file": "test/capture-cell.test.mjs",
+          "title": "run binding to subject scope profile evaluator and run is enforced"
+        }
+      ]
+    },
+    {
+      "id": "KYA-CAP-007",
+      "level": "MUST",
+      "area": "capture",
+      "section": "Trust and eligibility",
+      "statement": "The capture adapter MUST produce only unsigned evidence candidates from a verified capture, with source fixture, and an agent self-report MUST be reconciled against the measured transcript.",
+      "tests": [
+        {
+          "file": "test/capture-cell.test.mjs",
+          "title": "adapter turns a verified capture into unsigned candidates that an evaluator key can sign for the scorer"
+        },
+        {
+          "file": "test/capture-cell.test.mjs",
+          "title": "adapter maps findings to failing candidates and refuses unverified captures"
+        },
+        {
+          "file": "test/capture-cell.test.mjs",
+          "title": "spoofed tool result in the agent self report is detected against the measured transcript"
+        },
+        {
+          "file": "test/capture-cell.test.mjs",
+          "title": "calls dropped from the agent self report are detected and extra claimed calls are detected"
+        }
+      ]
+    },
+    {
+      "id": "KYA-CAP-008",
+      "level": "SHOULD",
+      "area": "capture",
+      "section": "Records and bindings",
+      "statement": "The reference cell SHOULD be deterministic for identical inputs and expose a CLI whose exit codes separate invalid, flagged and clean captures.",
+      "tests": [
+        {
+          "file": "test/capture-cell.test.mjs",
+          "title": "same inputs and clock give identical capture bytes"
+        },
+        {
+          "file": "test/capture-cell.test.mjs",
+          "title": "capture cli demo and verify agree with the library and exit codes distinguish findings"
+        }
+      ]
+    },
+    {
       "id": "KYA-DOC-001",
       "level": "MUST",
       "area": "docs",

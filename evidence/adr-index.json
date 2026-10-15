@@ -196,9 +196,10 @@
       "title": "Measured, signed capture attestation (`kya.capture/v1`)",
       "status": "Proposed",
       "file": "docs/adr/0017-measured-signed-capture-attestation.md",
-      "contentDigest": "5cabdec9626c23778e850192e6001ff288cd95910e299ce28b407cae361eb0c9",
+      "contentDigest": "11c7d30dae8eeb2900bc90c56d93dc74d697743559131f9eac76afd7722eedb6",
       "related": [
         "ADR-0021",
+        "ADR-0032",
         "ADR-0003",
         "ADR-0004",
         "ADR-0009",
@@ -393,8 +394,23 @@
         "ADR-0027",
         "ADR-0028"
       ]
+    },
+    {
+      "id": "ADR-0032",
+      "title": "Reference measured capture cell (`kya.capture/v1`, simulated)",
+      "status": "Proposed",
+      "file": "docs/adr/0032-capture-cell-reference.md",
+      "contentDigest": "e9af59d906c6d09842751ce1855cd3d3955dc323247f61b1369127b77a9a1b6a",
+      "related": [
+        "ADR-0003",
+        "ADR-0009",
+        "ADR-0017",
+        "ADR-0018",
+        "ADR-0021",
+        "ADR-0020"
+      ]
     }
   ],
-  "digest": "d98420be78a18ea44a631014e2182afa59b1cc7d494bb5c96f338dc39a214f54",
+  "digest": "144aea5f69e004794876083a0c29f740f93719fbea9f85e042316966ab3e07d2",
   "store": "portable local file; not a claim of AgentDB graph persistence"
 }
