@@ -25,7 +25,7 @@ export function buildStatement(r, currency) {
  * non-current assessment unless allowNonQualified or allowNotCurrent is passed. No DSSE envelope is produced and no signature is made.
  */
 export function exportInTotoStatement(assessment, options = {}) {
-  checkOptions(options);
+  options = checkOptions(options);
   const { report, currency } = gate(assessment, options);
   return buildStatement(report, currency);
 }

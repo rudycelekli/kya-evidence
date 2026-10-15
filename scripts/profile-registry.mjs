@@ -49,10 +49,10 @@ export async function build() {
   for (const file of Object.keys(METADATA)) if (!profiles.has(file)) throw Error('Registry metadata names a missing profile ' + file);
   for (const [file, p] of profiles) {
     const m = METADATA[file];
-    entries.push(validateProfileMetadata({ schema: METADATA_SCHEMA, profileId: p.id, profileVersion: p.version, profileDigest: digest(p), file, ...profileStats(p), status: m.status, purpose: m.purpose, intendedScope: m.intendedScope, knownGaps: m.knownGaps, changeLog: m.changeLog, owner: m.owner, signOff: null }, { profile: p }));
+    entries.push(validateProfileMetadata({ schema: METADATA_SCHEMA, profileId: p.id, profileVersion: p.version, profileDigest: digest(p), file, ...profileStats(p), status: m.status, purpose: m.purpose, intendedScope: m.intendedScope, knownGaps: m.knownGaps, changeLog: m.changeLog, owner: m.owner, signOff: null }, { profile: p, requireProfile: true }));
   }
   entries.sort((a, b) => { const x = `${a.profileId}@${a.profileVersion}`, y = `${b.profileId}@${b.profileVersion}`; return x < y ? -1 : x > y ? 1 : 0; });
-  const registry = validateProfileRegistry({ schema: REGISTRY_SCHEMA, warning: WARNING, profiles: entries }, { profiles });
+  const registry = validateProfileRegistry({ schema: REGISTRY_SCHEMA, warning: WARNING, profiles: entries }, { profiles, requireProfiles: true });
   // Every shipped policy template must target a registered profile.
   const ids = new Set(registry.profiles.map(e => e.profileId));
   for (const [n, target] of await policyTemplateTargets()) if (!ids.has(target)) throw Error(`Policy template ${n} targets unregistered profile ${target}`);

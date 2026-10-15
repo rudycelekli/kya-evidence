@@ -24,7 +24,7 @@ const urlOption = options => options.assessmentUrl === undefined ? undefined : c
  * is what binds. Nothing is fetched.
  */
 export function exportA2aExtension(assessment, options = {}) {
-  checkOptions(options, ['assessmentUrl']);
+  options = checkOptions(options, ['assessmentUrl']);
   const url = urlOption(options);
   const { report, currency } = gate(assessment, options);
   return buildA2aExtension(report, currency, url);
@@ -32,7 +32,7 @@ export function exportA2aExtension(assessment, options = {}) {
 
 /** A members object for MCP server or tool _meta, keyed by MCP_META_KEY. Same pointer content as the A2A extension. */
 export function exportMcpMeta(assessment, options = {}) {
-  checkOptions(options, ['assessmentUrl']);
+  options = checkOptions(options, ['assessmentUrl']);
   const url = urlOption(options);
   const { report, currency } = gate(assessment, options);
   return buildMcpMeta(report, currency, url);
