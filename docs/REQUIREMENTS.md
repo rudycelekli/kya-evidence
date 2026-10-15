@@ -139,5 +139,9 @@ Each requirement is traced to at least one test that must exist exactly once; th
 | KYA-XWK-003 | MUST | Every crosswalk row MUST carry a status from the allowed set and MUST be flagged for primary re-check when its basis is not primary text. | `crosswalks.test.mjs` |
 | KYA-XWK-004 | MUST | A crosswalk MUST NOT state compliance, certification or guarantees except in a negation. | `crosswalks.test.mjs` |
 | KYA-XWK-005 | SHOULD | The crosswalk index SHOULD list every framework file. | `crosswalks.test.mjs` |
+| KYA-ASR-001 | MUST | An assessor disclosure MUST be signed Ed25519 under the domain prefix and MUST reject extra fields, free text, unknown codes and records over 4096 bytes. | `assessor.test.mjs` |
+| KYA-ASR-002 | MUST | Standing MUST be reported per key with named reason codes and MUST fail closed on expiry, revocation, a blocking relationship, unfinished cooling-off and an undisclosed conflict declared by a trusted other party. | `assessor.test.mjs` |
+| KYA-ASR-003 | MUST | A disclosure MUST NOT grant standing to a key other than its signer, and a declaration MUST NOT count unless signed by a trusted declarer other than the assessor. | `assessor.test.mjs` |
+| KYA-ASR-004 | SHOULD | Standing results SHOULD be independent of record order and duplicate delivery and equal-time disagreement SHOULD fail closed. | `assessor.test.mjs` |
 
-Registry digest: `a223cb71e344f4cfac8728ddc56868f87ab4bc1efb8a56b30e595d7f90dcf655`
+Registry digest: `2d8f53927e05008d6aae5557b59ab23933b006286b183eff58428972e32e7d8d`
