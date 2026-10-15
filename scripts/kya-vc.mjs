@@ -10,7 +10,8 @@ const HELP = `kya-vc: export KYA assessments as W3C VC 2.0 (vc+jwt, EdDSA, did:k
   kya-vc did-key --key PRIVATE_PEM | --public PUBLIC_PEM
   kya-vc export --assessment FILE --key PRIVATE_PEM [--valid-from ISO] [--valid-until ISO] [--out FILE]
                 [--revocation-list URL --suspension-list URL --status-secret-file FILE --ledger FILE]
-  kya-vc verify --jwt FILE --now ISO [--trust-did DID]... [--policy FILE] [--status-list URL=FILE]... [--require-status] [--report FILE]
+  kya-vc verify --jwt FILE --now ISO [--trust-did DID]... [--policy FILE] [--status-list URL=FILE]... [--require-status] [--allow-untrusted-issuer] [--report FILE]
+  (verify needs --trust-did or --policy; without either it refuses unless --allow-untrusted-issuer is given, and the result then says issuerTrust unchecked)
   kya-vc status-list --purpose revocation|suspension --url URL --ledger FILE --policy FILE --key PRIVATE_PEM
                 --now ISO --valid-until ISO [--ttl-ms N] [--suspended-subject DIGEST]... [--size N] [--out FILE]
 
@@ -18,7 +19,7 @@ A valid signature proves key possession, not truthful execution, human identity 
 `;
 
 function parseArgs(argv) {
-  const flags = {}, multi = new Set(['trust-did', 'status-list', 'suspended-subject']), bool = new Set(['require-status']);
+  const flags = {}, multi = new Set(['trust-did', 'status-list', 'suspended-subject']), bool = new Set(['require-status', 'allow-untrusted-issuer']);
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i]; if (!a.startsWith('--')) throw Error(`Unexpected argument ${a}`);
     const k = a.slice(2);
@@ -63,6 +64,7 @@ async function main() {
   }
   if (cmd === 'verify') {
     need(f, 'jwt', 'now');
+    if (!(f['trust-did']?.length) && !f.policy && f['allow-untrusted-issuer'] !== true) throw Error('verify needs --trust-did or --policy to check the issuer; pass --allow-untrusted-issuer to accept any issuer (issuerTrust stays unchecked)');
     const statusLists = {};
     for (const spec of f['status-list'] ?? []) { const i = spec.indexOf('='); if (i < 1) throw Error('--status-list needs URL=FILE'); statusLists[spec.slice(0, i)] = (await readFile(spec.slice(i + 1), 'utf8')).trim(); }
     const result = verifyAssessmentCredential((await readFile(f.jwt, 'utf8')).trim(), { now: f.now, expectedIssuerKeys: f['trust-did'] ?? [], policy: f.policy ? await readJson(f.policy) : undefined, statusLists, requireStatusCheck: f['require-status'] === true, ...(f.report ? { report: await readJson(f.report) } : {}) });

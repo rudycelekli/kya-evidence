@@ -6,6 +6,7 @@ import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { assess, checkCurrency, parseJson, digest, BLOCKER_CODES } from '../src/index.mjs';
 import { CORE_PROFILE } from '../src/conformance/index.mjs';
+import { isMain } from "./lib/is-main.mjs";
 
 const CORE_PROFILE_DIGEST = digest(CORE_PROFILE);
 
@@ -244,4 +245,4 @@ export function main(argv = process.argv.slice(2), env = process.env, write = s 
   }
 }
 
-if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) process.exitCode = main();
+if (isMain(import.meta.url)) process.exitCode = main();

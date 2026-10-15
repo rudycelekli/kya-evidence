@@ -188,5 +188,12 @@ Each requirement is traced to at least one test that must exist exactly once; th
 | KYA-DOC-006 | MUST | A detection result that is not reproducible from the repository MUST be labelled so and MUST point at the mutation check. | `docs-claims.test.mjs` |
 | KYA-DOC-007 | MUST | The stated mutation control count MUST match the mutation check script. | `docs-claims.test.mjs` |
 | KYA-DOC-008 | MUST | Documented VC bridge commands MUST resolve to an existing script or the `kya vc` subcommand. | `docs-claims.test.mjs` |
+| KYA-CLI-001 | MUST | A CLI entry point MUST run its main function when started through a symbolic link (npm bin link), comparing real paths of the entry file and the module. | `symlink-entry.test.mjs` |
+| KYA-ENV-001 | MUST | A public key in a proof or trust anchor MUST be the canonical SPKI PEM export of the parsed key; any other PEM or DER spelling MUST be refused so one signed payload has one envelope digest. | `envelope-canonical.test.mjs` |
+| KYA-ENV-002 | MUST | Core verifiers MUST refuse small-order, off-curve and non-canonical Ed25519 public keys (not only the VC bridge). | `envelope-canonical.test.mjs` |
+| KYA-CAM-021 | MUST | A campaign run MUST hold an exclusive lock file beside the ledger for its whole duration, MUST NOT remove a lock it does not own, and MUST refuse to replace the ledger when the on-disk head differs from the head it last wrote. | `campaign-hardening.test.mjs` |
+| KYA-CAM-022 | MUST | The private directory check MUST treat a child whose name begins with two dots as inside the repository. | `campaign-hardening.test.mjs` |
+| KYA-GOV-004 | MUST | Status ledger evidence paths MUST be compared by path segments, not string prefix. | `world-class-path.test.mjs` |
+| KYA-VCB-015 | MUST | `kya vc verify` MUST require `--trust-did` or `--policy`, or the explicit `--allow-untrusted-issuer` flag. | `vc-cli-trust.test.mjs` |
 
-Registry digest: `e7cab2d57902e27603b0223cff1f64134cd51a0a84b2b3f80c33c505b3e49e88`
+Registry digest: `bb130c484aebc7f6346964b467f101c22296549e1516b529c08dec0299b16ae9`

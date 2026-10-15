@@ -2,6 +2,7 @@ import { readFile,writeFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { join } from 'node:path';
 import { digest } from '../src/index.mjs';
+import { isMain } from "./lib/is-main.mjs";
 
 // Traceability gate: every normative requirement must name tests that still exist.
 const root=fileURLToPath(new URL('../',import.meta.url));
@@ -42,7 +43,7 @@ export function render(reg){
   for(const r of reg.requirements)lines.push(`| ${r.id} | ${r.level} | ${r.statement} | ${r.tests.map(t=>`\`${t.file.replace('test/','')}\`${t.hostConditional?' (host-conditional)':''}`).filter((x,i,a)=>a.indexOf(x)===i).join(', ')} |`);
   lines.push('',`Registry digest: \`${digest(reg)}\``,'');return lines.join('\n');
 }
-if(process.argv[1]===fileURLToPath(import.meta.url)){
+if (isMain(import.meta.url)){
   const {reg,areas}=await loadRequirements(),out=join(root,'docs/REQUIREMENTS.md'),text=render(reg);
   if(process.argv.includes('--check')){if(await readFile(out,'utf8')!==text)throw Error('docs/REQUIREMENTS.md drift; run npm run requirements');}
   else await writeFile(out,text);

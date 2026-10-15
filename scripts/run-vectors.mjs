@@ -5,6 +5,7 @@ import { resolve, join } from 'node:path';
 import { parseJson } from '../src/shared/canonical.mjs';
 import { buildReport, validateReport } from '../src/conformance-report/index.mjs';
 import { loadRequirements } from './requirements.mjs';
+import { isMain } from "./lib/is-main.mjs";
 
 // Language-neutral harness: runs ANY implementation command against evidence/assessment-vectors.json.
 // An implementation reads one kya.impl-input/v1 JSON object on stdin and writes one kya.impl-result/v1 object on stdout
@@ -148,4 +149,4 @@ async function main() {
   console.log(JSON.stringify(summary));
   process.exit(summary.vectors.fail || summary.vectors.unsupported ? 1 : 0);
 }
-if (process.argv[1] === fileURLToPath(import.meta.url)) main().catch(e => { console.error(e.message); process.exit(2); });
+if (isMain(import.meta.url)) main().catch(e => { console.error(e.message); process.exit(2); });

@@ -2,6 +2,7 @@ import { createPrivateKey, createPublicKey } from 'node:crypto';
 import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { assess, checkCurrency, signEvidence, signIncident, digest, hashBytes, keyId, canonical, BLOCKER_CODES, CURRENCY_CODES } from '../src/index.mjs';
+import { isMain } from "./lib/is-main.mjs";
 
 // Golden ASSESSMENT vectors (kya.assessment-vectors/v1). The JS reference is called only through its public
 // API (src/index.mjs). Every vector also carries a hand-written claim below; the generator refuses to write
@@ -288,7 +289,7 @@ async function generate() {
   return JSON.stringify(first, null, 2) + '\n';
 }
 
-if (process.argv[1] === fileURLToPath(import.meta.url)) {
+if (isMain(import.meta.url)) {
   const text = await generate();
   if (process.argv.includes('--print')) process.stdout.write(text);
   else if (process.argv.includes('--check')) {

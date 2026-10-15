@@ -3,6 +3,7 @@ import { fileURLToPath } from 'node:url';
 import { digest, canonical } from '../src/shared/canonical.mjs';
 import { validateProfile } from '../src/identity/domain/services/validation.mjs';
 import { validateProfileMetadata, validateProfileRegistry, profileStats, METADATA_SCHEMA, REGISTRY_SCHEMA, OWNER_CONTACT_PLACEHOLDER } from '../src/profiles/validate-metadata.mjs';
+import { isMain } from "./lib/is-main.mjs";
 
 // Generator and drift check for evidence/profile-registry.json (docs/PROFILES.md, ADR-0030).
 // Digests are computed from the real profile files; nothing in the registry is typed by hand except the
@@ -65,7 +66,7 @@ export async function generate() {
   return JSON.stringify(first, null, 2) + '\n';
 }
 
-if (process.argv[1] === fileURLToPath(import.meta.url)) {
+if (isMain(import.meta.url)) {
   const text = await generate();
   if (process.argv.includes('--print')) process.stdout.write(text);
   else if (process.argv.includes('--check')) {
