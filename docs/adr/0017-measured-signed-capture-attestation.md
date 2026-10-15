@@ -3,6 +3,7 @@
 **Status**: Proposed
 **Date**: 2026-10-14
 **Updated**: 2026-10-14, first slice implemented in ADR-0021 (`capture-issuer` role, signed planned-attempt campaign ledger and runner). Egress probes, environment fingerprint, tool-surface measurement, capture records and anchoring remain unimplemented; status stays Proposed.
+**Updated**: 2026-10-15, a reference implementation of a simulated cell exists in ADR-0032 (tool-surface proxy, canaries, world digest comparison, bidirectional probes, signed `kya.capture/v1` bundle and verifier). It is not a production sandbox, no real egress probe or environment fingerprint exists, and the evaluator binding (`captureDigest`, `requireCapture`) is still unimplemented; status stays Proposed.
 **Depends-on**: ADR-0003, ADR-0004, ADR-0009, ADR-0014
 
 Review boundary: design only for everything except the slice named above; no independent review, no external certification.
