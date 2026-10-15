@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 // Standalone campaign harness CLI (ADR-0021). No network, no hidden clock, no real model or vendor CLI.
-import { lstat, readFile, writeFile, rename } from 'node:fs/promises';
+import { lstat, readFile, writeFile, rename, open, unlink } from 'node:fs/promises';
+import { randomBytes } from 'node:crypto';
 import { resolve } from 'node:path';
 import { createPrivateKey, createPublicKey } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
@@ -60,6 +61,22 @@ async function saveAtomic(path, value) {
   await writeFile(temp, JSON.stringify(value, null, 2) + '\n', { flag: 'wx', mode: 0o600 });
   await rename(temp, path);
 }
+// A run takes an exclusive lock file (O_EXCL) beside the ledger for its whole duration. A leftover lock from a crashed run
+// is reported with its owner and is never removed automatically: confirm the owner is gone, then delete the lock file by hand.
+async function acquireLock(path) {
+  const lockPath = `${path}.lock`, token = randomBytes(16).toString('hex');
+  let handle;
+  try { handle = await open(lockPath, 'wx', 0o600); }
+  catch (error) {
+    if (error.code !== 'EEXIST') throw error;
+    let owner = 'unknown owner';
+    try { const o = JSON.parse(await readFile(lockPath, 'utf8')); owner = `pid ${Number.isSafeInteger(o.pid) ? o.pid : '?'} since ${typeof o.createdAt === 'string' ? o.createdAt.slice(0, 24) : '?'}`; } catch { /* unreadable lock stays unreadable */ }
+    throw Error(`Campaign ledger is locked (another run is in progress, or a crashed run left ${lockPath}; ${owner}). The lock is never removed automatically: confirm no run is active, then delete that file and re-run`);
+  }
+  try { await handle.writeFile(JSON.stringify({ pid: process.pid, token, createdAt: new Date().toISOString() })); } finally { await handle.close(); }
+  return async () => { try { if (JSON.parse(await readFile(lockPath, 'utf8')).token === token) await unlink(lockPath); } catch { /* lock already gone */ } };
+}
+const headOf = ledger => digest(ledger.entries.length ? ledger.entries.at(-1) : ledger.plan);
 const print = value => console.log(JSON.stringify(value, null, 2));
 async function signerTrust(flags) {
   if (flags.policy && flags['trust-plan-signer'] !== undefined) throw Error('Use either --policy or --trust-plan-signer, not both');
@@ -101,9 +118,21 @@ const commands = {
     allow(flags, [...names, 'policy', 'trust-plan-signer', 'expect-head', 'expect-entries']); need(flags, names);
     timestamp(flags.now, '--now');
     const trust = await signerTrust(flags);
-    const path = resolve(flags.ledger), ledger = await jsonFile(path);
-    const manifests = await manifestsFrom(flags.manifest), key = await privateKeyFrom(flags.key);
-    const result = await runCampaign({ plan: ledger.plan, ledger, adapter: adapterChoice(flags.adapter).create(), manifests, ...trust, ...pins(flags), privateKey: key, privateDir: flags['private-dir'], clock: () => flags.now, persist: l => saveAtomic(path, l) });
+    const path = resolve(flags.ledger);
+    const release = await acquireLock(path);
+    let ledger, result;
+    try {
+      ledger = await jsonFile(path);
+      const manifests = await manifestsFrom(flags.manifest), key = await privateKeyFrom(flags.key);
+      let lastHead = headOf(ledger);
+      // Re-read the ledger before every replace: a head that differs from the one this process last wrote means another writer got in.
+      const persist = async l => {
+        const onDisk = await jsonFile(path);
+        if (headOf(onDisk) !== lastHead) throw Error('Ledger changed on disk during this run (head mismatch); refusing to overwrite it');
+        await saveAtomic(path, l); lastHead = headOf(l);
+      };
+      result = await runCampaign({ plan: ledger.plan, ledger, adapter: adapterChoice(flags.adapter).create(), manifests, ...trust, ...pins(flags), privateKey: key, privateDir: flags['private-dir'], clock: () => flags.now, persist });
+    } finally { await release(); }
     const summary = summarizeCampaign(result.ledger);
     const out = { campaignId: ledger.plan.payload.campaignId, results: result.results.map(({ bundlePath, ...r }) => r), summary };
     if (trust.trustPlanSigner) out.warnings = ['Signer was NOT checked against a capture-issuer anchor (--trust-plan-signer)'];

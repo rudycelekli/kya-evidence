@@ -6,6 +6,7 @@ import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { digest, keyId, parseJson, validatePolicy, validateProfile } from '../src/index.mjs';
 import { CORE_PROFILE } from '../src/conformance/index.mjs';
+import { isMain } from "./lib/is-main.mjs";
 
 const HELP = `kya-policy-init: generate a KYA policy from a template
 
@@ -138,4 +139,4 @@ export function main(argv = process.argv.slice(2)) {
   }
 }
 
-if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) process.exitCode = main();
+if (isMain(import.meta.url)) process.exitCode = main();

@@ -87,9 +87,9 @@ property('swapping the key or the proof fields fails verification', 40, (rng) =>
     assert.throws(() => verify({ payload: e.payload, proof: { ...e.proof, extra: 1 } }));
     assert.throws(() => verify({ payload: e.payload }));
     assert.throws(() => verify({ ...e, extra: true }));
-    // a trailing newline or CRLF in the PEM changes the byte form but never the key identity: verification must stay consistent
+    // a CRLF spelling of the PEM is a second encoding of the same key and would carry a second envelope digest: it must be refused
     const crlf = { ...e, proof: { ...e.proof, publicKey: e.proof.publicKey.replace(/\n/g, '\r\n') } };
-    assert.equal(tryVerify(verify, crlf), true);
+    assert.equal(tryVerify(verify, crlf), false);
   }
 });
 

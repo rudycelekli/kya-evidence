@@ -1,7 +1,8 @@
 import { readFile, writeFile } from 'node:fs/promises';
 import { lstatSync, realpathSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
-import { join, resolve, relative, isAbsolute } from 'node:path';
+import { join, resolve, relative, isAbsolute, sep } from 'node:path';
+import { isMain } from "./lib/is-main.mjs";
 
 // Status ledger for docs/WORLD-CLASS-PLAN.md. "Verified" is not a feeling: it needs linked evidence of the
 // right kind, and anything that needs an outside party can only be verified by one (named, https, dated).
@@ -12,13 +13,14 @@ const root = fileURLToPath(new URL('../', import.meta.url));
 const need = (c, m) => { if (!c) throw Error(m); };
 const exact = (o, keys, what) => { need(o && typeof o === 'object' && !Array.isArray(o), `${what} must be an object`); const extra = Object.keys(o).filter(k => !keys.includes(k)); need(!extra.length, `${what}: unexpected members ${extra.join(', ')}`); };
 
+const withinDir = (parent, child) => { const r = relative(parent, child); return r === '' || (r !== '..' && !r.startsWith('..' + sep) && !isAbsolute(r)); };
 function repoFile(rootDir, ref, what) {
   need(typeof ref === 'string' && ref && !isAbsolute(ref) && !ref.split('/').includes('..'), `${what}: path must be a relative repository path`);
   const full = resolve(rootDir, ref); const rel = relative(rootDir, full);
-  need(!rel.startsWith('..') && !isAbsolute(rel), `${what}: path escapes the repository`);
+  need(rel !== '..' && !rel.startsWith('..' + sep) && !isAbsolute(rel), `${what}: path escapes the repository`);
   let st; try { st = lstatSync(full); } catch { throw Error(`${what}: missing file ${ref}`); }
   need(st.isFile() && !st.isSymbolicLink(), `${what}: ${ref} must be a regular file`);
-  need(realpathSync(full).startsWith(realpathSync(rootDir)), `${what}: ${ref} resolves outside the repository`);
+  need(withinDir(realpathSync(rootDir), realpathSync(full)), `${what}: ${ref} resolves outside the repository`);
 }
 
 export function validateStatus(status, { registry, root: rootDir = root }) {
@@ -76,7 +78,7 @@ export function renderStatus(status) {
   return lines.join('\n');
 }
 
-if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+if (isMain(import.meta.url)) {
   const status = JSON.parse(await readFile(join(root, 'evidence/world-class-status.json'), 'utf8')), registry = JSON.parse(await readFile(join(root, 'evidence/requirements.json'), 'utf8'));
   validateStatus(status, { registry, root });
   const out = join(root, 'docs/WORLD-CLASS-STATUS.md'), text = renderStatus(status);

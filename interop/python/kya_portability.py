@@ -171,7 +171,10 @@ def parse_json(text):
 
     try:
         value = json.loads(text, object_pairs_hook=object_pairs, parse_constant=constant)
-    except (json.JSONDecodeError, RecursionError) as error:
+    except InvalidValue:
+        raise
+    except (ValueError, RecursionError) as error:
+        # ValueError covers json.JSONDecodeError and the interpreter's integer digit limit (4300 digits).
         raise InvalidValue("Invalid or excessively nested JSON") from error
     canonical(value)
     return value

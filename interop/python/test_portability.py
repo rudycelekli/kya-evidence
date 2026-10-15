@@ -183,6 +183,17 @@ class IncidentBytes(unittest.TestCase):
         with self.assertRaises(InvalidValue):
             MODULE["signature_bytes"](self.BY_ID["report"]["envelope"], False)
 
+    def test_oversized_integer_literal_is_a_structured_failure_not_a_traceback(self):
+        import subprocess
+        import sys
+        text = '{"a":' + "1" * 4301 + "}"
+        with self.assertRaises(InvalidValue):
+            parse_json(text)
+        done = subprocess.run([sys.executable, str(HERE / "kya_portability.py"), "canonical"], input=text.encode(), capture_output=True)
+        self.assertEqual(done.returncode, 1)
+        self.assertEqual(json.loads(done.stdout)["status"], "failed")
+        self.assertNotIn(b"Traceback", done.stderr)
+
 
 if __name__ == "__main__":
     unittest.main()

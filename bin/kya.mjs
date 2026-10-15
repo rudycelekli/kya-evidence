@@ -8,6 +8,7 @@ import { assess, digest, hashBytes, keyId, signEvidence, parseJson, verifyEviden
 import { inspectConfiguration } from '../src/identity/infrastructure/inspect.mjs';
 import { renderAssessment } from '../src/assessment/infrastructure/render.mjs';
 import { CORE_PROFILE, EVALUATOR_DIGEST, createReferenceAdapter, runConformance, probeRuntimes } from '../src/conformance/index.mjs';
+import { isMain } from "../scripts/lib/is-main.mjs";
 
 const HELP=`KYA Evidence 0.1.0-alpha.3 — Know Your Agent
 
@@ -164,4 +165,4 @@ export async function main(argv=process.argv.slice(2)){
     const st=await lstat(flags.key);if(!st.isFile()||st.isSymbolicLink()||st.size>2000)throw Error('Private key must be a bounded regular PEM file');await emit(signEvidence(await jsonFile(flags.input),await readFile(flags.key)),flags.out);
   }else throw Error(`Unknown command ${command}; use --help`);
 }
-if(process.argv[1] && resolve(process.argv[1])===fileURLToPath(import.meta.url))main().catch(err=>{console.error('kya: '+err.message);process.exitCode=1;});
+if(isMain(import.meta.url))main().catch(err=>{console.error('kya: '+err.message);process.exitCode=1;});

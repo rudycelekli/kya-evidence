@@ -1,5 +1,5 @@
 import { lstat, mkdir, realpath, writeFile } from 'node:fs/promises';
-import { basename, dirname, isAbsolute, join, relative, resolve } from 'node:path';
+import { basename, dirname, isAbsolute, join, relative, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { canonical, digest, hashBytes, insist } from '../../shared/canonical.mjs';
 import { CORE_PROFILE, SCENARIOS, EVALUATOR_DIGEST, runConformance } from '../../conformance/index.mjs';
@@ -17,7 +17,7 @@ export function conformanceDigests() {
   return { profileDigest: digest(CORE_PROFILE), scenarioSetDigest: digest(SCENARIOS), evaluatorDigest: EVALUATOR_DIGEST };
 }
 
-const inside = (parent, child) => { const r = relative(parent, child); return r === '' || (!r.startsWith('..') && !isAbsolute(r)); };
+const inside = (parent, child) => { const r = relative(parent, child); return r === '' || (r !== '..' && !r.startsWith('..' + sep) && !isAbsolute(r)); };
 async function deepestExisting(path) {
   let current = path; const rest = [];
   for (;;) {

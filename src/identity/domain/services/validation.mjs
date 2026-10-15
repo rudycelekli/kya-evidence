@@ -1,5 +1,6 @@
 import { createPublicKey, KeyObject } from 'node:crypto';
 import { canonical, exactKeys, hashBytes, insist } from '../../../shared/canonical.mjs';
+import { assertValidEd25519Point } from '../../../shared/ed25519-point.mjs';
 
 export const DIMENSIONS = Object.freeze(['identity', 'authority', 'security', 'reliability', 'accountability', 'operations']);
 export const SOURCES = Object.freeze(['runtime', 'fixture', 'declaration']);
@@ -23,14 +24,26 @@ export function list(v, label, max = 256, validate = identifier) {
   v.forEach(x => validate(x, label));
   insist(new Set(v).size === v.length, `${label}: duplicate values`);
 }
+const VALID_POINTS = new Set();
 export function publicKeyObject(key) {
   const obj = key instanceof KeyObject && key.type === 'public' ? key : createPublicKey(key);
   insist(obj.asymmetricKeyType === 'ed25519', 'Expected Ed25519 key');
+  // Reject small-order, off-curve and non-canonical points everywhere a key is used, not only in the VC bridge.
+  const x = obj.export({ format: 'jwk' }).x;
+  if (!VALID_POINTS.has(x)) {
+    assertValidEd25519Point(Uint8Array.from(Buffer.from(x, 'base64url')));
+    if (VALID_POINTS.size >= 4096) VALID_POINTS.clear();
+    VALID_POINTS.add(x); // the BigInt check costs milliseconds; only successes are remembered
+  }
   return obj;
 }
 export function validatePublicPem(v) {
-  insist(typeof v === 'string' && v.length <= 2000 && /^-----BEGIN PUBLIC KEY-----\r?\n[A-Za-z0-9+/=\r\n]+\r?\n-----END PUBLIC KEY-----\r?\n?$/.test(v), 'Expected public SPKI PEM only');
-  publicKeyObject(v);
+  insist(typeof v === 'string' && v.length <= 2000, 'Expected public SPKI PEM only');
+  // Exactly one spelling per key: the PEM must equal the canonical SPKI export of the parsed key, so a re-encoded copy
+  // (CRLF, wrapping, padding bits, DER length forms, trailing bytes) cannot carry a second envelope digest.
+  let canonicalPem;
+  try { canonicalPem = publicKeyObject(v).export({ format: 'pem', type: 'spki' }).toString(); } catch (e) { insist(false, e.message.startsWith('Invalid Ed25519') ? e.message : 'Expected public SPKI PEM only'); }
+  insist(v === canonicalPem, 'Expected canonical public SPKI PEM only');
 }
 export function keyId(key) {
   return hashBytes(publicKeyObject(key).export({ format: 'der', type: 'spki' }));

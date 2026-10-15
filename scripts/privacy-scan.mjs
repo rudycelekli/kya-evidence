@@ -18,6 +18,7 @@ import { createHash } from 'node:crypto';
 import { join, relative, basename, extname, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseJson } from '../src/shared/canonical.mjs';
+import { isMain } from "./lib/is-main.mjs";
 
 export const SCAN_SCHEMA = 'kya.privacy-scan/v1';
 export const MAX_FILE_BYTES = 32 * 1024 * 1024;
@@ -346,6 +347,6 @@ async function main(argv) {
   return report.errors.length ? 2 : 0;
 }
 
-if (process.argv[1] && fileURLToPath(import.meta.url) === resolve(process.argv[1])) {
+if (isMain(import.meta.url)) {
   main(process.argv.slice(2)).then(c => { process.exitCode = c; }, e => { process.stderr.write(`privacy-scan failed (${errCode(e)})\n`); process.exitCode = 2; });
 }
