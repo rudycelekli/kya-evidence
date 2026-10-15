@@ -7,7 +7,7 @@
   "engines": { "node": ">=22" },
   "license": "Apache-2.0",
   "bin": { "kya": "bin/kya.mjs" },
-  "exports": { ".": { "types": "./src/index.d.ts", "import": "./src/index.mjs" }, "./conformance": { "types": "./src/conformance/index.d.ts", "import": "./src/conformance/index.mjs" }, "./conformance-report": { "types": "./src/conformance-report/index.d.ts", "import": "./src/conformance-report/index.mjs" }, "./suites": { "types": "./src/suites/index.d.ts", "import": "./src/suites/index.mjs" }, "./holdout": { "types": "./src/holdout/index.d.ts", "import": "./src/holdout/index.mjs" }, "./campaign": { "import": "./src/campaign/index.mjs" }, "./vc-bridge": { "import": "./src/vc-bridge/index.mjs" }, "./assessor": { "import": "./src/assessor/index.mjs" }, "./interop-bridges": { "import": "./src/interop-bridges/index.mjs" }, "./schemas/*": "./schemas/*" },
+  "exports": { ".": { "types": "./src/index.d.ts", "import": "./src/index.mjs" }, "./conformance": { "types": "./src/conformance/index.d.ts", "import": "./src/conformance/index.mjs" }, "./conformance-report": { "types": "./src/conformance-report/index.d.ts", "import": "./src/conformance-report/index.mjs" }, "./suites": { "types": "./src/suites/index.d.ts", "import": "./src/suites/index.mjs" }, "./holdout": { "types": "./src/holdout/index.d.ts", "import": "./src/holdout/index.mjs" }, "./campaign": { "import": "./src/campaign/index.mjs" }, "./vc-bridge": { "import": "./src/vc-bridge/index.mjs" }, "./assessor": { "import": "./src/assessor/index.mjs" }, "./capture-cell": { "import": "./src/capture-cell/index.mjs" }, "./interop-bridges": { "import": "./src/interop-bridges/index.mjs" }, "./schemas/*": "./schemas/*" },
   "files": ["bin/", "src/", "suites/", "action/", "policies/", "schemas/", "profiles/", "examples/", "scripts/", "test/", "interop/", "dashboard/", "assets/", "docs/", "evidence/", "AGENTS.md", "PRODUCT.md", "DESIGN.md", "README.md", "CONTRIBUTING.md", "SECURITY.md", "LICENSE", "NOTICE"],
   "scripts": {
     "test": "node --test test/*.test.mjs",
@@ -22,6 +22,7 @@
     "requirements": "node scripts/requirements.mjs",
     "adr:index": "node scripts/adr-index.mjs",
     "sbom": "node scripts/sbom.mjs",
+    "capture": "node scripts/kya-capture.mjs",
     "bridge": "node scripts/kya-bridge.mjs",
     "privacy:scan": "node scripts/privacy-scan.mjs examples test/fixtures profiles policies suites",
     "privacy:scan:vectors": "node scripts/privacy-scan.mjs --rules pii evidence interop schemas",

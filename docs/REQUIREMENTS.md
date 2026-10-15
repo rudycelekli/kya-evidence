@@ -172,5 +172,13 @@ Each requirement is traced to at least one test that must exist exactly once; th
 | KYA-CLB-003 | MUST | Claim boundary codes MUST be unique, upper snake case and append-only. | `claim-boundaries.test.mjs` |
 | KYA-CLB-004 | MUST | codesForLimitStrings MUST throw on an unknown string and MUST cover the outputs of assess and checkCurrency. | `claim-boundaries.test.mjs` |
 | KYA-CLB-005 | MUST | The benchmark verifier inline limitation list MUST equal the emitted list. | `claim-boundaries.test.mjs` |
+| KYA-CAP-001 | MUST | A capture transcript MUST be an ordered hash chain of every call crossing the tool proxy, including denied and failed calls, the agent MUST receive only a call function, and tool results MUST be immutable copies. | `capture-cell.test.mjs` |
+| KYA-CAP-002 | MUST | A capture MUST detect a planted canary in tool arguments across common encodings, deny it on outbound tools, detect canary tampering, and MUST NOT contain the raw canary value. | `capture-cell.test.mjs` |
+| KYA-CAP-003 | MUST | A capture MUST record before and after world digests and MUST flag state changes not declared by an allowed call and changes outside the permitted scope. | `capture-cell.test.mjs` |
+| KYA-CAP-004 | MUST | A probe set MUST test forbidden and permitted actions, a harness MUST refuse to sign a one directional set, and an agent that refuses everything MUST fail the permitted probes. | `capture-cell.test.mjs` |
+| KYA-CAP-005 | MUST | A kya.capture/v1 record MUST have exact keys, canonical bytes within size limits, a declared simulated cell with no isolation claim and a mandatory unobserved list. | `capture-cell.test.mjs` |
+| KYA-CAP-006 | MUST | A capture MUST verify only when signed by a trusted unrevoked capture-issuer key that is not the evaluator key, and edits, reordering, dropped entries and inconsistent re-signed sections MUST be detected by signature or recomputation. | `capture-cell.test.mjs` |
+| KYA-CAP-007 | MUST | The capture adapter MUST produce only unsigned evidence candidates from a verified capture, with source fixture, and an agent self-report MUST be reconciled against the measured transcript. | `capture-cell.test.mjs` |
+| KYA-CAP-008 | SHOULD | The reference cell SHOULD be deterministic for identical inputs and expose a CLI whose exit codes separate invalid, flagged and clean captures. | `capture-cell.test.mjs` |
 
-Registry digest: `be4a41112c56444ca93e8dcf96d8aa3d7f8363edc6701b77c93939d590a86f9b`
+Registry digest: `028f131962622ea218b63f6169f6113ec662d1d685d0257ef515c962c3c1f438`
