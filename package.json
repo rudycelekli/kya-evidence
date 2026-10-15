@@ -22,6 +22,8 @@
     "requirements": "node scripts/requirements.mjs",
     "adr:index": "node scripts/adr-index.mjs",
     "sbom": "node scripts/sbom.mjs",
+    "privacy:scan": "node scripts/privacy-scan.mjs examples test/fixtures profiles policies suites",
+    "privacy:scan:vectors": "node scripts/privacy-scan.mjs --rules pii evidence interop schemas",
     "profiles:registry": "node scripts/profile-registry.mjs",
     "profiles:registry:check": "node scripts/profile-registry.mjs --check",
     "vectors:assessment": "node scripts/assessment-vectors.mjs",

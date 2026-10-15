@@ -344,6 +344,18 @@
       ]
     },
     {
+      "id": "ADR-0029",
+      "title": "Privacy tooling",
+      "status": "Proposed",
+      "file": "docs/adr/0029-privacy-tooling.md",
+      "contentDigest": "33d97be8c99fc56d76033d8545ff7c0976035f6a203085555e3f110c3fc07407",
+      "related": [
+        "ADR-0014",
+        "ADR-0022",
+        "ADR-0025"
+      ]
+    },
+    {
       "id": "ADR-0030",
       "title": "Profile registry and metadata rules",
       "status": "Proposed",
@@ -357,6 +369,6 @@
       ]
     }
   ],
-  "digest": "4f6e8a18ed902c4dc9a9c68b3d8838b9afc4dbb439ec6df37c7539137f5c80c6",
+  "digest": "98c7d7c82c304798899244774b478e65c6c9b6fae77784c6cdf62cfd63dfe2cd",
   "store": "portable local file; not a claim of AgentDB graph persistence"
 }

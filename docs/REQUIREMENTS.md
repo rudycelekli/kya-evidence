@@ -148,5 +148,10 @@ Each requirement is traced to at least one test that must exist exactly once; th
 | KYA-PRF-003 | MUST | Profile metadata MUST state known gaps, a change log, an owner and a purpose; an entry missing any of them, with an unknown status, or with unknown members MUST be refused. | `profiles.test.mjs` |
 | KYA-PRF-004 | MUST NOT | A profile entry MUST NOT claim review or sign-off without a sign-off record carrying reviewer, role, date and evidence digest, and a draft MUST NOT carry one. | `profiles.test.mjs` |
 | KYA-PRF-005 | SHOULD | The committed profile registry SHOULD match the generator output, and every policy template SHOULD target a registered profile. | `profiles.test.mjs` |
+| KYA-PRV-001 | SHOULD | A deployer SHOULD scan artifacts for personal-data shapes before signing and before publishing; the scanner MUST NOT print a matched value. | `privacy.test.mjs` |
+| KYA-PRV-002 | SHOULD | Identifier and digest fields SHOULD be coded or 64-hex digests; incident, evidence and receipt records SHOULD carry no narrative text. | `privacy.test.mjs` |
+| KYA-PRV-003 | SHOULD | The scanner report SHOULD be deterministic and SHOULD state its false-positive and false-negative limits. | `privacy.test.mjs` |
+| KYA-PRV-004 | MUST | The repository example artifacts and fixtures MUST scan clean. | `privacy.test.mjs` |
+| KYA-PRV-005 | MAY | A per-field salted commitment helper MAY be used; the commitment MUST be domain separated by record ID and field name and MUST open only with the matching salt and value. | `privacy.test.mjs` |
 
-Registry digest: `6816ace5a0e0a71998c0d68e44771accad764e537aae1ba96af76196c65ab6c3`
+Registry digest: `f92e6da9c5161050374e08916e34c778ab5b880579983a785dce33e04841aec4`

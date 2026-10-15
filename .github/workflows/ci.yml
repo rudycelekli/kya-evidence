@@ -17,6 +17,8 @@ jobs:
         with:
           node-version: ${{ matrix.node }}
       - run: node scripts/check.mjs
+      - run: npm run privacy:scan
+      - run: npm run privacy:scan:vectors
       - name: Run tests (no test may be skipped on CI)
         shell: bash
         run: |
