@@ -4,7 +4,7 @@ Generated from [evidence/world-class-status.json](../evidence/world-class-status
 
 An item is verified only when linked evidence of the right kind exists: a requirement, test or file for CI verification, and a named outside party with an https link and a date for external review, independent implementation or real use. Work that needs an outside party cannot be marked verified on internal evidence.
 
-Totals: 34 items; 19 planned, 7 in progress, 5 implemented, 3 verified. Items that need an outside party: 11; verified by an outside party: 0.
+Totals: 34 items; 18 planned, 8 in progress, 5 implemented, 3 verified. Items that need an outside party: 11; verified by an outside party: 0.
 
 ## WS1 Narrow, precise problem
 
@@ -70,7 +70,7 @@ Totals: 34 items; 19 planned, 7 in progress, 5 implemented, 3 verified. Items th
 | Item | Status | Verifier | Evidence | Needs outsiders |
 | :--- | :--- | :--- | :--- | :--- |
 | WS8-01 Signed incident, resolution and appeal records (appeals are recorded but cannot reopen a resolution) | implemented |  | `test/incidents.test.mjs`, `docs/adr/0014-signed-incident-and-appeal-records.md` |  |
-| WS8-02 Assessor independence criteria, conflict-of-interest records, accreditation | planned |  |  |  |
+| WS8-02 Assessor independence criteria, conflict-of-interest records, accreditation | in progress |  |  |  |
 | WS8-03 Two assessors cross-assess one agent; an appeal is exercised end to end | planned |  |  | yes |
 
 ## WS9 Privacy by design

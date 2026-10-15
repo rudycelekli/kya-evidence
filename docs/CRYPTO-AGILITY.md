@@ -14,6 +14,7 @@ KYA-native records sign `DOMAIN + canonical(payload)`, where `DOMAIN` is a fixed
 | :--- | :--- | :--- |
 | `kya.evidence/v1\n` | Evidence receipt payload (`kya.evidence/v1`) | `src/evidence/domain/services/signatures.mjs` |
 | `kya.incident/v1\n` | Incident report, resolution, appeal payload (`kya.incident/v1`) | `src/evidence/domain/services/incidents.mjs` |
+| `kya.assessor-disclosure/v1\n` | Assessor disclosure, conflict declaration, withdrawal payload (`kya.assessor-disclosure/v1`) | `src/assessor/disclosure.mjs` |
 | `kya.campaign-plan/v1\n` | Campaign plan payload (`kya.campaign-plan/v1`) | `src/campaign/domain/records.mjs` (`PLAN_DOMAIN`) |
 | `kya.campaign-ledger/v1\n` | Campaign ledger entry payload (`kya.campaign-ledger-entry/v1`; the domain name differs from the schema name) | `src/campaign/domain/records.mjs` (`LEDGER_DOMAIN`) |
 | `kya.conformance-report/v1\n` | Conformance report payload (`kya.conformance-report/v1`) | `src/conformance-report/report.mjs` (`REPORT_DOMAIN`) |

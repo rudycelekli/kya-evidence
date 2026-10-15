@@ -329,8 +329,21 @@
         "ADR-0015",
         "ADR-0016"
       ]
+    },
+    {
+      "id": "ADR-0028",
+      "title": "Assessor disclosure records and standing check",
+      "status": "Proposed",
+      "file": "docs/adr/0028-assessor-disclosure.md",
+      "contentDigest": "f3fa8306fb7e178cb42b43b340eb38ad4ba9b5fb7e25264151bf7d30f4fd91f7",
+      "related": [
+        "ADR-0004",
+        "ADR-0012",
+        "ADR-0014",
+        "ADR-0021"
+      ]
     }
   ],
-  "digest": "5f9682126c5e648b6bce843525806a2d2b3198d1688fbfb499b5b72895b793cb",
+  "digest": "a416c7e04539342e9b8d55376a3fa71180e26ed18e63f4b7845f3e55f740b3b9",
   "store": "portable local file; not a claim of AgentDB graph persistence"
 }

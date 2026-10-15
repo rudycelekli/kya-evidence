@@ -2563,6 +2563,94 @@
           "title": "the crosswalk index lists every framework file"
         }
       ]
+    },
+    {
+      "id": "KYA-ASR-001",
+      "level": "MUST",
+      "area": "ASR",
+      "section": "Trust and eligibility",
+      "statement": "An assessor disclosure MUST be signed Ed25519 under the domain prefix and MUST reject extra fields, free text, unknown codes and records over 4096 bytes.",
+      "tests": [
+        {
+          "file": "test/assessor.test.mjs",
+          "title": "assessor disclosures are signed, domain separated and strict"
+        },
+        {
+          "file": "test/assessor.test.mjs",
+          "title": "assessor disclosure rejects a forged signature from another key"
+        },
+        {
+          "file": "test/assessor.test.mjs",
+          "title": "assessor disclosure signed under another domain does not verify"
+        },
+        {
+          "file": "test/assessor.test.mjs",
+          "title": "assessor disclosure rejects extra fields, free text, bad codes and oversize input"
+        }
+      ]
+    },
+    {
+      "id": "KYA-ASR-002",
+      "level": "MUST",
+      "area": "ASR",
+      "section": "Trust and eligibility",
+      "statement": "Standing MUST be reported per key with named reason codes and MUST fail closed on expiry, revocation, a blocking relationship, unfinished cooling-off and an undisclosed conflict declared by a trusted other party.",
+      "tests": [
+        {
+          "file": "test/assessor.test.mjs",
+          "title": "missing and expired and future disclosures name their reasons"
+        },
+        {
+          "file": "test/assessor.test.mjs",
+          "title": "a revoked assessor key is not in standing even with a valid disclosure"
+        },
+        {
+          "file": "test/assessor.test.mjs",
+          "title": "a blocking relationship removes standing and prior engagement is judged by cooling off"
+        },
+        {
+          "file": "test/assessor.test.mjs",
+          "title": "an undisclosed conflict declared by a trusted other party removes standing"
+        }
+      ]
+    },
+    {
+      "id": "KYA-ASR-003",
+      "level": "MUST",
+      "area": "ASR",
+      "section": "Trust and eligibility",
+      "statement": "A disclosure MUST NOT grant standing to a key other than its signer, and a declaration MUST NOT count unless signed by a trusted declarer other than the assessor.",
+      "tests": [
+        {
+          "file": "test/assessor.test.mjs",
+          "title": "replaying another keys disclosure does not give standing"
+        },
+        {
+          "file": "test/assessor.test.mjs",
+          "title": "declarations from the assessor itself or untrusted keys are ignored with reasons"
+        },
+        {
+          "file": "test/assessor.test.mjs",
+          "title": "a withdrawal by the same key ends a disclosure and cannot be forged by another key"
+        }
+      ]
+    },
+    {
+      "id": "KYA-ASR-004",
+      "level": "SHOULD",
+      "area": "ASR",
+      "section": "Trust and eligibility",
+      "statement": "Standing results SHOULD be independent of record order and duplicate delivery and equal-time disagreement SHOULD fail closed.",
+      "tests": [
+        {
+          "file": "test/assessor.test.mjs",
+          "title": "the newest disclosure wins and equal time conflicts fail closed"
+        },
+        {
+          "file": "test/assessor.test.mjs",
+          "title": "duplicate delivery of one envelope is harmless and results do not depend on order"
+        }
+      ]
     }
   ]
 }
