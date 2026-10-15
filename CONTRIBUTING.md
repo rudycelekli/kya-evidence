@@ -16,7 +16,7 @@ Scoring, eligibility, schema or evaluator changes need a substantive ADR, advers
 
 ## Test first
 
-Write the failing test before the change. A behaviour change is shown by a test that fails on the old code and passes on the new code. Run `npm test` and `npm run check` before you ask for review. Documentation-only changes still run `npm run check`.
+Write the failing test before the change. A behaviour change is shown by a test that fails on the old code and passes on the new code. Run `npm test` and `npm run check` before you ask for review. The command-transport and native-adapter tests are timing sensitive and need a quiet machine; under load, re-run a single failing test file alone before judging it a regression. Documentation-only changes still run `npm run check`.
 
 ## Code under src/conformance
 

@@ -5,7 +5,7 @@ The alpha is a working local reference implementation. Its tests establish defin
 | Layer | Reproducible evidence | Boundary |
 | :--- | :--- | :--- |
 | Record integrity | Strict JSON, golden bytes, SHA-256 and domain-separated Ed25519 vectors | A valid signature does not establish truthful execution or authenticated identity |
-| Assessment policy | Adversarial trust, revocation, freshness, denominator, complete-run and critical-gate cases; six weakened gates detected | Weights and thresholds are experimental relying-party choices |
+| Assessment policy | Adversarial trust, revocation, freshness, denominator, complete-run and critical-gate cases; a six-gate detection result was reported in a private same-team run that is not reproducible from this repository; `scripts/mutation-check.mjs` (87 targeted gate mutations) is the reproducible check | Weights and thresholds are experimental relying-party choices |
 | Native transport | Bounded child fixtures, failure/tool-event oracles, authority preflights, byte limits, concurrent and reentrant request controls | Fixture events do not measure commercial products or independently observe their side effects |
 | Python bytes | A separately written implementation in this project team reconstructs all six published vectors; supported numeric subsets agree | General noninteger double portability is incomplete; a missing crypto backend remains partial |
 | Research universes | Frozen inputs, source-engine hashes, replay, hypothesis forks and correction lineage | Cross-engine snapshots require their archived implementation; fork integrity does not establish causation |

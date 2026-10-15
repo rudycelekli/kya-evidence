@@ -25,4 +25,4 @@ A claim-boundary code states something the artifact does NOT show. `NOT_AUTHORIZ
 
 ## Not done
 
-Codes are not yet carried inside any artifact or bridge export. Adding a member to an export changes its bytes and the exact-match verification in `verifyBridgeExport`, so it needs a versioned decision; see ADR-0031 and `docs/lane-x-integration.md`.
+Codes are not yet carried inside any artifact or bridge export. Adding a member to an export changes its bytes and the exact-match verification in `verifyBridgeExport`, so it needs a versioned decision; see ADR-0031.

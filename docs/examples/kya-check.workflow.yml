@@ -12,6 +12,8 @@
 #   base:kya-gate/policy.json and base:kya-gate/profile.json  (kya-policy-init output; changes need review)
 #   head:kya-gate/manifest.json and head:kya-gate/evidence.json  (the agent version and its signed runtime evidence)
 #   repository variables KYA_POLICY_DIGEST, KYA_EVALUATOR_DIGEST and KYA_EVALUATOR (the digest the evidence binds to)
+#   KYA_POLICY_DIGEST is the canonical policyDigest printed by `kya policy-init` and in the `kya check` summary, NOT the
+#   sha256sum of the policy file. KYA_EVALUATOR_DIGEST and KYA_EVALUATOR come from `kya init DIR` and assessment.json evaluatorDigest.
 # If a variable is unset the check fails with PINS_REQUIRED instead of running unpinned.
 name: kya-check
 on:

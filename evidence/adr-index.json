@@ -294,7 +294,7 @@
       "title": "Governance charter, IPR, claims, versioning, extension registry and decision process",
       "status": "Proposed",
       "file": "docs/adr/0024-governance-charter-and-change-process.md",
-      "contentDigest": "3554141b38dac3c007a9ba590f6560ca5cb4a08472e6ea7d8e376dd64a0a45ff",
+      "contentDigest": "9abef1c9b207f71b2293ccb8c9de78221f45e01b37d1eba20e5b6c162524cfb2",
       "related": [
         "ADR-0003",
         "ADR-0011",
@@ -320,7 +320,7 @@
       "title": "Golden assessment vectors and a language-neutral harness",
       "status": "Implemented",
       "file": "docs/adr/0026-golden-assessment-vectors.md",
-      "contentDigest": "5ff2074e18dd4d7f628a7f675f8ccb9f37dbbd87645892478924e3a147a0b62c",
+      "contentDigest": "5076d0c7dbfeb18c311b4fc93ab4498e29ba92302d71370b851736a6a017da62",
       "related": [
         "ADR-0003",
         "ADR-0008",
@@ -335,7 +335,7 @@
       "title": "Interop bridges for in-toto, OpenTelemetry, OAuth and SPIFFE, A2A and MCP",
       "status": "Proposed",
       "file": "docs/adr/0027-interop-bridges.md",
-      "contentDigest": "e374bfe6db66223e92616cd6b5c518ec82793c4ed9b14adf55c4666b597a5806",
+      "contentDigest": "104264d6efcf42c1bce6bfcf8d7c228f3903ac6316827cd0eeb15c663c709c1f",
       "related": [
         "ADR-0002",
         "ADR-0003",
@@ -362,7 +362,7 @@
       "title": "Privacy tooling",
       "status": "Proposed",
       "file": "docs/adr/0029-privacy-tooling.md",
-      "contentDigest": "33d97be8c99fc56d76033d8545ff7c0976035f6a203085555e3f110c3fc07407",
+      "contentDigest": "0213a4a2fb342c52c53b0539675ea14930d9a52de27e424e7f81b024ed7165d6",
       "related": [
         "ADR-0014",
         "ADR-0022",
@@ -374,7 +374,7 @@
       "title": "Profile registry and metadata rules",
       "status": "Proposed",
       "file": "docs/adr/0030-profile-registry.md",
-      "contentDigest": "6e9e8157419c5fe1c86bff43b39dd56524ef64f55662e85007c7b8ae942b3086",
+      "contentDigest": "85cdc53cf4094ffee8dcc8472142b426e7d6c7d3a579cccb7cec16e8339c54c0",
       "related": [
         "ADR-0003",
         "ADR-0016",
@@ -395,6 +395,6 @@
       ]
     }
   ],
-  "digest": "8a2c369560cb46efecd9a7058fc947a2811a130ebc7f2644672cfc5bdb907422",
+  "digest": "d98420be78a18ea44a631014e2182afa59b1cc7d494bb5c96f338dc39a214f54",
   "store": "portable local file; not a claim of AgentDB graph persistence"
 }

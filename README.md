@@ -4,7 +4,7 @@
 
 **A passport says what an agent is. Evidence shows what an exact agent system did, under an exact scope.**
 
-KYA Evidence is local-first open infrastructure for **Know Your Agent**: portable agent passports, signed check receipts, configurable relying-party policies and explainable assurance assessments. The vision is a neutral standard that people, organizations and independent assessors can implement, reproduce and contest. The current deliverable is a dependency-free Node.js reference implementation, **v0.1.0-alpha.3**, not an adopted industry standard.
+KYA Evidence is local-first open infrastructure for **Know Your Agent**: signed check receipts over an exact agent manifest (a declaration, not a passport or identity credential), configurable relying-party policies and explainable assurance assessments. The vision is a neutral standard that people, organizations and independent assessors can implement, reproduce and contest. The current deliverable is a dependency-free Node.js reference implementation, **v0.1.0-alpha.3**, not an adopted industry standard.
 
 Every person may eventually delegate to an agent. Every relying party will need a better answer than “trust the prompt.” Start with an exact question: **does this configuration meet this party's policy for this scope, on this evidence?** Keep the result portable, the decision explainable and the correction process open.
 
@@ -27,7 +27,7 @@ Open `dossier.html` for the offline, printable report or read `dossier.md`. This
 
 ## Challenge the evaluator
 
-Sixteen frozen controls include four complete behavioral reference modes and twelve signed-receipt admission challenges. Cases preserve expected outcomes, missing measurements and every failure. Six real weakened assessor gates are detected by the unchanged control population. These checks establish local evaluator behavior; commercial agents need separate measured campaigns.
+Sixteen frozen controls include four complete behavioral reference modes and twelve signed-receipt admission challenges. Cases preserve expected outcomes, missing measurements and every failure. A detection result for six weakened assessor gates was reported in a private same-team run that cannot be reproduced from this repository; the reproducible check is `scripts/mutation-check.mjs`, which applies 87 targeted gate mutations to the evaluator source and fails if the tests do not catch one (`--preflight` checks the anchors only). These checks establish local evaluator behavior; commercial agents need separate measured campaigns.
 
 ```sh
 node bin/kya.mjs bench --out .kya/controls
@@ -64,7 +64,7 @@ node bin/kya.mjs probe --out ./artifacts/runtime-probes.json
 node bin/kya.mjs benchmark --out ./artifacts/benchmark
 ```
 
-Use generated demo inputs and the [adapter protocol](docs/ADAPTERS.md) to connect an explicitly authorized runtime. `probe` checks executable availability and version, never competence or safety. A command adapter is a transport, not an operating-system sandbox. `verify` checks report checksum integrity; it does not authenticate the report or recompute its claims.
+The evaluator digest comes from `kya init DIR` (also `evaluatorDigest` in `evidence/evaluator-identity.json`). `./manifest.json`, `./policy.json` and `./evidence.json` are files from the `kya demo` output folder or from `kya init`; `./profiles/core-v1.json` is in this repository. Use generated demo inputs and the [adapter protocol](docs/ADAPTERS.md) to connect an explicitly authorized runtime. `probe` checks executable availability and version, never competence or safety. A command adapter is a transport, not an operating-system sandbox. `verify` checks report checksum integrity; it does not authenticate the report or recompute its claims.
 
 The typed SDK includes strict Claude Code result and Codex event parsers, explicit command plans and opt-in native factories. Native model claims remain declarations and cannot earn observed-action credit. Claude execution is blocked until effective managed policy can be established. Codex requires verified subscription auth and explicit binding of included global instructions. See [execution gates and private transcript retention](docs/ADAPTERS.md) and [validation boundaries](docs/VALIDATION.md).
 
@@ -100,7 +100,7 @@ A fired trigger (`subject-changed`, `policy-changed`, `subject-revoked`, `assess
 | :--- | :--- |
 | Which system was assessed? | Full-manifest digest binds agent, controller reference, harness, model, tools, configuration and scope. |
 | Who supplied the evidence? | Ed25519 receipts match out-of-band policy trust anchors. Signer roles come from policy. |
-| Can bad results disappear? | Every frozen check stays in the denominator. One latest whole run is selected. Tied latest runs cannot qualify. |
+| Can bad results disappear? | Every frozen check stays in the denominator. One latest whole run is selected. Tied latest runs cannot qualify. An issuer that never submits a failing run is not detectable without a pinned campaign ledger. |
 | Can a high average hide harm? | Critical failures block qualification. Missing, errored and abstained checks stay unresolved. |
 | Is the evidence relevant now? | Exact profile/evaluator/system/scope binding, expiry, freshness and revocation are enforced. |
 | Can someone challenge the result? | Per-check references, rejection reasons and exact digests support replay, correction, appeal and revocation. |
@@ -112,7 +112,7 @@ Six dimensions: **identity, authority, security, reliability, accountability and
 
 ## A standardization path that can earn adoption
 
-The vision is broader than a single scoring service: interoperable passports, independently operated assessors, explicit relying-party policy, issuer accountability, reproducible comparisons and a shared correction protocol. Scores should travel with their evidence and limits. No central authority should quietly redefine a person's agent reputation.
+The vision is broader than a single scoring service: interoperable signed check receipts, independently operated assessors, explicit relying-party policy, issuer accountability, reproducible comparisons and a shared correction protocol. Scores should travel with their evidence and limits. No central authority should quietly redefine a person's agent reputation.
 
 [Open-KYA](https://github.com/open-kya/kya-standard) explores agent identity in alpha incubation. [W3C Verifiable Credentials 2.0](https://www.w3.org/TR/vc-data-model-2.0/) supplies a credential data model. [A2A](https://a2a-protocol.org/latest/specification/) and [MCP authorization](https://modelcontextprotocol.io/specification/2025-11-25/basic/authorization) address other agent and tool interaction concerns. This project explores the executable assessment layer. These efforts can complement one another; no affiliation, certification or adoption is asserted.
 

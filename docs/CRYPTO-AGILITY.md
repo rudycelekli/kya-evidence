@@ -116,7 +116,7 @@ Method: on 2026-10-14 the author ran `canonical()` and `parseJson()` on chosen v
 
 Conclusion from the test: for every input both accept, the output bytes are the same, because both are defined by ECMAScript number and string serialisation and UTF-16 key order. The differences are in which inputs are accepted. KYA accepts a strict subset of what JCS accepts for numbers and members, plus lone surrogates that JCS refuses.
 
-ADR-0022 describes the difference as "number formatting and string ordering rules". The tests above do not support that wording: formatting and ordering matched on every tested value. The accurate statement is acceptance-set differences (unsafe integers, lone surrogates, reserved member names, resource limits). ADR-0022 is outside this change and is not edited here; the correction is recorded as a follow-up in `docs/lane-o-integration.md`.
+ADR-0022 describes the difference as "number formatting and string ordering rules". The tests above do not support that wording: formatting and ordering matched on every tested value. The accurate statement is acceptance-set differences (unsafe integers, lone surrogates, reserved member names, resource limits). ADR-0022 is outside this change and is not edited here; the correction is a follow-up (the working note that recorded it was not retained).
 
 Decision: keep the KYA canonical form for v1 records, because existing signatures and golden vectors depend on its exact bytes, and make it explicit that it is a strict, hardened subset of JCS output.
 

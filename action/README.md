@@ -7,12 +7,22 @@ This is a local policy check. It is not an authorization grant, and it does not 
 ## Usage
 
 ```yaml
-- uses: actions/checkout@v4
+# base/ is the pull request base commit, head/ is the pull request head commit (two checkouts; see docs/examples/kya-check.workflow.yml)
 - uses: OWNER/kya-evidence/action@COMMIT_SHA   # pin a full commit SHA you have reviewed
   with:
-    assessment-inputs: kya/inputs.json
+    policy: base/kya-gate/policy.json
+    profile: base/kya-gate/profile.json
+    evaluator: ${{ vars.KYA_EVALUATOR }}
+    expect-policy-digest: ${{ vars.KYA_POLICY_DIGEST }}
+    expect-evaluator-digest: ${{ vars.KYA_EVALUATOR_DIGEST }}
+    manifest: head/kya-gate/manifest.json
+    evidence: head/kya-gate/evidence.json
     now: ${{ env.KYA_NOW }}
 ```
+
+The policy and profile come from the base checkout, the evaluator digest and both pins from repository variables (never from the code under test), and the manifest and evidence from the pull request head, because they are what is being assessed. `KYA_POLICY_DIGEST` is the canonical `policyDigest` printed by `kya policy-init` and shown in the `kya check` summary, not the `sha256sum` of the file. `KYA_EVALUATOR_DIGEST` and `KYA_EVALUATOR` come from `kya init DIR` and the `evaluatorDigest` field of an assessment.
+
+A bare call that supplies only `assessment-inputs` and no pins exits 1 with `PINS_REQUIRED` unless `require-pins` is `'false'`. Set `require-pins: 'false'` for local use only, never in a gate.
 
 Replace `OWNER/kya-evidence` and `COMMIT_SHA` with the repository you vendor or fork and a commit you reviewed. The action uses `actions/setup-node` pinned to a commit SHA (the v4 tag as of 2026-10-14) for Node.js 22 and runs with the repository workspace as the working directory, so input paths are relative to your checkout.
 
