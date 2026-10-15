@@ -85,6 +85,8 @@ Bindings that export an assessment into other ecosystems (in-toto, OpenTelemetry
 
 This is not an official implementation of Open-KYA, W3C VC, A2A or MCP. Credential/discovery bridges must preserve exact input digests, source class and limits. Compatibility needs executable multi-implementation tests. Alpha schema changes require explicit versioning and migration notes. Invalid top-level input fails; invalid individual receipts become rejections. Determinism requires frozen time and input files.
 
+Claim-boundary codes classify the limit statements an artifact carries ([CLAIM-BOUNDARIES.md](CLAIM-BOUNDARIES.md), [ADR-0031](adr/0031-claim-boundary-codes.md)). A code states what the artifact does not show and never raises confidence. The registry (`evidence/claim-boundaries.json`) is append-only. Codes are not part of any record, digest or export; a producer MUST NOT omit or reword a limit statement because a code exists.
+
 ## Governance documents
 
 The project's draft governance layer lives in [docs/governance](governance/CHARTER.md): charter, IPR policy, trademark and conformance-claim rules, versioning, extension registry and decision process. Each legal-style document opens with a draft-for-counsel notice and none has been adopted by any body. Requirements about these documents are checked by `test/governance-docs.test.mjs`. Regulatory crosswalks in [docs/crosswalks](crosswalks/README.md) are informative drafts: each carries the same notice, marks rows that rest on secondary sources, and makes no compliance claim; they are checked by `test/crosswalks.test.mjs`.

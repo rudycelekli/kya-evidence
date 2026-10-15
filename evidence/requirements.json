@@ -3151,6 +3151,79 @@
           "title": "calibration docs are plain ASCII"
         }
       ]
+    },
+    {
+      "id": "KYA-CLB-001",
+      "level": "MUST",
+      "area": "claim-boundaries",
+      "section": "Interoperability and versioning",
+      "statement": "Every limit string emitted by a scanned module MUST be covered by a registry code.",
+      "tests": [
+        {
+          "file": "test/claim-boundaries.test.mjs",
+          "title": "every limit string emitted by src is covered by the claim boundary registry"
+        }
+      ]
+    },
+    {
+      "id": "KYA-CLB-002",
+      "level": "MUST",
+      "area": "claim-boundaries",
+      "section": "Interoperability and versioning",
+      "statement": "The claim boundary registry MUST NOT contain a string that src no longer emits.",
+      "tests": [
+        {
+          "file": "test/claim-boundaries.test.mjs",
+          "title": "every claim boundary registry string is still present in src"
+        }
+      ]
+    },
+    {
+      "id": "KYA-CLB-003",
+      "level": "MUST",
+      "area": "claim-boundaries",
+      "section": "Interoperability and versioning",
+      "statement": "Claim boundary codes MUST be unique, upper snake case and append-only.",
+      "tests": [
+        {
+          "file": "test/claim-boundaries.test.mjs",
+          "title": "claim boundary codes are unique and upper snake case"
+        },
+        {
+          "file": "test/claim-boundaries.test.mjs",
+          "title": "claim boundary codes are append only against the committed list"
+        }
+      ]
+    },
+    {
+      "id": "KYA-CLB-004",
+      "level": "MUST",
+      "area": "claim-boundaries",
+      "section": "Interoperability and versioning",
+      "statement": "codesForLimitStrings MUST throw on an unknown string and MUST cover the outputs of assess and checkCurrency.",
+      "tests": [
+        {
+          "file": "test/claim-boundaries.test.mjs",
+          "title": "codesForLimitStrings throws on an unknown string and describe throws on an unknown code"
+        },
+        {
+          "file": "test/claim-boundaries.test.mjs",
+          "title": "codesForLimitStrings covers the real assess and checkCurrency outputs"
+        }
+      ]
+    },
+    {
+      "id": "KYA-CLB-005",
+      "level": "MUST",
+      "area": "claim-boundaries",
+      "section": "Interoperability and versioning",
+      "statement": "The benchmark verifier inline limitation list MUST equal the emitted list.",
+      "tests": [
+        {
+          "file": "test/claim-boundaries.test.mjs",
+          "title": "benchmark verifier inline limitation list matches the emitted list"
+        }
+      ]
     }
   ]
 }
