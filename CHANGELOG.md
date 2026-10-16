@@ -4,11 +4,13 @@ All notable changes to KYA Evidence are recorded here. The format follows [Keep 
 
 Read this file with two facts in mind. First, no version has been tagged, published to npm or released on GitHub: the alpha labels below mark the `version` field in `package.json` at the commit named in each heading, and nothing more. Second, nothing here is a certification, a safety claim or an outside validation. Every "Added" line means "the reference implementation now does this and a test checks it", not "an outside party confirmed it". The list of what is still not shown is in [docs/RELEASE-NOTES-ALPHA.md](docs/RELEASE-NOTES-ALPHA.md).
 
-Entries come from `git log` and the merged pull requests (#1 to #26) of the repository. Where a commit message was too short to say what changed, the entry is limited to what the message says.
+Entries come from `git log` and the merged pull requests (#1 to #29) of the repository. Where a commit message was too short to say what changed, the entry is limited to what the message says.
 
 ## [Unreleased]
 
-Everything after the commit that set `0.1.0-alpha.3`. The next release is planned as `0.1.0-alpha.4` (reasoning in [docs/RELEASING.md](docs/RELEASING.md)); when it is cut, this heading is renamed and dated.
+## [0.1.0-alpha.4] - 2026-10-16
+
+Everything after the commit that set `0.1.0-alpha.3`. Not tagged or published; the version label marks the `package.json` value at the release commit (procedure: [docs/RELEASING.md](docs/RELEASING.md)).
 
 ### Added
 
@@ -33,6 +35,7 @@ Everything after the commit that set `0.1.0-alpha.3`. The next release is planne
 - A reference measured capture cell (ADR-0032, PR #24). The cell is simulated; no real capture environment is measured.
 - Mutation controls for the review-round fixes below; the harness now syntax-checks every mutant up front and has a `--preflight` mode.
 - A documentation claims guard test (`test/docs-claims.test.mjs`) and cold-reader documentation fixes (PR #25).
+- Release readiness (PR #28): the release procedure (`docs/RELEASING.md`), a launch note draft, a manual dry-run release workflow that publishes nothing by default, and `npm run release:readiness`, which checks the automated gates and lists the outside gates that remain open. Exit 0 means ready for an owner decision, not approved.
 
 ### Changed
 
@@ -51,6 +54,9 @@ Everything after the commit that set `0.1.0-alpha.3`. The next release is planne
 ### Security
 
 Each item below was found by an internal adversarial review of this project's own code and fixed with a regression test. They show review happened inside the team. They are not an outside security review, and none of them shows the absence of further defects.
+
+- Public-key strictness now matches across implementations (PR #27): the second implementation and the Python checker refuse the same non-canonical PEM or DER spellings and small-order or non-canonical Ed25519 keys as the core, using independent point checks (no imports from `src/`). A 69-envelope differential test runs core, second implementation and Python together; all 111 assessment vectors still pass on both implementations. All three are same-team code; no outside implementation has run this.
+- Capture cell and claim-boundary hardening after review (PR #29): nine reproduced findings, each fixed test-first. A canary secret sent without its prefix or in another encoding is now detected (matched on the secret part with a cross-call accumulator; remaining undetected transforms are documented). Re-signed bundles that contradict their own recorded state no longer verify, because the verifier replays effects. Also fixed: the attempt limit erasing the capture, a vacuous exfiltration pass, an adapter that trusted plain objects, an unbound probe set and forbidden list, dot-dot path segments, async agents, and gaps in the claim-boundary registry (git baseline, whole-source scan). The campaign lock is released on SIGINT and SIGTERM. `kya.capture/v1` gains a `forbidden` key (ADR-0032 is still Proposed). The cell is still simulated and in-process; no isolation is claimed.
 
 - Symlink-safe entry guard: command-line entry points now compare real paths, so a tool started through an npm bin link actually runs its main function (and a symlink cannot make a script silently do nothing).
 - Canonical key spelling: a public key in a proof or trust anchor must be the canonical SPKI PEM export of the parsed key. Other PEM or DER spellings are refused, so one signed payload has one envelope digest and a re-encoded copy of a conflict declaration cannot dodge its digest-bound withdrawal.
@@ -104,4 +110,5 @@ State at the first commit, "docs: freeze KYA Evidence implementation and assuran
 
 - The frozen implementation and assurance contract: `docs/BUILD-CONTRACT.md` and `package.json`, which later versions implement.
 
-[Unreleased]: https://github.com/rudycelekli/kya-evidence/compare/a670120...HEAD
+[Unreleased]: https://github.com/rudycelekli/kya-evidence/compare/a4ac588...HEAD
+[0.1.0-alpha.4]: https://github.com/rudycelekli/kya-evidence/compare/a670120...a4ac588

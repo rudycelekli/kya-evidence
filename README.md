@@ -4,7 +4,7 @@
 
 **A passport says what an agent is. Evidence shows what an exact agent system did, under an exact scope.**
 
-KYA Evidence is local-first open infrastructure for **Know Your Agent**: signed check receipts over an exact agent manifest (a declaration, not a passport or identity credential), configurable relying-party policies and explainable assurance assessments. The vision is a neutral standard that people, organizations and independent assessors can implement, reproduce and contest. The current deliverable is a dependency-free Node.js reference implementation, **v0.1.0-alpha.3**, not an adopted industry standard.
+KYA Evidence is local-first open infrastructure for **Know Your Agent**: signed check receipts over an exact agent manifest (a declaration, not a passport or identity credential), configurable relying-party policies and explainable assurance assessments. The vision is a neutral standard that people, organizations and independent assessors can implement, reproduce and contest. The current deliverable is a dependency-free Node.js reference implementation, **v0.1.0-alpha.4**, not an adopted industry standard.
 
 Every person may eventually delegate to an agent. Every relying party will need a better answer than “trust the prompt.” Start with an exact question: **does this configuration meet this party's policy for this scope, on this evidence?** Keep the result portable, the decision explainable and the correction process open.
 

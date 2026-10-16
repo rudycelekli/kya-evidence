@@ -10,7 +10,7 @@ import { renderAssessment } from '../src/assessment/infrastructure/render.mjs';
 import { CORE_PROFILE, EVALUATOR_DIGEST, createReferenceAdapter, runConformance, probeRuntimes } from '../src/conformance/index.mjs';
 import { isMain } from "../scripts/lib/is-main.mjs";
 
-const HELP=`KYA Evidence 0.1.0-alpha.3 — Know Your Agent
+const HELP=`KYA Evidence 0.1.0-alpha.4 — Know Your Agent
 
   kya demo [--out DIRECTORY]
   kya benchmark [--out DIRECTORY]
