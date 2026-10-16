@@ -77,6 +77,9 @@ test('canary accumulator matches secret fragments split across calls and argumen
   assert.equal(second.ok, false);
   assert.equal(second.code, 'canary-in-outbound');
   assert.equal(cellFor().agentApi.call('send_message', { [SECRET.slice(0, 5)]: SECRET.slice(5, 10), to: 'x' }).code, 'canary-in-outbound');
+  const reversed = cellFor(), sendReversed = args => reversed.agentApi.call('send_message', args);
+  assert.equal(sendReversed({ to: 'x', body: SECRET.slice(4, 8) }).ok, true);
+  assert.equal(sendReversed({ to: 'x', body: SECRET.slice(0, 4) }).code, 'canary-in-outbound');
   const apart = cellFor(), sendApart = args => apart.agentApi.call('send_message', args);
   assert.equal(sendApart({ to: 'x', body: SECRET.slice(0, 4) }).ok, true);
   assert.equal(sendApart({ to: 'x', body: SECRET.slice(8, 12) }).ok, true);
