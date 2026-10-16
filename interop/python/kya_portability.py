@@ -194,6 +194,56 @@ def read_bounded(file=None):
         raise InvalidValue("Input is not UTF-8") from error
 
 
+# One accepted spelling per public key: exactly "-----BEGIN PUBLIC KEY-----", LF, the 60 base64 characters of the
+# 44-byte SPKI (RFC 4648 alphabet, canonical padding bits, no padding), LF, "-----END PUBLIC KEY-----", LF.
+CANONICAL_PEM = re.compile(r"-----BEGIN PUBLIC KEY-----\n([A-Za-z0-9+/]{58}[AEIMQUYcgkosw048]=)\n-----END PUBLIC KEY-----\n", re.ASCII)
+
+# Ed25519 point arithmetic written here from RFC 8032 section 5.1.3 (affine twisted Edwards, Python big integers).
+FIELD = 2**255 - 19
+CURVE_D = (-121665 * pow(121666, -1, FIELD)) % FIELD
+
+
+def edwards_add(a, b):
+    (x1, y1), (x2, y2) = a, b
+    t = CURVE_D * x1 * x2 * y1 * y2 % FIELD
+    return ((x1 * y2 + x2 * y1) * pow(1 + t, -1, FIELD) % FIELD, (y1 * y2 + x1 * x2) * pow(1 - t, -1, FIELD) % FIELD)
+
+
+def check_ed25519_point(raw):
+    """Refuse non-canonical encodings, points off the curve and points of order 1, 2, 4 or 8."""
+    require(len(raw) == 32, "Invalid Ed25519 public key: wrong length")
+    number = int.from_bytes(raw, "little")
+    sign, y = number >> 255, number & (2**255 - 1)
+    require(y < FIELD, "Invalid Ed25519 public key: non-canonical y coordinate")
+    numerator, denominator = (y * y - 1) % FIELD, (CURVE_D * y * y + 1) % FIELD
+    x2 = numerator * pow(denominator, -1, FIELD) % FIELD
+    x = pow(x2, (FIELD + 3) // 8, FIELD)
+    if (x * x - x2) % FIELD:
+        x = x * pow(2, (FIELD - 1) // 4, FIELD) % FIELD
+    require((x * x - x2) % FIELD == 0, "Invalid Ed25519 public key: point is not on the curve")
+    require(not (x == 0 and sign == 1), "Invalid Ed25519 public key: non-canonical x sign")
+    if x & 1 != sign:
+        x = (FIELD - x) % FIELD
+    point = (x, y)
+    for _ in range(3):
+        point = edwards_add(point, point)
+    require(point != (0, 1), "Invalid Ed25519 public key: small-order point")
+
+
+def canonical_public_pem(pem):
+    """Return the 44-byte SPKI DER of the one canonical PEM spelling of an Ed25519 public key, else refuse."""
+    match = CANONICAL_PEM.fullmatch(pem)
+    require(match is not None, "Non-canonical public key PEM: expected the canonical single-line SPKI PEM")
+    try:
+        der = base64.b64decode(match.group(1), validate=True)
+    except (ValueError, base64.binascii.Error) as error:
+        raise InvalidValue("Invalid PEM base64") from error
+    require(len(der) == 44 and der.startswith(SPKI_ED25519_PREFIX), "Expected Ed25519 SPKI key")
+    require(base64.b64encode(der).decode("ascii") == match.group(1), "Non-canonical public key PEM: padding bits")
+    check_ed25519_point(der[12:])
+    return der
+
+
 def proof_bytes(envelope, domain, enable_crypto):
     """Verify the proof byte layer only; no trusting issuers or assessment."""
     payload, proof = envelope["payload"], envelope["proof"]
@@ -201,13 +251,7 @@ def proof_bytes(envelope, domain, enable_crypto):
     require(proof["algorithm"] == "Ed25519", "Unsupported proof algorithm")
     pem, encoded = proof["publicKey"], proof["signature"]
     require(type(pem) is str and len(pem) <= 2000, "Invalid public key")
-    match = re.fullmatch(r"-----BEGIN PUBLIC KEY-----\r?\n([A-Za-z0-9+/=\r\n]+)\r?\n-----END PUBLIC KEY-----\r?\n?", pem)
-    require(match is not None, "Expected public SPKI PEM only")
-    try:
-        der = base64.b64decode(re.sub(r"[\r\n]", "", match.group(1)), validate=True)
-    except (ValueError, base64.binascii.Error) as error:
-        raise InvalidValue("Invalid PEM base64") from error
-    require(len(der) == 44 and der.startswith(SPKI_ED25519_PREFIX), "Expected Ed25519 SPKI key")
+    der = canonical_public_pem(pem)
     require(type(proof["keyId"]) is str and hashlib.sha256(der).hexdigest() == proof["keyId"], "Proof key fingerprint differs")
     require(type(encoded) is str and re.fullmatch(r"[A-Za-z0-9_-]{86}", encoded) is not None, "Invalid signature encoding")
     signature = base64.urlsafe_b64decode(encoded + "==")
