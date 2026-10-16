@@ -3713,6 +3713,107 @@
       ]
     },
     {
+      "id": "KYA-REL-002",
+      "level": "MUST",
+      "area": "release",
+      "section": "Interoperability and versioning",
+      "statement": "The release workflow MUST start only on manual dispatch, MUST default its dry run input to true, and MUST pin every action reference to a full commit SHA.",
+      "tests": [
+        {
+          "file": "test/release-workflow.test.mjs",
+          "title": "the workflow runs only on manual dispatch and has no push tag schedule or pull request trigger"
+        },
+        {
+          "file": "test/release-workflow.test.mjs",
+          "title": "the dry run input is a boolean that defaults to true"
+        },
+        {
+          "file": "test/release-workflow.test.mjs",
+          "title": "every action reference is pinned to a full commit SHA and none is local or unpinned"
+        }
+      ]
+    },
+    {
+      "id": "KYA-REL-003",
+      "level": "MUST NOT",
+      "area": "release",
+      "section": "Interoperability and versioning",
+      "statement": "The release workflow MUST NOT run `npm publish` unless the dry run input is false, the `release` environment is approved and a publisher is configured, and MUST NOT grant write permission to repository contents It MUST NOT create a provenance attestation on a dry run.",
+      "tests": [
+        {
+          "file": "test/release-workflow.test.mjs",
+          "title": "npm publish appears only in steps gated on a real run, in a job that needs the release environment"
+        },
+        {
+          "file": "test/release-workflow.test.mjs",
+          "title": "permissions are least privilege with read only contents by default"
+        },
+        {
+          "file": "test/release-workflow.test.mjs",
+          "title": "the workflow never tags pushes or creates releases and keeps untrusted context out of the file"
+        },
+        {
+          "file": "test/release-workflow.test.mjs",
+          "title": "the provenance attestation step runs only when the dry run input is false"
+        }
+      ]
+    },
+    {
+      "id": "KYA-REL-004",
+      "level": "MUST",
+      "area": "release",
+      "section": "Interoperability and versioning",
+      "statement": "The readiness report MUST exit 1 and MUST NOT print the ready line when any automated gate fails, and MUST treat a missing or malformed observation as a failure.",
+      "tests": [
+        {
+          "file": "test/release-readiness.test.mjs",
+          "title": "each broken observation fails its own gate and the report is not ready"
+        },
+        {
+          "file": "test/release-readiness.test.mjs",
+          "title": "missing or malformed observations fail closed"
+        },
+        {
+          "file": "test/release-readiness.test.mjs",
+          "title": "exit code is 1 and no ready line when an automated gate fails"
+        },
+        {
+          "file": "test/release-readiness.test.mjs",
+          "title": "exit code is 0 with the ready line when every automated gate passes"
+        },
+        {
+          "file": "test/release-readiness.test.mjs",
+          "title": "exit code is 2 for usage errors"
+        }
+      ]
+    },
+    {
+      "id": "KYA-REL-005",
+      "level": "MUST NOT",
+      "area": "release",
+      "section": "Interoperability and versioning",
+      "statement": "The readiness report MUST NOT mark any outside gate as passed, whatever its inputs say.",
+      "tests": [
+        {
+          "file": "test/release-readiness.test.mjs",
+          "title": "outside gates are always open whatever the observations claim"
+        }
+      ]
+    },
+    {
+      "id": "KYA-REL-006",
+      "level": "MUST NOT",
+      "area": "release",
+      "section": "Interoperability and versioning",
+      "statement": "The readiness script MUST NOT use the network and MUST NOT publish, tag or push; it spawns only node and read-only git commands.",
+      "tests": [
+        {
+          "file": "test/release-readiness.test.mjs",
+          "title": "the script uses no network and publishes nothing"
+        }
+      ]
+    },
+    {
       "id": "KYA-CAP-009",
       "level": "MUST",
       "area": "capture",
