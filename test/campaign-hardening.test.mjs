@@ -78,3 +78,67 @@ test('a stale lock is reported and never silently stolen', async () => {
     assert.equal(existsSync(ledgerPath + '.lock'), true, 'a foreign lock is left in place');
   } finally { await rm(dir, { recursive: true, force: true }); }
 });
+
+// The hold file is never created: the run blocks right after taking its lock until the signal arrives, so the test does not race the run.
+async function heldRun(dir) {
+  const ledgerPath = join(dir, 'ledger.json'), manifestPath = join(dir, 'manifest.json'), keyPath = join(dir, 'key.pem'), policyPath = join(dir, 'policy.json'), priv = join(dir, 'private');
+  await writeFile(ledgerPath, JSON.stringify(ledgerFor(['a-1', 'a-2']), null, 2));
+  await writeFile(manifestPath, JSON.stringify(manifest)); await writeFile(policyPath, JSON.stringify(policy));
+  await writeFile(keyPath, issuer.privateKey.export({ format: 'pem', type: 'pkcs8' }), { mode: 0o600 });
+  await mkdir(priv, { mode: 0o700 });
+  const child = spawn(process.execPath, [join(repoRoot, 'scripts/kya-campaign.mjs'), 'run', '--ledger', ledgerPath, '--manifest', manifestPath, '--private-dir', priv, '--adapter', 'reference', '--key', keyPath, '--now', T1, '--policy', policyPath], { stdio: ['ignore', 'pipe', 'pipe'], env: { ...process.env, KYA_CAMPAIGN_HOLD_FILE: join(dir, 'never-created') } });
+  let stderr = '';
+  child.stderr.on('data', d => { stderr += d; });
+  const closed = new Promise(resolveClose => child.on('close', (status, signal) => resolveClose({ status, signal })));
+  const lockPath = ledgerPath + '.lock';
+  const started = Date.now();
+  let token = null;
+  while (token === null && Date.now() - started < 20_000) {
+    try { token = JSON.parse(await readFile(lockPath, 'utf8')).token ?? null; } catch { await new Promise(r => setTimeout(r, 20)); }
+  }
+  assert.ok(token, 'the run never took its lock: ' + stderr);
+  return { child, closed, lockPath, ledgerPath, token, stderr: () => stderr };
+}
+
+test('SIGTERM during a campaign run releases the lock this process owns and leaves the ledger unchanged', async () => {
+  const dir = await mkdtemp(join(tmpdir(), 'kya-sigterm-'));
+  try {
+    const run = await heldRun(dir);
+    const before = await readFile(run.ledgerPath, 'utf8');
+    run.child.kill('SIGTERM');
+    const { status, signal } = await run.closed;
+    assert.equal(signal, null, 'the handler exits normally instead of dying from the signal');
+    assert.equal(status, 143, run.stderr());
+    assert.equal(existsSync(run.lockPath), false, 'the lock this process created is released');
+    assert.equal(await readFile(run.ledgerPath, 'utf8'), before);
+  } finally { await rm(dir, { recursive: true, force: true }); }
+});
+
+test('SIGINT during a campaign run never removes a lock that now belongs to another run', async () => {
+  const dir = await mkdtemp(join(tmpdir(), 'kya-sigint-'));
+  try {
+    const run = await heldRun(dir);
+    await writeFile(run.lockPath, JSON.stringify({ pid: 999999, token: 'someone-else', createdAt: T0 }));
+    run.child.kill('SIGINT');
+    const { status } = await run.closed;
+    assert.equal(status, 130, run.stderr());
+    assert.equal(existsSync(run.lockPath), true, 'a lock with a foreign token is left in place');
+    assert.equal(JSON.parse(await readFile(run.lockPath, 'utf8')).token, 'someone-else');
+  } finally { await rm(dir, { recursive: true, force: true }); }
+});
+
+test('a run that finishes normally still releases its lock and removes its signal handlers', async () => {
+  const dir = await mkdtemp(join(tmpdir(), 'kya-normal-'));
+  try {
+    const ledgerPath = join(dir, 'ledger.json'), manifestPath = join(dir, 'manifest.json'), keyPath = join(dir, 'key.pem'), policyPath = join(dir, 'policy.json'), priv = join(dir, 'private');
+    await writeFile(ledgerPath, JSON.stringify(ledgerFor(['a-1']), null, 2));
+    await writeFile(manifestPath, JSON.stringify(manifest)); await writeFile(policyPath, JSON.stringify(policy));
+    await writeFile(keyPath, issuer.privateKey.export({ format: 'pem', type: 'pkcs8' }), { mode: 0o600 });
+    await mkdir(priv, { mode: 0o700 });
+    const hold = join(dir, 'hold');
+    await writeFile(hold, 'go');
+    const r = spawnSync(process.execPath, [join(repoRoot, 'scripts/kya-campaign.mjs'), 'run', '--ledger', ledgerPath, '--manifest', manifestPath, '--private-dir', priv, '--adapter', 'reference', '--key', keyPath, '--now', T1, '--policy', policyPath], { encoding: 'utf8', env: { ...process.env, KYA_CAMPAIGN_HOLD_FILE: hold } });
+    assert.equal(r.status, 0, r.stderr);
+    assert.equal(existsSync(ledgerPath + '.lock'), false);
+  } finally { await rm(dir, { recursive: true, force: true }); }
+});
