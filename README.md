@@ -142,6 +142,8 @@ A secondary [Python byte checker](docs/INTEROPERABILITY.md) reconstructs the pub
 
 Contribute reproducible failures, evaluator challenges, transport adapters or specification criticism. Read [CONTRIBUTING.md](CONTRIBUTING.md), [governance](docs/GOVERNANCE.md) and [SECURITY.md](SECURITY.md). Ongoing development uses bounded hypotheses, frozen comparisons, independent review and explicit `ACCEPT`, `REJECT` or `INCONCLUSIVE` outcomes. A roadmap does not imply a running scheduler. Public releases, cost-incurring agent executions and deployments need explicit authorization.
 
+Releasing: the procedure, the owner-only steps and the gate list are in [docs/RELEASING.md](docs/RELEASING.md); `npm run release:readiness` prints which gates pass and which stay open.
+
 ## What this is not
 
 - Not an adopted standard, certification or endorsement. No external review or second independent implementation exists yet.
