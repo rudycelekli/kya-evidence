@@ -8,10 +8,10 @@ import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { assess, digest, hashBytes, keyId, signEvidence } from '../src/index.mjs';
 import { canonical } from '../src/shared/canonical.mjs';
-import { createCell, mintCanaryValue, canaryForms, containsCanary, defaultProbes, buildCapture, signCapture, verifyCapture, validateCapture, reconcileSelfReport, captureToCandidates, runReferenceCell, runAndSign, carefulAgent, recordingCall, referenceTools, tickClock, HARNESS, DECLARED_TOOLS } from '../src/capture-cell/index.mjs';
+import { PROBE_IDS, createCell, mintCanaryValue, canaryForms, containsCanary, defaultProbes, buildCapture, signCapture, verifyCapture, validateCapture, reconcileSelfReport, captureToCandidates, runReferenceCell, runAndSign, carefulAgent, recordingCall, referenceTools, tickClock, HARNESS, DECLARED_TOOLS } from '../src/capture-cell/index.mjs';
 import { manifest, profile, policy, keys as evaluatorKeys, signerId as evaluatorKeyId, evaluatorDigest, NOW, FUTURE } from './helpers.mjs';
 
-const PID = { publish: 'p-forbid-publish', exfil: 'p-forbid-exfil', read: 'p-allow-read', write: 'p-allow-write', send: 'p-allow-send' };
+const PID = PROBE_IDS;
 const pem = k => k.publicKey.export({ format: 'pem', type: 'spki' }).toString();
 const issuer = generateKeyPairSync('ed25519'), issuerId = keyId(pem(issuer));
 const stranger = generateKeyPairSync('ed25519');
@@ -21,6 +21,7 @@ const START = '2026-10-13T11:59:00.000Z';
 const fixedRng = () => Buffer.from('0123456789abcdef');
 const CANARY = mintCanaryValue(fixedRng);
 const trust = { trustedIssuerKeyIds: [issuerId] };
+const bound = { expected: { runId: 'run-1', ...bind } };
 function capturePolicy(extra = {}) {
   const base = policy(p);
   return { ...base, trustedKeys: [...base.trustedKeys, { id: issuerId, publicKey: pem(issuer), role: 'capture-issuer' }], ...extra };
@@ -296,8 +297,8 @@ test('run binding to subject scope profile evaluator and run is enforced', () =>
 
 test('adapter turns a verified capture into unsigned candidates that an evaluator key can sign for the scorer', () => {
   const checkMap = { toolSurface: 'check-0', forbiddenActions: 'check-1', exfiltration: 'check-2', stateIntegrity: 'check-3', probes: 'check-4' };
-  const opts = { checkMap, scopeId: m.scope.id, evaluatorDigest, expiresAt: FUTURE };
-  const v = verifyCapture(run(carefulAgent).envelope, { policy: capturePolicy() });
+  const opts = { checkMap, scopeId: m.scope.id, evaluatorDigest, evaluatorKeyId, expiresAt: FUTURE };
+  const v = verifyCapture(run(carefulAgent).envelope, { policy: capturePolicy(), ...bound });
   const candidates = captureToCandidates(v, opts);
   assert.equal(candidates.length, 5);
   assert.ok(candidates.every(c => c.outcome === 'pass' && c.source === 'fixture' && !('proof' in c) && c.subjectDigest === bind.subjectDigest));
@@ -316,17 +317,17 @@ test('adapter turns a verified capture into unsigned candidates that an evaluato
 
 test('adapter maps findings to failing candidates and refuses unverified captures', () => {
   const checkMap = { toolSurface: 'check-0', forbiddenActions: 'check-1', exfiltration: 'check-2', stateIntegrity: 'check-3', probes: 'check-4' };
-  const opts = { checkMap, scopeId: m.scope.id, evaluatorDigest, expiresAt: FUTURE };
-  const bad = verifyCapture(run(exfil(s => Buffer.from(s).toString('base64'))).envelope, trust);
+  const opts = { checkMap, scopeId: m.scope.id, evaluatorDigest, evaluatorKeyId, expiresAt: FUTURE };
+  const bad = verifyCapture(run(exfil(s => Buffer.from(s).toString('base64'))).envelope, { ...trust, ...bound });
   const byTopic = Object.fromEntries(captureToCandidates(bad, opts).map(c => [c.checkId, c.outcome]));
   assert.equal(byTopic['check-2'], 'fail');
   assert.equal(byTopic['check-0'], 'pass');
   assert.equal(byTopic['check-4'], 'fail');
-  const refuse = Object.fromEntries(captureToCandidates(verifyCapture(run(refuseAll).envelope, trust), opts).map(c => [c.checkId, c.outcome]));
+  const refuse = Object.fromEntries(captureToCandidates(verifyCapture(run(refuseAll).envelope, { ...trust, ...bound }), opts).map(c => [c.checkId, c.outcome]));
   assert.equal(refuse['check-4'], 'fail');
   const tampered = verifyCapture(edit(run(carefulAgent).envelope, x => { x.runId = 'run-2'; }), trust);
   assert.throws(() => captureToCandidates(tampered, opts), /verified capture/);
-  assert.throws(() => captureToCandidates(verifyCapture(run(carefulAgent).envelope, trust), { ...opts, checkMap: { unknown: 'check-0' } }), /Unknown topic/);
+  assert.throws(() => captureToCandidates(verifyCapture(run(carefulAgent).envelope, { ...trust, ...bound }), { ...opts, checkMap: { unknown: 'check-0' } }), /Unknown topic/);
 });
 
 test('same inputs and clock give identical capture bytes', () => {
