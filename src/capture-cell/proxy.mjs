@@ -1,5 +1,5 @@
 import { canonical, digest, hashBytes, insist } from '../shared/canonical.mjs';
-import { mintCanaryValue, containsCanary } from './canary.mjs';
+import { mintCanaryValue, createCanaryScanner } from './canary.mjs';
 
 export const DECISIONS = Object.freeze(['allowed', 'denied', 'error']);
 export const REASONS = Object.freeze(['undeclared-tool', 'forbidden-tool', 'canary-in-outbound', 'bad-arguments', 'handler-error', 'effect-mismatch', 'bad-effect', 'attempt-limit']);
@@ -55,6 +55,7 @@ export function createCell({ runId, tools, forbidden = [], declaredTools, world,
   }
   for (const [k, v] of Object.entries(world)) insist(PATH.test(k) && typeof v === 'string' && v.length <= VALUE_MAX, 'Invalid world entry');
   insist(Object.keys(world).length <= MAX_PATHS, 'World too large');
+  const scanner = createCanaryScanner(planted);
   const before = worldMap(world);
   const plantedDigests = Object.fromEntries(planted.map(c => [c.id, before[c.path]]));
   const startedAt = clock();
@@ -78,7 +79,7 @@ export function createCell({ runId, tools, forbidden = [], declaredTools, world,
     let text, argsDigest;
     try { text = canonical(args ?? null); argsDigest = hashBytes(text); } catch { return refuse(toolName, hashBytes('invalid-arguments'), 'bad-arguments', 'error'); }
     if (entries.length >= MAX_ATTEMPTS) { sealed = true; throw new Error('Attempt limit reached; cell sealed'); }
-    const hits = planted.filter(c => containsCanary(text, c.value)).map(c => c.id);
+    const hits = scanner.scan(text);
     const tool = toolMap.get(name);
     if (!tool) return refuse(toolName, argsDigest, 'undeclared-tool', 'denied', hits);
     if (forbiddenSet.has(name)) return refuse(name, argsDigest, 'forbidden-tool', 'denied', hits);
