@@ -3625,6 +3625,94 @@
       ]
     },
     {
+      "id": "KYA-ENV-003",
+      "level": "MUST",
+      "area": "envelope",
+      "section": "Trust and eligibility",
+      "statement": "A second implementation of the proof byte layer MUST refuse every non-canonical PEM or DER spelling of a public key that the core refuses, and MUST accept the canonical spelling.",
+      "tests": [
+        {
+          "file": "test/second-impl-strictness.test.mjs",
+          "title": "canonical key is accepted by the core, the second implementation and python"
+        },
+        {
+          "file": "test/second-impl-strictness.test.mjs",
+          "title": "crlf line endings in the key PEM are refused by all three"
+        },
+        {
+          "file": "test/second-impl-strictness.test.mjs",
+          "title": "re-wrapped key PEM lines are refused by all three"
+        },
+        {
+          "file": "test/second-impl-strictness.test.mjs",
+          "title": "missing trailing newline in the key PEM is refused by all three"
+        },
+        {
+          "file": "test/second-impl-strictness.test.mjs",
+          "title": "blank line inside the base64 body is refused by all three"
+        },
+        {
+          "file": "test/second-impl-strictness.test.mjs",
+          "title": "non-canonical trailing base64 bits are refused by all three"
+        },
+        {
+          "file": "test/second-impl-strictness.test.mjs",
+          "title": "long-form DER length is refused by all three"
+        },
+        {
+          "file": "test/second-impl-strictness.test.mjs",
+          "title": "trailing zero bytes after the SPKI are refused by all three"
+        }
+      ]
+    },
+    {
+      "id": "KYA-ENV-004",
+      "level": "MUST",
+      "area": "envelope",
+      "section": "Trust and eligibility",
+      "statement": "A second implementation MUST refuse small-order, off-curve and non-canonical Ed25519 public keys, including the identity key with signature 01 followed by zeros.",
+      "tests": [
+        {
+          "file": "test/second-impl-strictness.test.mjs",
+          "title": "identity point key with signature 01 followed by zeros is refused by all three"
+        },
+        {
+          "file": "test/second-impl-strictness.test.mjs",
+          "title": "every small-order Ed25519 point is refused by all three"
+        },
+        {
+          "file": "test/second-impl-strictness.test.mjs",
+          "title": "non-canonical y encodings are refused by all three"
+        }
+      ]
+    },
+    {
+      "id": "KYA-ENV-005",
+      "level": "SHOULD",
+      "area": "envelope",
+      "section": "Interoperability and versioning",
+      "statement": "The core, the second implementation and the Python checker SHOULD agree accept or reject on a shared set of at least 60 mutated envelopes.",
+      "tests": [
+        {
+          "file": "test/second-impl-strictness.test.mjs",
+          "title": "differential run over at least 60 mutated envelopes agrees across core, second implementation and python"
+        }
+      ]
+    },
+    {
+      "id": "KYA-ENV-006",
+      "level": "MUST",
+      "area": "envelope",
+      "section": "Interoperability and versioning",
+      "statement": "The second implementation MUST still match all 111 assessment vectors after the strictness change.",
+      "tests": [
+        {
+          "file": "test/second-impl-strictness.test.mjs",
+          "title": "second implementation still matches all 111 assessment vectors"
+        }
+      ]
+    },
+    {
       "id": "KYA-REL-002",
       "level": "MUST",
       "area": "release",

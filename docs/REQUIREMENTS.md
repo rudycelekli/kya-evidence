@@ -195,10 +195,14 @@ Each requirement is traced to at least one test that must exist exactly once; th
 | KYA-CAM-022 | MUST | The private directory check MUST treat a child whose name begins with two dots as inside the repository. | `campaign-hardening.test.mjs` |
 | KYA-GOV-004 | MUST | Status ledger evidence paths MUST be compared by path segments, not string prefix. | `world-class-path.test.mjs` |
 | KYA-VCB-015 | MUST | `kya vc verify` MUST require `--trust-did` or `--policy`, or the explicit `--allow-untrusted-issuer` flag. | `vc-cli-trust.test.mjs` |
+| KYA-ENV-003 | MUST | A second implementation of the proof byte layer MUST refuse every non-canonical PEM or DER spelling of a public key that the core refuses, and MUST accept the canonical spelling. | `second-impl-strictness.test.mjs` |
+| KYA-ENV-004 | MUST | A second implementation MUST refuse small-order, off-curve and non-canonical Ed25519 public keys, including the identity key with signature 01 followed by zeros. | `second-impl-strictness.test.mjs` |
+| KYA-ENV-005 | SHOULD | The core, the second implementation and the Python checker SHOULD agree accept or reject on a shared set of at least 60 mutated envelopes. | `second-impl-strictness.test.mjs` |
+| KYA-ENV-006 | MUST | The second implementation MUST still match all 111 assessment vectors after the strictness change. | `second-impl-strictness.test.mjs` |
 | KYA-REL-002 | MUST | The release workflow MUST start only on manual dispatch, MUST default its dry run input to true, and MUST pin every action reference to a full commit SHA. | `release-workflow.test.mjs` |
 | KYA-REL-003 | MUST NOT | The release workflow MUST NOT run `npm publish` unless the dry run input is false, the `release` environment is approved and a publisher is configured, and MUST NOT grant write permission to repository contents It MUST NOT create a provenance attestation on a dry run. | `release-workflow.test.mjs` |
 | KYA-REL-004 | MUST | The readiness report MUST exit 1 and MUST NOT print the ready line when any automated gate fails, and MUST treat a missing or malformed observation as a failure. | `release-readiness.test.mjs` |
 | KYA-REL-005 | MUST NOT | The readiness report MUST NOT mark any outside gate as passed, whatever its inputs say. | `release-readiness.test.mjs` |
 | KYA-REL-006 | MUST NOT | The readiness script MUST NOT use the network and MUST NOT publish, tag or push; it spawns only node and read-only git commands. | `release-readiness.test.mjs` |
 
-Registry digest: `f90d2c394c384572391b5d7b8608455c24b69f9ce21d7bdf7684c2fc37e70d35`
+Registry digest: `8db4b3d90e60d852d73b66ec24755b62221b62243388dc9e818cd90b58d13560`

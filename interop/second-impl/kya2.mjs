@@ -151,7 +151,7 @@ export function validPolicy(p, profileDigest, scopeId, checkIds) {
   if (!Array.isArray(p.trustedKeys)) refuse('trustedKeys');
   const kids = new Set();
   for (const k of p.trustedKeys) {
-    if (!exactKeys(k, ['id', 'publicKey', 'role']) || !HEX64.test(k.id) || !isPem(k.publicKey) || !ROLES.includes(k.role)) refuse('trusted key');
+    if (!exactKeys(k, ['id', 'publicKey', 'role']) || !HEX64.test(k.id) || !isPem(k.publicKey) || strictPublicKey(k.publicKey).problem || !ROLES.includes(k.role)) refuse('trusted key');
     if (kids.has(k.id)) refuse('duplicate trusted key');
     kids.add(k.id);
   }
@@ -172,16 +172,57 @@ export function validPolicy(p, profileDigest, scopeId, checkIds) {
 
 // ---------------------------------------------------------------- signatures
 
+// Public keys: exactly one accepted spelling, and no small-order or non-canonical Ed25519 point.
+// Spelling: "-----BEGIN PUBLIC KEY-----", LF, the 60 base64 characters of the 44-byte SPKI (RFC 4648 alphabet,
+// canonical padding bits, one "=" pad), LF, "-----END PUBLIC KEY-----", LF. Nothing else is a spelling of a key.
+// The point check is written here from RFC 8032 section 5.1.3 (affine twisted Edwards, BigInt); it does not import src/.
+const PEM_SHAPE = /^-----BEGIN PUBLIC KEY-----\n([A-Za-z0-9+/]{58}[AEIMQUYcgkosw048]=)\n-----END PUBLIC KEY-----\n$/;
+const SPKI_PREFIX = '302a300506032b6570032100';
+const Pf = 2n ** 255n - 19n;
+const md = a => ((a % Pf) + Pf) % Pf;
+const modPow = (b, e) => { let r = 1n; b = md(b); for (; e > 0n; e >>= 1n) { if (e & 1n) r = md(r * b); b = md(b * b); } return r; };
+const modInv = a => modPow(a, Pf - 2n);
+const Dc = md(-121665n * modInv(121666n));
+function edAdd(p, q) {
+  const t = md(Dc * p[0] * q[0] * p[1] * q[1]);
+  return [md((p[0] * q[1] + q[0] * p[1]) * modInv(1n + t)), md((p[1] * q[1] + p[0] * q[0]) * modInv(1n - t))];
+}
+function pointProblem(raw) {
+  let n = 0n; for (let i = 31; i >= 0; i--) n = (n << 8n) | BigInt(raw[i]);
+  const sign = n >> 255n, y = n & (2n ** 255n - 1n);
+  if (y >= Pf) return 'non-canonical y coordinate';
+  const x2 = md(md(y * y - 1n) * modInv(md(Dc * y * y + 1n)));
+  let x = modPow(x2, (Pf + 3n) / 8n);
+  if (md(x * x - x2) !== 0n) x = md(x * modPow(2n, (Pf - 1n) / 4n));
+  if (md(x * x - x2) !== 0n) return 'point is not on the curve';
+  if (x === 0n && sign === 1n) return 'non-canonical x sign';
+  if ((x & 1n) !== sign) x = md(-x);
+  let q = [x, y];
+  for (let i = 0; i < 3; i++) q = edAdd(q, q);
+  return q[0] === 0n && q[1] === 1n ? 'small-order point' : null;
+}
+/** Returns { der } for the one canonical spelling of a usable Ed25519 key, else { problem }. */
+export function strictPublicKey(pem) {
+  const m = typeof pem === 'string' ? PEM_SHAPE.exec(pem) : null;
+  if (!m) return { problem: 'Public key is not the canonical SPKI PEM' };
+  const der = Buffer.from(m[1], 'base64');
+  if (der.length !== 44 || der.toString('hex').slice(0, 24) !== SPKI_PREFIX || der.toString('base64') !== m[1]) return { problem: 'Public key is not a canonical Ed25519 SPKI' };
+  const bad = pointProblem(der.subarray(12));
+  return bad ? { problem: 'Invalid Ed25519 public key: ' + bad } : { der };
+}
+
 const b64uOk = s => typeof s === 'string' && /^[A-Za-z0-9_-]+$/.test(s) && Buffer.from(s, 'base64url').toString('base64url') === s;
 export function verifyProof(domain, payload, proof) {
   // returns null when fine, else a reason string
   if (!exactKeys(proof, ['algorithm', 'keyId', 'publicKey', 'signature'])) return 'Malformed envelope: proof keys';
   if (proof.algorithm !== 'Ed25519') return 'Malformed envelope: algorithm';
   if (!HEX64.test(proof.keyId) || !isPem(proof.publicKey) || typeof proof.signature !== 'string') return 'Malformed envelope: proof fields';
+  const strict = strictPublicKey(proof.publicKey);
+  if (strict.problem) return strict.problem;
   let key;
   try { key = createPublicKey(proof.publicKey); } catch { return 'Public key is not usable'; }
   if (key.asymmetricKeyType !== 'ed25519') return 'Public key is not Ed25519';
-  const der = key.export({ type: 'spki', format: 'der' });
+  const der = strict.der;
   if (sha256hex(der) !== proof.keyId) return 'Key ID does not match the embedded public key';
   if (!b64uOk(proof.signature) || Buffer.from(proof.signature, 'base64url').length !== 64) return 'Signature encoding is not canonical base64url of 64 bytes';
   let ok = false;
