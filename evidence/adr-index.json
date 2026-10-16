@@ -400,7 +400,7 @@
       "title": "Reference measured capture cell (`kya.capture/v1`, simulated)",
       "status": "Proposed",
       "file": "docs/adr/0032-capture-cell-reference.md",
-      "contentDigest": "e9af59d906c6d09842751ce1855cd3d3955dc323247f61b1369127b77a9a1b6a",
+      "contentDigest": "1103e9a15e35720954f6fe63c45394a69167dfc6868fdf2f0332573d121b7391",
       "related": [
         "ADR-0003",
         "ADR-0009",
@@ -411,6 +411,6 @@
       ]
     }
   ],
-  "digest": "144aea5f69e004794876083a0c29f740f93719fbea9f85e042316966ab3e07d2",
+  "digest": "f99faa94fd0570d8a2849d5e0653288d389da81f1d6df4aeb2090191bbff85fb",
   "store": "portable local file; not a claim of AgentDB graph persistence"
 }

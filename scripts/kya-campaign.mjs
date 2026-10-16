@@ -1,6 +1,8 @@
 #!/usr/bin/env node
 // Standalone campaign harness CLI (ADR-0021). No network, no hidden clock, no real model or vendor CLI.
-import { lstat, readFile, writeFile, rename, open, unlink } from 'node:fs/promises';
+import { lstat, readFile, writeFile, rename, open } from 'node:fs/promises';
+import { existsSync, readFileSync, unlinkSync } from 'node:fs';
+import { constants as osConstants } from 'node:os';
 import { randomBytes } from 'node:crypto';
 import { resolve } from 'node:path';
 import { createPrivateKey, createPublicKey } from 'node:crypto';
@@ -21,6 +23,7 @@ run, verify-ledger and summary need --policy (the signer must be a capture-issue
 or the explicit, reported-as-unsafe --trust-plan-signer true.
 Exit 2 means incomplete: run and summary exit 2 unless every planned attempt completed (an errored attempt later retried by a completed amendment does not count against it); verify-ledger exits 2 for an open ledger unless --allow-open true. Exit 1 means invalid or refused.
 Without an externally pinned --expect-head, a rolled-back or forked ledger cannot be detected.
+SIGINT and SIGTERM release the run lock this process created (exit 130 or 143); SIGKILL or a crash leaves it, and a leftover lock is never removed automatically.
 
 Only the owned reference and command fixtures are wired. No model, vendor CLI or network call is made.
 `;
@@ -63,18 +66,41 @@ async function saveAtomic(path, value) {
 }
 // A run takes an exclusive lock file (O_EXCL) beside the ledger for its whole duration. A leftover lock from a crashed run
 // is reported with its owner and is never removed automatically: confirm the owner is gone, then delete the lock file by hand.
+// SIGINT and SIGTERM release the lock this process created (and only that one: a lock that now carries another run's token is
+// left alone) and exit with 128 plus the signal number. SIGKILL and a crash cannot be handled and leave the lock for manual removal.
+const SIGNALS = ['SIGINT', 'SIGTERM'];
 async function acquireLock(path) {
   const lockPath = `${path}.lock`, token = randomBytes(16).toString('hex');
+  let created = false;
+  const releaseSync = () => {
+    if (!created) return;
+    created = false;
+    let content = '';
+    try { content = readFileSync(lockPath, 'utf8'); } catch { return; /* lock already gone */ }
+    let owner = null;
+    try { owner = JSON.parse(content).token; } catch { /* a lock created but not yet written is still ours */ }
+    if (owner === token || content === '') { try { unlinkSync(lockPath); } catch { /* removed meanwhile */ } }
+  };
+  const onSignal = signal => { releaseSync(); process.exit(128 + (osConstants.signals[signal] ?? 0)); };
+  for (const signal of SIGNALS) process.on(signal, onSignal);
+  const uninstall = () => { for (const signal of SIGNALS) process.off(signal, onSignal); };
   let handle;
-  try { handle = await open(lockPath, 'wx', 0o600); }
+  try { handle = await open(lockPath, 'wx', 0o600); created = true; }
   catch (error) {
+    uninstall();
     if (error.code !== 'EEXIST') throw error;
     let owner = 'unknown owner';
     try { const o = JSON.parse(await readFile(lockPath, 'utf8')); owner = `pid ${Number.isSafeInteger(o.pid) ? o.pid : '?'} since ${typeof o.createdAt === 'string' ? o.createdAt.slice(0, 24) : '?'}`; } catch { /* unreadable lock stays unreadable */ }
     throw Error(`Campaign ledger is locked (another run is in progress, or a crashed run left ${lockPath}; ${owner}). The lock is never removed automatically: confirm no run is active, then delete that file and re-run`);
   }
   try { await handle.writeFile(JSON.stringify({ pid: process.pid, token, createdAt: new Date().toISOString() })); } finally { await handle.close(); }
-  return async () => { try { if (JSON.parse(await readFile(lockPath, 'utf8')).token === token) await unlink(lockPath); } catch { /* lock already gone */ } };
+  return async () => { uninstall(); releaseSync(); };
+}
+// Test seam: when set, a run blocks after taking the lock until the named file exists, so a signal can be sent mid-run. It changes timing only.
+async function holdForTest() {
+  const hold = process.env.KYA_CAMPAIGN_HOLD_FILE;
+  if (!hold) return;
+  while (!existsSync(hold)) await new Promise(resolveWait => setTimeout(resolveWait, 20));
 }
 const headOf = ledger => digest(ledger.entries.length ? ledger.entries.at(-1) : ledger.plan);
 const print = value => console.log(JSON.stringify(value, null, 2));
@@ -122,6 +148,7 @@ const commands = {
     const release = await acquireLock(path);
     let ledger, result;
     try {
+      await holdForTest();
       ledger = await jsonFile(path);
       const manifests = await manifestsFrom(flags.manifest), key = await privateKeyFrom(flags.key);
       let lastHead = headOf(ledger);

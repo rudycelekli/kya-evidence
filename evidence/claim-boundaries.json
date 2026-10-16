@@ -5,11 +5,17 @@
     "ASSOCIATION_ASSERTED_NOT_PROVEN",
     "CAPTURE_COMPLETENESS_NOT_ESTABLISHED",
     "CHECKSUM_UNAUTHENTICATED",
+    "COMPLETE_ASSURANCE_NOT_ESTABLISHED",
     "CONTENT_NOT_EMITTED",
     "COST_UNMEASURED",
+    "CREDENTIALS_NOT_ISOLATED",
     "CURRENCY_POINT_IN_TIME",
+    "DECLARATION_NOT_AUTHORITY",
+    "DECLARATION_NOT_OBSERVED_EFFECT",
+    "DECLARED_FIELD_UNVERIFIED",
     "ISSUER_ROLE_POLICY_ASSIGNED",
     "ISSUER_TRUST_RELATIVE",
+    "MODEL_IDENTITY_UNVERIFIED",
     "NOT_AUTHORIZATION_GRANT",
     "NOT_CONFORMANCE_CLAIM",
     "NOT_HUMAN_CREDIT_SCORE",
@@ -22,19 +28,27 @@
     "NO_EXTERNAL_ANCHOR",
     "NO_EXTERNAL_RESOLUTION",
     "NO_IDENTITY_VERIFICATION",
+    "NO_OS_ISOLATION",
+    "NO_PROOF_OF_ABSENCE",
     "NO_RUNTIME_OBSERVATION",
     "NO_SCORE_PRODUCED",
     "NO_SIDE_EFFECT_VERIFICATION",
     "NO_THIRD_PARTY_CONSUMER",
     "NO_UNIVERSAL_PREDICTIVE_VALIDITY",
     "OMITTED_INCIDENT_UNDETECTABLE",
+    "PARSER_CONTRACT_VERSION_SPECIFIC",
     "PARTIAL_INVENTORY",
     "PARTIAL_MAPPING",
+    "PROVIDER_SCHEMA_NOT_IMPLIED",
     "PUBLIC_CATALOG_CONTAMINATION",
     "RAW_EVIDENCE_OMITTED",
+    "RAW_OUTPUT_BYTES_PRIVATE",
+    "RUNTIME_REPORT_NOT_TRUTHFUL_EXECUTION",
     "SIGNATURE_NOT_TRUTHFUL_EXECUTION",
     "SOURCE_BYTES_NOT_VERIFIED",
+    "STRENGTH_REQUIRES_REPLAY",
     "SYNTHETIC_FIXTURE_EVIDENCE",
+    "UNKNOWN_CHECKS_UNMEASURED",
     "UNSIGNED_EXPORT",
     "UNSIGNED_RECORD",
     "UPPER_BOUND_NOT_CONFIDENCE_INTERVAL"
@@ -54,24 +68,43 @@
       "code": "CAPTURE_COMPLETENESS_NOT_ESTABLISHED",
       "meaning": "It is not shown that all relevant activity was captured.",
       "artifactKinds": [
-        "dossier"
+        "dossier",
+        "presentation"
       ],
       "strings": [
-        "Signature integrity, policy-assigned issuer roles, capture completeness and execution truth are separate."
+        "A policy-qualified receipt bundle can still lack diagnostic originals. Original coverage describes supplied selected checks, not incident-history completeness.",
+        "Signature integrity, policy-assigned issuer roles, capture completeness and execution truth are separate.",
+        "This is a scoped relying-policy result. It grants no authorization, verifies no actual effects, and does not establish complete capture or independent issuer identity. It is not a commercial quality badge or a credit score for a person."
       ]
     },
     {
       "code": "CHECKSUM_UNAUTHENTICATED",
       "meaning": "The checksum detects change to bytes but does not show who produced them.",
       "artifactKinds": [
+        "assessment",
         "bridge-export",
         "currency",
-        "dossier"
+        "dossier",
+        "presentation"
       ],
       "strings": [
+        "Report checksum is not an evaluator signature; recompute from trusted inputs for decisions",
         "Report checksum is unauthenticated; recompute from trusted inputs before reliance",
         "Standalone dossier checksums are unauthenticated; recompute from frozen authorized inputs.",
-        "The report checksum is unauthenticated; it detects change, not who produced the report"
+        "Standalone unauthenticated report · evidence replay required",
+        "The report checksum is not a signature",
+        "The report checksum is unauthenticated; it detects change, not who produced the report",
+        "These are unsigned content commitments. Reconstruct the dossier from trusted original inputs and replay its evidence before relying on the decision. A matching checksum or valid signature does not establish truthful execution."
+      ]
+    },
+    {
+      "code": "COMPLETE_ASSURANCE_NOT_ESTABLISHED",
+      "meaning": "A list of checks or blind spots is not shown to be complete.",
+      "artifactKinds": [
+        "presentation"
+      ],
+      "strings": [
+        "No blind spots supplied; this does not establish complete assurance."
       ]
     },
     {
@@ -88,10 +121,29 @@
       "code": "COST_UNMEASURED",
       "meaning": "Monetary cost was not measured.",
       "artifactKinds": [
-        "benchmark-run"
+        "benchmark-run",
+        "conformance-run",
+        "dossier",
+        "presentation"
       ],
       "strings": [
-        "Monetary cost is unmeasured; elapsed case duration is a local observation."
+        "Billing is unverified",
+        "Missing measurements are not zero. Totals describe receipt-bound evaluator reports, not verified billing, wall-clock performance, retries or total human effort.",
+        "Monetary cost is unmeasured; elapsed case duration is a local observation.",
+        "Reported costs and timings are evaluator assertions; an operation-budget check does not measure real spend.",
+        "Usage cost values are adapter-reported; unmeasured cost remains null.",
+        "receipt-bound evaluator reports; not verified billing"
+      ]
+    },
+    {
+      "code": "CREDENTIALS_NOT_ISOLATED",
+      "meaning": "Granting a HOME directory gives access to existing login files; billing is not verified and credentials are not isolated.",
+      "artifactKinds": [
+        "native-adapter"
+      ],
+      "strings": [
+        "Explicit HOME grants existing-login file access; this does not verify subscription billing or isolate credentials.",
+        "Stored auth metadata is a local snapshot, not billing or live entitlement verification."
       ]
     },
     {
@@ -101,7 +153,41 @@
         "bridge-export"
       ],
       "strings": [
-        "Currency was evaluated once, at the stated check time, against the supplied manifest, policy and incidents; it is not live"
+        "Currency was evaluated once, at the stated check time, against the supplied manifest, policy and incidents; it is not live",
+        "Run the KYA currency check (kya.currency/v1) yourself with your own manifest, policy, incidents and clock. The values here are the exporter result at checkedAt and are not proof."
+      ]
+    },
+    {
+      "code": "DECLARATION_NOT_AUTHORITY",
+      "meaning": "A reference or declaration records a claim; it carries no authority over another artifact.",
+      "artifactKinds": [
+        "universe"
+      ],
+      "strings": [
+        "Correction references are declarations; replay integrity is distinct from authority to revoke an assessment"
+      ]
+    },
+    {
+      "code": "DECLARATION_NOT_OBSERVED_EFFECT",
+      "meaning": "Agent-reported actions are declarations, not tool effects observed by an independent party.",
+      "artifactKinds": [
+        "native-adapter"
+      ],
+      "strings": [
+        "Agent-reported actions are declarations, not independently observed tool effects."
+      ]
+    },
+    {
+      "code": "DECLARED_FIELD_UNVERIFIED",
+      "meaning": "The listed property was imported from a declaration and was not verified.",
+      "artifactKinds": [
+        "declaration-import"
+      ],
+      "strings": [
+        "behavior and quality",
+        "cryptographic proofs and credentials",
+        "hardware attestation",
+        "runtime enforcement"
       ]
     },
     {
@@ -111,7 +197,9 @@
         "dossier"
       ],
       "strings": [
-        "Signature integrity, policy-assigned issuer roles, capture completeness and execution truth are separate."
+        "Issuer independence is a policy assignment",
+        "Signature integrity, policy-assigned issuer roles, capture completeness and execution truth are separate.",
+        "The relying policy assigns independent roles; signatures do not establish organizational independence."
       ]
     },
     {
@@ -125,6 +213,17 @@
       ]
     },
     {
+      "code": "MODEL_IDENTITY_UNVERIFIED",
+      "meaning": "The identity of the serving model or loaded code was not verified.",
+      "artifactKinds": [
+        "dossier"
+      ],
+      "strings": [
+        "Requested model and on-disk hashes do not attest the model or code actually loaded.",
+        "Serving model identity is unverified"
+      ]
+    },
+    {
       "code": "NOT_AUTHORIZATION_GRANT",
       "meaning": "The artifact does not grant or imply any permission; the relying party decides what it permits.",
       "artifactKinds": [
@@ -132,14 +231,20 @@
         "bridge-export",
         "currency",
         "declaration-import",
-        "dossier"
+        "dossier",
+        "presentation"
       ],
       "strings": [
         "A passing check is not an authorization grant",
+        "An assessment is not an authorization grant",
         "Local policy result; not an authorization grant",
         "No score or permission grant is produced",
         "Not an authorization grant; a relying party decides what an assessment permits",
-        "Supplied-bundle policy result; not an authorization grant or a human credit score."
+        "Pointer to a KYA assessment of this agent configuration and its currency check. Not an authorization grant.",
+        "Supplied-bundle policy result; not an authorization grant or a human credit score.",
+        "This cross-check rebuilds the export from the supplied report and compares it. It proves the export is consistent with that report, not that the report is truthful, authentic or authorized.",
+        "This is a scoped relying-policy result. It grants no authorization, verifies no actual effects, and does not establish complete capture or independent issuer identity. It is not a commercial quality badge or a credit score for a person.",
+        "authorization grant"
       ]
     },
     {
@@ -158,42 +263,50 @@
       "code": "NOT_HUMAN_CREDIT_SCORE",
       "meaning": "The result is not a credit score or rating of a person.",
       "artifactKinds": [
-        "dossier"
+        "dossier",
+        "presentation"
       ],
       "strings": [
-        "Supplied-bundle policy result; not an authorization grant or a human credit score."
+        "Supplied-bundle policy result; not an authorization grant or a human credit score.",
+        "This is a scoped relying-policy result. It grants no authorization, verifies no actual effects, and does not establish complete capture or independent issuer identity. It is not a commercial quality badge or a credit score for a person."
       ]
     },
     {
       "code": "NOT_INDEPENDENT_ASSESSMENT",
       "meaning": "Ephemeral self-signed integrity is not an independent assessment.",
       "artifactKinds": [
-        "benchmark-run"
+        "benchmark-run",
+        "dossier"
       ],
       "strings": [
-        "Ephemeral self-signing keys provide fixture integrity, not independent assessment."
+        "Ephemeral self-signing keys provide fixture integrity, not independent assessment.",
+        "The relying policy assigns independent roles; signatures do not establish organizational independence."
       ]
     },
     {
       "code": "NOT_LEGAL_RIGHTS_VERIFICATION",
       "meaning": "Declared redistribution rights were not legally verified.",
       "artifactKinds": [
+        "declaration-import",
         "universe"
       ],
       "strings": [
-        "Declared redistribution rights are not a legal rights verification"
+        "Declared redistribution rights are not a legal rights verification",
+        "controller consent and legal authority"
       ]
     },
     {
       "code": "NO_CAUSAL_CLAIM",
       "meaning": "No causal root cause or causal improvement is established.",
       "artifactKinds": [
+        "assessment",
         "dossier",
         "universe"
       ],
       "strings": [
         "Failures identify a predicate; causal root cause is not established.",
-        "Forks preserve history but cannot prove a causal improvement"
+        "Forks preserve history but cannot prove a causal improvement",
+        "same-policy evidence comparison; not a causal improvement claim"
       ]
     },
     {
@@ -201,11 +314,21 @@
       "meaning": "No commercial agent quality or runtime isolation was measured.",
       "artifactKinds": [
         "benchmark-catalog",
-        "benchmark-run"
+        "benchmark-run",
+        "dossier",
+        "presentation"
       ],
       "strings": [
         "Fixture controls measure local gate behavior, not commercial runtime quality or OS isolation.",
-        "Public fixture controls test local gates; they do not measure commercial agent quality."
+        "Fixture evidence. No commercial runtime quality was measured.",
+        "Fixture only. Commercial runtimes measured: no. Execution authenticated: no.",
+        "Fixture performance tests this controlled example. It does not establish real product behavior.",
+        "Mixed fixture and runtime-labelled receipts. The sources do not establish commercial runtime quality.",
+        "Public fixture controls test local gates; they do not measure commercial agent quality.",
+        "Synthetic fixture; no commercial agent quality measured.",
+        "Synthetic results do not score a commercial agent",
+        "This is a scoped relying-policy result. It grants no authorization, verifies no actual effects, and does not establish complete capture or independent issuer identity. It is not a commercial quality badge or a credit score for a person.",
+        "not a test of any named company or product"
       ]
     },
     {
@@ -223,11 +346,16 @@
       "meaning": "No authenticated observer or execution attestation backs the record.",
       "artifactKinds": [
         "benchmark-run",
+        "bridge-export",
+        "presentation",
         "universe"
       ],
       "strings": [
         "A local immutable research snapshot; no external timestamp, signer or execution attestation",
-        "Unsigned local replay record; no authenticated observer or execution attestation."
+        "Fixture only. Commercial runtimes measured: no. Execution authenticated: no.",
+        "Runtime-labelled receipts. Actual execution and effects are not authenticated by this report.",
+        "Unsigned local replay record; no authenticated observer or execution attestation.",
+        "truthful execution"
       ]
     },
     {
@@ -256,10 +384,35 @@
       "code": "NO_IDENTITY_VERIFICATION",
       "meaning": "No identity was verified.",
       "artifactKinds": [
+        "bridge-export",
+        "declaration-import",
         "inventory"
       ],
       "strings": [
-        "No quality score or identity verification was performed"
+        "No quality score or identity verification was performed",
+        "external identity",
+        "human identity"
+      ]
+    },
+    {
+      "code": "NO_OS_ISOLATION",
+      "meaning": "The child process runs with the caller operating system permissions; tool or write restrictions do not establish OS or managed-policy isolation.",
+      "artifactKinds": [
+        "native-adapter"
+      ],
+      "strings": [
+        "Deliberately included instructions or local file absence do not establish policy/OS isolation; startup races remain.",
+        "The child runs with caller OS permissions; read-only/tool-disabled settings do not establish OS or managed-policy isolation."
+      ]
+    },
+    {
+      "code": "NO_PROOF_OF_ABSENCE",
+      "meaning": "No recorded observation or failure does not prove that none occurred.",
+      "artifactKinds": [
+        "presentation"
+      ],
+      "strings": [
+        "No failure observations supplied. This is not proof of absence of failure."
       ]
     },
     {
@@ -288,10 +441,16 @@
       "code": "NO_SIDE_EFFECT_VERIFICATION",
       "meaning": "Tool side effects and actual effects were not verified.",
       "artifactKinds": [
-        "dossier"
+        "conformance-run",
+        "dossier",
+        "presentation"
       ],
       "strings": [
-        "Structured-response replay does not verify tool side effects or omitted incidents."
+        "Actual side effects are unverified",
+        "Structured responses and signatures do not independently prove tool effects, denied attempts or absence of hidden actions.",
+        "Structured traces are adapter observations, not independent proof of real side effects.",
+        "Structured-response replay does not verify tool side effects or omitted incidents.",
+        "This is a scoped relying-policy result. It grants no authorization, verifies no actual effects, and does not establish complete capture or independent issuer identity. It is not a commercial quality badge or a credit score for a person."
       ]
     },
     {
@@ -308,10 +467,13 @@
       "code": "NO_UNIVERSAL_PREDICTIVE_VALIDITY",
       "meaning": "Results are not shown to predict behavior outside the assessed scope, and public suites can be gamed.",
       "artifactKinds": [
-        "assessment"
+        "assessment",
+        "dossier"
       ],
       "strings": [
-        "No universal predictive validation; public suites can be gamed"
+        "No universal predictive validation; public suites can be gamed",
+        "Predictive assurance is uncalibrated",
+        "Weights and thresholds have no established prospective outcome calibration. Score upperBound is a logical unresolved-case bound, not a confidence interval."
       ]
     },
     {
@@ -322,8 +484,21 @@
         "dossier"
       ],
       "strings": [
+        "A policy-qualified receipt bundle can still lack diagnostic originals. Original coverage describes supplied selected checks, not incident-history completeness.",
+        "Incident history is incomplete",
         "Incident records are trusted only through the supplied policy anchors; an omitted incident is undetectable",
-        "Structured-response replay does not verify tool side effects or omitted incidents."
+        "Structured-response replay does not verify tool side effects or omitted incidents.",
+        "Supplied receipts and originals cannot prove that omitted incidents never happened."
+      ]
+    },
+    {
+      "code": "PARSER_CONTRACT_VERSION_SPECIFIC",
+      "meaning": "The parser accepts only the output contract of one tool version and rejects anything else.",
+      "artifactKinds": [
+        "native-adapter"
+      ],
+      "strings": [
+        "Version-specific parser contract; unsupported or ambiguous transcripts are rejected."
       ]
     },
     {
@@ -333,7 +508,8 @@
         "inventory"
       ],
       "strings": [
-        "Allowlisted file digests only; not an exact executable or full configuration attestation"
+        "Allowlisted file digests only; not an exact executable or full configuration attestation",
+        "Partial static configuration inventory; no behavioral assessment"
       ]
     },
     {
@@ -347,23 +523,60 @@
       ]
     },
     {
+      "code": "PROVIDER_SCHEMA_NOT_IMPLIED",
+      "meaning": "No default provider output schema is implied; a reviewed schema may support only part of the purposes.",
+      "artifactKinds": [
+        "native-adapter"
+      ],
+      "strings": [
+        "No default provider schema is implied; explicitly reviewed schemas may support only a subset of purposes."
+      ]
+    },
+    {
       "code": "PUBLIC_CATALOG_CONTAMINATION",
       "meaning": "A fixed public catalog can be contaminated and is not a protected holdout.",
       "artifactKinds": [
-        "benchmark-catalog"
+        "benchmark-catalog",
+        "conformance-run",
+        "dossier"
       ],
       "strings": [
-        "A fixed public catalog is vulnerable to contamination and is not a protected holdout."
+        "A fixed public catalog is vulnerable to contamination and is not a protected holdout.",
+        "Passing published cases can reflect memorization. No protected holdout result is inferred.",
+        "Public case contamination is unmeasured",
+        "Public synthetic cases are susceptible to contamination."
       ]
     },
     {
       "code": "RAW_EVIDENCE_OMITTED",
       "meaning": "Raw responses and private detail are withheld; original bytes live in authorized private storage.",
       "artifactKinds": [
-        "dossier"
+        "dossier",
+        "presentation"
       ],
       "strings": [
-        "Raw responses and private error prose are omitted; original bytes belong in authorized private storage."
+        "Raw responses and private error prose are omitted; original bytes belong in authorized private storage.",
+        "Raw responses and private source code are not included in this presentation."
+      ]
+    },
+    {
+      "code": "RAW_OUTPUT_BYTES_PRIVATE",
+      "meaning": "Output hashes refer to private transcript bytes that must be retained separately to check them.",
+      "artifactKinds": [
+        "native-adapter"
+      ],
+      "strings": [
+        "Raw output hashes refer to private transcript bytes; original bytes must be retained separately."
+      ]
+    },
+    {
+      "code": "RUNTIME_REPORT_NOT_TRUTHFUL_EXECUTION",
+      "meaning": "Vendor events and completion markers are runtime reports and do not establish truthful execution.",
+      "artifactKinds": [
+        "native-adapter"
+      ],
+      "strings": [
+        "Vendor events and completion markers are runtime reports; they do not establish truthful execution."
       ]
     },
     {
@@ -371,13 +584,18 @@
       "meaning": "A valid signature shows byte integrity and key possession, not that the signed claims or the execution were truthful.",
       "artifactKinds": [
         "assessment",
+        "bridge-export",
         "dossier",
+        "presentation",
         "vc-credential"
       ],
       "strings": [
         "A valid signature proves possession of the issuer key and integrity of these bytes. It does not prove truthful execution, human identity, authorization, or independent review. Issuer trust is relative to the relying party policy.",
         "Signature integrity, policy-assigned issuer roles, capture completeness and execution truth are separate.",
-        "Signatures attest bytes and key possession, not truthful execution"
+        "Signatures attest bytes and key possession, not truthful execution",
+        "Structured responses and signatures do not independently prove tool effects, denied attempts or absence of hidden actions.",
+        "These are unsigned content commitments. Reconstruct the dossier from trusted original inputs and replay its evidence before relying on the decision. A matching checksum or valid signature does not establish truthful execution.",
+        "This cross-check rebuilds the export from the supplied report and compares it. It proves the export is consistent with that report, not that the report is truthful, authentic or authorized."
       ]
     },
     {
@@ -391,18 +609,51 @@
       ]
     },
     {
+      "code": "STRENGTH_REQUIRES_REPLAY",
+      "meaning": "A strength is claimed only where an original structured response replays to the signed outcome; a reported pass without one is not a demonstrated strength.",
+      "artifactKinds": [
+        "dossier",
+        "presentation"
+      ],
+      "strings": [
+        "A matching signed artifact contains a response that does not replay to its asserted outcome. It cannot support a strength.",
+        "No structured-response-replayed strengths are available.",
+        "Signed passing assertions are retained separately from replay-supported strengths. Missing, quarantined or unsupported originals cannot establish structured-response strength.",
+        "Unknown checks are unmeasured, not weaknesses. Reported passes without a verified original structured response are not demonstrated strengths."
+      ]
+    },
+    {
       "code": "SYNTHETIC_FIXTURE_EVIDENCE",
       "meaning": "The evidence or control is synthetic fixture material, not a measurement of a real product.",
       "artifactKinds": [
         "assessment",
         "benchmark-catalog",
         "benchmark-run",
+        "dossier",
+        "presentation",
         "vc-credential"
       ],
       "strings": [
         "Fixture controls measure local gate behavior, not commercial runtime quality or OS isolation.",
+        "Fixture evidence. No commercial runtime quality was measured.",
+        "Fixture only. Commercial runtimes measured: no. Execution authenticated: no.",
+        "Fixture performance tests this controlled example. It does not establish real product behavior.",
         "Includes synthetic fixture evidence; not a real product benchmark",
-        "Public fixture controls test local gates; they do not measure commercial agent quality."
+        "Mixed fixture and runtime-labelled receipts. The sources do not establish commercial runtime quality.",
+        "Public fixture controls test local gates; they do not measure commercial agent quality.",
+        "Synthetic fixture; no commercial agent quality measured.",
+        "Synthetic results do not score a commercial agent"
+      ]
+    },
+    {
+      "code": "UNKNOWN_CHECKS_UNMEASURED",
+      "meaning": "A check without admissible evidence is unmeasured; it is neither a pass nor a weakness.",
+      "artifactKinds": [
+        "presentation"
+      ],
+      "strings": [
+        "No admissible scored evidence. Unknown checks remain unmeasured.",
+        "Unknown checks are unmeasured, not weaknesses. Reported passes without a verified original structured response are not demonstrated strengths."
       ]
     },
     {
@@ -432,7 +683,8 @@
         "dossier"
       ],
       "strings": [
-        "Score upperBound is not a statistical confidence interval."
+        "Score upperBound is not a statistical confidence interval.",
+        "Weights and thresholds have no established prospective outcome calibration. Score upperBound is a logical unresolved-case bound, not a confidence interval."
       ]
     }
   ]
