@@ -93,6 +93,14 @@ test('npm publish appears only in steps gated on a real run, in a job that needs
   assert.ok(!build.body.join('\n').includes('environment:'));
 });
 
+test('the provenance attestation step runs only when the dry run input is false', () => {
+  const text = readFileSync(join(root, '.github/workflows/release.yml'), 'utf8');
+  const i = text.indexOf('actions/attest-build-provenance@');
+  assert.ok(i > 0);
+  const before = text.slice(Math.max(0, i - 160), i);
+  assert.ok(before.includes('inputs.dry_run == false'), 'attest step must be gated on dry_run == false');
+});
+
 test('the build job runs the gates and builds verifies and attests the tarball', () => {
   const build = jobs().find(j => j.name === 'build').body.join('\n');
   for (const needle of ['scripts/check.mjs', 'privacy:scan', '--test', 'scripts/mutation-check.mjs', 'scripts/requirements.mjs --check', 'scripts/release-readiness.mjs', 'scripts/pack.mjs', 'scripts/verify-release.mjs', 'scripts/sbom.mjs', 'actions/attest-build-provenance@', 'actions/upload-artifact@', "'# skipped 0'", "'# todo 0'"]) {
