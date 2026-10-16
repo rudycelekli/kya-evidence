@@ -34,6 +34,7 @@
     "conformance-report": "node scripts/conformance-report.mjs",
     "campaign": "node scripts/kya-campaign.mjs",
     "check:agent": "node scripts/kya-check.mjs",
-    "policy:init": "node scripts/kya-policy-init.mjs"
+    "policy:init": "node scripts/kya-policy-init.mjs",
+    "release:readiness": "node scripts/release-readiness.mjs"
   }
 }

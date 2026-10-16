@@ -1,0 +1,137 @@
+name: release
+# Manual release workflow. It has no push, tag or schedule trigger: nothing here runs unless the owner starts it.
+# Default is a dry run. A dry run builds and verifies the tarball and publishes and attests nothing.
+# See docs/RELEASING.md for the procedure and for the owner-only setup (npm account, 2FA, trusted publisher or
+# token, the `release` environment with required reviewers).
+#
+# Action pins: every `uses:` is a full commit SHA. checkout and setup-node reuse the SHAs already pinned in
+# ci.yml. upload-artifact v4.6.2, download-artifact v4.3.0 and attest-build-provenance v4.2.2 were resolved on
+# 2026-10-16 with read-only `gh api repos/actions/<name>/tags` (the commit SHA each tag points at). The SHAs were
+# not independently re-checked against the action source. Re-resolve and review them before bumping.
+on:
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Dry run: build and verify only. Set to false to allow the gated publish job."
+        type: boolean
+        default: true
+permissions:
+  contents: read
+concurrency:
+  group: release
+  cancel-in-progress: false
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+      attestations: write
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 22
+      - run: node scripts/check.mjs
+      - run: npm run privacy:scan
+      - run: npm run privacy:scan:vectors
+      - name: Run tests (no test may be skipped)
+        shell: bash
+        run: |
+          set -o pipefail
+          node --test --test-reporter=tap test/*.test.mjs | tee "$RUNNER_TEMP/tap.txt"
+          grep -qx '# skipped 0' "$RUNNER_TEMP/tap.txt"
+          grep -qx '# todo 0' "$RUNNER_TEMP/tap.txt"
+      - run: node scripts/mutation-check.mjs
+      - run: node scripts/adr-index.mjs
+      - run: node scripts/profile-registry.mjs --check
+      - run: node scripts/requirements.mjs --check
+      - name: Release readiness (automated gates; outside gates stay open)
+        run: node scripts/release-readiness.mjs
+      - run: node scripts/pack.mjs
+      - run: node scripts/verify-release.mjs
+      - name: Verify reproducible package bytes
+        shell: bash
+        run: |
+          cp dist/release-receipt.json dist/first-receipt.json
+          node scripts/pack.mjs
+          node --input-type=module -e 'import {readFileSync} from "node:fs";const a=JSON.parse(readFileSync("dist/first-receipt.json"));const b=JSON.parse(readFileSync("dist/release-receipt.json"));if(a.archiveSha256!==b.archiveSha256)throw Error("non-reproducible archive");'
+          rm dist/first-receipt.json
+      - name: Generate SBOM
+        run: node scripts/sbom.mjs --out dist/sbom.cdx.json
+      - name: Record digests
+        shell: bash
+        run: |
+          cd dist
+          sha256sum -- *.tgz release-receipt.json sbom.cdx.json | tee "$GITHUB_STEP_SUMMARY"
+      # Attestation writes to a public transparency log, so a dry run must not make one.
+      - if: ${{ inputs.dry_run == false }}
+        uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
+        with:
+          subject-path: dist/*.tgz
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: kya-evidence-release
+          path: |
+            dist/*.tgz
+            dist/release-receipt.json
+            dist/sbom.cdx.json
+          if-no-files-found: error
+          retention-days: 30
+  publish:
+    # Runs only for a non-dry run, and only after the owner approves the `release` environment.
+    needs: build
+    if: ${{ inputs.dry_run == false }}
+    runs-on: ubuntu-latest
+    environment: release
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 22
+          registry-url: https://registry.npmjs.org
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: kya-evidence-release
+          path: dist
+      - name: Verify the downloaded tarball against its receipt
+        run: node scripts/verify-release.mjs
+      - name: Check npm publisher configuration
+        id: cfg
+        shell: bash
+        env:
+          HAS_NPM_TOKEN: ${{ secrets.NPM_TOKEN != '' }}
+          HAS_TRUSTED_PUBLISHER: ${{ vars.NPM_TRUSTED_PUBLISHER == 'true' }}
+        run: |
+          if [ "$HAS_TRUSTED_PUBLISHER" = "true" ]; then
+            echo "mode=trusted" >> "$GITHUB_OUTPUT"
+          elif [ "$HAS_NPM_TOKEN" = "true" ]; then
+            echo "mode=token" >> "$GITHUB_OUTPUT"
+          else
+            echo "mode=none" >> "$GITHUB_OUTPUT"
+            echo "No npm token or trusted publisher is configured. Nothing was published. See docs/RELEASING.md section 6."
+          fi
+      - name: Publish to npm with provenance (trusted publisher, no stored token)
+        if: ${{ inputs.dry_run == false && steps.cfg.outputs.mode == 'trusted' }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm --version
+          unset NODE_AUTH_TOKEN
+          npm publish dist/kya-evidence-*.tgz --provenance --access public --tag alpha
+      - name: Publish to npm with provenance (token)
+        if: ${{ inputs.dry_run == false && steps.cfg.outputs.mode == 'token' }}
+        shell: bash
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          set -euo pipefail
+          npm --version
+          npm publish dist/kya-evidence-*.tgz --provenance --access public --tag alpha
