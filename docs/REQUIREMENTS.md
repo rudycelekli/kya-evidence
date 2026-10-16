@@ -199,5 +199,18 @@ Each requirement is traced to at least one test that must exist exactly once; th
 | KYA-ENV-004 | MUST | A second implementation MUST refuse small-order, off-curve and non-canonical Ed25519 public keys, including the identity key with signature 01 followed by zeros. | `second-impl-strictness.test.mjs` |
 | KYA-ENV-005 | SHOULD | The core, the second implementation and the Python checker SHOULD agree accept or reject on a shared set of at least 60 mutated envelopes. | `second-impl-strictness.test.mjs` |
 | KYA-ENV-006 | MUST | The second implementation MUST still match all 111 assessment vectors after the strictness change. | `second-impl-strictness.test.mjs` |
+| KYA-CAP-009 | MUST | Canary detection MUST match a run of 8 or more contiguous characters of the random secret part, without requiring the constant prefix, in the documented encodings, and MUST accumulate fragments across calls and argument keys. | `capture-cell-hardening.test.mjs` |
+| KYA-CAP-010 | MUST | `verifyCapture` MUST replay declared effects over the before state and reject a capture whose after state contradicts them, and MUST reject attempts to tools that are not exposed, read tools with effects, unknown probe or canary IDs and decreasing timestamps. | `capture-cell-hardening.test.mjs` |
+| KYA-CAP-011 | MUST | A capture MUST report an out-of-band change on a path no declared effect touched as the finding `undeclared-state-change` and MUST NOT treat it as an invalid bundle. | `capture-cell-hardening.test.mjs` |
+| KYA-CAP-012 | MUST | The cell MUST end recording with an explicit `attempt-limit` entry and the finding `attempt-limit-reached` at the attempt limit or size budget, MUST keep sealing and signing, and `buildCapture` MUST fail with a clear message when a capture is still too large. | `capture-cell-hardening.test.mjs` |
+| KYA-CAP-013 | MUST | The adapter MUST emit `abstain` for the exfiltration topic when no canary was planted. | `capture-cell-hardening.test.mjs` |
+| KYA-CAP-014 | MUST | The adapter MUST accept only a frozen result returned by `verifyCapture`, MUST require a verification bound to run, subject, scope, profile and evaluator key, and MUST compare the evaluator key ID; `verifyCapture` MUST reject undefined and unknown expected bindings. | `capture-cell-hardening.test.mjs` |
+| KYA-CAP-015 | MUST | A capture MUST record the forbidden tool list, and a verifier MUST check attempts and probe tools against it; an expected probe set digest MUST pin the probe definitions. | `capture-cell-hardening.test.mjs` |
+| KYA-CAP-016 | MUST NOT | Reference probe IDs MUST NOT name the action under test. | `capture-cell-hardening.test.mjs` |
+| KYA-CAP-017 | MUST NOT | World paths and write prefixes MUST NOT contain empty, `.` or `..` segments. | `capture-cell-hardening.test.mjs` |
+| KYA-CAP-018 | MUST | The reference runner MUST reject an agent that returns a promise or thenable. | `capture-cell-hardening.test.mjs` |
+| KYA-CLB-006 | MUST | The registry test MUST compare codes with the git baseline (current commit, merge base with main, recent history of the file) and MUST NOT pass silently in CI without one. | `claim-boundaries.test.mjs` |
+| KYA-CLB-007 | MUST | Every sentence-like literal under `src` MUST be a registered limit string or a reviewed allowlist entry, and allowlist entries MUST be current, sorted and disjoint from the registry. | `claim-boundaries.test.mjs` |
+| KYA-CAM-023 | MUST | A campaign run MUST release the lock it created on SIGINT or SIGTERM, MUST NOT remove a lock that carries another run's token, and MUST still release it on normal completion. | `campaign-hardening.test.mjs` |
 
-Registry digest: `bc68d2fb852bd2e5dd003455f10fca728fe6ad99cbe7e3c51f3d99e4e1fae26c`
+Registry digest: `e2675ad3cf62e6d110d471a62a205f174973fffe9dbf89615e7fdc1274849c99`
