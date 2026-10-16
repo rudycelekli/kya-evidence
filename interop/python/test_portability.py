@@ -195,5 +195,112 @@ class IncidentBytes(unittest.TestCase):
         self.assertNotIn(b"Traceback", done.stderr)
 
 
+class PublicKeyStrictness(unittest.TestCase):
+    """The core refuses non-canonical key spellings and small-order or non-canonical points; so must this checker."""
+    HEAD, TAIL = "-----BEGIN PUBLIC KEY-----", "-----END PUBLIC KEY-----"
+    PREFIX = bytes.fromhex("302a300506032b6570032100")
+    ZERO_SIG = "AQ" + "A" * 84
+
+    def envelope(self, pem=None, der=None, signature=None):
+        import hashlib
+        env = copy.deepcopy(VECTORS["signature"]["envelope"])
+        if pem is not None:
+            env["proof"]["publicKey"] = pem
+            env["proof"]["keyId"] = hashlib.sha256(der).hexdigest()
+        if signature is not None:
+            env["proof"]["signature"] = signature
+        return env
+
+    def good(self):
+        import base64
+        pem = VECTORS["signature"]["envelope"]["proof"]["publicKey"]
+        body = pem.split("\n")[1]
+        return pem, body, base64.b64decode(body)
+
+    def pem_of(self, der, width=60):
+        import base64
+        text = base64.b64encode(der).decode()
+        lines = [text[i:i + width] for i in range(0, len(text), width)]
+        return self.HEAD + "\n" + "\n".join(lines) + "\n" + self.TAIL + "\n"
+
+    def refused(self, env, pattern):
+        for crypto in (False, True):
+            with self.assertRaisesRegex(InvalidValue, pattern):
+                MODULE["signature_bytes"](env, crypto)
+
+    def test_canonical_vector_key_is_accepted(self):
+        pem, _, der = self.good()
+        self.assertEqual(self.pem_of(der), pem)
+        self.assertEqual(MODULE["signature_bytes"](self.envelope(), False)["status"], "unavailable")
+
+    def test_crlf_pem_is_refused(self):
+        pem, _, der = self.good()
+        self.refused(self.envelope(pem.replace("\n", "\r\n"), der), "canonical")
+
+    def test_rewrapped_pem_lines_are_refused(self):
+        _, _, der = self.good()
+        for width in (20, 30, 40, 59):
+            self.refused(self.envelope(self.pem_of(der, width), der), "canonical")
+
+    def test_missing_trailing_newline_is_refused(self):
+        pem, _, der = self.good()
+        self.refused(self.envelope(pem[:-1], der), "canonical")
+
+    def test_blank_line_in_base64_is_refused(self):
+        _, body, der = self.good()
+        self.refused(self.envelope(self.HEAD + "\n\n" + body + "\n" + self.TAIL + "\n", der), "canonical")
+        self.refused(self.envelope(self.HEAD + "\n" + body + "\n\n" + self.TAIL + "\n", der), "canonical")
+
+    def test_non_canonical_trailing_base64_bits_are_refused(self):
+        _, body, der = self.good()
+        alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
+        sloppy = body[:58] + alphabet[(alphabet.index(body[58]) + 1) % 64] + "="
+        self.refused(self.envelope(self.HEAD + "\n" + sloppy + "\n" + self.TAIL + "\n", der), "canonical")
+
+    def test_long_form_der_length_is_refused(self):
+        _, _, der = self.good()
+        longer = bytes([0x30, 0x81, der[1]]) + der[2:]
+        self.refused(self.envelope(self.pem_of(longer), longer), "SPKI|canonical")
+
+    def test_trailing_zero_bytes_after_the_spki_are_refused(self):
+        _, _, der = self.good()
+        for extra in (1, 2, 8):
+            padded = der + bytes(extra)
+            self.refused(self.envelope(self.pem_of(padded), padded), "SPKI|canonical")
+
+    def test_identity_point_key_with_signature_01_then_zeros_is_refused(self):
+        der = self.PREFIX + bytes([1]) + bytes(31)
+        self.refused(self.envelope(self.pem_of(der), der, self.ZERO_SIG), "small-order")
+
+    def test_every_small_order_point_is_refused(self):
+        for raw in (
+            "01" + "00" * 31, "ec" + "ff" * 30 + "7f", "00" * 32, "00" * 31 + "80",
+            "c7176a703d4dd84fba3c0b760d10670f2a2053fa2c39ccc64ec7fd7792ac037a",
+            "c7176a703d4dd84fba3c0b760d10670f2a2053fa2c39ccc64ec7fd7792ac03fa",
+            "26e8958fc2b227b045c3f489f2ef98f0d5dfac05d3c63339b13802886d53fc05",
+            "26e8958fc2b227b045c3f489f2ef98f0d5dfac05d3c63339b13802886d53fc85",
+        ):
+            der = self.PREFIX + bytes.fromhex(raw)
+            self.refused(self.envelope(self.pem_of(der), der, self.ZERO_SIG), "small-order")
+
+    def test_non_canonical_y_encodings_are_refused(self):
+        for raw in (
+            "ed" + "ff" * 30 + "7f", "ee" + "ff" * 30 + "7f", "ee" + "ff" * 30 + "ff",
+            "01" + "00" * 30 + "80", "ff" * 32,
+        ):
+            der = self.PREFIX + bytes.fromhex(raw)
+            self.refused(self.envelope(self.pem_of(der), der, self.ZERO_SIG), "(?i)non-canonical")
+
+    def test_off_curve_point_is_refused(self):
+        for y in range(2, 40):
+            der = self.PREFIX + y.to_bytes(32, "little")
+            try:
+                MODULE["signature_bytes"](self.envelope(self.pem_of(der), der, self.ZERO_SIG), False)
+            except InvalidValue as error:
+                if "not on the curve" in str(error):
+                    return
+        self.fail("expected at least one small y value to be off the curve")
+
+
 if __name__ == "__main__":
     unittest.main()
