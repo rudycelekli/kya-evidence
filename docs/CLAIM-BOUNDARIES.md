@@ -21,7 +21,12 @@ A claim-boundary code states something the artifact does NOT show. `NOT_AUTHORIZ
 
 ## Enforcement
 
-`test/claim-boundaries.test.mjs` scans the known emitting modules, fails if any emitted limit string has no code, fails if a registry string is no longer emitted, and fails if a committed code is removed. Adding limit text to a new module requires adding that module to the test scan list; the scan is a list of known emitters, not a repository-wide guarantee.
+`test/claim-boundaries.test.mjs` enforces the registry in four ways.
+
+1. It scans the known emitting arrays and constants (including the native adapter limitations, the conformance run limitations and the bridge `NOT_ASSERTED` list) and fails if an emitted limit string has no code.
+2. It scans every `.mjs` file under `src` (`test/claim-scan.mjs`) for sentence-like string literals (three words or more, fifteen characters or more, any quote style, templates without expressions; comments and regular expressions are skipped; lines that raise or build an error are skipped). Each such literal must be a registered string or a reviewed entry of `evidence/claim-boundary-allowlist.json`, the explicit list of sentence-like strings that are not limit statements (reasons, labels, instructions, recommendations). A new sentence in `src` therefore fails the test until someone either gives it a code or reviews it into the allowlist. The scan is lexical, not a parser: a limit sentence that is built by concatenation, assembled in a template with an expression, or kept outside `src` is not seen, and a short phrase of fewer than three words is not seen unless it sits in one of the known arrays.
+3. It fails if a registry string is no longer present in `src`, and if an allowlist entry no longer exists, is unsorted, duplicated, or also registered.
+4. Append-only: a code may never be removed or renamed. The in-file `committedCodes` list can be edited together with the codes, so the test also compares with git: the current commit, the merge base with `main` (or `origin/main`) and the last 25 commits that touched the registry. Any code present in one of those versions must still exist. Outside a git checkout the comparison is skipped with a message, and under `CI=1` a missing baseline fails the test instead of passing silently. A shallow clone with a single commit compares only with that commit.
 
 ## Not done
 
