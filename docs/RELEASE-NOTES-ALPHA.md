@@ -1,6 +1,6 @@
 # KYA Evidence 0.1.0-alpha.4: launch note
 
-Status of this note: a draft for the owner. Nothing has been published; `package.json` still reads `0.1.0-alpha.3` until the release commit described in [RELEASING.md](RELEASING.md). Edit the version below when the bump lands.
+Status of this note: a draft for the owner. Nothing has been published: no tag, no npm package, no GitHub release. `package.json` reads `0.1.0-alpha.4` at the release commit described in [RELEASING.md](RELEASING.md). Counts at that commit: 915 tests, 211 traced requirements, 111 assessment vectors, 16 frozen controls, 87 mutation controls (mutation run not repeated for this note; only its preflight).
 
 ## What this is
 
