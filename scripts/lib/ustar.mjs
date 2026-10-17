@@ -4,7 +4,7 @@ import { canonical,digest,hashBytes,insist,exactKeys } from '../../src/shared/ca
 const zeros=b=>b.every(x=>x===0);
 function field(h,start,size){const b=h.subarray(start,start+size),end=b.indexOf(0);insist(end>=0&&zeros(b.subarray(end)),'Tar text field is not NUL padded');return b.subarray(0,end).toString('utf8');}
 function octal(h,start,size){const s=h.subarray(start,start+size).toString('ascii');insist(new RegExp(`^[0-7]{${size-1}}\\x00$`).test(s),'Noncanonical tar octal field');const n=parseInt(s,8);insist(Number.isSafeInteger(n),'Tar integer overflow');return n;}
-export function verifyReleaseReceipt(receipt,archive){
+export function verifyReleaseReceipt(receipt,archive,opts={}){
   receipt=JSON.parse(canonical(receipt));
   exactKeys(receipt,['schema','package','version','sourceCommit','archive','archiveSha256','inventoryDigest','inventory','build','status','assurance'],'Release receipt');
   insist(receipt.schema==='kya.release-receipt/v1','Unsupported release receipt');
@@ -15,7 +15,7 @@ export function verifyReleaseReceipt(receipt,archive){
   insist(digest(receipt.inventory)===receipt.inventoryDigest&&hashBytes(archive)===receipt.archiveSha256,'Release digest differs');
   const tar=gunzipSync(archive,{maxOutputLength:20_000_000});
   insist(tar.length%512===0,'Truncated tar blocks');
-  const actual=[],names=new Set();let pos=0,terminated=false;
+  const actual=[],names=new Set();let pos=0,terminated=false,pkgBytes=null;
   while(pos<tar.length){
     const h=tar.subarray(pos,pos+512);
     if(zeros(h)){insist(pos+1024<=tar.length&&zeros(tar.subarray(pos)),'Invalid tar terminator/trailing bytes');terminated=true;break;}
@@ -27,8 +27,18 @@ export function verifyReleaseReceipt(receipt,archive){
     insist(octal(h,100,8)===(name==='package/bin/kya.mjs'?0o755:0o644)&&octal(h,108,8)===0&&octal(h,116,8)===0&&octal(h,136,12)===0,'Tar mode/owner/time differs from frozen subset');
     const n=octal(h,124,12),end=pos+512+n,next=pos+512+Math.ceil(n/512)*512;
     insist(end<=tar.length&&next<=tar.length&&zeros(tar.subarray(end,next)),'Truncated tar body or nonzero padding');
+    if(name==='package/package.json')pkgBytes=Buffer.from(tar.subarray(pos+512,end));
     actual.push({path:name.slice(8),bytes:n,sha256:hashBytes(tar.subarray(pos+512,end))});pos=next;
   }
   insist(terminated&&digest(actual)===receipt.inventoryDigest,'Unpacked inventory differs or missing tar terminator');
-  return {archiveSha256:receipt.archiveSha256,sourceCommit:receipt.sourceCommit,sourceCommitVerified:false,files:actual.length,archiveIntegrity:'verified',authenticatedPublisher:false,publication:'not performed'};
+  if(opts.expectCommit!==undefined){
+    insist(typeof opts.expectCommit==='string'&&/^[a-f0-9]{40}$/.test(opts.expectCommit),'Expected commit must be a 40 character lowercase hex SHA');
+    insist(receipt.sourceCommit===opts.expectCommit,'Receipt source commit differs from the expected commit');
+  }
+  if(opts.bindPackage===true){
+    insist(pkgBytes!==null,'Archive has no package.json to bind the receipt to');
+    let meta;try{meta=JSON.parse(pkgBytes.toString('utf8'));}catch{insist(false,'Archive package.json is not valid JSON');}
+    insist(meta!==null&&typeof meta==='object'&&meta.name===receipt.package&&meta.version===receipt.version,'Receipt package or version differs from the archive package.json');
+  }
+  return {expectedCommitMatched:opts.expectCommit!==undefined,archiveSha256:receipt.archiveSha256,sourceCommit:receipt.sourceCommit,sourceCommitVerified:false,files:actual.length,archiveIntegrity:'verified',authenticatedPublisher:false,publication:'not performed'};
 }

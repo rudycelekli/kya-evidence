@@ -64,6 +64,10 @@ See `docs/examples/kya-check.workflow.yml` and `action/README.md`. When `GITHUB_
 
 Pass `now` explicitly so the recorded time is a decision you made. A system-clock result raises a `KYA clock` warning.
 
+Under `--require-pins` (always on in the Action by default) the `now` member of an `--assessment-inputs` file is ignored, because that file comes from the code under test and a pull request could backdate the clock. The system clock is used instead, and `clock.source` says `system-clock`. The CLI flag `--allow-inputs-clock` restores the file clock under `--require-pins` for local use; the Action does not expose it. Without `--require-pins` the file clock is still read, as before. An explicit `--now` always wins.
+
+Input paths given inside the workspace (the current directory) are resolved through symbolic links, including parent directories, and an input whose real path leaves the workspace is refused with exit 1. A path that is outside the workspace as written (for example an absolute path under the runner temp directory) is not checked for this.
+
 ## What it does NOT prove
 
 - It does not authorize anything. A reliable result says the supplied manifest, profile, policy, evidence, incidents and clock were consistent when checked.

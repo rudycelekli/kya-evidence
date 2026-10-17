@@ -34,3 +34,24 @@ test('receipt digest mismatches, filename traversal and gzip output limits rejec
   const y=fixture();y.receipt.archive='../fixture.tgz';assert.throws(()=>verifyReleaseReceipt(y.receipt,y.archive));
   const z=fixture(),bomb=gzipSync(Buffer.alloc(20_000_512));z.receipt.archiveSha256=hashBytes(bomb);assert.throws(()=>verifyReleaseReceipt(z.receipt,bomb));
 });
+
+const pkgFixture=(meta={name:'kya-evidence',version:'test'},patch={})=>{const x=fixture({name:'package/package.json',body:Buffer.from(JSON.stringify(meta))});Object.assign(x.receipt,patch);return x;};
+test('binding accepts the expected commit and a matching package name and version',()=>{
+  const x=pkgFixture(),r=verifyReleaseReceipt(x.receipt,x.archive,{expectCommit:'a'.repeat(40),bindPackage:true});
+  assert.equal(r.expectedCommitMatched,true);assert.equal(r.sourceCommitVerified,false);
+});
+test('binding rejects a receipt source commit that differs from the expected commit',()=>{
+  const x=pkgFixture();assert.throws(()=>verifyReleaseReceipt(x.receipt,x.archive,{expectCommit:'b'.repeat(40),bindPackage:true}),/expected commit/);
+});
+test('binding rejects an expected commit that is not a full lowercase SHA',()=>{
+  const x=pkgFixture();for(const bad of ['abc','A'.repeat(40),'',' '+'a'.repeat(39)])assert.throws(()=>verifyReleaseReceipt(x.receipt,x.archive,{expectCommit:bad,bindPackage:true}),/40 character/);
+});
+test('binding rejects a receipt version that differs from the archive package json',()=>{
+  const x=pkgFixture({name:'kya-evidence',version:'9.9.9'});assert.throws(()=>verifyReleaseReceipt(x.receipt,x.archive,{bindPackage:true}),/package or version/);
+});
+test('binding rejects a receipt package name that differs from the archive package json',()=>{
+  const x=pkgFixture({name:'other-name',version:'test'});assert.throws(()=>verifyReleaseReceipt(x.receipt,x.archive,{bindPackage:true}),/package or version/);
+});
+test('binding rejects an archive without a package json',()=>{
+  const x=fixture();assert.throws(()=>verifyReleaseReceipt(x.receipt,x.archive,{bindPackage:true}),/no package.json/);
+});

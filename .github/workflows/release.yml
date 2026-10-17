@@ -1,6 +1,8 @@
 name: release
 # Manual release workflow. It has no push, tag or schedule trigger: nothing here runs unless the owner starts it.
 # Default is a dry run. A dry run builds and verifies the tarball and publishes and attests nothing.
+# Every job runs only on refs/heads/main. The build job runs repository scripts with contents: read only, so it holds
+# no token that can sign or publish. Attestation and publish are separate jobs behind the `release` environment.
 # See docs/RELEASING.md for the procedure and for the owner-only setup (npm account, 2FA, trusted publisher or
 # token, the `release` environment with required reviewers).
 #
@@ -22,11 +24,11 @@ concurrency:
   cancel-in-progress: false
 jobs:
   build:
+    # Runs repository scripts, so it holds read access to contents and nothing else, and only on main.
+    if: ${{ github.ref == 'refs/heads/main' }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      id-token: write
-      attestations: write
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
@@ -66,11 +68,6 @@ jobs:
         run: |
           cd dist
           sha256sum -- *.tgz release-receipt.json sbom.cdx.json | tee "$GITHUB_STEP_SUMMARY"
-      # Attestation writes to a public transparency log, so a dry run must not make one.
-      - if: ${{ inputs.dry_run == false }}
-        uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
-        with:
-          subject-path: dist/*.tgz
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: kya-evidence-release
@@ -80,10 +77,37 @@ jobs:
             dist/sbom.cdx.json
           if-no-files-found: error
           retention-days: 30
-  publish:
-    # Runs only for a non-dry run, and only after the owner approves the `release` environment.
+  attest:
+    # Attestation writes to a public transparency log, so a dry run must not make one. It runs only for a real run
+    # on main, only after the owner approves the `release` environment, and holds only the permissions it needs.
     needs: build
-    if: ${{ inputs.dry_run == false }}
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run == false && github.ref == 'refs/heads/main' }}
+    runs-on: ubuntu-latest
+    environment: release
+    permissions:
+      contents: read
+      id-token: write
+      attestations: write
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 22
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: kya-evidence-release
+          path: dist
+      - name: Verify the downloaded tarball against its receipt and this commit
+        run: node scripts/verify-release.mjs --expect-commit "$GITHUB_SHA"
+      - uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
+        with:
+          subject-path: dist/*.tgz
+  publish:
+    # Runs only for a non-dry run on main, and only after the owner approves the `release` environment.
+    needs: [build, attest]
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run == false && github.ref == 'refs/heads/main' }}
     runs-on: ubuntu-latest
     environment: release
     permissions:
@@ -101,8 +125,8 @@ jobs:
         with:
           name: kya-evidence-release
           path: dist
-      - name: Verify the downloaded tarball against its receipt
-        run: node scripts/verify-release.mjs
+      - name: Verify the downloaded tarball against its receipt and this commit
+        run: node scripts/verify-release.mjs --expect-commit "$GITHUB_SHA"
       - name: Check npm publisher configuration
         id: cfg
         shell: bash
@@ -119,7 +143,7 @@ jobs:
             echo "No npm token or trusted publisher is configured. Nothing was published. See docs/RELEASING.md section 6."
           fi
       - name: Publish to npm with provenance (trusted publisher, no stored token)
-        if: ${{ inputs.dry_run == false && steps.cfg.outputs.mode == 'trusted' }}
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run == false && steps.cfg.outputs.mode == 'trusted' }}
         shell: bash
         run: |
           set -euo pipefail
@@ -127,7 +151,7 @@ jobs:
           unset NODE_AUTH_TOKEN
           npm publish dist/kya-evidence-*.tgz --provenance --access public --tag alpha
       - name: Publish to npm with provenance (token)
-        if: ${{ inputs.dry_run == false && steps.cfg.outputs.mode == 'token' }}
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run == false && steps.cfg.outputs.mode == 'token' }}
         shell: bash
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

@@ -30,11 +30,11 @@ Replace `OWNER/kya-evidence` and `COMMIT_SHA` with the repository you vendor or 
 
 | Input | Meaning |
 | :--- | :--- |
-| `assessment-inputs` | One JSON file with `manifest`, `profile`, `policy`, `evidence`, `evaluatorDigest` and optionally `now` |
+| `assessment-inputs` | One JSON file with `manifest`, `profile`, `policy`, `evidence`, `evaluatorDigest` and optionally `now`, which is ignored while `require-pins` is on (the default) because the file comes from the code under test; pass the `now` input instead |
 | `manifest`, `profile`, `policy`, `evidence`, `evaluator` | The same inputs as separate files plus the evaluator digest |
 | `assessment` | An existing assessment; with `manifest` and `policy` it selects currency-only mode |
 | `incidents` | Signed incident records |
-| `now` | ISO UTC timestamp with milliseconds. Empty means the system clock is read, and the summary and a warning annotation say so |
+| `now` | ISO UTC timestamp with milliseconds. Empty means the system clock is read, and the summary and a warning annotation say so. The action has no input for `--allow-inputs-clock`: a clock inside the inputs file never counts here |
 | `fail-on` | `unreliable` (default), `not-qualified` or `never` |
 | `allow-fixture` | `true` lets fixture or mixed evidence count as reliable. Default `false`: only runtime evidence is reliable (reason code `FIXTURE_EVIDENCE_NOT_RELIABLE`) |
 | `expect-policy-digest`, `expect-evaluator-digest` | Pinned SHA-256 digests; a mismatch exits 1 before any result. Take them from the base branch or a protected path, never from the code under test |

@@ -4,6 +4,7 @@ import { fileURLToPath } from 'node:url';
 import { gzipSync } from 'node:zlib';
 import { spawnSync } from 'node:child_process';
 import { hashBytes, digest } from '../src/index.mjs';
+import { isForbiddenPath, isTextLike, textMarker } from './lib/package-guard.mjs';
 
 const root=fileURLToPath(new URL('../',import.meta.url));
 function git(args,binary=false){const p=spawnSync('git',args,{cwd:root,encoding:binary?undefined:'utf8',maxBuffer:20_000_000});if(p.status!==0)throw Error('Git snapshot read failed');return p.stdout;}
@@ -25,8 +26,8 @@ function record(path,bytes){
 }
 const entries=[],inventory=[];
 for(const file of files){const path=file.path,bytes=git(['cat-file','blob',file.blob],true);const name=relative(root,path).replaceAll('\\','/');
-  if(/(?:^|\/)(?:\.env|\.private|\.swarm|\.claude-flow|node_modules)(?:\/|$)|\.pem$/.test(name))throw Error('Private path in package inventory');
-  if(/\.(?:mjs|js|json|md|html|css|svg|ts)$/.test(name)&&/(?:\/Users\/rudycelekli|sk-(?:proj-)?[A-Za-z0-9]{24,}|-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----)/.test(bytes.toString('utf8')))throw Error('Private path/secret marker in package text: '+name);
+  if(isForbiddenPath(name))throw Error('Private path in package inventory');
+  if(isTextLike(name)&&textMarker(bytes.toString('utf8')))throw Error('Private path/secret marker in package text: '+name);
   entries.push(record(path,bytes));inventory.push({path:name,bytes:bytes.length,sha256:hashBytes(bytes)});
 }
 const archive=gzipSync(Buffer.concat([...entries,Buffer.alloc(1024)]),{level:9});

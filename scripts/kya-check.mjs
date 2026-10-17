@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 // kya-check: a CI gate over assess and checkCurrency. Standalone; it does not touch bin/kya.mjs.
 // Exit codes: 0 reliable and current, 2 not qualified or reassess required, 1 usage or input error.
-import { readFileSync, lstatSync, appendFileSync } from 'node:fs';
-import { resolve } from 'node:path';
+import { readFileSync, lstatSync, appendFileSync, realpathSync } from 'node:fs';
+import { resolve, relative, isAbsolute, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { assess, checkCurrency, parseJson, digest, BLOCKER_CODES } from '../src/index.mjs';
 import { CORE_PROFILE } from '../src/conformance/index.mjs';
@@ -23,6 +23,7 @@ FILE for --assessment-inputs holds {manifest, profile, policy, evidence, evaluat
 --expect-evaluator-digest D  refuse (exit 1) unless the evaluator digest equals D
 --expect-assessment-digest D  currency-only mode: refuse (exit 1, ASSESSMENT_DIGEST_MISMATCH) unless the assessment reportDigest equals D
 --allow-unpinned-assessment  currency-only mode: do not withhold reliability (ASSESSMENT_NOT_PINNED) when no assessment pin is given
+--allow-inputs-clock       let the now member of an --assessment-inputs file set the clock under --require-pins (ignored there by default: the file comes from the code under test)
 --require-pins             refuse (exit 1, PINS_REQUIRED) unless the policy and evaluator pins (and, in currency-only mode, the assessment pin) are supplied
 Take inputs and pinned digests from the base branch or a protected path, never from the code under test.
 Exit: 0 reliable and current, 2 not qualified or reassess required, 1 usage or input error.
@@ -30,7 +31,7 @@ Without --now the system clock is read and the summary says so.
 A result is a local policy check, not an authorization grant.
 `;
 const VALUE_FLAGS = ['assessment-inputs', 'assessment', 'manifest', 'profile', 'policy', 'evidence', 'evaluator', 'incidents', 'now', 'fail-on', 'expect-policy-digest', 'expect-evaluator-digest', 'expect-assessment-digest'];
-const BOOLEAN_FLAGS = ['allow-fixture', 'allow-unpinned-assessment', 'require-pins'];
+const BOOLEAN_FLAGS = ['allow-fixture', 'allow-unpinned-assessment', 'require-pins', 'allow-inputs-clock'];
 const FAIL_ON = ['unreliable', 'not-qualified', 'never'];
 const INPUT_KEYS = ['manifest', 'profile', 'policy', 'evidence', 'evaluatorDigest', 'now'];
 const MAX_FILE = 4_194_304;
@@ -56,8 +57,21 @@ function parseArgs(argv) {
   return flags;
 }
 
+// A path given inside the workspace (the current directory) must still resolve inside it once every parent is
+// resolved, so a checked-in symlinked directory cannot point an input at a file outside the workspace.
+function confine(path, label) {
+  const lexical = resolve(path), root = resolve('.');
+  const rel = relative(root, lexical);
+  if (rel === '' || rel.startsWith('..') || isAbsolute(rel)) return;
+  let real, realRoot;
+  try { real = realpathSync(lexical); realRoot = realpathSync(root); } catch { usage(`Cannot read ${label}`); }
+  const back = relative(realRoot, real);
+  if (back === '..' || back.startsWith('..' + sep) || isAbsolute(back)) usage(`${label} resolves outside the workspace through a symbolic link`);
+}
+
 function readJson(path, label) {
   let st;
+  confine(path, label);
   try { st = lstatSync(path); } catch { usage(`Cannot read ${label}`); }
   if (!st.isFile() || st.isSymbolicLink() || st.size > MAX_FILE) usage(`${label} must be a bounded regular JSON file`);
   try { return parseJson(readFileSync(path, 'utf8')); } catch (e) { usage(`${label} is not valid JSON: ${clean(e.message, 120)}`); }
@@ -202,8 +216,10 @@ export function main(argv = process.argv.slice(2), env = process.env, write = s 
     if (!FAIL_ON.includes(failOn)) usage('--fail-on must be unreliable, not-qualified or never');
     const input = loadInputs(flags);
     const incidents = flags.incidents !== undefined ? readJson(flags.incidents, 'incidents') : [];
-    const clockSource = flags.now !== undefined ? 'flag' : input.fileNow !== undefined ? 'inputs-file' : 'system-clock';
-    const now = flags.now ?? input.fileNow ?? new Date().toISOString();
+    // Under --require-pins the inputs file comes from the code under test, so its clock is ignored unless opted in.
+    const fileNow = flags['require-pins'] && !flags['allow-inputs-clock'] ? undefined : input.fileNow;
+    const clockSource = flags.now !== undefined ? 'flag' : fileNow !== undefined ? 'inputs-file' : 'system-clock';
+    const now = flags.now ?? fileNow ?? new Date().toISOString();
     if (typeof now !== 'string' || !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/.test(now) || Number.isNaN(Date.parse(now))) usage('now must be an ISO UTC timestamp with milliseconds, for example 2026-01-01T00:00:00.000Z');
     let report;
     try {

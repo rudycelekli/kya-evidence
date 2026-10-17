@@ -139,11 +139,37 @@ test('the text report has an automated section and an outside section', () => {
 });
 
 test('exit code is 0 with the ready line when every automated gate passes', () => {
-  const r = capture(['--observed', observedFile('good.json', good())]);
-  assert.equal(r.code, 0);
-  assert.ok(r.out.includes('READY FOR OWNER DECISION: automated gates pass; 8 outside gates open'));
+  // A real run is simulated by injecting the collector; observations read from a file can never reach this.
+  const out = [], err = [];
+  const code = main([], { out: s => out.push(s), err: s => err.push(s) }, () => good());
+  const text = out.join('\n');
+  assert.equal(code, 0);
+  assert.ok(text.includes('READY FOR OWNER DECISION: automated gates pass; 8 outside gates open'));
+  assert.ok(text.includes('"schema": "kya.release-readiness/v1"'));
+});
+
+test('observations read from a file never produce READY or exit 0 even when every gate passes', () => {
+  const r = capture(['--observed', observedFile('good-injected.json', good())]);
+  assert.equal(r.code, 1);
+  assert.ok(!r.out.includes('READY FOR OWNER DECISION'));
+  assert.ok(r.out.includes('OBSERVATIONS INJECTED'));
   assert.ok(r.out.includes('not a real run'));
-  assert.ok(r.out.includes('"schema": "kya.release-readiness/v1"'));
+  const j = JSON.parse(capture(['--json', '--observed', observedFile('good-injected2.json', good())]).out);
+  assert.equal(j.ready, false);
+  assert.equal(j.injected, true);
+  assert.equal(j.failedAutomated, 0);
+  const built = buildReport(good(), { source: 'file x' });
+  assert.equal(built.ready, false);
+  assert.match(built.verdict, /^OBSERVATIONS INJECTED/);
+  assert.equal(buildReport(good()).ready, true);
+});
+
+test('the branch option accepts only main', () => {
+  assert.equal(capture(['--branch', 'develop', '--observed', observedFile('b.json', good())]).code, 2);
+  assert.match(capture(['--branch', 'feature/x']).err, /only main/);
+  const out = [];
+  const code = main(['--branch', 'main'], { out: s => out.push(s), err: () => {} }, o => { assert.equal(o.expectedBranch, 'main'); return good(); });
+  assert.equal(code, 0);
 });
 
 test('exit code is 1 and no ready line when an automated gate fails', () => {
@@ -152,7 +178,7 @@ test('exit code is 1 and no ready line when an automated gate fails', () => {
   const r = capture(['--observed', observedFile('bad.json', o)]);
   assert.equal(r.code, 1);
   assert.ok(!r.out.includes('READY FOR OWNER DECISION'));
-  assert.ok(r.out.includes('NOT READY: 1 of'));
+  assert.ok(r.out.includes('OBSERVATIONS INJECTED: 1 of'));
   assert.ok(r.out.includes('[FAIL] tests'));
   const j = capture(['--json', '--observed', observedFile('bad2.json', o)]);
   assert.equal(j.code, 1);
@@ -174,8 +200,9 @@ test('exit code is 2 for usage errors', () => {
 test('the command line process exits with the documented codes and prints the report', () => {
   const run = args => spawnSync(process.execPath, [script, ...args], { cwd: root, encoding: 'utf8', timeout: 20000 });
   const ok = run(['--observed', observedFile('cli-good.json', good())]);
-  assert.equal(ok.status, 0, ok.stderr);
-  assert.ok(ok.stdout.includes('READY FOR OWNER DECISION: automated gates pass; 8 outside gates open'));
+  assert.equal(ok.status, 1, ok.stderr);
+  assert.ok(ok.stdout.includes('OBSERVATIONS INJECTED'));
+  assert.ok(!ok.stdout.includes('READY FOR OWNER DECISION'));
   const o = good();
   o.securityText = '';
   const failing = run(['--observed', observedFile('cli-bad.json', o)]);
@@ -201,7 +228,7 @@ test('the script uses no network and publishes nothing', () => {
   const forbidden = ['node:http', 'node:https', 'node:net', 'node:dns', 'node:tls', 'node:dgram', 'fetch' + '(', 'XMLHttpRequest', 'WebSocket', 'npm ' + 'publish', 'git ' + 'push', 'git ' + 'tag', 'gh ' + 'release', 'curl', 'wget'];
   for (const word of forbidden) assert.ok(!src.includes(word), 'script must not contain ' + word);
   const imports = [...src.matchAll(/^import .* from '([^']+)';$/gm)].map(m => m[1]);
-  assert.deepEqual(imports.sort(), ['./lib/is-main.mjs', 'node:child_process', 'node:fs', 'node:path', 'node:url']);
+  assert.deepEqual(imports.sort(), ['./lib/is-main.mjs', './lib/package-guard.mjs', 'node:child_process', 'node:fs', 'node:path', 'node:url']);
   // The only commands it spawns are node and read-only git.
   const spawned = [...src.matchAll(/run\('([a-z]+)'/g)].map(m => m[1]);
   assert.ok(spawned.every(c => c === 'git'));
@@ -214,4 +241,48 @@ test('the package defines the readiness script and nothing else changed in its s
   const pkg = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8'));
   assert.equal(pkg.scripts['release:readiness'], 'node scripts/release-readiness.mjs');
   assert.ok(pkg.files.includes('scripts/') && pkg.files.includes('docs/'));
+});
+
+// Package content guard (shared by pack and readiness). Literal secret shapes are built by concatenation so the
+// repository text never contains them.
+import { isForbiddenPath, isTextLike, textMarker } from '../scripts/lib/package-guard.mjs';
+const rep = (ch, n) => ch.repeat(n);
+
+test('the package guard refuses private config and key file paths', () => {
+  for (const p of ['.claude/settings.json', 'docs/.claude/x.md', '.kya/state.json', 'examples/.kya/a.json', '.npmrc', 'docs/.npmrc', 'deploy/server.key', 'a/cert.p12', 'a/id_rsa', 'a/id_rsa.pub', 'id_ed25519', '.env', '.env.local', '.swarm/x', 'x/node_modules/y', 'a/b.pem'])
+    assert.equal(isForbiddenPath(p), true, p);
+  for (const p of ['README.md', 'docs/keys.md', 'src/keyring.mjs', 'scripts/lib/package-guard.mjs', 'docs/environment.md', 'examples/rsa-notes.md'])
+    assert.equal(isForbiddenPath(p), false, p);
+});
+
+test('the package guard flags GitHub npm and AWS token shapes built by concatenation', () => {
+  assert.equal(textMarker('token ' + 'gh' + 'p_' + rep('a', 36)), true);
+  assert.equal(textMarker('token ' + 'gh' + 'o_' + rep('B', 36)), true);
+  assert.equal(textMarker('token ' + 'gh' + 's_' + rep('9', 36)), true);
+  assert.equal(textMarker('NPM_TOKEN=' + 'npm' + '_' + rep('x', 36)), true);
+  assert.equal(textMarker('key ' + 'AK' + 'IA' + rep('A', 16)), true);
+  assert.equal(textMarker('-----BEGIN ' + 'PRIVATE KEY-----'), true);
+  assert.equal(textMarker('gh' + 'p_' + rep('a', 35)), false);
+  assert.equal(textMarker('npm' + '_' + rep('x', 35)), false);
+  assert.equal(textMarker('AK' + 'IA' + rep('A', 15)), false);
+});
+
+test('the package guard flags absolute home paths except documented placeholders', () => {
+  assert.equal(textMarker('see ' + '/Users/' + 'jsmith' + '/project'), true);
+  assert.equal(textMarker('see ' + '/home/' + 'deploy' + '/.ssh'), true);
+  assert.equal(textMarker('see ' + '/Users/' + 'rudycelekli' + '/x'), true);
+  assert.equal(textMarker('at /home/janedoe/.ssh and /Users/a and /home/runner/work'), false);
+  assert.equal(textMarker('at /Users/you/project'), false);
+});
+
+test('the package guard scans every extension except known binary ones', () => {
+  for (const f of ['a.mjs', 'a.yml', 'a.sh', 'a.py', 'a.txt', 'NOTICE', 'LICENSE', 'a.toml', '.gitignore']) assert.equal(isTextLike(f), true, f);
+  for (const f of ['a.png', 'a.PDF', 'a.woff2', 'a.tgz']) assert.equal(isTextLike(f), false, f);
+});
+
+test('pack and readiness both use the shared package guard', () => {
+  for (const f of ['scripts/pack.mjs', 'scripts/release-readiness.mjs']) {
+    const t = readFileSync(join(root, f), 'utf8');
+    assert.ok(t.includes("./lib/package-guard.mjs"), f);
+  }
 });

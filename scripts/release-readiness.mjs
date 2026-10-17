@@ -9,16 +9,18 @@
 // Exit 0 means "ready for an owner decision", not "approved". Nothing here publishes, tags, pushes or uses the
 // network: it spawns only node and read-only git commands.
 //
-// Usage: node scripts/release-readiness.mjs [--branch NAME] [--json] [--observed FILE]
-//   --branch NAME    branch the release must be cut from (default main)
+// Usage: node scripts/release-readiness.mjs [--branch main] [--json] [--observed FILE]
+//   --branch NAME    must be main (the default); any other value is a usage error (exit 2)
 //   --json           print only the JSON report
 //   --observed FILE  evaluate injected observations from a JSON file instead of running anything (test use);
-//                    the report says so, and the observations are never trusted as a real run.
+//                    the report says so, ready is always false and the exit code is 1, so injected observations
+//                    can never print READY or exit 0.
 import { readFileSync, existsSync, readdirSync, rmSync, statSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { isMain } from './lib/is-main.mjs';
+import { isForbiddenPath, isTextLike, textMarker } from './lib/package-guard.mjs';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 
@@ -105,10 +107,14 @@ export function buildReport(observed, meta = {}) {
   const automated = evaluateAutomated(observed);
   const failed = automated.filter(g => g.status !== 'pass').length;
   const outside = OUTSIDE_GATES.map(g => ({ id: g.id, title: g.title, status: 'OPEN', needs: g.needs }));
-  const verdict = failed === 0
+  const source = meta.source || 'run';
+  const injected = source !== 'run';
+  const verdict = injected
+    ? `OBSERVATIONS INJECTED: ${failed} of ${automated.length} automated gates fail on the supplied observations; this is not a real run, so READY is never reported; ${outside.length} outside gates open`
+    : failed === 0
     ? `READY FOR OWNER DECISION: automated gates pass; ${outside.length} outside gates open`
     : `NOT READY: ${failed} of ${automated.length} automated gates fail; ${outside.length} outside gates open`;
-  return { schema: 'kya.release-readiness/v1', source: meta.source || 'run', version: observed && observed.versions ? observed.versions.package ?? null : null, automated, outside, failedAutomated: failed, ready: failed === 0, verdict };
+  return { schema: 'kya.release-readiness/v1', source, injected, version: observed && observed.versions ? observed.versions.package ?? null : null, automated, outside, failedAutomated: failed, ready: failed === 0 && !injected, verdict };
 }
 
 export function renderText(report) {
@@ -137,15 +143,15 @@ function parseTap(out) {
   return { tests: n('tests'), pass: n('pass'), fail: n('fail'), cancelled: n('cancelled'), skipped: n('skipped'), todo: n('todo') };
 }
 
-/** Scan the files pack.mjs would package, using markers built by concatenation so this file carries none. */
+/** Scan the files pack.mjs would package, using the shared patterns so this file carries no literal marker. */
 function scanMarkers() {
-  const home = '/Users/' + 'rudycelekli', pk = '-----BEGIN (?:RSA |EC |OPENSSH )?' + 'PRIVATE KEY-----';
-  const marker = new RegExp(home + '|sk-(?:proj-)?[A-Za-z0-9]{24,}|' + pk);
   const pkg = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8'));
   const ls = run('git', ['ls-files', '-z', '--', 'package.json', ...pkg.files]);
-  const paths = ls.stdout.split('\0').filter(Boolean).filter(p => /\.(?:mjs|js|json|md|html|css|svg|ts)$/.test(p));
+  const all = ls.stdout.split('\0').filter(Boolean);
   const hits = [];
-  for (const p of paths) { const t = read(p); if (t !== null && marker.test(t)) hits.push(p); }
+  for (const p of all) if (isForbiddenPath(p)) hits.push(p + ' (forbidden path)');
+  const paths = all.filter(isTextLike);
+  for (const p of paths) { const t = read(p); if (t !== null && textMarker(t)) hits.push(p); }
   return { scanned: paths.length, hits };
 }
 
@@ -195,18 +201,19 @@ export function parseArgs(argv) {
   return out;
 }
 
-const USAGE = 'Usage: node scripts/release-readiness.mjs [--branch NAME] [--json] [--observed FILE]\nExit 0: automated gates pass (outside gates stay open). 1: an automated gate fails. 2: usage error.';
+const USAGE = 'Usage: node scripts/release-readiness.mjs [--branch NAME] [--json] [--observed FILE]\nExit 0: automated gates pass on a real run (outside gates stay open). 1: an automated gate fails, or --observed was used. 2: usage error.';
 
-export function main(argv, io = { out: s => process.stdout.write(s + '\n'), err: s => process.stderr.write(s + '\n') }) {
+export function main(argv, io = { out: s => process.stdout.write(s + '\n'), err: s => process.stderr.write(s + '\n') }, collector = collect) {
   const args = parseArgs(argv);
   if (args.error) { io.err(args.error + '\n' + USAGE); return 2; }
   if (args.help) { io.out(USAGE); return 0; }
+  if (args.branch !== 'main') { io.err('--branch accepts only main\n' + USAGE); return 2; }
   let observed, source = 'run';
   if (args.observed) {
     try { observed = JSON.parse(readFileSync(args.observed, 'utf8')); } catch { io.err('cannot read observations from ' + args.observed); return 2; }
     if (!observed || typeof observed !== 'object' || Array.isArray(observed)) { io.err('observations must be a JSON object'); return 2; }
     source = 'file ' + args.observed;
-  } else observed = collect({ expectedBranch: args.branch });
+  } else observed = collector({ expectedBranch: args.branch });
   const report = buildReport(observed, { source });
   if (args.json) io.out(JSON.stringify(report, null, 2));
   else { io.out(renderText(report)); io.out(''); io.out('JSON report'); io.out(JSON.stringify(report, null, 2)); }
