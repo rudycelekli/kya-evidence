@@ -8,7 +8,7 @@ Status: draft, version 0.1 (drafted 2026-10-15). Not adopted. Numbers marked "pr
 
 | Artifact | Identifier today | Version rule |
 | :--- | :--- | :--- |
-| Software package | `package.json`, currently `0.1.0-alpha.3` | Semantic versioning (MAJOR.MINOR.PATCH, with pre-release tags) |
+| Software package | `package.json`, currently `0.1.0-alpha.4` | Semantic versioning (MAJOR.MINOR.PATCH, with pre-release tags) |
 | Specification | `docs/SPECIFICATION.md` (no separate number today) | Follows the package version it ships with; a normative change needs an ADR |
 | JSON schemas and wire formats | Identifiers such as `kya.evidence/v1`, `kya.assessment/v1`, `kya.campaign-ledger/v1` | The `vN` suffix changes only for a breaking wire change |
 | Requirement registry | `evidence/requirements.json`, schema `kya.requirements/v1`, digest shown in `docs/REQUIREMENTS.md` | Digest changes on any change; ID rules in section 5 |

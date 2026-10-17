@@ -1,6 +1,6 @@
 {
   "name": "kya-evidence",
-  "version": "0.1.0-alpha.3",
+  "version": "0.1.0-alpha.4",
   "description": "Know Your Agent: signed evidence, replayable assurance dossiers and frozen evaluator-control benchmarks.",
   "keywords": ["know-your-agent", "agent-assurance", "agent-evaluation", "evidence", "reproducibility", "conformance"],
   "type": "module",
