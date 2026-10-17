@@ -4,9 +4,13 @@ All notable changes to KYA Evidence are recorded here. The format follows [Keep 
 
 Read this file with two facts in mind. First, no version has been tagged, published to npm or released on GitHub: the alpha labels below mark the `version` field in `package.json` at the commit named in each heading, and nothing more. Second, nothing here is a certification, a safety claim or an outside validation. Every "Added" line means "the reference implementation now does this and a test checks it", not "an outside party confirmed it". The list of what is still not shown is in [docs/RELEASE-NOTES-ALPHA.md](docs/RELEASE-NOTES-ALPHA.md).
 
-Entries come from `git log` and the merged pull requests (#1 to #29) of the repository. Where a commit message was too short to say what changed, the entry is limited to what the message says.
+Entries come from `git log` and the merged pull requests (#1 to #30) of the repository. Where a commit message was too short to say what changed, the entry is limited to what the message says.
 
 ## [Unreleased]
+
+### Changed
+
+- Prepared 0.1.0-alpha.4: version bump to `0.1.0-alpha.4` and changelog update (PR #30). Nothing was tagged or published.
 
 ## [0.1.0-alpha.4] - 2026-10-16
 

@@ -1,6 +1,6 @@
 # KYA Evidence 0.1.0-alpha.4: launch note
 
-Status of this note: a draft for the owner. Nothing has been published: no tag, no npm package, no GitHub release. `package.json` reads `0.1.0-alpha.4` at the release commit described in [RELEASING.md](RELEASING.md). Counts at that commit: 915 tests, 211 traced requirements, 111 assessment vectors, 16 frozen controls, 87 mutation controls (mutation run not repeated for this note; only its preflight).
+Status: alpha, built from a checkout. Nothing is published: there is no npm package, no git tag and no GitHub release yet. `package.json` reads `0.1.0-alpha.4`. At the commit the pull request #29 merged, the project's continuous integration reported 915 tests passing with none skipped or pending. This repository carries 211 traced requirements, 111 assessment vectors, 16 frozen controls and 87 mutation controls.
 
 ## What this is
 
@@ -28,8 +28,6 @@ Details and dates: [CHANGELOG.md](../CHANGELOG.md).
 - **Domain profiles have no expert sign-off.**
 - **Not a standard, certification, endorsement or authorization.** A signature shows key possession and byte integrity, not that an agent did what a report says. There is no live revocation service and no continuous monitoring. The README's "What this is not" section lists the rest.
 
-The same list, as open gates with the party each one needs, is printed by `npm run release:readiness`.
-
 ## Try it in five minutes
 
 Requires Node.js 22 or later and a clone of the repository. No network, API keys or installs. The output folder can be anywhere; use a scratch folder you delete afterwards.
@@ -44,12 +42,12 @@ node scripts/assessment-vectors.mjs --check       # published assessment vectors
 rm -rf "$S"
 ```
 
-To see tamper detection, change `"decision": "qualified"` to `"blocked"` in a copy of `assessment.json` and run `verify` on the copy: it prints `kya: Assessment digest differs` and exits 1. To run everything the maintainers run: `npm test`, then `npm run release:readiness` (the readiness report is about publishing, and it says which gates are open).
+To see tamper detection, change `"decision": "qualified"` to `"blocked"` in a copy of `assessment.json` and run `verify` on the copy: it prints `kya: Assessment digest differs` and exits 1. To run the checks the maintainers run, use `npm test` in a clone.
 
 ## Where to file issues
 
 Open an issue at <https://github.com/rudycelekli/kya-evidence/issues>. Useful reports are reproducible failures (a sanitized input and the command that fails), places where the specification is ambiguous, and evaluator weaknesses. Read [CONTRIBUTING.md](../CONTRIBUTING.md) first. Never put credentials, personal data or raw private traces in an issue.
 
-## Security contact
+## Security
 
-**Status: no real, monitored security contact exists yet.** [SECURITY.md](../SECURITY.md) promises no mailbox and no response time, and `docs/security.txt` is a draft with owner placeholders. The owner must supply a private channel (for example the repository host's private vulnerability reporting, enabled and tested), put it in `SECURITY.md`, and complete `security.txt` before this note is published. Until then, do not publish: this paragraph and the readiness gate `security-contact-form` both stay red. After the owner sets it, replace this paragraph with the real channel; do not copy an address from anywhere else.
+Follow [SECURITY.md](../SECURITY.md). Today it says: if the repository Security tab offers a private report button, use it; otherwise do not post exploit details publicly and open a public issue titled Security contact request containing no technical details, and the maintainer will reply with a private channel. No response time is promised and no monitored private channel is confirmed.

@@ -4,11 +4,11 @@
 
 **A passport says what an agent is. Evidence shows what an exact agent system did, under an exact scope.**
 
-KYA Evidence is local-first open infrastructure for **Know Your Agent**: signed check receipts over an exact agent manifest (a declaration, not a passport or identity credential), configurable relying-party policies and explainable assurance assessments. The vision is a neutral standard that people, organizations and independent assessors can implement, reproduce and contest. The current deliverable is a dependency-free Node.js reference implementation, **v0.1.0-alpha.4**, not an adopted industry standard.
+KYA Evidence is local-first open infrastructure for **Know Your Agent**: signed check receipts over an exact agent manifest (a declaration, not a passport or identity credential), configurable relying-party policies and explainable assurance assessments. The vision is a neutral standard that people, organizations and independent assessors can implement, reproduce and contest. The current deliverable is a dependency-free Node.js reference implementation, **v0.1.0-alpha.4**, not an adopted industry standard. No GitHub release or npm package exists yet; build from a checkout.
 
 Every person may eventually delegate to an agent. Every relying party will need a better answer than “trust the prompt.” Start with an exact question: **does this configuration meet this party's policy for this scope, on this evidence?** Keep the result portable, the decision explainable and the correction process open.
 
-[Specification](docs/SPECIFICATION.md) · [Scoring](docs/SCORING.md) · [Research universes](docs/UNIVERSES.md) · [Byte interoperability](docs/INTEROPERABILITY.md) · [Threat model](docs/THREAT-MODEL.md) · [Adapters](docs/ADAPTERS.md) · [Roadmap](docs/ROADMAP.md) · [Contribute](CONTRIBUTING.md)
+[Specification](docs/SPECIFICATION.md) · [Scoring](docs/SCORING.md) · [Research universes](docs/UNIVERSES.md) · [Byte interoperability](docs/INTEROPERABILITY.md) · [Threat model](docs/THREAT-MODEL.md) · [Adapters](docs/ADAPTERS.md) · [Roadmap](docs/ROADMAP.md) · [What this is not](#what-this-is-not) · [Changelog](CHANGELOG.md) · [Release notes](docs/RELEASE-NOTES-ALPHA.md) · [Contribute](CONTRIBUTING.md)
 
 ## Read the full agent dossier
 
@@ -27,7 +27,7 @@ Open `dossier.html` for the offline, printable report or read `dossier.md`. This
 
 ## Challenge the evaluator
 
-Sixteen frozen controls include four complete behavioral reference modes and twelve signed-receipt admission challenges. Cases preserve expected outcomes, missing measurements and every failure. A detection result for six weakened assessor gates was reported in a private same-team run that cannot be reproduced from this repository; the reproducible check is `scripts/mutation-check.mjs`, which applies 87 targeted gate mutations to the evaluator source and fails if the tests do not catch one (`--preflight` checks the anchors only). These checks establish local evaluator behavior; commercial agents need separate measured campaigns.
+Sixteen frozen controls include four complete behavioral reference modes and twelve signed-receipt admission challenges. Cases preserve expected outcomes, missing measurements and every failure. The reproducible check is `scripts/mutation-check.mjs`: 87 targeted gate mutations over the assessment and incident, campaign, assessor, bridge, profile-validation and privacy-scanner source, each of which the tests must catch (`--preflight` checks the anchors only). These checks establish local evaluator behavior; commercial agents need separate measured campaigns.
 
 ```sh
 node bin/kya.mjs bench --out .kya/controls
@@ -120,9 +120,9 @@ To become a useful standard, the protocol needs independent implementations, pub
 
 ## Built to be challenged
 
-This clean-room implementation applies evidence-first engineering: exact revisions, replayable tests, visible uncertainty, independently reviewed promotion and reversible change. Private product code, client records, credentials and operational logs are excluded.
+This clean-room implementation applies evidence-first engineering: exact revisions, replayable tests, visible uncertainty, review by someone other than the author (no outside review exists yet) before promotion and reversible change. Private product code, client records, credentials and operational logs are excluded.
 
-Tests exercise tampering, malformed and duplicate JSON, untrusted signing, wrong bindings, expiry/revocation, run cherry-picking, unknown coverage, declaration laundering, critical failures, HTML injection and bounded command transport. Evaluator mutation tests must detect weakened gates. Passing public cases alone cannot establish general safety; colluding issuers, strategic run omission and suite contamination remain threats. The [requirement registry](docs/REQUIREMENTS.md) lists every normative requirement with its test traces, each traced to tests that the gate checks for staleness; CI fails on any skipped or `todo` test. `scripts/mutation-check.mjs` applies named gate mutations to the assessment and incident code and requires each to be detected. [Threat model](docs/THREAT-MODEL.md) lists what is not mitigated.
+Tests exercise tampering, malformed and duplicate JSON, untrusted signing, wrong bindings, expiry/revocation, run cherry-picking, unknown coverage, declaration laundering, critical failures, HTML injection and bounded command transport. Evaluator mutation tests must detect weakened gates. Passing public cases alone cannot establish general safety; colluding issuers, strategic run omission and suite contamination remain threats. The [requirement registry](docs/REQUIREMENTS.md) lists every normative requirement with its test traces, each traced to tests that the gate checks for staleness; CI fails on any skipped or `todo` test. `scripts/mutation-check.mjs` applies 87 targeted gate mutations over the assessment and incident, campaign, assessor, bridge, profile-validation and privacy-scanner source and requires each to be detected. [Threat model](docs/THREAT-MODEL.md) lists what is not mitigated.
 
 Research can fork without rewriting its past. [Universes](docs/UNIVERSES.md) hash every bundled executable module, package routing, exact input evidence and assessment time. Replay recomputes the result under that implementation. Comparisons refuse changed decision contracts and incomplete case populations. Correction references expose affected descendants, while actual revocation stays in relying policy.
 
@@ -140,7 +140,7 @@ The package builder reads immutable Git blobs from a clean committed revision, f
 
 A secondary [Python byte checker](docs/INTEROPERABILITY.md) reconstructs the public vectors without forwarding expected answers. It verifies Ed25519 when an existing cryptographic backend is available and otherwise reports partial verification. Its supported numeric subset is explicit; unsupported doubles are refused. This is a second implementation by this project team, with external implementers and full semantic assessment parity still needed.
 
-Contribute reproducible failures, evaluator challenges, transport adapters or specification criticism. Read [CONTRIBUTING.md](CONTRIBUTING.md), [governance](docs/GOVERNANCE.md) and [SECURITY.md](SECURITY.md). Ongoing development uses bounded hypotheses, frozen comparisons, independent review and explicit `ACCEPT`, `REJECT` or `INCONCLUSIVE` outcomes. A roadmap does not imply a running scheduler. Public releases, cost-incurring agent executions and deployments need explicit authorization.
+Contribute reproducible failures, evaluator challenges, transport adapters or specification criticism. Read [CONTRIBUTING.md](CONTRIBUTING.md), [governance](docs/GOVERNANCE.md) and [SECURITY.md](SECURITY.md). Ongoing development uses bounded hypotheses, frozen comparisons, review by someone other than the author (no outside review exists yet) and explicit `ACCEPT`, `REJECT` or `INCONCLUSIVE` outcomes. A roadmap does not imply a running scheduler. Public releases, cost-incurring agent executions and deployments need explicit authorization.
 
 Releasing: the procedure, the owner-only steps and the gate list are in [docs/RELEASING.md](docs/RELEASING.md); `npm run release:readiness` prints which gates pass and which stay open.
 
@@ -156,3 +156,5 @@ Releasing: the procedure, the owner-only steps and the gate list are in [docs/RE
 - Not an authorization grant, and never a credit or worth score for a person.
 
 Apache-2.0. [License](LICENSE) · [Notice](NOTICE)
+
+"KYA Evidence" and "Know Your Agent" are not registered marks (see [docs/governance/TRADEMARK-AND-CLAIMS.md](docs/governance/TRADEMARK-AND-CLAIMS.md), a draft).

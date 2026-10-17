@@ -72,10 +72,21 @@ test('the implementers guide reports all 111 vectors byte for byte for the secon
 });
 
 test('the six-gate detection claim is labelled as not reproducible from the repository', () => {
+  // The claim itself was removed; if wording about an unreproducible run ever returns it must carry the caveat.
   for (const p of ['README.md', 'docs/VALIDATION.md', 'docs/BENCHMARKS.md']) {
     const text = read(p);
-    assert.ok(text.includes('not reproducible from this repository') || text.includes('cannot be reproduced from this repository'), `${p} lacks the reproducibility caveat`);
     assert.ok(text.includes('scripts/mutation-check.mjs'), `${p} does not point at the mutation check`);
+    if (/private same-team|six[- ]gate detection|Six assessor mutations were reported/i.test(text)) {
+      assert.ok(text.includes('not reproducible from this repository') || text.includes('cannot be reproduced from this repository'), `${p} lacks the reproducibility caveat`);
+    }
+  }
+});
+
+test('no public doc cites a private same-team detection run', () => {
+  for (const p of ['README.md', 'docs/VALIDATION.md', 'docs/BENCHMARKS.md']) {
+    const text = read(p);
+    assert.ok(!/private same-team/i.test(text), `${p} cites a private run that cannot be reproduced`);
+    assert.ok(!/six[- ]gate detection/i.test(text) && !/Six assessor mutations were reported/i.test(text), `${p} cites an unreproducible detection result`);
   }
 });
 
@@ -114,4 +125,49 @@ test('the relying party quickstart lists observations.json and shows how to auth
 test('the implementers guide says an unsupported reply to a refusal vector fails', () => {
   assert.ok(read('docs/IMPLEMENTERS-GUIDE.md').includes('`unsupported` reply to a vector whose expected result is a refusal is a `fail`'));
   assert.ok(read('interop/impl-contract/README.md').includes('so it is a **fail** there'));
+});
+
+test('every relative markdown link in top-level and docs markdown files resolves to a tracked path', () => {
+  const ls = spawnSync('git', ['ls-files'], { cwd: root, encoding: 'utf8' });
+  assert.equal(ls.status, 0, 'git ls-files failed');
+  const tracked = new Set(ls.stdout.split('\n').filter(Boolean));
+  const folders = new Set();
+  for (const p of tracked) { const parts = p.split('/'); for (let i = 1; i < parts.length; i++) folders.add(parts.slice(0, i).join('/')); }
+  const generated = /^(?:dist|artifacts|node_modules|\.git|\.claude)(?:\/|$)/;
+  const bad = [];
+  for (const abs of files) {
+    const rel = relative(root, abs).split('\\').join('/');
+    if (rel.includes('/') && !rel.startsWith('docs/')) continue;
+    const text = readFileSync(abs, 'utf8').replace(/```[\s\S]*?```/g, '');
+    for (const m of text.matchAll(/\]\(([^)\s]+)(?:\s+"[^"]*")?\)/g)) {
+      const target = m[1];
+      if (/^[a-z][a-z0-9+.-]*:/i.test(target) || target.startsWith('#') || target.startsWith('//')) continue;
+      const pathPart = target.split('#')[0].split('?')[0];
+      if (!pathPart) continue;
+      const parts = [];
+      for (const seg of (pathPart.startsWith('/') ? pathPart.slice(1) : [...rel.split('/').slice(0, -1), pathPart].join('/')).split('/')) {
+        if (seg === '' || seg === '.') continue;
+        if (seg === '..') parts.pop(); else parts.push(seg);
+      }
+      const resolved = parts.join('/');
+      if (generated.test(resolved)) continue;
+      if (!tracked.has(resolved) && !folders.has(resolved)) bad.push(`${rel} -> ${target}`);
+    }
+  }
+  assert.deepEqual(bad, []);
+});
+
+test('no tracked markdown file carries an owner placeholder except the file the readiness gate watches', () => {
+  // scripts/release-readiness.mjs reads only SECURITY.md for the security-contact-form gate and treats a placeholder
+  // there as "no real contact". docs/security.txt is a text draft (not markdown) and keeps its owner values on purpose.
+  const allowed = new Set(['SECURITY.md']);
+  const pattern = /[<\[](?:SET-BY-OWNER|SECURITY CONTACT|ENFORCEMENT CONTACT)/;
+  const bad = [];
+  for (const abs of files) {
+    const rel = relative(root, abs).split('\\').join('/');
+    if (allowed.has(rel)) continue;
+    if (pattern.test(readFileSync(abs, 'utf8'))) bad.push(rel);
+  }
+  assert.deepEqual(bad, []);
+  assert.ok(existsSync(join(root, 'docs/security.txt')), 'the draft security.txt must stay');
 });

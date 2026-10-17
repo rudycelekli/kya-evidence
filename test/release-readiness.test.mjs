@@ -97,6 +97,16 @@ test('each broken observation fails its own gate and the report is not ready', (
   }
 });
 
+test('the interim security wording cannot turn the contact form gate green', () => {
+  const interim = 'If the repository Security tab offers a private report button, use it. Otherwise do not post exploit details publicly: open a public issue titled Security contact request containing no technical details, and the maintainer will reply with a private channel. No response time is promised. Never send credentials, personal records or raw private traces.';
+  assert.equal(hasRealSecurityContact(interim), false);
+  const o = good();
+  o.securityText = '# Security policy\n\n' + interim + ' No security mailbox is promised and no monitored private channel is confirmed today.';
+  assert.equal(status(evaluateAutomated(o), 'security-contact-form'), 'fail');
+  assert.equal(buildReport(o).ready, false);
+  assert.ok(buildReport(o).outside.some(g => g.id === 'security-contact-monitored' && g.status === 'OPEN'));
+});
+
 test('missing or malformed observations fail closed', () => {
   for (const bad of [undefined, null, {}, [], 'x', 7]) {
     const gates = evaluateAutomated(bad);

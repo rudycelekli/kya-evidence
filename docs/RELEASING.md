@@ -15,10 +15,10 @@ Rules for this project's pre-release versions:
 - Move to `0.1.0-beta.1` or `0.1.0` only when the owner decides the outside gates (see the readiness report) justify it. This procedure does not cover that.
 - The protocol label `kyaVersion: "0.1.0-alpha"` that appears inside records is a format label, not the package version. Do not change it in a package bump. Changing it is a format change that needs an ADR.
 
-**Next version: `0.1.0-alpha.4`.** Reasons:
+**Current version: `0.1.0-alpha.4`.** The bump from `alpha.3` is already done (the release commit and the version-prep pull request are merged) and `CHANGELOG.md` has a `## [0.1.0-alpha.4]` section with an `## [Unreleased]` section above it. The next artifact that is published, or any later change that needs a bump under the rules above, gets the next label (`0.1.0-alpha.5` and so on). Reasons for the alpha.4 label, kept for the record:
 
-1. `0.1.0-alpha.3` is the label that `package.json` has carried since the commit "Add evidence-replayed dossiers and exact scope comparison gates" (2026-10-13). Since then more than 100 commits changed behaviour, formats and security properties (see `CHANGELOG.md`, section Unreleased). Reusing `alpha.3` for those bytes would attach an old label to new content.
-2. `alpha.3` was never tagged or published, so there is no published alpha.3 to confuse. Skipping to alpha.4 costs nothing and keeps one rule: one label, one set of bytes.
+1. `0.1.0-alpha.3` was the label `package.json` carried since 2026-10-13, and more than 100 commits changed behaviour, formats and security properties after it. Reusing `alpha.3` for those bytes would attach an old label to new content.
+2. `alpha.3` was never tagged or published, so there is no published alpha.3 to confuse. One label, one set of bytes.
 3. The changes are still pre-1.0 and still unreviewed from outside, so another alpha (not a beta) is the honest label.
 
 ### Files that carry the version
@@ -31,7 +31,7 @@ Edit all of these in one commit (the "release commit"). `npm run release:readine
 | `bin/kya.mjs` | the first line of the `HELP` text (`KYA Evidence 0.1.0-alpha.N`) |
 | `docs/governance/VERSIONING.md` | the "currently" version in the software package row |
 | `README.md` | the bold `v0.1.0-alpha.N` in the sentence that begins "The current deliverable is" |
-| `CHANGELOG.md` | rename `## [Unreleased]` to `## [0.1.0-alpha.4]`, add the date, add a fresh empty `## [Unreleased]` above it, update the compare links at the bottom |
+| `CHANGELOG.md` | rename `## [Unreleased]` to the new version heading, add the date, add a fresh empty `## [Unreleased]` above it, update the compare links at the bottom |
 | `docs/RELEASE-NOTES-ALPHA.md` | the version named in the text and the commands |
 | `docs/SUPPLY-CHAIN.md` | the example tag in the "How a release SHOULD be signed" section (an example only; keep it current) |
 
@@ -139,6 +139,14 @@ The workflow has not been run. Its first run is a dry run by the owner; treat an
 Do not post the announcement anywhere (social posts, mailing lists, standards groups) as part of this procedure.
 
 ## 9. Security contact
+
+**Owner checklist before publishing or announcing (this is not part of the public launch note).**
+
+- A real, private, monitored security contact exists and has been tested, and `SECURITY.md` names it. Until then `SECURITY.md` carries only the interim process (a private report button if the Security tab offers one, otherwise a public issue titled Security contact request with no technical details), and the readiness gate `security-contact-form` stays red on purpose. Do not add wording to `SECURITY.md` that makes the gate pass without a channel the owner actually monitors.
+- `docs/security.txt` has every owner value filled in and is served from the project's web site, or is left unpublished.
+- `npm run release:readiness` has been read: every automated gate passes and the open outside gates are listed in the release notes.
+- The owner decision to publish has been taken in the chat or the pull request, not inferred.
+
 
 `SECURITY.md` currently promises no monitored mailbox and no response time, and `docs/security.txt` is a draft with owner placeholders. **[OWNER ONLY]** Before announcing a release, set a real, monitored private reporting channel (for example the repository host's private vulnerability reporting, enabled and tested), update `SECURITY.md`, and replace the placeholders in `docs/security.txt`. Do not publish `security.txt` with placeholders. The readiness report fails its security-contact gate while `SECURITY.md` contains no recognizable real contact.
 
