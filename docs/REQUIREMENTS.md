@@ -217,5 +217,12 @@ Each requirement is traced to at least one test that must exist exactly once; th
 | KYA-CLB-006 | MUST | The registry test MUST compare codes with the git baseline (current commit, merge base with main, recent history of the file) and MUST NOT pass silently in CI without one. | `claim-boundaries.test.mjs` |
 | KYA-CLB-007 | MUST | Every sentence-like literal under `src` MUST be a registered limit string or a reviewed allowlist entry, and allowlist entries MUST be current, sorted and disjoint from the registry. | `claim-boundaries.test.mjs` |
 | KYA-CAM-023 | MUST | A campaign run MUST release the lock it created on SIGINT or SIGTERM, MUST NOT remove a lock that carries another run's token, and MUST still release it on normal completion. | `campaign-hardening.test.mjs` |
+| KYA-REL-007 | MUST NOT | The release build job MUST NOT hold `id-token` or `attestations` write permission, MUST hold `contents: read` only, and the attestation MUST be created in a separate job behind the `release` environment; every release job MUST run only on `refs/heads/main`. | `release-workflow.test.mjs` |
+| KYA-REL-008 | MUST | The real run gates MUST require a manual dispatch event together with `inputs.dry_run == false`, so a null input on another event cannot open them. | `release-workflow.test.mjs` |
+| KYA-REL-009 | MUST | The release verifier MUST, when given an expected commit, refuse a receipt whose source commit differs, and MUST refuse a receipt whose package name or version differs from the archive package.json; the attest and publish jobs MUST pass the workflow commit. | `release.test.mjs`, `release-workflow.test.mjs` |
+| KYA-REL-010 | MUST NOT | The readiness report MUST NOT report ready or exit 0 when its observations were read from a file, and MUST accept only `main` as the branch. | `release-readiness.test.mjs` |
+| KYA-REL-011 | MUST | The package content guard MUST refuse private config and key paths, token shapes (GitHub, npm, AWS), private key headers and absolute home paths other than documented placeholders, in pack and in the readiness scan, over every text-like file. | `release-readiness.test.mjs` |
+| KYA-REL-012 | SHOULD | The repository SHOULD have a Dependabot configuration that updates the pinned GitHub Actions weekly and does not merge by itself. | `dependabot.test.mjs` |
+| KYA-ACT-015 | MUST | Under `--require-pins` the CI gate MUST ignore the clock member of the inputs file unless `--allow-inputs-clock` is given, and MUST refuse an input whose real path leaves the workspace through a symbolic link. | `kya-check.test.mjs` |
 
-Registry digest: `e80b49be619524cfaaeaaa78f7d43724ed0aec3f72ee7476e2b122c2698094c5`
+Registry digest: `a3a322fed3ab42f5c6538dd48f11fea0f15c00518facfe4d0136679100e1b091`

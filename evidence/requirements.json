@@ -4045,6 +4045,165 @@
           "title": "a run that finishes normally still releases its lock and removes its signal handlers"
         }
       ]
+    },
+    {
+      "id": "KYA-REL-007",
+      "level": "MUST NOT",
+      "area": "release",
+      "section": "Interoperability and versioning",
+      "statement": "The release build job MUST NOT hold `id-token` or `attestations` write permission, MUST hold `contents: read` only, and the attestation MUST be created in a separate job behind the `release` environment; every release job MUST run only on `refs/heads/main`.",
+      "tests": [
+        {
+          "file": "test/release-workflow.test.mjs",
+          "title": "the provenance attestation step runs only when the dry run input is false"
+        },
+        {
+          "file": "test/release-workflow.test.mjs",
+          "title": "the attest job holds only the attestation permissions and verifies the artifact against the commit first"
+        },
+        {
+          "file": "test/release-workflow.test.mjs",
+          "title": "the build job holds contents read only and no token that can sign or publish"
+        },
+        {
+          "file": "test/release-workflow.test.mjs",
+          "title": "build attest and publish jobs run only on the main branch"
+        }
+      ]
+    },
+    {
+      "id": "KYA-REL-008",
+      "level": "MUST",
+      "area": "release",
+      "section": "Interoperability and versioning",
+      "statement": "The real run gates MUST require a manual dispatch event together with `inputs.dry_run == false`, so a null input on another event cannot open them.",
+      "tests": [
+        {
+          "file": "test/release-workflow.test.mjs",
+          "title": "the real run gates require a workflow dispatch event and do not fail open on a null input"
+        }
+      ]
+    },
+    {
+      "id": "KYA-REL-009",
+      "level": "MUST",
+      "area": "release",
+      "section": "Interoperability and versioning",
+      "statement": "The release verifier MUST, when given an expected commit, refuse a receipt whose source commit differs, and MUST refuse a receipt whose package name or version differs from the archive package.json; the attest and publish jobs MUST pass the workflow commit.",
+      "tests": [
+        {
+          "file": "test/release.test.mjs",
+          "title": "binding accepts the expected commit and a matching package name and version"
+        },
+        {
+          "file": "test/release.test.mjs",
+          "title": "binding rejects a receipt source commit that differs from the expected commit"
+        },
+        {
+          "file": "test/release.test.mjs",
+          "title": "binding rejects an expected commit that is not a full lowercase SHA"
+        },
+        {
+          "file": "test/release.test.mjs",
+          "title": "binding rejects a receipt version that differs from the archive package json"
+        },
+        {
+          "file": "test/release.test.mjs",
+          "title": "binding rejects a receipt package name that differs from the archive package json"
+        },
+        {
+          "file": "test/release.test.mjs",
+          "title": "binding rejects an archive without a package json"
+        },
+        {
+          "file": "test/release-workflow.test.mjs",
+          "title": "publish and attest verify the artifact against the workflow commit before acting"
+        }
+      ]
+    },
+    {
+      "id": "KYA-REL-010",
+      "level": "MUST NOT",
+      "area": "release",
+      "section": "Interoperability and versioning",
+      "statement": "The readiness report MUST NOT report ready or exit 0 when its observations were read from a file, and MUST accept only `main` as the branch.",
+      "tests": [
+        {
+          "file": "test/release-readiness.test.mjs",
+          "title": "observations read from a file never produce READY or exit 0 even when every gate passes"
+        },
+        {
+          "file": "test/release-readiness.test.mjs",
+          "title": "the branch option accepts only main"
+        }
+      ]
+    },
+    {
+      "id": "KYA-REL-011",
+      "level": "MUST",
+      "area": "release",
+      "section": "Interoperability and versioning",
+      "statement": "The package content guard MUST refuse private config and key paths, token shapes (GitHub, npm, AWS), private key headers and absolute home paths other than documented placeholders, in pack and in the readiness scan, over every text-like file.",
+      "tests": [
+        {
+          "file": "test/release-readiness.test.mjs",
+          "title": "the package guard refuses private config and key file paths"
+        },
+        {
+          "file": "test/release-readiness.test.mjs",
+          "title": "the package guard flags GitHub npm and AWS token shapes built by concatenation"
+        },
+        {
+          "file": "test/release-readiness.test.mjs",
+          "title": "the package guard flags absolute home paths except documented placeholders"
+        },
+        {
+          "file": "test/release-readiness.test.mjs",
+          "title": "the package guard scans every extension except known binary ones"
+        },
+        {
+          "file": "test/release-readiness.test.mjs",
+          "title": "pack and readiness both use the shared package guard"
+        }
+      ]
+    },
+    {
+      "id": "KYA-REL-012",
+      "level": "SHOULD",
+      "area": "release",
+      "section": "Interoperability and versioning",
+      "statement": "The repository SHOULD have a Dependabot configuration that updates the pinned GitHub Actions weekly and does not merge by itself.",
+      "tests": [
+        {
+          "file": "test/dependabot.test.mjs",
+          "title": "dependabot config exists and updates github actions weekly"
+        }
+      ]
+    },
+    {
+      "id": "KYA-ACT-015",
+      "level": "MUST",
+      "area": "action",
+      "section": "Interoperability and versioning",
+      "statement": "Under `--require-pins` the CI gate MUST ignore the clock member of the inputs file unless `--allow-inputs-clock` is given, and MUST refuse an input whose real path leaves the workspace through a symbolic link.",
+      "tests": [
+        {
+          "file": "test/kya-check.test.mjs",
+          "title": "require-pins ignores the clock member of the inputs file and uses the system clock"
+        },
+        {
+          "file": "test/kya-check.test.mjs",
+          "title": "allow-inputs-clock lets the inputs file clock count under require-pins"
+        },
+        {
+          "file": "test/kya-check.test.mjs",
+          "title": "without require-pins the inputs file clock is still honoured and an explicit now wins"
+        },
+        {
+          "file": "test/kya-check.test.mjs",
+          "title": "an input path whose parent directory is a symlink out of the workspace is refused"
+        }
+      ]
     }
   ]
 }
