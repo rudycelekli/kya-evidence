@@ -41,7 +41,7 @@ This code applies within project spaces and when a person represents the project
 
 Report unacceptable behaviour to the enforcement contact below. Include what happened, where and when, and any evidence you hold. Do not include credentials or personal data beyond what is needed. Security defects are reported through `SECURITY.md`, not through this channel.
 
-Enforcement contact: [ENFORCEMENT CONTACT: the repository owner must set a monitored channel before this code is adopted or relied on. No address has been provided and none has been invented.]
+Enforcement contact: open an issue titled Conduct report request with no details, or use the private channel described in SECURITY.md once it exists; no response time is promised. No monitored channel is claimed and no address has been provided or invented.
 
 Reports are handled confidentially, as far as the process allows. No response time is promised until the owner sets a monitored channel.
 

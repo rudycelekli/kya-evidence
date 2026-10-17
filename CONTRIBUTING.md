@@ -2,6 +2,8 @@
 
 Bring a replayable boundary failure, a sharper evaluator or a working adapter. This Apache-2.0 project is clean-room: no private product code, client records, credentials, internal paths or unapproved traces.
 
+Questions and reproducible failures: open an issue; security reports: see [SECURITY.md](SECURITY.md).
+
 Use Node.js 22 or later:
 
 ```sh

@@ -24,4 +24,4 @@ Allowed statuses: `supports as input`, `partial`, `not addressed`. None of them 
 - Clause numbers were not invented. Where a number could not be verified, the clause is described by topic.
 - Rows resting on secondary sources are flagged `needs primary re-check` and must be checked against the licensed or official text before use.
 
-Proposals for requirements and specification text are in INTEGRATION.md. The test is test/crosswalks.test.mjs.
+The test that checks these files is test/crosswalks.test.mjs.

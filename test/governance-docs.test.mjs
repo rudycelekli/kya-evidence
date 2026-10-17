@@ -109,9 +109,11 @@ test('IPR policy prohibits customer data credentials private code and operationa
   }
 });
 
-test('code of conduct has an enforcement placeholder and no email address', async () => {
+test('code of conduct claims no monitored channel and has no email address', async () => {
   const text = await read('CODE_OF_CONDUCT.md');
-  assert.ok(text.includes('[ENFORCEMENT CONTACT'), 'enforcement contact placeholder is required');
+  assert.ok(text.includes('Conduct report request') && text.includes('no response time is promised'), 'interim conduct reporting wording is required');
+  assert.ok(text.includes('No monitored channel is claimed'), 'the code must not claim a monitored channel');
+  assert.equal(/\[ENFORCEMENT CONTACT/.test(text), false, 'no bracketed placeholder may remain');
   assert.equal(/[\w.+-]+@[\w-]+\.[\w.-]+/.test(text), false, 'no email address may be invented');
 });
 
