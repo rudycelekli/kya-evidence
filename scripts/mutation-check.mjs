@@ -16,7 +16,7 @@ const mutants=[
   ['duplicate fallback laundering',"for (const e of bound) {\n    const id = e.payload.runId;","for (const e of unique) {\n    const id = e.payload.runId;"]
 ,
   ['principal-binding gate removal',"const principalUnbound = policy.requirePrincipalBinding === true && !manifest.principal.accountableParty;","const principalUnbound = false;"],
-  ['expiry trigger removal',"if (at > validUntil) fire(","if (false) fire(",'src/assessment/application/currency.mjs'],
+  ['expiry trigger removal',"if (at >= validUntil) fire(","if (false) fire(",'src/assessment/application/currency.mjs'],
   ['subject-change trigger removal',"if (digest(manifest) !== assessment.subjectDigest) fire(","if (false) fire(",'src/assessment/application/currency.mjs'],
   ['independent-resolution requirement removal',"else if (e.role!=='independent') ignored.push","else if (false) ignored.push",'src/assessment/application/currency.mjs'],
   ['incident trust-anchor bypass',"if (!roles.has(keyId)) skip(","if (false) skip(",'src/assessment/application/currency.mjs'],

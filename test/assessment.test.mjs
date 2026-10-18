@@ -227,3 +227,16 @@ test('currency rejects a resealed assessment with missing or malformed validity 
 test('an agent cannot be its own accountable party under case or whitespace variation',()=>{
   for(const ref of ['AGENT:TEST','Agent:Test'])assert.throws(()=>{const m=manifest();m.principal={id:'controller:test',accountableParty:{kind:'natural-person',ref}};validateManifest(m);},/own accountable party/);
 });
+
+test('validity ends at validUntil: currency and assess agree one millisecond before, at, and after the boundary',()=>{
+  const i=inputs(),report=assess(i),end=Date.parse(report.validUntil),iso=ms=>new Date(ms).toISOString();
+  const cur=now=>checkCurrency(report,{manifest:clone(i.manifest),policy:clone(i.policy),now});
+  const re=now=>assess({...clone(i),now});
+  const before=iso(end-1),at=iso(end),after=iso(end+1);
+  assert.equal(cur(before).current,true);assert.equal(cur(before).reliable,true);assert.deepEqual(cur(before).triggers,[]);
+  assert.equal(re(before).decision,'qualified');
+  assert.equal(cur(at).current,false);assert.equal(cur(at).reliable,false);assert.equal(cur(at).action,'reassess');assert.deepEqual(cur(at).triggers.map(t=>t.id),['assessment-expired']);
+  assert.notEqual(re(at).decision,'qualified');
+  assert.equal(cur(after).current,false);assert.deepEqual(cur(after).triggers.map(t=>t.id),['assessment-expired']);
+  assert.notEqual(re(after).decision,'qualified');
+});

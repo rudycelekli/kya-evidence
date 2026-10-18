@@ -95,8 +95,11 @@ export function assess({manifest,profile,evidence,policy,evaluatorDigest,now = n
     if (e.payload.runId !== selectedRun?.id) reject(e.index,e.payload.id,ambiguousRuns && e.observed===selectedRun.at ? 'Equally recent run excluded; ambiguous runs cannot qualify' : 'Older run excluded; checks cannot be mixed across runs');
     else if (selected.get(e.payload.checkId) !== e) reject(e.index,e.payload.id,'Superseded observation within selected run');
   }
+  // A check that has a quarantined (duplicate-ID) receipt in the selected run is unproven. Otherwise replaying a
+  // failing receipt would quarantine it and let a sibling pass count, raising the reported score.
+  const quarantinedChecks=new Set((selectedRun?.items??[]).filter(e=>counts.get(e.payload.id)>1).map(e=>e.payload.checkId));
   const checks = profile.checks.map(c => {
-    const e = selected.get(c.id);
+    const e = quarantinedChecks.has(c.id) ? undefined : selected.get(c.id);
     return {...c,status:e?.payload.outcome ?? 'unknown',evidenceId:e?.payload.id ?? null,keyId:e?.keyId ?? null,independence:e?.role ?? null};
   });
   const total = checks.reduce((s,c)=>s+c.weight,0);

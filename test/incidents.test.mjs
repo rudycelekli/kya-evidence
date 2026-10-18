@@ -7,7 +7,7 @@ import { inputs, keys, NOW, clone } from './helpers.mjs';
 const reviewer=generateKeyPairSync('ed25519'),reviewerPem=reviewer.publicKey.export({format:'pem',type:'spki'}).toString();
 const stranger=generateKeyPairSync('ed25519');
 const reviewer2=generateKeyPairSync('ed25519'),reviewer2Pem=reviewer2.publicKey.export({format:'pem',type:'spki'}).toString();
-const later='2026-10-13T12:30:00.000Z',CHECK='2026-10-13T13:00:00.000Z';
+const later='2026-10-13T12:30:00.000Z',CHECK='2026-10-13T12:59:00.000Z';
 function setup(second=false){
   const i=inputs();i.policy.trustedKeys.push({id:keyId(reviewerPem),publicKey:reviewerPem,role:'independent'});
   if(second)i.policy.trustedKeys.push({id:keyId(reviewer2Pem),publicKey:reviewer2Pem,role:'independent'});

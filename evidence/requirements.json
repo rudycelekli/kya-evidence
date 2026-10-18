@@ -4717,6 +4717,32 @@
           "title": "the fix lane 10 integration note names only requirement titles and spec headings that exist"
         }
       ]
+    },
+    {
+      "id": "KYA-MET-001",
+      "level": "MUST",
+      "area": "monitoring",
+      "section": "Reports and viewers",
+      "statement": "An assessment MUST be treated as not current at the instant equal to its `validUntil` and after it, by `assess` and by the currency check alike.",
+      "tests": [
+        {
+          "file": "test/assessment.test.mjs",
+          "title": "validity ends at validUntil: currency and assess agree one millisecond before, at, and after the boundary"
+        }
+      ]
+    },
+    {
+      "id": "KYA-MET-002",
+      "level": "MUST",
+      "area": "run-selection",
+      "section": "Run selection and qualification",
+      "statement": "A check whose receipt is quarantined as a duplicate in the selected run MUST be unproven, and replaying a failing receipt MUST NOT let a sibling pass on the same check count toward the score.",
+      "tests": [
+        {
+          "file": "test/metamorphic.test.mjs",
+          "title": "metamorphic e regression: replaying a failing receipt cannot let a sibling pass count toward the score"
+        }
+      ]
     }
   ]
 }

@@ -251,5 +251,7 @@ Each requirement is traced to at least one test that must exist exactly once; th
 | KYA-SCR-012 | MUST | A second verifier written only from the ADR layout and algorithm text MUST agree with the reference verifier on validity, score and card digest for every vector in the shared set, which MUST include valid cards, each tamper class and re-sealed edits. | `kya-score-second-verifier.test.mjs`, `kya-score-second-verifier.test.mjs` (host-conditional) |
 | KYA-SCR-013 | MUST | The ADR MUST state the card layout, the seed derivation and the rounding rules, and MUST state that a re-sealed edit of a manifest field that no computation reads verifies. | `kya-score-second-verifier.test.mjs` |
 | KYA-SCR-014 | MUST | The benchmark documentation MUST tell a reviewer how to reproduce a card and MUST repeat the non-claim wording and the same-team boundary of the second verifier. | `kya-score-second-verifier.test.mjs` |
+| KYA-MET-001 | MUST | An assessment MUST be treated as not current at the instant equal to its `validUntil` and after it, by `assess` and by the currency check alike. | `assessment.test.mjs` |
+| KYA-MET-002 | MUST | A check whose receipt is quarantined as a duplicate in the selected run MUST be unproven, and replaying a failing receipt MUST NOT let a sibling pass on the same check count toward the score. | `metamorphic.test.mjs` |
 
-Registry digest: `1c42a30cd25fdc1d14dde960bb22b3637b0a2e9193a60161acd184fd78594173`
+Registry digest: `5487cf9fdbbf0072d51a4f69916a69bf0eda99829563583d11e058757e30ad0c`

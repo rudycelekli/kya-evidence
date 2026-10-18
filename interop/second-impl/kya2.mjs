@@ -291,7 +291,7 @@ export function assess(inp) {
   const trusted = new Map(policy.trustedKeys.map(k => [k.id, k]));
   const revKeys = new Set(policy.revokedKeyIds), revEv = new Set(policy.revokedEvidenceIds);
   const subjectRevoked = policy.revokedSubjectDigests.includes(subjectDigest) || false;
-  const notYet = NOW < ms(manifest.issuedAt), expired = NOW > ms(manifest.expiresAt);
+  const notYet = NOW < ms(manifest.issuedAt), expired = NOW >= ms(manifest.expiresAt);
   const subjectStatus = subjectRevoked ? 'Subject is revoked' : expired ? 'Subject is expired' : notYet ? 'Subject is not yet issued' : null;
 
   // Stage 1: per receipt, up to "bound". rec = { i, env, p, role, reject }
@@ -346,6 +346,7 @@ export function assess(inp) {
     if (r.p.outcome === 'fail' && profile.checks[checkIndex.get(r.p.checkId)].critical) g.failedCritical = true;
     runs.set(r.p.runId, g);
   }
+  const quarantinedChecks = new Set();
   let selected = null, ambiguous = false;
   if (runs.size) {
     const top = Math.max(...[...runs.values()].map(g => g.latest));
@@ -367,8 +368,8 @@ export function assess(inp) {
       let why = null;
       if (revKeys.has(r.env.proof.keyId)) why = 'Signing key is revoked';
       else if (revEv.has(p.id)) why = 'Evidence is revoked';
-      else if (ms(p.expiresAt) < NOW) why = 'Evidence is expired';
-      else if (NOW - ms(p.observedAt) > policy.maxEvidenceAgeSeconds * 1000) why = 'Evidence exceeds freshness policy';
+      else if (ms(p.expiresAt) <= NOW) why = 'Evidence is expired';
+      else if (NOW - ms(p.observedAt) >= policy.maxEvidenceAgeSeconds * 1000) why = 'Evidence exceeds freshness policy';
       if (why) { rejected.set(r.i, why); invalidated = true; } else live.push(r);
     }
     // duplicate IDs among live receipts (whole bundle of eligible receipts)
@@ -380,7 +381,7 @@ export function assess(inp) {
     for (const g of perCheck.values()) if (g.length > 1) repeated = true;
     const survivors = [];
     for (const r of live) {
-      if (idCount.get(r.p.id) > 1) { rejected.set(r.i, 'Duplicate evidence ID'); conflict = true; invalidated = true; } else survivors.push(r);
+      if (idCount.get(r.p.id) > 1) { rejected.set(r.i, 'Duplicate evidence ID'); conflict = true; invalidated = true; quarantinedChecks.add(r.p.checkId); } else survivors.push(r);
     }
     const bycheck = new Map();
     for (const r of survivors) bycheck.set(r.p.checkId, [...(bycheck.get(r.p.checkId) ?? []), r]);
@@ -391,7 +392,8 @@ export function assess(inp) {
     }
     if (new Set(kept.map(r => r.env.proof.keyId)).size > 1) mixed = true;
   }
-  const results = new Map(kept.map(r => [r.p.checkId, r]));
+  // A check with a quarantined duplicate-ID receipt is unproven (replaying a failure must not let a sibling pass count).
+  const results = new Map(kept.filter(r => !quarantinedChecks.has(r.p.checkId)).map(r => [r.p.checkId, r]));
   return mkReport({ ...base, decision: null, selected, ambiguous, results, accepted: kept, blockers, rejected, recs, flags: { invalidated, conflict, repeated, mixed } });
 }
 

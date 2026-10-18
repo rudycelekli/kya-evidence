@@ -189,6 +189,7 @@
       ],
       "ASSESSMENT_EXPIRED": [
         "currency.assessment-expired",
+        "currency.at-validity-boundary-is-expired",
         "currency.expired-and-aged-fire-together"
       ],
       "ASSESSMENT_AGED": [
@@ -29458,12 +29459,12 @@
       }
     },
     {
-      "id": "currency.at-validity-boundary-is-current",
+      "id": "currency.at-validity-boundary-is-expired",
       "description": "The check time equals validUntil exactly.",
       "requirements": [
         "KYA-MON-001"
       ],
-      "rationale": "KYA-MON-001: expiry is strictly after validUntil; the boundary instant is still current.",
+      "rationale": "KYA-MON-001: validity ends at validUntil, so the boundary instant is expired, as in assess where expiry is exclusive; fail closed.",
       "operation": "currency",
       "inputs": {
         "assessment": {
@@ -29727,12 +29728,17 @@
       "expected": {
         "schema": "kya.impl-result/v1",
         "operation": "currency",
-        "current": true,
-        "reliable": true,
-        "action": "none",
+        "current": false,
+        "reliable": false,
+        "action": "reassess",
         "checkedAt": "2026-10-15T10:00:00.000Z",
         "assessmentDigest": "6763604de9e97a7ca7724c5e4368e29330489d901c264ecbb35ce2356f3ac863",
-        "triggers": [],
+        "triggers": [
+          {
+            "id": "assessment-expired",
+            "code": "ASSESSMENT_EXPIRED"
+          }
+        ],
         "incidents": {
           "considered": 0,
           "open": [],
@@ -29741,7 +29747,7 @@
           "observed": [],
           "ignored": []
         },
-        "resultDigest": "2e25d21364bf4a2dae9264fe1a6a6cf6110b173419323944658609046cbb96d5"
+        "resultDigest": "713dfcfd73dd0e4ae6c4762526caa4a81d63a3bae4b2c0c29b214bd4b7823c8b"
       }
     },
     {
