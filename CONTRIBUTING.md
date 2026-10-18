@@ -24,7 +24,7 @@ Code under `src/conformance/` must not change without an ADR. The evaluator dige
 
 ## Developer Certificate of Origin
 
-Every commit proposed for this repository must carry a `Signed-off-by:` line with your real name and a working email address. By adding it you certify the Developer Certificate of Origin (https://developercertificate.org). Use `git commit -s`. A pull request without the sign-off will not be merged. An AI co-author trailer does not replace the sign-off. The full terms are in [IPR-POLICY.md](docs/governance/IPR-POLICY.md), which also covers the Apache-2.0 patent grant, essential-patent disclosure, employer permission and prohibited material.
+Every commit proposed for this repository must carry a `Signed-off-by:` line with your real name and a working email address. By adding it you certify the Developer Certificate of Origin (https://developercertificate.org). Use `git commit -s`. Maintainers are asked not to merge a pull request without the sign-off. This is a review practice only: no automated check enforces it, so a missing sign-off is caught only when a maintainer looks. An AI co-author trailer does not replace the sign-off. The full terms are in [IPR-POLICY.md](docs/governance/IPR-POLICY.md), which also covers the Apache-2.0 patent grant, essential-patent disclosure, employer permission and prohibited material.
 
 ## Governance documents
 

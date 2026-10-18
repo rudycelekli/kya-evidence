@@ -43,23 +43,26 @@ function runCli(args) {
 test('two concurrent campaign runs on one ledger execute the attempts once and the other refuses', async () => {
   const dir = await mkdtemp(join(tmpdir(), 'kya-race-'));
   try {
-    const ledgerPath = join(dir, 'ledger.json'), manifestPath = join(dir, 'manifest.json'), keyPath = join(dir, 'key.pem'), policyPath = join(dir, 'policy.json'), priv = join(dir, 'private');
-    await writeFile(ledgerPath, JSON.stringify(ledgerFor(['a-1', 'a-2', 'a-3', 'a-4']), null, 2));
-    await writeFile(manifestPath, JSON.stringify(manifest)); await writeFile(policyPath, JSON.stringify(policy));
-    await writeFile(keyPath, issuer.privateKey.export({ format: 'pem', type: 'pkcs8' }), { mode: 0o600 });
-    await mkdir(priv, { mode: 0o700 });
-    const args = ['run', '--ledger', ledgerPath, '--manifest', manifestPath, '--private-dir', priv, '--adapter', 'reference', '--key', keyPath, '--now', T1, '--policy', policyPath];
-    const [a, b] = await Promise.all([runCli(args), runCli(args)]);
-    const codes = [a.status, b.status].sort();
-    assert.equal(codes.filter(c => c === 0).length, 1, 'exactly one run may execute: ' + JSON.stringify([a, b]));
-    const loser = a.status === 0 ? b : a;
-    assert.notEqual(loser.status, 0);
+    // Run A takes the lock and is held there, so run B overlaps it for certain; a machine under load cannot let A finish first.
+    const holder = await heldRun(dir);
+    const manifestPath = join(dir, 'manifest.json'), keyPath = join(dir, 'key.pem'), policyPath = join(dir, 'policy.json'), priv = join(dir, 'private');
+    const args = ['run', '--ledger', holder.ledgerPath, '--manifest', manifestPath, '--private-dir', priv, '--adapter', 'reference', '--key', keyPath, '--now', T1, '--policy', policyPath];
+    const loser = await runCli(args);
+    assert.notEqual(loser.status, 0, 'a second run on a locked ledger must not succeed: ' + JSON.stringify(loser));
     assert.match(loser.stderr, /lock|already running|in progress/i);
-    const final = JSON.parse(await readFile(ledgerPath, 'utf8'));
+    assert.equal(existsSync(holder.lockPath), true, 'the refused run must not remove the holder lock');
+    const during = JSON.parse(await readFile(holder.ledgerPath, 'utf8'));
+    assert.equal(during.entries.filter(e => e.payload.kind === 'started').length, 0, 'the refused run must not start any attempt');
+    holder.child.kill('SIGTERM');
+    await holder.closed;
+    assert.equal(existsSync(holder.lockPath), false, 'the lock is released when the holder ends');
+    const after = await runCli(args);
+    assert.equal(after.status, 0, 'a later run proceeds once the lock is free: ' + JSON.stringify(after));
+    const final = JSON.parse(await readFile(holder.ledgerPath, 'utf8'));
     const started = final.entries.filter(e => e.payload.kind === 'started').map(e => e.payload.attemptId);
     assert.equal(new Set(started).size, started.length, 'no attempt may be started twice');
-    assert.equal(started.length, 4);
-    assert.equal(existsSync(ledgerPath + '.lock'), false, 'the lock is released after the run');
+    assert.equal(started.length, 2);
+    assert.equal(existsSync(holder.lockPath), false, 'the lock is released after the run');
   } finally { await rm(dir, { recursive: true, force: true }); }
 });
 

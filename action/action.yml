@@ -4,7 +4,7 @@ author: KYA Evidence contributors
 
 inputs:
   assessment-inputs:
-    description: JSON file holding manifest, profile, policy, evidence and evaluatorDigest (optionally now). Use this or the individual file inputs.
+    description: JSON file holding manifest, profile, policy, evidence and evaluatorDigest (a now member is ignored while require-pins is true). Use this or the individual file inputs.
     required: false
     default: ''
   manifest:

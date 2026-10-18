@@ -80,7 +80,7 @@ test('npm publish appears only in steps gated on a real run, in a job that needs
   const jobText = job.body.join('\n');
   assert.ok(/^ {4}environment:\s*release\s*$/m.test(jobText), 'publish job needs the release environment');
   assert.ok(/^ {4}if:.*inputs\.dry_run == false/m.test(jobText), 'publish job must be gated on dry_run == false');
-  assert.ok(/^ {4}needs:\s*build\s*$/m.test(jobText));
+  assert.ok(/^ {4}needs:\s*\[build, attest\]\s*$/m.test(jobText), 'publish must need both build and attest');
   const publishSteps = stepsOf(job).filter(s => /\bnpm publish\s/.test(s));
   assert.ok(publishSteps.length >= 1);
   for (const s of publishSteps) {
@@ -94,20 +94,61 @@ test('npm publish appears only in steps gated on a real run, in a job that needs
 });
 
 test('the provenance attestation step runs only when the dry run input is false', () => {
-  const text = readFileSync(join(root, '.github/workflows/release.yml'), 'utf8');
-  const i = text.indexOf('actions/attest-build-provenance@');
-  assert.ok(i > 0);
-  const before = text.slice(Math.max(0, i - 160), i);
-  assert.ok(before.includes('inputs.dry_run == false'), 'attest step must be gated on dry_run == false');
+  const all = jobs();
+  const withAttest = all.filter(j => j.body.join('\n').includes('actions/attest-build-provenance@'));
+  assert.deepEqual(withAttest.map(j => j.name), ['attest']);
+  const text = withAttest[0].body.join('\n');
+  assert.ok(/^ {4}if:.*inputs\.dry_run == false/m.test(text), 'attest job must be gated on dry_run == false');
+  assert.ok(/^ {4}environment:\s*release\s*$/m.test(text), 'attest job needs the release environment');
+  assert.ok(/^ {4}needs:\s*build\s*$/m.test(text));
+  const build = all.find(j => j.name === 'build').body.join('\n');
+  assert.ok(!build.includes('attest-build-provenance'), 'a dry run path must not contain an attestation');
 });
 
-test('the build job runs the gates and builds verifies and attests the tarball', () => {
+test('the attest job holds only the attestation permissions and verifies the artifact against the commit first', () => {
+  const job = jobs().find(j => j.name === 'attest');
+  const i = job.body.findIndex(l => /^ {4}permissions:\s*$/.test(l));
+  const perms = block(job.body, i).map(l => l.trim()).filter(Boolean).sort();
+  assert.deepEqual(perms, ['attestations: write', 'contents: read', 'id-token: write']);
+  const text = job.body.join('\n');
+  assert.ok(text.indexOf('verify-release.mjs --expect-commit "$GITHUB_SHA"') > 0 && text.indexOf('verify-release.mjs') < text.indexOf('attest-build-provenance@'));
+});
+
+test('the build job holds contents read only and no token that can sign or publish', () => {
+  const build = jobs().find(j => j.name === 'build');
+  const i = build.body.findIndex(l => /^ {4}permissions:\s*$/.test(l));
+  assert.deepEqual(block(build.body, i).map(l => l.trim()).filter(Boolean), ['contents: read']);
+  const text = build.body.join('\n');
+  assert.ok(!/id-token|attestations/.test(text));
+});
+
+test('build attest and publish jobs run only on the main branch', () => {
+  for (const name of ['build', 'attest', 'publish']) {
+    const job = jobs().find(j => j.name === name);
+    assert.ok(/^ {4}if:.*github\.ref == 'refs\/heads\/main'/m.test(job.body.join('\n')), name + ' must be gated on refs/heads/main');
+  }
+});
+
+test('the real run gates require a workflow dispatch event and do not fail open on a null input', () => {
+  const gates = code.filter(l => l.includes('inputs.dry_run == false'));
+  assert.ok(gates.length >= 4);
+  for (const l of gates) assert.ok(l.includes("github.event_name == 'workflow_dispatch' && inputs.dry_run == false"), 'fail open gate: ' + l.trim());
+});
+
+test('publish and attest verify the artifact against the workflow commit before acting', () => {
+  for (const name of ['attest', 'publish']) {
+    const text = jobs().find(j => j.name === name).body.join('\n');
+    assert.ok(text.includes('node scripts/verify-release.mjs --expect-commit "$GITHUB_SHA"'), name);
+  }
+});
+
+test('the build job runs the gates and builds verifies and uploads the tarball without attesting', () => {
   const build = jobs().find(j => j.name === 'build').body.join('\n');
-  for (const needle of ['scripts/check.mjs', 'privacy:scan', '--test', 'scripts/mutation-check.mjs', 'scripts/requirements.mjs --check', 'scripts/release-readiness.mjs', 'scripts/pack.mjs', 'scripts/verify-release.mjs', 'scripts/sbom.mjs', 'actions/attest-build-provenance@', 'actions/upload-artifact@', "'# skipped 0'", "'# todo 0'"]) {
+  for (const needle of ['scripts/check.mjs', 'privacy:scan', '--test', 'scripts/mutation-check.mjs', 'scripts/requirements.mjs --check', 'scripts/release-readiness.mjs', 'scripts/pack.mjs', 'scripts/verify-release.mjs', 'scripts/sbom.mjs', 'actions/upload-artifact@', "'# skipped 0'", "'# todo 0'"]) {
     assert.ok(build.includes(needle), 'build job lacks ' + needle);
   }
   assert.ok(build.indexOf('scripts/pack.mjs') < build.indexOf('scripts/verify-release.mjs'));
-  assert.ok(build.indexOf('scripts/verify-release.mjs') < build.indexOf('actions/attest-build-provenance@'));
+  assert.ok(build.indexOf('scripts/verify-release.mjs') < build.indexOf('actions/upload-artifact@'));
 });
 
 test('permissions are least privilege with read only contents by default', () => {
@@ -126,7 +167,7 @@ test('permissions are least privilege with read only contents by default', () =>
 test('the workflow never tags pushes or creates releases and keeps untrusted context out of the file', () => {
   for (const banned of ['git tag', 'git push', 'gh release', 'gh api', 'curl ', 'wget ']) assert.ok(!code.join('\n').includes(banned), banned);
   for (const l of code) {
-    if (l.includes('github.event') || l.includes('github.head_ref') || l.includes('github.ref_name')) assert.fail('untrusted context in workflow text: ' + l.trim());
+    if (/github\.event(?!_name\b)/.test(l) || l.includes('github.head_ref') || l.includes('github.ref_name')) assert.fail('untrusted context in workflow text: ' + l.trim());
   }
   assert.ok(!code.some(l => /persist-credentials:\s*true/.test(l)));
   assert.ok(code.filter(l => l.includes('actions/checkout@')).length === code.filter(l => l.includes('persist-credentials: false')).length);

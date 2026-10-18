@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { mkdtempSync, writeFileSync, readFileSync, rmSync, mkdirSync } from 'node:fs';
+import { mkdtempSync, writeFileSync, readFileSync, rmSync, mkdirSync, symlinkSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { fileURLToPath } from 'node:url';
@@ -358,4 +358,49 @@ test('a policy not built on the frozen core profile is flagged as a custom profi
   const core = inputs(); core.profile = CORE_PROFILE; core.policy = policy(CORE_PROFILE); core.evidence = bundle(core.manifest, CORE_PROFILE);
   const q = run(['--assessment-inputs', bundleFile(core), '--now', NOW, '--allow-fixture'], { GITHUB_ACTIONS: 'true' });
   assert.equal(jsonOf(q.stdout).customProfile, false); assert.equal(/KYA custom profile/.test(q.stdout), false);
+});
+
+const liveInputs = () => {
+  const x = inputs(), at = Date.now(), iso = ms => new Date(at + ms).toISOString();
+  x.manifest.issuedAt = iso(-3600_000); x.manifest.expiresAt = iso(86400_000);
+  x.evidence = x.profile.checks.map((_, i) => signEvidence(payload(x.manifest, x.profile, i, { observedAt: iso(-60_000), expiresAt: iso(3600_000) }), keys.privateKey));
+  return x;
+};
+const withClock = (x, now) => put('clock-inputs.json', { manifest: x.manifest, profile: x.profile, policy: x.policy, evidence: x.evidence, evaluatorDigest: x.evaluatorDigest, now });
+const pinArgs = x => ['--expect-policy-digest', digest(x.policy), '--expect-evaluator-digest', x.evaluatorDigest, '--require-pins', '--allow-fixture'];
+
+test('require-pins ignores the clock member of the inputs file and uses the system clock', () => {
+  const x = liveInputs(), f = withClock(x, NOW);
+  const s = jsonOf(run(['--assessment-inputs', f, ...pinArgs(x)]).stdout);
+  assert.equal(s.clock.source, 'system-clock');
+  assert.notEqual(s.clock.now, NOW);
+});
+
+test('allow-inputs-clock lets the inputs file clock count under require-pins', () => {
+  const x = liveInputs(), f = withClock(x, NOW);
+  const s = jsonOf(run(['--assessment-inputs', f, ...pinArgs(x), '--allow-inputs-clock']).stdout);
+  assert.equal(s.clock.source, 'inputs-file');
+  assert.equal(s.clock.now, NOW);
+});
+
+test('without require-pins the inputs file clock is still honoured and an explicit now wins', () => {
+  const x = liveInputs(), f = withClock(x, NOW);
+  assert.equal(jsonOf(run(['--assessment-inputs', f, '--allow-fixture']).stdout).clock.source, 'inputs-file');
+  const s = jsonOf(run(['--assessment-inputs', f, ...pinArgs(x), '--now', NOW]).stdout);
+  assert.equal(s.clock.source, 'flag');
+});
+
+test('an input path whose parent directory is a symlink out of the workspace is refused', () => {
+  const x = inputs(), outside = mkdtempSync(join(tmpdir(), 'kya-outside-')), ws = mkdtempSync(join(tmpdir(), 'kya-ws-'));
+  try {
+    writeFileSync(join(outside, 'inputs.json'), JSON.stringify({ manifest: x.manifest, profile: x.profile, policy: x.policy, evidence: x.evidence, evaluatorDigest: x.evaluatorDigest }));
+    symlinkSync(outside, join(ws, 'link'));
+    mkdirSync(join(ws, 'real'));
+    writeFileSync(join(ws, 'real', 'inputs.json'), readFileSync(join(outside, 'inputs.json')));
+    const at = args => spawnSync(process.execPath, [script, ...args, '--now', NOW, '--allow-fixture'], { cwd: ws, encoding: 'utf8', timeout: 20000, env: { PATH: process.env.PATH } });
+    const bad = at(['--assessment-inputs', 'link/inputs.json']);
+    assert.equal(bad.status, 1); assert.match(bad.stderr, /outside the workspace/); assert.equal(bad.stdout, '');
+    const good = at(['--assessment-inputs', 'real/inputs.json']);
+    assert.ok(good.status === 0 || good.status === 2, good.stderr);
+  } finally { rmSync(outside, { recursive: true, force: true }); rmSync(ws, { recursive: true, force: true }); }
 });

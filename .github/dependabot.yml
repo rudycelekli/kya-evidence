@@ -1,0 +1,9 @@
+version: 2
+updates:
+  # Opens pull requests that bump the SHA-pinned actions in .github/workflows and action/. Nothing merges
+  # automatically: a person reviews each bump and the new SHA.
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
