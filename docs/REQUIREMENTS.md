@@ -231,5 +231,14 @@ Each requirement is traced to at least one test that must exist exactly once; th
 | KYA-DOC-013 | MUST | Interim security wording MUST NOT turn the readiness gate `security-contact-form` green; only a recognizable real contact may. | `release-readiness.test.mjs` |
 | KYA-ACT-016 | MUST | The CI gate MUST refuse an input path that reaches outside the workspace through a symbolic link, including one routed through a directory whose name begins with two dots. | `core-adversarial.test.mjs` |
 | KYA-CAP-019 | MUST | The capture verification command MUST accept pins for run, subject, scope and profile, MUST exit non-zero when a pin does not match, and MUST report whether the capture was bound. | `core-adversarial.test.mjs` |
+| KYA-SCR-001 | MUST | A score card MUST be rebuilt byte for byte from its embedded per-item results and manifest, and any edit to a number, outcome, manifest field, floor or non-claim MUST make verification fail even when the card digest is recomputed. | `kya-score.test.mjs` |
+| KYA-SCR-002 | MUST | Interval computation MUST use only the manifest seed and resample count, and identical inputs MUST yield identical card bytes. | `kya-score.test.mjs` |
+| KYA-SCR-003 | MUST | Every aggregate on a card MUST carry a 95 percent interval, the interval MUST widen for a smaller sample, and invalid sample input MUST be rejected. | `kya-score.test.mjs` |
+| KYA-SCR-004 | MUST | Abstain, error and fail MUST each count as non-pass in a fixed denominator on a score card. | `kya-score.test.mjs` |
+| KYA-SCR-005 | MUST | A score card MUST NOT be produced below the evidence floor, every unmet reason MUST be named, and a caller MUST NOT be able to lower the floor. | `kya-score.test.mjs` |
+| KYA-SCR-006 | SHOULD | A score card SHOULD report variance across repeats, a held-out aggregate separate from the public aggregate, cost only when fully known, and a count of canary exposures. | `kya-score.test.mjs` |
+| KYA-SCR-007 | MUST | Two score cards MUST NOT be compared unless their suite digest and evaluator digest match. | `kya-score.test.mjs` |
+| KYA-SCR-008 | MUST NOT | The score card module MUST NOT import network or process facilities, and MUST reject malformed manifests. | `kya-score.test.mjs` |
+| KYA-SCR-009 | MUST | The KYA Score ADR MUST stay Proposed, MUST list predictive validity, inter-assessor agreement and calibration against real incidents as unmeasured, and MUST describe every non-claim code. | `kya-score.test.mjs` |
 
-Registry digest: `c7cc975586e4205c2e9483aff0eb209d22d44d5b0a04d650f7d5c567c40f906b`
+Registry digest: `e6832aee904153d878215f96e31b88079ca5c13ea31ae29ecd99a64bb07e94ab`

@@ -4295,6 +4295,219 @@
           "title": "capture cli verify takes binding pins and reports whether the capture is bound"
         }
       ]
+    },
+    {
+      "id": "KYA-SCR-001",
+      "level": "MUST",
+      "area": "benchmarks",
+      "section": "Reports and viewers",
+      "statement": "A score card MUST be rebuilt byte for byte from its embedded per-item results and manifest, and any edit to a number, outcome, manifest field, floor or non-claim MUST make verification fail even when the card digest is recomputed.",
+      "tests": [
+        {
+          "file": "test/kya-score.test.mjs",
+          "title": "verify accepts an untouched card and returns the recomputed headline"
+        },
+        {
+          "file": "test/kya-score.test.mjs",
+          "title": "verify rejects an edited headline score even when the digest is recomputed"
+        },
+        {
+          "file": "test/kya-score.test.mjs",
+          "title": "verify rejects an edited item outcome when only the digest is recomputed"
+        },
+        {
+          "file": "test/kya-score.test.mjs",
+          "title": "verify rejects a stale digest after any edit"
+        },
+        {
+          "file": "test/kya-score.test.mjs",
+          "title": "verify rejects dropped or reordered non claims"
+        },
+        {
+          "file": "test/kya-score.test.mjs",
+          "title": "verify rejects unknown fields and wrong schema without throwing"
+        }
+      ]
+    },
+    {
+      "id": "KYA-SCR-002",
+      "level": "MUST",
+      "area": "benchmarks",
+      "section": "Records and bindings",
+      "statement": "Interval computation MUST use only the manifest seed and resample count, and identical inputs MUST yield identical card bytes.",
+      "tests": [
+        {
+          "file": "test/kya-score.test.mjs",
+          "title": "seeded random is deterministic and differs between seeds"
+        },
+        {
+          "file": "test/kya-score.test.mjs",
+          "title": "bootstrap interval is identical for identical seed and data and brackets the point estimate"
+        },
+        {
+          "file": "test/kya-score.test.mjs",
+          "title": "score card build is byte identical for identical inputs"
+        }
+      ]
+    },
+    {
+      "id": "KYA-SCR-003",
+      "level": "MUST",
+      "area": "benchmarks",
+      "section": "Reports and viewers",
+      "statement": "Every aggregate on a card MUST carry a 95 percent interval, the interval MUST widen for a smaller sample, and invalid sample input MUST be rejected.",
+      "tests": [
+        {
+          "file": "test/kya-score.test.mjs",
+          "title": "bootstrap interval is wider for a small sample than for a large one with the same mean"
+        },
+        {
+          "file": "test/kya-score.test.mjs",
+          "title": "bootstrap rejects empty data non finite values and unsafe resample counts"
+        },
+        {
+          "file": "test/kya-score.test.mjs",
+          "title": "wilson interval reproduces the published floor arithmetic of ADR-0019"
+        },
+        {
+          "file": "test/kya-score.test.mjs",
+          "title": "score card carries a headline with interval counts manifest and fixed non claims"
+        }
+      ]
+    },
+    {
+      "id": "KYA-SCR-004",
+      "level": "MUST",
+      "area": "benchmarks",
+      "section": "Run selection and qualification",
+      "statement": "Abstain, error and fail MUST each count as non-pass in a fixed denominator on a score card.",
+      "tests": [
+        {
+          "file": "test/kya-score.test.mjs",
+          "title": "fixed denominator counts abstain and error as non passes"
+        },
+        {
+          "file": "test/kya-score.test.mjs",
+          "title": "build rejects runs that disagree on the item population and duplicate item ids"
+        }
+      ]
+    },
+    {
+      "id": "KYA-SCR-005",
+      "level": "MUST",
+      "area": "benchmarks",
+      "section": "Trust and eligibility",
+      "statement": "A score card MUST NOT be produced below the evidence floor, every unmet reason MUST be named, and a caller MUST NOT be able to lower the floor.",
+      "tests": [
+        {
+          "file": "test/kya-score.test.mjs",
+          "title": "build refuses below the item floor and names the code"
+        },
+        {
+          "file": "test/kya-score.test.mjs",
+          "title": "build refuses below the repeat floor and names the code"
+        },
+        {
+          "file": "test/kya-score.test.mjs",
+          "title": "build refuses too few held out items and a missing holdout commitment"
+        },
+        {
+          "file": "test/kya-score.test.mjs",
+          "title": "build reports every unmet floor at once"
+        },
+        {
+          "file": "test/kya-score.test.mjs",
+          "title": "options can raise the floor but never lower it"
+        },
+        {
+          "file": "test/kya-score.test.mjs",
+          "title": "verify rejects a card whose recorded floor was lowered below the hard floor"
+        },
+        {
+          "file": "test/kya-score.test.mjs",
+          "title": "verify rejects a card built from too little evidence even with an honest floor field"
+        }
+      ]
+    },
+    {
+      "id": "KYA-SCR-006",
+      "level": "SHOULD",
+      "area": "benchmarks",
+      "section": "Reports and viewers",
+      "statement": "A score card SHOULD report variance across repeats, a held-out aggregate separate from the public aggregate, cost only when fully known, and a count of canary exposures.",
+      "tests": [
+        {
+          "file": "test/kya-score.test.mjs",
+          "title": "repeat variance reports per run scores spread and the share of unstable items"
+        },
+        {
+          "file": "test/kya-score.test.mjs",
+          "title": "held out and public items are scored separately and the gap is descriptive"
+        },
+        {
+          "file": "test/kya-score.test.mjs",
+          "title": "cost and runtime are reported and cost stays null when any item cost is unknown"
+        },
+        {
+          "file": "test/kya-score.test.mjs",
+          "title": "canary exposures are counted from item flags and reported"
+        }
+      ]
+    },
+    {
+      "id": "KYA-SCR-007",
+      "level": "MUST",
+      "area": "benchmarks",
+      "section": "Interoperability and versioning",
+      "statement": "Two score cards MUST NOT be compared unless their suite digest and evaluator digest match.",
+      "tests": [
+        {
+          "file": "test/kya-score.test.mjs",
+          "title": "compare refuses different suites and flags overlapping intervals as not distinguishable"
+        },
+        {
+          "file": "test/kya-score.test.mjs",
+          "title": "compare reports clearly separated scores as distinguishable"
+        }
+      ]
+    },
+    {
+      "id": "KYA-SCR-008",
+      "level": "MUST NOT",
+      "area": "benchmarks",
+      "section": "Records and bindings",
+      "statement": "The score card module MUST NOT import network or process facilities, and MUST reject malformed manifests.",
+      "tests": [
+        {
+          "file": "test/kya-score.test.mjs",
+          "title": "the kya score source makes no network or process calls"
+        },
+        {
+          "file": "test/kya-score.test.mjs",
+          "title": "build rejects malformed manifests and unknown fields"
+        },
+        {
+          "file": "test/kya-score.test.mjs",
+          "title": "the kya score cli builds a card then verifies it and rejects a tampered copy"
+        }
+      ]
+    },
+    {
+      "id": "KYA-SCR-009",
+      "level": "MUST",
+      "area": "benchmarks",
+      "section": "Governance documents",
+      "statement": "The KYA Score ADR MUST stay Proposed, MUST list predictive validity, inter-assessor agreement and calibration against real incidents as unmeasured, and MUST describe every non-claim code.",
+      "tests": [
+        {
+          "file": "test/kya-score.test.mjs",
+          "title": "ADR-0033 is Proposed and names what is unmeasured"
+        },
+        {
+          "file": "test/kya-score.test.mjs",
+          "title": "the fix lane 8 integration note names only requirement titles and spec headings that exist"
+        }
+      ]
     }
   ]
 }
