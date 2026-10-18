@@ -415,7 +415,7 @@
       "title": "KYA Score benchmark profile (`kya.score-card/v1`, experimental)",
       "status": "Proposed",
       "file": "docs/adr/0033-kya-score-benchmark-profile.md",
-      "contentDigest": "938adff5768a99c5cffdc1abc120def9d959cd4dc3601773b7f0abb12f77022c",
+      "contentDigest": "6e4064ffd6a50fe6a516cf23bc3528630a6ce6a4da2304ebad14a694d0fc3370",
       "related": [
         "ADR-0003",
         "ADR-0010",
@@ -427,6 +427,6 @@
       ]
     }
   ],
-  "digest": "a6ad83bc37a357fc6cf48b57f9cc10491bf2227a40b766f07e49d1c1cbf563b9",
+  "digest": "87fa9665bf407e072ca7b1d9dcfd2645ea40d7b8ab82798f60744203f8217e0c",
   "store": "portable local file; not a claim of AgentDB graph persistence"
 }
