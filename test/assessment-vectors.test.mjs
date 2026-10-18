@@ -279,3 +279,49 @@ test('the JS reference adapter refuses malformed input with a non-zero exit and 
   assert.equal(unsupported.status, 0);
   assert.equal(JSON.parse(unsupported.stdout).unsupported, true);
 });
+
+test('vectors that restate the same input in another spelling expect exactly the same result and the spelling really differs', () => {
+  const byId = id => FILE.vectors.find(v => v.id === id);
+  const base = byId('assess.qualified-all-pass-runtime');
+  const flipped = byId('assess.canonical-member-order-does-not-matter');
+  assert.deepEqual(flipped.expected, base.expected);
+  assert.notEqual(JSON.stringify(flipped.inputs), JSON.stringify(base.inputs));
+  assert.deepEqual(Object.keys(flipped.inputs.manifest), Object.keys(base.inputs.manifest).reverse());
+  const numbers = byId('assess.raw-number-spellings-equal-by-value-are-accepted');
+  assert.deepEqual(numbers.expected, base.expected);
+  for (const spelling of ['"minScore":7e2', '"minCoverage":8E-1', '"maxEvidenceAgeSeconds":86400.0', '"minIndependentCoverage":0.0']) assert.ok(numbers.rawInput.includes(spelling), spelling);
+  const unicode = byId('assess.canonical-unicode-and-escapes-preserved');
+  const escaped = byId('assess.raw-pretty-printed-input-with-escaped-text-is-accepted');
+  assert.deepEqual(escaped.expected, unicode.expected);
+  assert.ok(escaped.rawInput.includes('\\u00e9') && escaped.rawInput.includes('\\ud83e\\udded') && !/[^\x00-\x7f]/.test(escaped.rawInput));
+  assert.ok(escaped.rawInput.includes('\n  '), 'the escaped input is indented');
+  assert.equal(escaped.inputs, undefined);
+  for (const v of FILE.vectors.filter(x => x.rawInput !== undefined)) assert.equal(v.inputs, undefined, v.id);
+});
+
+test('an empty reasonContains accepts any non-empty reason text and refuses a missing or empty reason', () => {
+  assert.equal(firstDifference({ index: 0, reasonContains: '' }, { index: 0, reason: 'any text at all' }), null);
+  assert.match(firstDifference({ index: 0, reasonContains: '' }, { index: 0, reason: '' }), /reason: expected a non-empty reason/);
+  assert.match(firstDifference({ index: 0, reasonContains: '' }, { index: 0 }), /reason: expected a non-empty reason/);
+  assert.match(firstDifference({ index: 0, reasonContains: '' }, { index: 0, reason: 7 }), /reason: expected a non-empty reason/);
+});
+
+test('a vector with rawInput sends exactly that text on stdin and a vector needs exactly one of inputs and rawInput', async () => {
+  await withTmp(async dir => {
+    const RAW = '{"schema":"kya.impl-input/v1","operation":"assess","inputs":{"a":1,"a":2}}';
+    const base = FILE.vectors.find(v => v.expected.refused === true);
+    const { inputs, ...rest } = structuredClone(base);
+    const file = join(dir, 'raw.json');
+    await writeFile(file, JSON.stringify({ ...FILE, vectors: [{ ...rest, rawInput: RAW }] }));
+    const refuseIfExact = await script(dir, 'exact.mjs', 'let s = "";\nfor await (const c of process.stdin) s += c;\nprocess.exit(s === ' + JSON.stringify(RAW) + ' ? 3 : 0);\n');
+    const r = await run(refuseIfExact, { vectorsFile: file });
+    assert.equal(r.summary.vectors.pass, 1, JSON.stringify(r.summary.failures));
+    const answers = await script(dir, 'ok.mjs', 'for await (const _ of process.stdin) {}\nprocess.stdout.write("{}");\n');
+    const bad = await run(answers, { vectorsFile: file });
+    assert.equal(bad.summary.vectors.fail, 1);
+    await writeFile(file, JSON.stringify({ ...FILE, vectors: [{ ...rest, rawInput: RAW, inputs }] }));
+    await assert.rejects(run(refuseIfExact, { vectorsFile: file }), /exactly one of inputs and rawInput/);
+    await writeFile(file, JSON.stringify({ ...FILE, vectors: [rest] }));
+    await assert.rejects(run(refuseIfExact, { vectorsFile: file }), /exactly one of inputs and rawInput/);
+  });
+});

@@ -10,6 +10,8 @@ Entries come from `git log` and the merged pull requests (#1 to #30) of the repo
 
 ### Changed
 
+- Assessment vectors grew from 111 to 272 (161 new, 71 of them refusals), written from the specification text before the reference was consulted: blocker order, scoring arithmetic, run recency, rejection reason precedence, public key strictness as proof key and trust anchor, strict parsing through a new `rawInput` vector field, field rules, principal binding, mandatory minimums and incident handling. Harness: `rawInput` and an empty `reasonContains`. Requirements passing in the harness report rose from 31 to 37 of 245. The writing exposed rules the reference enforced but the text did not state; they are now in `docs/SPECIFICATION.md` and `docs/SCORING.md` and the same-team second implementation was fixed against that text (it failed 26 of the 161 before). Nothing was tagged or published; no outside implementation has run the vectors.
+
 - Prepared 0.1.0-alpha.4: version bump to `0.1.0-alpha.4` and changelog update (PR #30). Nothing was tagged or published.
 - Core hardening from an adversarial review: the CI gate now refuses a symlinked input directory whose name begins with two dots, and `kya-capture verify` accepts run, subject, scope and profile pins and reports whether the capture is bound (KYA-ACT-016, KYA-CAP-019).
 
