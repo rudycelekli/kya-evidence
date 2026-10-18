@@ -4183,7 +4183,7 @@
     {
       "id": "KYA-ACT-015",
       "level": "MUST",
-      "area": "action",
+      "area": "adoption",
       "section": "Interoperability and versioning",
       "statement": "Under `--require-pins` the CI gate MUST ignore the clock member of the inputs file unless `--allow-inputs-clock` is given, and MUST refuse an input whose real path leaves the workspace through a symbolic link.",
       "tests": [
@@ -4267,6 +4267,32 @@
         {
           "file": "test/release-readiness.test.mjs",
           "title": "the interim security wording cannot turn the contact form gate green"
+        }
+      ]
+    },
+    {
+      "id": "KYA-ACT-016",
+      "level": "MUST",
+      "area": "adoption",
+      "section": "Trust and eligibility",
+      "statement": "The CI gate MUST refuse an input path that reaches outside the workspace through a symbolic link, including one routed through a directory whose name begins with two dots.",
+      "tests": [
+        {
+          "file": "test/core-adversarial.test.mjs",
+          "title": "kya-check refuses an input path routed through a workspace directory whose name starts with two dots"
+        }
+      ]
+    },
+    {
+      "id": "KYA-CAP-019",
+      "level": "MUST",
+      "area": "capture",
+      "section": "Records and bindings",
+      "statement": "The capture verification command MUST accept pins for run, subject, scope and profile, MUST exit non-zero when a pin does not match, and MUST report whether the capture was bound.",
+      "tests": [
+        {
+          "file": "test/core-adversarial.test.mjs",
+          "title": "capture cli verify takes binding pins and reports whether the capture is bound"
         }
       ]
     }

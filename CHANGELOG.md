@@ -11,6 +11,11 @@ Entries come from `git log` and the merged pull requests (#1 to #30) of the repo
 ### Changed
 
 - Prepared 0.1.0-alpha.4: version bump to `0.1.0-alpha.4` and changelog update (PR #30). Nothing was tagged or published.
+- Core hardening from an adversarial review: the CI gate now refuses a symlinked input directory whose name begins with two dots, and `kya-capture verify` accepts run, subject, scope and profile pins and reports whether the capture is bound (KYA-ACT-016, KYA-CAP-019).
+
+### Known issues
+
+- `checkCurrency` treats the instant equal to `validUntil` as current, while `assess` treats it as expired. The normative vector `currency.at-validity-boundary-is-current` (KYA-MON-001) pins the current behaviour, so changing it is a specification change and is not made here.
 
 ## [0.1.0-alpha.4] - 2026-10-16
 
