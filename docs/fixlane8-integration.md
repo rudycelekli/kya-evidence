@@ -27,7 +27,7 @@ Not addressed here and still missing: signed cards, judge calibration enforcemen
 
 Requirement text describes the reference implementation, not an adopted standard. IDs are suggestions; the integrator owns `evidence/requirements.json`. Spec headings below exist in `docs/SPECIFICATION.md`.
 
-### KYA-SCORE-001 (MUST, integrity)
+### KYA-SCR-001 (MUST, integrity)
 
 - spec: `## Reports and viewers`
 - statement: A score card MUST be rebuilt byte for byte from its embedded per-item results and manifest, and any edit to a number, outcome, manifest field, floor or non-claim MUST make verification fail even when the card digest is recomputed.
@@ -38,7 +38,7 @@ Requirement text describes the reference implementation, not an adopted standard
 - test: `verify rejects dropped or reordered non claims`
 - test: `verify rejects unknown fields and wrong schema without throwing`
 
-### KYA-SCORE-002 (MUST, determinism)
+### KYA-SCR-002 (MUST, determinism)
 
 - spec: `## Records and bindings`
 - statement: Interval computation MUST use only the manifest seed and resample count, and identical inputs MUST yield identical card bytes.
@@ -46,7 +46,7 @@ Requirement text describes the reference implementation, not an adopted standard
 - test: `bootstrap interval is identical for identical seed and data and brackets the point estimate`
 - test: `score card build is byte identical for identical inputs`
 
-### KYA-SCORE-003 (MUST, uncertainty)
+### KYA-SCR-003 (MUST, uncertainty)
 
 - spec: `## Reports and viewers`
 - statement: Every aggregate on a card MUST carry a 95 percent interval, the interval MUST widen for a smaller sample, and invalid sample input MUST be rejected.
@@ -55,14 +55,14 @@ Requirement text describes the reference implementation, not an adopted standard
 - test: `wilson interval reproduces the published floor arithmetic of ADR-0019`
 - test: `score card carries a headline with interval counts manifest and fixed non claims`
 
-### KYA-SCORE-004 (MUST, denominator)
+### KYA-SCR-004 (MUST, denominator)
 
 - spec: `## Run selection and qualification`
 - statement: Abstain, error and fail MUST each count as non-pass in a fixed denominator on a score card.
 - test: `fixed denominator counts abstain and error as non passes`
 - test: `build rejects runs that disagree on the item population and duplicate item ids`
 
-### KYA-SCORE-005 (MUST, evidence floor)
+### KYA-SCR-005 (MUST, evidence floor)
 
 - spec: `## Trust and eligibility`
 - statement: A score card MUST NOT be produced below the evidence floor, every unmet reason MUST be named, and a caller MUST NOT be able to lower the floor.
@@ -74,7 +74,7 @@ Requirement text describes the reference implementation, not an adopted standard
 - test: `verify rejects a card whose recorded floor was lowered below the hard floor`
 - test: `verify rejects a card built from too little evidence even with an honest floor field`
 
-### KYA-SCORE-006 (SHOULD, variance and contamination signal)
+### KYA-SCR-006 (SHOULD, variance and contamination signal)
 
 - spec: `## Reports and viewers`
 - statement: A score card SHOULD report variance across repeats, a held-out aggregate separate from the public aggregate, cost only when fully known, and a count of canary exposures.
@@ -83,14 +83,14 @@ Requirement text describes the reference implementation, not an adopted standard
 - test: `cost and runtime are reported and cost stays null when any item cost is unknown`
 - test: `canary exposures are counted from item flags and reported`
 
-### KYA-SCORE-007 (MUST, comparison lineage)
+### KYA-SCR-007 (MUST, comparison lineage)
 
 - spec: `## Interoperability and versioning`
 - statement: Two score cards MUST NOT be compared unless their suite digest and evaluator digest match.
 - test: `compare refuses different suites and flags overlapping intervals as not distinguishable`
 - test: `compare reports clearly separated scores as distinguishable`
 
-### KYA-SCORE-008 (MUST NOT, offline and input hygiene)
+### KYA-SCR-008 (MUST NOT, offline and input hygiene)
 
 - spec: `## Records and bindings`
 - statement: The score card module MUST NOT import network or process facilities, and MUST reject malformed manifests.
@@ -98,7 +98,7 @@ Requirement text describes the reference implementation, not an adopted standard
 - test: `build rejects malformed manifests and unknown fields`
 - test: `the kya score cli builds a card then verifies it and rejects a tampered copy`
 
-### KYA-SCORE-009 (MUST, documentation boundary)
+### KYA-SCR-009 (MUST, documentation boundary)
 
 - spec: `## Governance documents`
 - statement: The KYA Score ADR MUST stay Proposed, MUST list predictive validity, inter-assessor agreement and calibration against real incidents as unmeasured, and MUST describe every non-claim code.

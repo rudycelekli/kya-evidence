@@ -17,6 +17,7 @@ KYA-native records sign `DOMAIN + canonical(payload)`, where `DOMAIN` is a fixed
 | `kya.assessor-disclosure/v1\n` | Assessor disclosure, conflict declaration, withdrawal payload (`kya.assessor-disclosure/v1`) | `src/assessor/disclosure.mjs` |
 | `kya.campaign-plan/v1\n` | Campaign plan payload (`kya.campaign-plan/v1`) | `src/campaign/domain/records.mjs` (`PLAN_DOMAIN`) |
 | `kya.campaign-ledger/v1\n` | Campaign ledger entry payload (`kya.campaign-ledger-entry/v1`; the domain name differs from the schema name) | `src/campaign/domain/records.mjs` (`LEDGER_DOMAIN`) |
+| `kya.score.seed/v1\n` | Seed derivation for the score card bootstrap generator; not a signature and carries no secret (`kya.score-card/v1` cards are unsigned) | `src/kya-score/stats.mjs` |
 | `kya.capture/v1\n` | Reference capture record payload (simulated cell, ADR-0032) | `src/capture-cell/bundle.mjs` (`CAPTURE_DOMAIN`) |
 | `kya.conformance-report/v1\n` | Conformance report payload (`kya.conformance-report/v1`) | `src/conformance-report/report.mjs` (`REPORT_DOMAIN`) |
 

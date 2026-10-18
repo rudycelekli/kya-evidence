@@ -2,7 +2,7 @@ import { canonical, digest, insist } from '../shared/canonical.mjs';
 import { bootstrapSumQuantiles } from './stats.mjs';
 
 export const SCORE_CARD_SCHEMA = 'kya.score-card/v1';
-export const SCORE_LABEL = 'KYA-SCORE-EXPERIMENTAL';
+export const SCORE_LABEL = 'KYA-SCR-EXPERIMENTAL';
 /** Lower bounds on evidence. A caller may raise any of them; none can be lowered, and a verifier re-applies them. */
 export const EVIDENCE_FLOOR = Object.freeze({ minItems: 30, minRepeats: 3, minHeldOutItems: 10 });
 /** Fixed, ordered list of things the headline number does not establish. Prose for each code lives in ADR-0033. */
