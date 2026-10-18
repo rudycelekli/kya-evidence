@@ -8,6 +8,7 @@ import { resolve } from 'node:path';
 import { createPrivateKey, createPublicKey } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import { digest, parseJson } from '../src/shared/canonical.mjs';
+import { terminalJson, terminalText } from '../src/shared/terminal.mjs';
 import { validateManifest, validatePolicy, timestamp, keyId } from '../src/identity/domain/services/validation.mjs';
 import { createReferenceAdapter, createCommandAdapter } from '../src/conformance/index.mjs';
 import { createPlan, openLedger, verifyLedger, summarizeCampaign, runCampaign, conformanceDigests, verifyCaptureIssuerPolicy } from '../src/campaign/index.mjs';
@@ -103,7 +104,7 @@ async function holdForTest() {
   while (!existsSync(hold)) await new Promise(resolveWait => setTimeout(resolveWait, 20));
 }
 const headOf = ledger => digest(ledger.entries.length ? ledger.entries.at(-1) : ledger.plan);
-const print = value => console.log(JSON.stringify(value, null, 2));
+const print = value => console.log(terminalJson(value, null, 2));
 async function signerTrust(flags) {
   if (flags.policy && flags['trust-plan-signer'] !== undefined) throw Error('Use either --policy or --trust-plan-signer, not both');
   if (flags['trust-plan-signer'] !== undefined && flags['trust-plan-signer'] !== 'true') throw Error('--trust-plan-signer must be true');
@@ -195,6 +196,6 @@ try {
   else if (!Object.hasOwn(commands, command)) throw Error(`Unknown command ${command}`);
   else await commands[command](parseArgs(rest));
 } catch (error) {
-  console.error(`kya-campaign: ${error.message}`);
+  console.error(`kya-campaign: ${terminalText(error.message)}`);
   process.exitCode = 1;
 }

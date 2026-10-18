@@ -2,6 +2,8 @@ import { canonical, digest, insist } from '../shared/canonical.mjs';
 import { verifyAssessment } from '../assessment/application/assess.mjs';
 import { checkCurrency } from '../assessment/application/currency.mjs';
 import { timestamp } from '../identity/domain/services/validation.mjs';
+import { checkReportFields } from '../assessment/application/report-shape.mjs';
+import { escapeJsonText } from '../shared/terminal.mjs';
 
 export class BridgeError extends Error {
   constructor(code, message) { super(`${code}: ${message}`); this.name = 'BridgeError'; this.code = code; }
@@ -55,6 +57,7 @@ export function gate(assessment, rawOptions = {}) {
   const r = JSON.parse(canonical(assessment));
   verifyAssessment(r);
   checkReportTimes(r);
+  checkReportFields(r);
   const overrides = [];
   if (r.decision !== 'qualified') {
     if (options.allowNonQualified !== true) fail('NOT_QUALIFIED', `Assessment decision is ${r.decision}; pass allowNonQualified to export it anyway`);
@@ -100,5 +103,5 @@ export function checkUrl(v, label) {
   return v;
 }
 
-/** Deterministic bytes of any export: KYA canonical JSON (sorted keys), one trailing newline. Not RFC 8785. */
-export const serialize = value => canonical(value) + '\n';
+/** Deterministic bytes of any export: KYA canonical JSON (sorted keys), one trailing newline. Not RFC 8785. Invisible and reordering characters are written as JSON escapes, so the parsed value is unchanged. */
+export const serialize = value => escapeJsonText(canonical(value)) + '\n';

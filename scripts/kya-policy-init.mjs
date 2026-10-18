@@ -5,6 +5,7 @@ import { readFileSync, lstatSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { digest, keyId, parseJson, validatePolicy, validateProfile } from '../src/index.mjs';
+import { stripUnsafe, terminalJson } from '../src/shared/terminal.mjs';
 import { CORE_PROFILE } from '../src/conformance/index.mjs';
 import { isMain } from "./lib/is-main.mjs";
 
@@ -28,7 +29,7 @@ const MAX_FILE = 1_048_576;
 
 class UsageError extends Error {}
 const usage = message => { throw new UsageError(message); };
-const clean = (v, max = 160) => String(v ?? '').replace(new RegExp('[\\u0000-\\u001f\\u007f-\\u009f\\u2028\\u2029]', 'g'), ' ').slice(0, max);
+const clean = (v, max = 160) => stripUnsafe(v).slice(0, max);
 
 function parseArgs(argv) {
   const flags = { 'trust-key': [], 'mandatory-minimum': [] };
@@ -125,7 +126,7 @@ export function main(argv = process.argv.slice(2)) {
     if (flags.help) { process.stdout.write(HELP); return 0; }
     const { policy, template, profile, customProfile } = buildPolicy(flags);
     try { writeFileSync(resolve(flags.out), JSON.stringify(policy, null, 2) + '\n', { flag: 'wx', mode: 0o644 }); } catch (e) { usage('Cannot write --out (it must not already exist): ' + clean(e.code ?? e.message, 40)); }
-    process.stdout.write(JSON.stringify({
+    process.stdout.write(terminalJson({
       out: resolve(flags.out), template: template.id, policyId: policy.id, policyDigest: digest(policy), profileDigest: digest(profile), scopeId: policy.scopeId,
       trustedKeys: policy.trustedKeys.map(k => ({ id: k.id, role: k.role })), notValidated: true,
       customProfile,

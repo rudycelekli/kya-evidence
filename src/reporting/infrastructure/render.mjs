@@ -1,9 +1,10 @@
 import { validateDossier } from '../application/dossier.mjs';
+import { visibleControls } from '../../shared/terminal.mjs';
 
 const UNAUTHENTICATED = 'Standalone unauthenticated report · evidence replay required';
 const REPLAYED = 'structured-response-replayed';
-const h = value => String(value).replace(/[&<>"']/g, character => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[character]));
-const md = value => String(value).replace(/\r/g, '\\r').replace(/\n/g, '\\n').replace(/[&<>]/g, character => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[character])).replace(/[\\`*{}\[\]()#+.!_|>~\-]/g, '\\$&');
+const h = value => visibleControls(String(value)).replace(/[&<>"']/g, character => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[character]));
+const md = value => visibleControls(String(value).replace(/\r/g, '\\r').replace(/\n/g, '\\n')).replace(/[&<>]/g, character => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[character])).replace(/[\\`*{}\[\]()#+.!_|>~\-]/g, '\\$&');
 const percentage = value => `${Math.round(value * 10_000) / 100}%`;
 const measured = (value, unit) => value === null ? 'Unavailable' : unit === 'USD' ? value === 0 ? '$0.00' : `$${value}` : `${value} ms`;
 
