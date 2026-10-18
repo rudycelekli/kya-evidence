@@ -10,10 +10,11 @@ import { runAndSign, carefulAgent, recordingCall, verifyCapture, PROBE_IDS } fro
 const HELP = `kya-capture: reference measured capture cell (simulated agent, simulated world)
 
   kya-capture demo --agent careful|refuse|exfiltrate --key PRIVATE_PEM --evaluator-key-id SHA256 --now ISO --out BUNDLE
-  kya-capture verify --bundle BUNDLE (--policy FILE | --trust-issuer KEY_ID) [--evaluator-key-id SHA256]
+  kya-capture verify --bundle BUNDLE (--policy FILE | --trust-issuer KEY_ID) [--evaluator-key-id SHA256] [--run-id ID] [--subject-digest SHA256] [--scope-digest SHA256] [--profile-digest SHA256]
 
 demo runs a scripted agent through the reference tool proxy and signs a kya.capture/v1 bundle with the supplied capture-issuer key.
 verify checks signature, issuer trust, hash chain, state maps, probes and findings. Exit 1 invalid, 2 valid but findings present, 0 clean.
+Without all five pins (run, subject, scope, profile, evaluator key) the output says bound:false: a valid capture of another run or subject also reads clean.
 This proves what crossed a simulated proxy. It says nothing about a real agent and claims no sandbox isolation.
 `;
 const AGENTS = {
@@ -60,13 +61,14 @@ const commands = {
     print({ bundle: resolve(flags.out), runId: payload.runId, findings: payload.findings, probes: payload.probes.map(p => ({ id: p.id, outcome: p.outcome })) });
   },
   async verify(flags) {
-    allow(flags, ['bundle', 'policy', 'trust-issuer', 'evaluator-key-id']); need(flags, ['bundle']);
+    allow(flags, ['bundle', 'policy', 'trust-issuer', 'evaluator-key-id', 'run-id', 'subject-digest', 'scope-digest', 'profile-digest']); need(flags, ['bundle']);
     if (!flags.policy === !flags['trust-issuer']) throw Error('Use exactly one of --policy or --trust-issuer');
     const envelope = parseJson(await regular(resolve(flags.bundle)));
     const trust = flags.policy ? { policy: parseJson(await regular(resolve(flags.policy))) } : { trustedIssuerKeyIds: [flags['trust-issuer']] };
-    const expected = flags['evaluator-key-id'] ? { evaluatorKeyId: flags['evaluator-key-id'] } : {};
+    const expected = {};
+    for (const [flag, key] of [['evaluator-key-id', 'evaluatorKeyId'], ['run-id', 'runId'], ['subject-digest', 'subjectDigest'], ['scope-digest', 'scopeDigest'], ['profile-digest', 'profileDigest']]) if (flags[flag] !== undefined) expected[key] = flags[flag];
     const r = verifyCapture(envelope, { ...trust, expected });
-    print({ valid: r.valid, problems: r.problems, findings: r.findings ?? [], issuerKeyId: r.issuerKeyId ?? null, envelopeDigest: r.envelopeDigest ?? null, limits: 'simulated cell: proves what crossed a proxy, not that a real agent is safe' });
+    print({ valid: r.valid, problems: r.problems, findings: r.findings ?? [], issuerKeyId: r.issuerKeyId ?? null, bound: r.bound === true, envelopeDigest: r.envelopeDigest ?? null, limits: 'simulated cell: proves what crossed a proxy, not that a real agent is safe' });
     if (!r.valid) process.exitCode = 1; else if (r.findings.length) process.exitCode = 2;
   }
 };

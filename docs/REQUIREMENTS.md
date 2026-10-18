@@ -229,5 +229,7 @@ Each requirement is traced to at least one test that must exist exactly once; th
 | KYA-DOC-011 | MUST | Public documents MUST NOT cite a private same-team detection run that cannot be reproduced from the repository. | `docs-claims.test.mjs` |
 | KYA-DOC-012 | MUST | The code of conduct MUST NOT claim a monitored reporting channel or carry a bracketed placeholder contact, and MUST NOT contain an email address. | `governance-docs.test.mjs` |
 | KYA-DOC-013 | MUST | Interim security wording MUST NOT turn the readiness gate `security-contact-form` green; only a recognizable real contact may. | `release-readiness.test.mjs` |
+| KYA-ACT-016 | MUST | The CI gate MUST refuse an input path that reaches outside the workspace through a symbolic link, including one routed through a directory whose name begins with two dots. | `core-adversarial.test.mjs` |
+| KYA-CAP-019 | MUST | The capture verification command MUST accept pins for run, subject, scope and profile, MUST exit non-zero when a pin does not match, and MUST report whether the capture was bound. | `core-adversarial.test.mjs` |
 
-Registry digest: `c7d42ab6073f25d2b0bb9185a8eebc9a7c333be06799abd313297d464126eceb`
+Registry digest: `c7cc975586e4205c2e9483aff0eb209d22d44d5b0a04d650f7d5c567c40f906b`

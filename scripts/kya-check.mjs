@@ -62,7 +62,7 @@ function parseArgs(argv) {
 function confine(path, label) {
   const lexical = resolve(path), root = resolve('.');
   const rel = relative(root, lexical);
-  if (rel === '' || rel.startsWith('..') || isAbsolute(rel)) return;
+  if (rel === '' || rel === '..' || rel.startsWith('..' + sep) || isAbsolute(rel)) return;
   let real, realRoot;
   try { real = realpathSync(lexical); realRoot = realpathSync(root); } catch { usage(`Cannot read ${label}`); }
   const back = relative(realRoot, real);
