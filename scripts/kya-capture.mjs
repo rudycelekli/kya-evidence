@@ -4,6 +4,7 @@ import { lstat, readFile, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { createPrivateKey } from 'node:crypto';
 import { hashBytes, parseJson } from '../src/shared/canonical.mjs';
+import { terminalJson, terminalText } from '../src/shared/terminal.mjs';
 import { timestamp } from '../src/identity/domain/services/validation.mjs';
 import { runAndSign, carefulAgent, recordingCall, verifyCapture, PROBE_IDS } from '../src/capture-cell/index.mjs';
 
@@ -47,7 +48,7 @@ async function regular(path, max = 1_048_576) {
   if (!st.isFile() || st.isSymbolicLink() || st.size > max) throw Error('Input must be a bounded regular file');
   return readFile(path, 'utf8');
 }
-const print = v => console.log(JSON.stringify(v, null, 2));
+const print = v => console.log(terminalJson(v, null, 2));
 
 const commands = {
   async demo(flags) {
@@ -79,6 +80,6 @@ try {
   else if (!Object.hasOwn(commands, command)) throw Error(`Unknown command ${command}`);
   else await commands[command](parseArgs(rest));
 } catch (e) {
-  console.error(`kya-capture: ${e.message}`);
+  console.error(`kya-capture: ${terminalText(e.message)}`);
   process.exitCode = 1;
 }

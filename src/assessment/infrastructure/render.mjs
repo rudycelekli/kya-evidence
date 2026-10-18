@@ -1,4 +1,5 @@
-export const escapeHtml=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+import { visibleControls } from '../../shared/terminal.mjs';
+export const escapeHtml=s=>visibleControls(String(s)).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
 export function renderAssessment(report) {
   const h=escapeHtml;

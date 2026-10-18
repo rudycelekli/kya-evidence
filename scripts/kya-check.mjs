@@ -5,6 +5,7 @@ import { readFileSync, lstatSync, appendFileSync, realpathSync } from 'node:fs';
 import { resolve, relative, isAbsolute, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { assess, checkCurrency, parseJson, digest, BLOCKER_CODES } from '../src/index.mjs';
+import { stripUnsafe } from '../src/shared/terminal.mjs';
 import { CORE_PROFILE } from '../src/conformance/index.mjs';
 import { isMain } from "./lib/is-main.mjs";
 
@@ -36,7 +37,6 @@ const FAIL_ON = ['unreliable', 'not-qualified', 'never'];
 const INPUT_KEYS = ['manifest', 'profile', 'policy', 'evidence', 'evaluatorDigest', 'now'];
 const MAX_FILE = 4_194_304;
 
-const CONTROL = new RegExp('[\\u0000-\\u001f\\u007f-\\u009f\\u2028\\u2029]', 'g');
 class UsageError extends Error {}
 const usage = message => { throw new UsageError(message); };
 
@@ -79,7 +79,7 @@ function readJson(path, label) {
 
 // Untrusted text (agent names, blocker text, ids) is reduced to one printable line and bounded.
 export function clean(value, max = 200) {
-  return String(value ?? '').replace(CONTROL, ' ').slice(0, max);
+  return stripUnsafe(value).slice(0, max);
 }
 // GitHub workflow command escaping: data escapes % CR LF; properties also escape colon and comma.
 export const escapeData = s => String(s).replace(/%/g, '%25').replace(/\r/g, '%0D').replace(/\n/g, '%0A');

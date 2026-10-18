@@ -4508,6 +4508,215 @@
           "title": "the fix lane 8 integration note names only requirement titles and spec headings that exist"
         }
       ]
+    },
+    {
+      "id": "KYA-TRM-001",
+      "level": "MUST",
+      "area": "terminal",
+      "section": "Reports and viewers",
+      "statement": "Command output that can carry text from a report, manifest, credential or file name MUST escape or neutralize C1 controls, bidirectional controls, zero-width and invisible characters, and line separators, and a JSON consumer MUST read back the same value.",
+      "tests": [
+        {
+          "file": "test/fixlane9-adversarial.test.mjs",
+          "title": "fixlane9 terminal json escapes C1 bidi zero width and separators and parses back identically"
+        },
+        {
+          "file": "test/fixlane9-adversarial.test.mjs",
+          "title": "fixlane9 strip and text helpers neutralize every invisible or reordering character"
+        },
+        {
+          "file": "test/fixlane9-adversarial.test.mjs",
+          "title": "fixlane9 kya assess output carries no raw bidi or C1 characters from an agent name"
+        },
+        {
+          "file": "test/fixlane9-adversarial.test.mjs",
+          "title": "fixlane9 kya-vc verify output carries no raw bidi or C1 characters from a foreign credential"
+        },
+        {
+          "file": "test/fixlane9-adversarial.test.mjs",
+          "title": "fixlane9 kya-check clean strips bidi and zero width characters"
+        },
+        {
+          "file": "test/fixlane9-adversarial.test.mjs",
+          "title": "fixlane9 privacy scan text and json output neutralize control and bidi characters in file names"
+        }
+      ]
+    },
+    {
+      "id": "KYA-TRM-002",
+      "level": "MUST",
+      "area": "terminal",
+      "section": "Reports and viewers",
+      "statement": "The dossier and assessment views MUST show invisible and reordering characters from supplied text as visible markers.",
+      "tests": [
+        {
+          "file": "test/fixlane9-adversarial.test.mjs",
+          "title": "fixlane9 dossier markdown and html make invisible characters in the agent name visible"
+        }
+      ]
+    },
+    {
+      "id": "KYA-IBR-009",
+      "level": "MUST",
+      "area": "ibr",
+      "section": "Interoperability and versioning",
+      "statement": "A bridge or VC export MUST refuse a report whose decision, evidence mode, identifiers, limitations, score or coverage fall outside the assessor vocabulary, even when the report digest is consistent, and the export bytes MUST carry no raw invisible or reordering characters.",
+      "tests": [
+        {
+          "file": "test/fixlane9-adversarial.test.mjs",
+          "title": "fixlane9 bridge exports refuse a self digested report whose fields leave the report vocabulary"
+        },
+        {
+          "file": "test/fixlane9-adversarial.test.mjs",
+          "title": "fixlane9 bridge serialize escapes invisible characters without changing parsed content"
+        }
+      ]
+    },
+    {
+      "id": "KYA-CLI-002",
+      "level": "MUST",
+      "area": "cli",
+      "section": "Interoperability and versioning",
+      "statement": "Every command line entry point MUST refuse an input that is not a regular file within the size limit before reading it.",
+      "tests": [
+        {
+          "file": "test/fixlane9-adversarial.test.mjs",
+          "title": "fixlane9 kya-vc kya-bridge and conformance-report refuse an oversized input file before reading it"
+        }
+      ]
+    },
+    {
+      "id": "KYA-VCB-016",
+      "level": "MUST",
+      "area": "vcb",
+      "section": "Trust and eligibility",
+      "statement": "VC verification MUST refuse duplicate or aliased header members, crit and b64 headers, embedded key headers, HMAC with a public key, detached payloads, non-canonical encodings, malleable signatures and prototype-keyed status list lookups.",
+      "tests": [
+        {
+          "file": "test/fixlane9-adversarial.test.mjs",
+          "title": "fixlane9 vc verify refuses duplicate header members even when the signature covers them"
+        },
+        {
+          "file": "test/fixlane9-adversarial.test.mjs",
+          "title": "fixlane9 vc verify refuses crit b64 false jwk and HMAC with the public key as secret"
+        },
+        {
+          "file": "test/fixlane9-adversarial.test.mjs",
+          "title": "fixlane9 vc verify refuses detached payloads trailing dots padding and a malleable signature"
+        },
+        {
+          "file": "test/fixlane9-adversarial.test.mjs",
+          "title": "fixlane9 vc status lookup ignores prototype keys in the supplied status list map"
+        }
+      ]
+    },
+    {
+      "id": "KYA-PRV-006",
+      "level": "SHOULD",
+      "area": "privacy",
+      "section": "Reports and viewers",
+      "statement": "The privacy scanner SHOULD stay linear in input size on adversarial strings.",
+      "tests": [
+        {
+          "file": "test/fixlane9-adversarial.test.mjs",
+          "title": "fixlane9 privacy scan stays linear on adversarial one hundred thousand character strings"
+        }
+      ]
+    },
+    {
+      "id": "KYA-SCR-010",
+      "level": "MUST",
+      "area": "benchmarks",
+      "section": "Interoperability and versioning",
+      "statement": "`kya score build|verify` MUST delegate to the score script with its flags and exit codes unchanged, and the top-level help MUST list it.",
+      "tests": [
+        {
+          "file": "test/kya-score-wiring.test.mjs",
+          "title": "kya help lists the score subcommand and the delegated help comes from the score script"
+        },
+        {
+          "file": "test/kya-score-wiring.test.mjs",
+          "title": "kya score build and verify pass arguments and exit codes through the kya command"
+        }
+      ]
+    },
+    {
+      "id": "KYA-SCR-011",
+      "level": "MUST",
+      "area": "benchmarks",
+      "section": "Interoperability and versioning",
+      "statement": "The package MUST export the score card module under `./kya-score` with typings that name the builder, verifier, comparison and card types.",
+      "tests": [
+        {
+          "file": "test/kya-score-wiring.test.mjs",
+          "title": "the package exports a kya score subpath that resolves and the root typings name the card types"
+        }
+      ]
+    },
+    {
+      "id": "KYA-SCR-012",
+      "level": "MUST",
+      "area": "benchmarks",
+      "section": "Reports and viewers",
+      "statement": "A second verifier written only from the ADR layout and algorithm text MUST agree with the reference verifier on validity, score and card digest for every vector in the shared set, which MUST include valid cards, each tamper class and re-sealed edits.",
+      "tests": [
+        {
+          "file": "test/kya-score-second-verifier.test.mjs",
+          "title": "score vector file is current and covers valid tamper operator statement and malformed classes"
+        },
+        {
+          "file": "test/kya-score-second-verifier.test.mjs",
+          "title": "the javascript verifier agrees with the stated expectation on every shared vector"
+        },
+        {
+          "file": "test/kya-score-second-verifier.test.mjs",
+          "title": "the python verifier agrees with the stated expectation and with the javascript verifier on every shared vector",
+          "hostConditional": true
+        },
+        {
+          "file": "test/kya-score-second-verifier.test.mjs",
+          "title": "the python verifier rejects unreadable input and duplicate members and exits 2 on a usage error",
+          "hostConditional": true
+        },
+        {
+          "file": "test/kya-score-second-verifier.test.mjs",
+          "title": "the python verifier source uses only the standard library with no network process or file writes"
+        }
+      ]
+    },
+    {
+      "id": "KYA-SCR-013",
+      "level": "MUST",
+      "area": "benchmarks",
+      "section": "Records and bindings",
+      "statement": "The ADR MUST state the card layout, the seed derivation and the rounding rules, and MUST state that a re-sealed edit of a manifest field that no computation reads verifies.",
+      "tests": [
+        {
+          "file": "test/kya-score-second-verifier.test.mjs",
+          "title": "ADR-0033 states the layout the second verifier needs and the ordering that differs from published sfc32"
+        },
+        {
+          "file": "test/kya-score-second-verifier.test.mjs",
+          "title": "a re sealed edit of a manifest field that no computation reads is accepted and a re sealed edit of the seed is not"
+        }
+      ]
+    },
+    {
+      "id": "KYA-SCR-014",
+      "level": "MUST",
+      "area": "benchmarks",
+      "section": "Governance documents",
+      "statement": "The benchmark documentation MUST tell a reviewer how to reproduce a card and MUST repeat the non-claim wording and the same-team boundary of the second verifier.",
+      "tests": [
+        {
+          "file": "test/kya-score-second-verifier.test.mjs",
+          "title": "the benchmarks section tells a reviewer how to reproduce a card and repeats the non claims"
+        },
+        {
+          "file": "test/kya-score-second-verifier.test.mjs",
+          "title": "the fix lane 10 integration note names only requirement titles and spec headings that exist"
+        }
+      ]
     }
   ]
 }

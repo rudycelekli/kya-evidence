@@ -1,4 +1,6 @@
 import { readFile, writeFile } from 'node:fs/promises';
+import { terminalJson, terminalText } from '../src/shared/terminal.mjs';
+import { readBounded } from './lib/bounded-read.mjs';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { join, resolve } from 'node:path';
@@ -30,10 +32,10 @@ async function main() {
   const o = args(process.argv.slice(2)), root = resolve(o.root ?? fileURLToPath(new URL('../', import.meta.url)));
   const { reg } = await loadRequirements(root);
   if (o.verify) {
-    const parsed = parseJson(await readFile(o.verify, 'utf8'));
+    const parsed = parseJson(await readBounded(o.verify, 'utf8'));
     const signed = Object.hasOwn(parsed, 'proof');
     const v = signed ? verifyReport(parsed, { registry: reg }) : { payload: validateReport(parsed, { registry: reg }), keyId: null, authenticated: false, truthfulnessVerified: false };
-    console.log(JSON.stringify({ valid: true, signed, keyId: v.keyId, authenticated: false, truthfulnessVerified: false, registryDigest: v.payload.registryDigest, summary: v.payload.summary }));
+    console.log(terminalJson({ valid: true, signed, keyId: v.keyId, authenticated: false, truthfulnessVerified: false, registryDigest: v.payload.registryDigest, summary: v.payload.summary }));
     return;
   }
   if (!o.now) throw Error('--now ISO-8601 UTC time is required (this tool never reads the clock). ' + usage);
@@ -45,7 +47,7 @@ async function main() {
     implementation: { name: (pkg.name ?? 'kya-evidence') + ' (JavaScript reference)', version: String(pkg.version ?? 'unknown'), language: 'javascript', sourceDigest: o['source-digest'] ?? null, declaredSubset: null },
     results: mapTapToRequirements(reg, runs)
   });
-  if (o.out) { await writeFile(o.out, JSON.stringify(report, null, 2) + '\n'); console.log(JSON.stringify(report.summary)); }
-  else console.log(JSON.stringify(report, null, 2));
+  if (o.out) { await writeFile(o.out, JSON.stringify(report, null, 2) + '\n'); console.log(terminalJson(report.summary)); }
+  else console.log(terminalJson(report, null, 2));
 }
-main().catch(e => { console.error(e.message); process.exit(1); });
+main().catch(e => { console.error(terminalText(e.message)); process.exit(1); });

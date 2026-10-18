@@ -240,5 +240,16 @@ Each requirement is traced to at least one test that must exist exactly once; th
 | KYA-SCR-007 | MUST | Two score cards MUST NOT be compared unless their suite digest and evaluator digest match. | `kya-score.test.mjs` |
 | KYA-SCR-008 | MUST NOT | The score card module MUST NOT import network or process facilities, and MUST reject malformed manifests. | `kya-score.test.mjs` |
 | KYA-SCR-009 | MUST | The KYA Score ADR MUST stay Proposed, MUST list predictive validity, inter-assessor agreement and calibration against real incidents as unmeasured, and MUST describe every non-claim code. | `kya-score.test.mjs` |
+| KYA-TRM-001 | MUST | Command output that can carry text from a report, manifest, credential or file name MUST escape or neutralize C1 controls, bidirectional controls, zero-width and invisible characters, and line separators, and a JSON consumer MUST read back the same value. | `fixlane9-adversarial.test.mjs` |
+| KYA-TRM-002 | MUST | The dossier and assessment views MUST show invisible and reordering characters from supplied text as visible markers. | `fixlane9-adversarial.test.mjs` |
+| KYA-IBR-009 | MUST | A bridge or VC export MUST refuse a report whose decision, evidence mode, identifiers, limitations, score or coverage fall outside the assessor vocabulary, even when the report digest is consistent, and the export bytes MUST carry no raw invisible or reordering characters. | `fixlane9-adversarial.test.mjs` |
+| KYA-CLI-002 | MUST | Every command line entry point MUST refuse an input that is not a regular file within the size limit before reading it. | `fixlane9-adversarial.test.mjs` |
+| KYA-VCB-016 | MUST | VC verification MUST refuse duplicate or aliased header members, crit and b64 headers, embedded key headers, HMAC with a public key, detached payloads, non-canonical encodings, malleable signatures and prototype-keyed status list lookups. | `fixlane9-adversarial.test.mjs` |
+| KYA-PRV-006 | SHOULD | The privacy scanner SHOULD stay linear in input size on adversarial strings. | `fixlane9-adversarial.test.mjs` |
+| KYA-SCR-010 | MUST | `kya score build|verify` MUST delegate to the score script with its flags and exit codes unchanged, and the top-level help MUST list it. | `kya-score-wiring.test.mjs` |
+| KYA-SCR-011 | MUST | The package MUST export the score card module under `./kya-score` with typings that name the builder, verifier, comparison and card types. | `kya-score-wiring.test.mjs` |
+| KYA-SCR-012 | MUST | A second verifier written only from the ADR layout and algorithm text MUST agree with the reference verifier on validity, score and card digest for every vector in the shared set, which MUST include valid cards, each tamper class and re-sealed edits. | `kya-score-second-verifier.test.mjs`, `kya-score-second-verifier.test.mjs` (host-conditional) |
+| KYA-SCR-013 | MUST | The ADR MUST state the card layout, the seed derivation and the rounding rules, and MUST state that a re-sealed edit of a manifest field that no computation reads verifies. | `kya-score-second-verifier.test.mjs` |
+| KYA-SCR-014 | MUST | The benchmark documentation MUST tell a reviewer how to reproduce a card and MUST repeat the non-claim wording and the same-team boundary of the second verifier. | `kya-score-second-verifier.test.mjs` |
 
-Registry digest: `e6832aee904153d878215f96e31b88079ca5c13ea31ae29ecd99a64bb07e94ab`
+Registry digest: `1c42a30cd25fdc1d14dde960bb22b3637b0a2e9193a60161acd184fd78594173`

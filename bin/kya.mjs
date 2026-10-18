@@ -9,6 +9,7 @@ import { inspectConfiguration } from '../src/identity/infrastructure/inspect.mjs
 import { renderAssessment } from '../src/assessment/infrastructure/render.mjs';
 import { CORE_PROFILE, EVALUATOR_DIGEST, createReferenceAdapter, runConformance, probeRuntimes } from '../src/conformance/index.mjs';
 import { isMain } from "../scripts/lib/is-main.mjs";
+import { terminalJson, terminalText } from '../src/shared/terminal.mjs';
 
 const HELP=`KYA Evidence 0.1.0-alpha.4 — Know Your Agent
 
@@ -30,6 +31,7 @@ const HELP=`KYA Evidence 0.1.0-alpha.4 — Know Your Agent
   kya policy-init --template NAME --profile FILE --trust-key ROLE:PEM [--out FILE]   (see docs/POLICY-TEMPLATES.md)
   kya campaign plan|run|verify-ledger|summary ...   (frozen campaigns with a signed ledger; ADR-0021)
   kya vc did-key|export|verify|status-list ...   (W3C VC 2.0 bridge; docs/VC-BRIDGE.md)
+  kya score build|verify ...   (experimental score card with intervals and an evidence floor; ADR-0033)
   kya sign --input PAYLOAD --key PRIVATE_PEM [--out FILE]
   kya keygen DIRECTORY
   kya universe --inputs FILE --question TEXT [--out FILE]
@@ -55,7 +57,7 @@ function allow(flags,names){for(const k of Object.keys(flags))if(!names.includes
 function need(flags,names){for(const k of names)if(!flags[k])throw Error(`Missing --${k}`);}
 async function jsonFile(path){const st=await lstat(path);if(!st.isFile()||st.isSymbolicLink()||st.size>1_048_576)throw Error('Input must be a bounded regular JSON file');return parseJson(await readFile(path,'utf8'));}
 async function saveJson(path,value){await writeFile(path,JSON.stringify(value,null,2)+'\n',{flag:'wx',mode:0o600});}
-async function emit(value,out){if(out)await saveJson(resolve(out),value);else console.log(JSON.stringify(value,null,2));}
+async function emit(value,out){if(out)await saveJson(resolve(out),value);else console.log(terminalJson(value,null,2));}
 async function reportDirectory(directory,report,inputs={}){
   const out=resolve(directory);await mkdir(out,{recursive:true});
   await saveJson(join(out,'assessment.json'),report);
@@ -83,7 +85,7 @@ async function fixtureAssessment(mode,now,privateKey,publicPem){
   const report=assess({manifest,profile:CORE_PROFILE,policy,evidence,evaluatorDigest:EVALUATOR_DIGEST,now});
   return {report,manifest,policy,evidence,observations:run.observations??run.results??[],run};
 }
-const DELEGATED=Object.freeze({check:'kya-check.mjs','policy-init':'kya-policy-init.mjs',campaign:'kya-campaign.mjs',vc:'kya-vc.mjs'});
+const DELEGATED=Object.freeze({check:'kya-check.mjs','policy-init':'kya-policy-init.mjs',campaign:'kya-campaign.mjs',vc:'kya-vc.mjs',score:'kya-score.mjs'});
 export async function main(argv=process.argv.slice(2)){
   if(!argv.length||argv[0]==='--help'||argv[0]==='help'){console.log(HELP);return;}
   if(Object.hasOwn(DELEGATED,argv[0])){
@@ -103,8 +105,8 @@ export async function main(argv=process.argv.slice(2)){
     }
     if(command==='benchmark'){
       const value={schema:'kya.fixture-benchmark/v1',at:now,fixtureOnly:true,commercialRuntimesMeasured:false,evaluatorDigest:EVALUATOR_DIGEST,profileDigest:digest(CORE_PROFILE),reports:results};
-      if(flags.out){await saveJson(join(resolve(flags.out),'benchmark.json'),value);console.log(JSON.stringify({out:resolve(flags.out),fixtureOnly:true,results:results.map(r=>({agent:r.agentName,decision:r.decision,score:r.score.earned,coverage:r.coverage}))},null,2));}else console.log(JSON.stringify(value,null,2));
-    }else console.log(JSON.stringify(flags.out?{out:resolve(flags.out),decision:results[0].decision,fixtureOnly:true,score:results[0].score}:results[0],null,2));
+      if(flags.out){await saveJson(join(resolve(flags.out),'benchmark.json'),value);console.log(terminalJson({out:resolve(flags.out),fixtureOnly:true,results:results.map(r=>({agent:r.agentName,decision:r.decision,score:r.score.earned,coverage:r.coverage}))},null,2));}else console.log(terminalJson(value,null,2));
+    }else console.log(terminalJson(flags.out?{out:resolve(flags.out),decision:results[0].decision,fixtureOnly:true,score:results[0].score}:results[0],null,2));
   }else if(command==='diagnose'){
     allow(flags,['mode','out','with-benchmarks']);need(flags,['out']);if(positional.length)throw Error('Unexpected positional argument');
     const mode=flags.mode??'careful';if(!['careful','reckless','silent','gaming'].includes(mode)||flags['with-benchmarks']!==undefined&&!['true','false'].includes(flags['with-benchmarks']))throw Error('Unsupported fixture or benchmark option');
@@ -114,20 +116,20 @@ export async function main(argv=process.argv.slice(2)){
     const dossier=createDossier({inputs,observations:x.observations,benchmarkRuns}),out=await dossierDirectory(flags.out,dossier);
     await saveJson(join(out,'inputs.json'),inputs);await saveJson(join(out,'observations.json'),x.observations);
     if(benchmarkRuns.length)await saveJson(join(out,'benchmark-run.json'),benchmarkRuns[0]);
-    console.log(JSON.stringify({out,fixtureOnly:true,commercialRuntimesMeasured:false,decision:dossier.assessment.decision,strengths:dossier.strengths.length,failures:dossier.failureModes.length,blindSpots:dossier.blindSpots.length,dossierDigest:dossier.dossierDigest}));
+    console.log(terminalJson({out,fixtureOnly:true,commercialRuntimesMeasured:false,decision:dossier.assessment.decision,strengths:dossier.strengths.length,failures:dossier.failureModes.length,blindSpots:dossier.blindSpots.length,dossierDigest:dossier.dossierDigest}));
   }else if(command==='dossier'){
     allow(flags,['inputs','observations','benchmarks','out']);need(flags,['inputs','out']);if(positional.length)throw Error('Unexpected positional argument');
-    const dossier=createDossier(await dossierOptions(flags)),out=await dossierDirectory(flags.out,dossier);console.log(JSON.stringify({out,decision:dossier.assessment.decision,dossierDigest:dossier.dossierDigest,authenticated:false}));
+    const dossier=createDossier(await dossierOptions(flags)),out=await dossierDirectory(flags.out,dossier);console.log(terminalJson({out,decision:dossier.assessment.decision,dossierDigest:dossier.dossierDigest,authenticated:false}));
   }else if(command==='dossier-verify'){
     allow(flags,['dossier','inputs','observations','benchmarks']);need(flags,['dossier','inputs']);if(positional.length)throw Error('Unexpected positional argument');await emit(verifyDossier(await jsonFile(flags.dossier),await dossierOptions(flags)));
   }else if(command==='bench'){
-    allow(flags,['now','out']);need(flags,['out']);if(positional.length)throw Error('Unexpected positional argument');const run=await runOfflineBenchmarks({now:flags.now??new Date().toISOString()}),out=resolve(flags.out);await mkdir(out,{recursive:true,mode:0o700});await saveJson(join(out,'benchmark-run.json'),run);await saveJson(join(out,'benchmark-catalog.json'),BENCHMARK_CATALOG);console.log(JSON.stringify({out,fixtureOnly:true,commercialRuntimesMeasured:false,summary:run.summary,runDigest:run.runDigest}));if(!run.summary.allPassed)process.exitCode=2;
+    allow(flags,['now','out']);need(flags,['out']);if(positional.length)throw Error('Unexpected positional argument');const run=await runOfflineBenchmarks({now:flags.now??new Date().toISOString()}),out=resolve(flags.out);await mkdir(out,{recursive:true,mode:0o700});await saveJson(join(out,'benchmark-run.json'),run);await saveJson(join(out,'benchmark-catalog.json'),BENCHMARK_CATALOG);console.log(terminalJson({out,fixtureOnly:true,commercialRuntimesMeasured:false,summary:run.summary,runDigest:run.runDigest}));if(!run.summary.allPassed)process.exitCode=2;
   }else if(command==='bench-verify'){
     allow(flags,[]);if(positional.length!==1)throw Error('bench-verify requires FILE');const result=verifyBenchmarkRun(await jsonFile(positional[0]));await emit(result);if(!result.passed)process.exitCode=2;
   }else if(command==='init'){
     allow(flags,[]);if(positional.length!==1)throw Error('init requires DIRECTORY');const out=resolve(positional[0]);await mkdir(out,{recursive:true});
     await saveJson(join(out,'manifest.json'),starterManifest());await saveJson(join(out,'profile.json'),CORE_PROFILE);await saveJson(join(out,'policy.json'),relyingPolicy());await saveJson(join(out,'evidence.json'),[]);
-    console.log(JSON.stringify({out,evaluatorDigest:EVALUATOR_DIGEST,status:'unmeasured',next:'Pin real configuration and independent evaluator trust anchors before assessing'}));
+    console.log(terminalJson({out,evaluatorDigest:EVALUATOR_DIGEST,status:'unmeasured',next:'Pin real configuration and independent evaluator trust anchors before assessing'}));
   }else if(command==='inspect'){
     allow(flags,['out']);if(positional.length!==1)throw Error('inspect requires DIRECTORY');await emit(await inspectConfiguration(positional[0]),flags.out);
   }else if(command==='probe'){
@@ -138,7 +140,7 @@ export async function main(argv=process.argv.slice(2)){
     allow(flags,['manifest','profile','policy','evidence','evaluator','now','out']);need(flags,['manifest','profile','policy','evidence','evaluator']);if(positional.length)throw Error('Unexpected positional argument');
     const [manifest,profile,policy,evidence]=await Promise.all(['manifest','profile','policy','evidence'].map(k=>jsonFile(flags[k])));
     const report=assess({manifest,profile,policy,evidence,evaluatorDigest:flags.evaluator,now:flags.now??new Date().toISOString()});
-    if(flags.out){const out=await reportDirectory(flags.out,report);console.log(JSON.stringify({out,decision:report.decision,score:report.score}));}else console.log(JSON.stringify(report,null,2));
+    if(flags.out){const out=await reportDirectory(flags.out,report);console.log(terminalJson({out,decision:report.decision,score:report.score}));}else console.log(terminalJson(report,null,2));
     if(report.decision!=='qualified')process.exitCode=2;
   }else if(command==='currency'){
     allow(flags,['assessment','manifest','policy','incidents','now']);need(flags,['assessment','manifest','policy']);if(positional.length)throw Error('Unexpected positional argument');
@@ -151,7 +153,7 @@ export async function main(argv=process.argv.slice(2)){
     else await emit({...verifyEvidence(value),trustEvaluated:false});
   }else if(command==='keygen'){
     allow(flags,[]);if(positional.length!==1)throw Error('keygen requires DIRECTORY');const out=resolve(positional[0]);await mkdir(out,{recursive:true,mode:0o700});const keys=generateKeyPairSync('ed25519');
-    const publicPem=keys.publicKey.export({format:'pem',type:'spki'}).toString();await writeFile(join(out,'private.pem'),keys.privateKey.export({format:'pem',type:'pkcs8'}),{flag:'wx',mode:0o600});await writeFile(join(out,'public.pem'),publicPem,{flag:'wx',mode:0o600});console.log(JSON.stringify({keyId:keyId(publicPem),out,warning:'Keep private.pem private; trust role is assigned by the relying party'}));
+    const publicPem=keys.publicKey.export({format:'pem',type:'spki'}).toString();await writeFile(join(out,'private.pem'),keys.privateKey.export({format:'pem',type:'pkcs8'}),{flag:'wx',mode:0o600});await writeFile(join(out,'public.pem'),publicPem,{flag:'wx',mode:0o600});console.log(terminalJson({keyId:keyId(publicPem),out,warning:'Keep private.pem private; trust role is assigned by the relying party'}));
   }else if(command==='universe'){
     allow(flags,['inputs','question','out']);need(flags,['inputs','question']);if(positional.length)throw Error('Unexpected positional argument');await emit(createUniverse({inputs:await jsonFile(flags.inputs),question:flags.question}),flags.out);
   }else if(command==='fork'){
@@ -165,4 +167,4 @@ export async function main(argv=process.argv.slice(2)){
     const st=await lstat(flags.key);if(!st.isFile()||st.isSymbolicLink()||st.size>2000)throw Error('Private key must be a bounded regular PEM file');await emit(signEvidence(await jsonFile(flags.input),await readFile(flags.key)),flags.out);
   }else throw Error(`Unknown command ${command}; use --help`);
 }
-if(isMain(import.meta.url))main().catch(err=>{console.error('kya: '+err.message);process.exitCode=1;});
+if(isMain(import.meta.url))main().catch(err=>{console.error('kya: '+terminalText(err.message));process.exitCode=1;});

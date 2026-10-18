@@ -1,7 +1,9 @@
 #!/usr/bin/env node
 // kya-bridge: offline exports of a KYA assessment for other ecosystems. No network, no signing, no default clock.
 // Exit codes: 0 ok, 1 cross-check found a problem, 2 refused or usage error (fail closed).
-import { readFile, writeFile, lstat, stat } from 'node:fs/promises';
+import { writeFile, lstat, stat } from 'node:fs/promises';
+import { terminalJson, terminalText } from '../src/shared/terminal.mjs';
+import { readBounded } from './lib/bounded-read.mjs';
 import { constants } from 'node:fs';
 import { resolve } from 'node:path';
 import { parseJson } from '../src/shared/canonical.mjs';
@@ -41,7 +43,7 @@ function parseArgs(argv, cmd) {
   return flags;
 }
 const need = (f, ...ks) => { for (const k of ks) if (f[k] === undefined) throw Error(`--${k} is required`); };
-const readJson = async p => parseJson(await readFile(p, 'utf8'));
+const readJson = async p => parseJson(await readBounded(p, 'utf8'));
 const INPUT_FLAGS = ['assessment', 'manifest', 'policy', 'incidents', 'export'];
 
 async function emit(f, text) {
@@ -94,13 +96,13 @@ async function main() {
     if (have.some(Boolean) && !have.every(Boolean)) throw Error('--manifest, --policy and --now must be given together, or none of them');
     if (f.incidents !== undefined && !have.every(Boolean)) throw Error('--incidents needs --manifest, --policy and --now');
     const result = verifyBridgeExport(kind, await readJson(f.export), { report: await readJson(f.assessment), ...await inputs(f) });
-    process.stdout.write(JSON.stringify(result, null, 2) + '\n');
+    process.stdout.write(terminalJson(result, null, 2) + '\n');
     return result.valid ? 0 : 1;
   }
   throw Error(`Unknown command ${cmd}`);
 }
 
 main().then(code => { process.exitCode = code; }, e => {
-  process.stderr.write(JSON.stringify({ error: e.message, code: e instanceof BridgeError ? e.code : undefined }) + '\n');
+  process.stderr.write(terminalJson({ error: e.message, code: e instanceof BridgeError ? e.code : undefined }) + '\n');
   process.exitCode = 2;
 });

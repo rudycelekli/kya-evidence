@@ -1,6 +1,7 @@
 import { createPublicKey } from 'node:crypto';
 import { insist, canonical } from '../shared/canonical.mjs';
 import { verifyAssessment } from '../assessment/application/assess.mjs';
+import { checkReportFields } from '../assessment/application/report-shape.mjs';
 import { hash } from '../identity/domain/services/validation.mjs';
 import { didKeyFromPublicKey } from './encoding.mjs';
 import { fail, signCompact, privateKeyObject, VcBridgeError } from './jws.mjs';
@@ -37,6 +38,7 @@ export function exportAssessmentCredential(assessment, options = {}) {
   for (const k of Object.keys(options)) insist(OPTIONS.has(k), `Unknown option ${k}`);
   const r = JSON.parse(JSON.stringify(assessment));
   verifyAssessment(r);
+  checkReportFields(r);
   insist(MODES.includes(r.evidenceMode), 'Unknown evidenceMode on report');
   insist(Array.isArray(r.limitations) && r.limitations.length > 0, 'Report has no limitations to carry');
   insist(fixtureModes(r.evidenceMode) === hasFixtureLimitation(r.limitations), 'Report evidenceMode and its fixture limitation disagree; refusing to export fixture evidence without the fixture limitation');

@@ -18,6 +18,7 @@ import { createHash } from 'node:crypto';
 import { join, relative, basename, extname, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseJson } from '../src/shared/canonical.mjs';
+import { terminalJson, terminalText } from '../src/shared/terminal.mjs';
 import { isMain } from "./lib/is-main.mjs";
 
 export const SCAN_SCHEMA = 'kya.privacy-scan/v1';
@@ -337,12 +338,12 @@ async function main(argv) {
     else if (a === '--rules') rules = argv[++i];
     else if (a === '--ext') exts = normalizeExts(String(argv[++i] || '').split(',')) || [];
     else if (a === '--help' || a === '-h') { process.stdout.write('usage: privacy-scan.mjs [--format json|text] [--rules all|pii] [--ext .json,.jsonl] <file-or-dir>...\nexit 0 clean, 1 findings, 2 error\n'); return 0; }
-    else if (a.startsWith('--')) { process.stderr.write(`unknown option ${a}\n`); return 2; }
+    else if (a.startsWith('--')) { process.stderr.write(`unknown option ${terminalText(a)}\n`); return 2; }
     else targets.push(a);
   }
   if (!targets.length || !['json', 'text'].includes(format) || !['all', 'pii'].includes(rules) || !exts.length) { process.stderr.write('usage: privacy-scan.mjs [--format json|text] [--rules all|pii] [--ext .json,.jsonl] <file-or-dir>...\n'); return 2; }
   const report = await scanPaths(targets, { exts, rules });
-  process.stdout.write(format === 'json' ? JSON.stringify(report, null, 2) + '\n' : text(report));
+  process.stdout.write(format === 'json' ? terminalJson(report, null, 2) + '\n' : terminalText(text(report)));
   if (report.findings.length) return 1;
   return report.errors.length ? 2 : 0;
 }
