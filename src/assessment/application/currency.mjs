@@ -70,7 +70,7 @@ export function checkCurrency(assessment, {manifest, policy, now, incidents = []
   if (digest(manifest) !== assessment.subjectDigest) fire('subject-changed','Manifest no longer matches the assessed subject digest');
   if (digest(policy) !== assessment.policyDigest) fire('policy-changed','Relying policy differs from the assessed policy');
   if (policy.revokedSubjectDigests.includes(assessment.subjectDigest)) fire('subject-revoked','Subject digest is revoked by the supplied policy');
-  if (at > validUntil) fire('assessment-expired','Assessment validity interval has ended');
+  if (at >= validUntil) fire('assessment-expired','Assessment validity interval has ended');
   if (policy.maxAssessmentAgeSeconds !== undefined && at - assessedAt > policy.maxAssessmentAgeSeconds*1000) fire('assessment-aged','Assessment is older than the policy maximum age');
   const inc=evaluateIncidents(incidents,assessment,policy,at);
   if (inc.open.length) fire('incident-open',`${inc.open.length} unresolved high or critical incident record(s) for this subject`);

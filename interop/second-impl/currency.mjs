@@ -112,7 +112,7 @@ export function currencyResult(inp) {
   if (digest(manifest) !== a.subjectDigest) fire('subject-changed', 'SUBJECT_CHANGED');
   if (digest(policy) !== a.policyDigest) fire('policy-changed', 'POLICY_CHANGED');
   if (policy.revokedSubjectDigests.includes(a.subjectDigest)) fire('subject-revoked', 'SUBJECT_REVOKED');
-  if (nowMs > ms(a.validUntil)) fire('assessment-expired', 'ASSESSMENT_EXPIRED');
+  if (nowMs >= ms(a.validUntil)) fire('assessment-expired', 'ASSESSMENT_EXPIRED');
   if (policy.maxAssessmentAgeSeconds !== undefined && nowMs - ms(a.assessedAt) > policy.maxAssessmentAgeSeconds * 1000) fire('assessment-aged', 'ASSESSMENT_AGED');
   const inc = processIncidents(incidents, a, policy, nowMs);
   if (inc.open.length) fire('incident-open', 'INCIDENT_OPEN');

@@ -12,10 +12,8 @@ Entries come from `git log` and the merged pull requests (#1 to #30) of the repo
 
 - Prepared 0.1.0-alpha.4: version bump to `0.1.0-alpha.4` and changelog update (PR #30). Nothing was tagged or published.
 - Core hardening from an adversarial review: the CI gate now refuses a symlinked input directory whose name begins with two dots, and `kya-capture verify` accepts run, subject, scope and profile pins and reports whether the capture is bound (KYA-ACT-016, KYA-CAP-019).
-
-### Known issues
-
-- `checkCurrency` treats the instant equal to `validUntil` as current, while `assess` treats it as expired. The normative vector `currency.at-validity-boundary-is-current` (KYA-MON-001) pins the current behaviour, so changing it is a specification change and is not made here.
+- BEHAVIOR CHANGE in the alpha: `checkCurrency` now fires `assessment-expired` at the instant equal to `validUntil` (previously it fired only after). Validity ends at `validUntil`, matching `assess`, which rejects a manifest or receipt at its expiry instant, so a relying party can no longer read current for an assessment that `assess` would already refuse (fail closed). The normative vector `currency.at-validity-boundary-is-current` (KYA-MON-001) is replaced by `currency.at-validity-boundary-is-expired` and `evidence/assessment-vectors.json` is regenerated. The second implementation had the inclusive reading for the currency boundary and also for manifest expiry, receipt expiry and receipt freshness inside `assess`; no vector covered those instants, and all are now exclusive like the reference (`interop/second-impl/AMBIGUITIES.md` C3 updated).
+- BEHAVIOR CHANGE in the alpha: a check whose receipt is quarantined as a duplicate ID in the selected run is now `unknown` (it was the best surviving sibling). Found by the new metamorphic tests: replaying a failing receipt quarantined it and let a sibling pass raise the reported score and coverage and turned `blocked` into `insufficient-evidence`. The decision could never become `qualified` (RUN_CONFLICT blocks), so the effect was on score, coverage and label only. The second implementation follows. New seeded metamorphic tests (`test/metamorphic.test.mjs`) cover revocation, incident, removal, order, time, duplication, stricter policy and purity.
 
 ## [0.1.0-alpha.4] - 2026-10-16
 
