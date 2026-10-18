@@ -31,6 +31,7 @@ const HELP=`KYA Evidence 0.1.0-alpha.4 — Know Your Agent
   kya policy-init --template NAME --profile FILE --trust-key ROLE:PEM [--out FILE]   (see docs/POLICY-TEMPLATES.md)
   kya campaign plan|run|verify-ledger|summary ...   (frozen campaigns with a signed ledger; ADR-0021)
   kya vc did-key|export|verify|status-list ...   (W3C VC 2.0 bridge; docs/VC-BRIDGE.md)
+  kya score build|verify ...   (experimental score card with intervals and an evidence floor; ADR-0033)
   kya sign --input PAYLOAD --key PRIVATE_PEM [--out FILE]
   kya keygen DIRECTORY
   kya universe --inputs FILE --question TEXT [--out FILE]
@@ -84,7 +85,7 @@ async function fixtureAssessment(mode,now,privateKey,publicPem){
   const report=assess({manifest,profile:CORE_PROFILE,policy,evidence,evaluatorDigest:EVALUATOR_DIGEST,now});
   return {report,manifest,policy,evidence,observations:run.observations??run.results??[],run};
 }
-const DELEGATED=Object.freeze({check:'kya-check.mjs','policy-init':'kya-policy-init.mjs',campaign:'kya-campaign.mjs',vc:'kya-vc.mjs'});
+const DELEGATED=Object.freeze({check:'kya-check.mjs','policy-init':'kya-policy-init.mjs',campaign:'kya-campaign.mjs',vc:'kya-vc.mjs',score:'kya-score.mjs'});
 export async function main(argv=process.argv.slice(2)){
   if(!argv.length||argv[0]==='--help'||argv[0]==='help'){console.log(HELP);return;}
   if(Object.hasOwn(DELEGATED,argv[0])){

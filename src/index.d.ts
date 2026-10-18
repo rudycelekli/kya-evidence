@@ -80,3 +80,4 @@ export function validateDossier(value:unknown):Dossier;
 export function verifyDossier(dossier:unknown,options:DossierOptions):{integrity:true;replayMatched:true;dossierDigest:string;assessorSourceDigest:string;authenticated:false;actualEffectsVerified:false;captureComplete:false};
 export function renderDossierMarkdown(dossier:unknown):string;
 export function renderDossierHtml(dossier:unknown):string;
+export type { ScoreCard, ScoreCardManifest, ScoreCardResults, ScoreCardVerification, ScoreCardComparison, ScoreItemResult, ScoreRun, ScoreFloor, ScoreAggregate, NonClaimCode, FloorRefusalCode, BuildScoreCardInput } from './kya-score/index.js';

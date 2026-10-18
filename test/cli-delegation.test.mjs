@@ -7,7 +7,7 @@ const bin = fileURLToPath(new URL('../bin/kya.mjs', import.meta.url));
 const run = args => spawnSync(process.execPath, [bin, ...args], { encoding: 'utf8', timeout: 20000 });
 
 test('the kya command delegates check, policy-init, campaign and vc to their scripts and passes their output through', () => {
-  for (const [command, marker] of [['check', 'kya-check:'], ['policy-init', 'kya-policy-init:'], ['campaign', 'kya-campaign:'], ['vc', 'kya-vc:']]) {
+  for (const [command, marker] of [['check', 'kya-check:'], ['policy-init', 'kya-policy-init:'], ['campaign', 'kya-campaign:'], ['vc', 'kya-vc:'], ['score', 'kya-score:']]) {
     const r = run([command, '--help']);
     assert.equal(r.status, 0, `${command}: ${r.stderr}`);
     assert.ok((r.stdout + r.stderr).includes(marker), `${command} help should come from its own script`);
