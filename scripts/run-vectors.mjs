@@ -56,6 +56,8 @@ export function firstDifference(expected, actual, path = '$') {
   const ek = Object.keys(expected).filter(k => k !== 'reasonContains'), ak = Object.keys(actual).filter(k => !(contains && k === 'reason'));
   for (const k of ek.sort()) { if (!Object.hasOwn(actual, k)) return `${path}.${k}: missing`; const d = firstDifference(expected[k], actual[k], `${path}.${k}`); if (d) return d; }
   for (const k of ak.sort()) if (!Object.hasOwn(expected, k)) return `${path}.${k}: unexpected field`;
+  // An empty reasonContains means the reason text is free (the specification gives no wording): any non-empty string is accepted.
+  if (contains && expected.reasonContains === '' && (typeof actual.reason !== 'string' || actual.reason.length === 0)) return `${path}.reason: expected a non-empty reason, got ${show(actual.reason)}`;
   if (contains && (typeof actual.reason !== 'string' || !actual.reason.toLowerCase().includes(expected.reasonContains.toLowerCase()))) return `${path}.reason: expected text containing ${show(expected.reasonContains)}, got ${show(actual.reason)}`;
   return null;
 }
@@ -78,7 +80,8 @@ function runOne(cmd, args, input, timeoutMs) {
 
 // Returns {status: pass|fail|unsupported|semantic-pass, detail}
 async function evaluate(vector, impl, o) {
-  const input = JSON.stringify({ schema: 'kya.impl-input/v1', operation: vector.operation, inputs: vector.inputs });
+  // rawInput, when present, is the exact stdin text (used for input that JSON.parse of a vectors file cannot hold, such as duplicate members).
+  const input = typeof vector.rawInput === 'string' ? vector.rawInput : JSON.stringify({ schema: 'kya.impl-input/v1', operation: vector.operation, inputs: vector.inputs });
   if (Buffer.byteLength(input) > LIMITS.inputBytes) return { status: 'fail', detail: 'vector input exceeds the harness size bound' };
   const r = await runOne(impl.cmd, impl.args, input, o.timeoutMs);
   if (r.kind === 'spawn-error') return { status: 'fail', detail: `cannot start implementation: ${r.message}` };
@@ -107,7 +110,9 @@ function validateVectors(file, registryIds) {
     if (typeof v.id !== 'string' || ids.has(v.id)) throw Error('Duplicate or missing vector ID ' + v.id); ids.add(v.id);
     if (!['assess', 'currency'].includes(v.operation)) throw Error(`Vector ${v.id}: unknown operation`);
     if (!Array.isArray(v.requirements) || !v.requirements.length || v.requirements.some(r => !registryIds.has(r))) throw Error(`Vector ${v.id}: cites a requirement that is not in the registry`);
-    if (typeof v.inputs !== 'object' || v.inputs === null || typeof v.expected !== 'object' || v.expected === null) throw Error(`Vector ${v.id}: inputs and expected are required`);
+    const hasInputs = typeof v.inputs === 'object' && v.inputs !== null, hasRaw = typeof v.rawInput === 'string';
+    if (hasInputs === hasRaw) throw Error(`Vector ${v.id}: exactly one of inputs and rawInput is required`);
+    if (typeof v.expected !== 'object' || v.expected === null) throw Error(`Vector ${v.id}: expected is required`);
   }
 }
 

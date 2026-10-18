@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
+import { readFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import { join } from 'node:path';
@@ -185,8 +186,10 @@ test('second implementation still matches all 111 assessment vectors', async () 
     vectorsFile: join(ROOT, 'evidence/assessment-vectors.json'), name: 'second-impl', language: 'javascript', implVersion: '0.1', semanticOnly: true
   });
   assert.deepEqual(outcomes.filter(o => o.status !== 'semantic-pass').map(o => `${o.id}: ${o.detail}`), []);
-  assert.equal(summary.vectors.total, 111);
-  assert.equal(summary.vectors.semanticPass, 111);
+  const published = JSON.parse(readFileSync(join(ROOT, 'evidence/assessment-vectors.json'), 'utf8')).vectors.length;
+  assert.ok(published >= 272, 'the published vector set shrank to ' + published);
+  assert.equal(summary.vectors.total, published);
+  assert.equal(summary.vectors.semanticPass, published);
 });
 
 test('differential run over at least 60 mutated envelopes agrees across core, second implementation and python', () => {

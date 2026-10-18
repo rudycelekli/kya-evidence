@@ -17,7 +17,7 @@ const REGISTRY = JSON.parse(await readFile(join(ROOT, 'evidence/requirements.jso
 const FILE = JSON.parse(await readFile(VECTORS, 'utf8'));
 const q = p => `"${p}"`;
 const refImpl = `${q(process.execPath)} ${q(REFERENCE)}`;
-const run = (impl, extra = {}) => runVectors({ impl, vectorsFile: VECTORS, name: 'test impl', language: 'javascript', ...extra });
+const run = (impl, extra = {}) => runVectors({ impl, vectorsFile: VECTORS, name: 'test impl', language: 'javascript', timeoutMs: 120000, ...extra });
 async function withTmp(f) { const dir = await mkdtemp(join(tmpdir(), 'kya-vec-')); try { return await f(dir); } finally { await rm(dir, { recursive: true, force: true }); } }
 async function subsetFile(dir, ids, mutate = v => v) {
   const file = join(dir, 'subset.json');
@@ -32,7 +32,7 @@ test('assessment vector generator reproduces the committed file byte for byte', 
 });
 
 test('assessment vector generator check mode succeeds on the committed file', () => {
-  const check = spawnSync(process.execPath, [join(ROOT, 'scripts/assessment-vectors.mjs'), '--check'], { encoding: 'utf8', timeout: 60000 });
+  const check = spawnSync(process.execPath, [join(ROOT, 'scripts/assessment-vectors.mjs'), '--check'], { encoding: 'utf8', timeout: 240000 });
   assert.equal(check.status, 0, check.stderr);
 });
 
@@ -79,7 +79,7 @@ test('vectors cover the named scenario families', () => {
 test('the JS reference passes every vector through the harness CLI and the report is valid', async () => {
   await withTmp(async dir => {
     const out = join(dir, 'report.json');
-    const p = spawnSync(process.execPath, [join(ROOT, 'scripts/run-vectors.mjs'), '--impl', refImpl, '--name', 'kya-js-reference', '--language', 'javascript', '--out', out], { encoding: 'utf8', timeout: 120000 });
+    const p = spawnSync(process.execPath, [join(ROOT, 'scripts/run-vectors.mjs'), '--impl', refImpl, '--name', 'kya-js-reference', '--language', 'javascript', '--timeout-ms', '120000', '--out', out], { encoding: 'utf8', timeout: 300000 });
     assert.equal(p.status, 0, p.stdout + p.stderr);
     const summary = JSON.parse(p.stdout);
     assert.equal(summary.vectors.total, FILE.vectors.length);
@@ -278,4 +278,50 @@ test('the JS reference adapter refuses malformed input with a non-zero exit and 
   const unsupported = spawnSync(process.execPath, [REFERENCE], { input: '{"schema":"kya.impl-input/v1","operation":"verify","inputs":{}}', encoding: 'utf8' });
   assert.equal(unsupported.status, 0);
   assert.equal(JSON.parse(unsupported.stdout).unsupported, true);
+});
+
+test('vectors that restate the same input in another spelling expect exactly the same result and the spelling really differs', () => {
+  const byId = id => FILE.vectors.find(v => v.id === id);
+  const base = byId('assess.qualified-all-pass-runtime');
+  const flipped = byId('assess.canonical-member-order-does-not-matter');
+  assert.deepEqual(flipped.expected, base.expected);
+  assert.notEqual(JSON.stringify(flipped.inputs), JSON.stringify(base.inputs));
+  assert.deepEqual(Object.keys(flipped.inputs.manifest), Object.keys(base.inputs.manifest).reverse());
+  const numbers = byId('assess.raw-number-spellings-equal-by-value-are-accepted');
+  assert.deepEqual(numbers.expected, base.expected);
+  for (const spelling of ['"minScore":7e2', '"minCoverage":8E-1', '"maxEvidenceAgeSeconds":86400.0', '"minIndependentCoverage":0.0']) assert.ok(numbers.rawInput.includes(spelling), spelling);
+  const unicode = byId('assess.canonical-unicode-and-escapes-preserved');
+  const escaped = byId('assess.raw-pretty-printed-input-with-escaped-text-is-accepted');
+  assert.deepEqual(escaped.expected, unicode.expected);
+  assert.ok(escaped.rawInput.includes('\\u00e9') && escaped.rawInput.includes('\\ud83e\\udded') && !/[^\x00-\x7f]/.test(escaped.rawInput));
+  assert.ok(escaped.rawInput.includes('\n  '), 'the escaped input is indented');
+  assert.equal(escaped.inputs, undefined);
+  for (const v of FILE.vectors.filter(x => x.rawInput !== undefined)) assert.equal(v.inputs, undefined, v.id);
+});
+
+test('an empty reasonContains accepts any non-empty reason text and refuses a missing or empty reason', () => {
+  assert.equal(firstDifference({ index: 0, reasonContains: '' }, { index: 0, reason: 'any text at all' }), null);
+  assert.match(firstDifference({ index: 0, reasonContains: '' }, { index: 0, reason: '' }), /reason: expected a non-empty reason/);
+  assert.match(firstDifference({ index: 0, reasonContains: '' }, { index: 0 }), /reason: expected a non-empty reason/);
+  assert.match(firstDifference({ index: 0, reasonContains: '' }, { index: 0, reason: 7 }), /reason: expected a non-empty reason/);
+});
+
+test('a vector with rawInput sends exactly that text on stdin and a vector needs exactly one of inputs and rawInput', async () => {
+  await withTmp(async dir => {
+    const RAW = '{"schema":"kya.impl-input/v1","operation":"assess","inputs":{"a":1,"a":2}}';
+    const base = FILE.vectors.find(v => v.expected.refused === true);
+    const { inputs, ...rest } = structuredClone(base);
+    const file = join(dir, 'raw.json');
+    await writeFile(file, JSON.stringify({ ...FILE, vectors: [{ ...rest, rawInput: RAW }] }));
+    const refuseIfExact = await script(dir, 'exact.mjs', 'let s = "";\nfor await (const c of process.stdin) s += c;\nprocess.exit(s === ' + JSON.stringify(RAW) + ' ? 3 : 0);\n');
+    const r = await run(refuseIfExact, { vectorsFile: file });
+    assert.equal(r.summary.vectors.pass, 1, JSON.stringify(r.summary.failures));
+    const answers = await script(dir, 'ok.mjs', 'for await (const _ of process.stdin) {}\nprocess.stdout.write("{}");\n');
+    const bad = await run(answers, { vectorsFile: file });
+    assert.equal(bad.summary.vectors.fail, 1);
+    await writeFile(file, JSON.stringify({ ...FILE, vectors: [{ ...rest, rawInput: RAW, inputs }] }));
+    await assert.rejects(run(refuseIfExact, { vectorsFile: file }), /exactly one of inputs and rawInput/);
+    await writeFile(file, JSON.stringify({ ...FILE, vectors: [rest] }));
+    await assert.rejects(run(refuseIfExact, { vectorsFile: file }), /exactly one of inputs and rawInput/);
+  });
 });

@@ -13,7 +13,9 @@ independence = I / W
 upper bound  = floor(1000 × (P + W − K) / W)
 ```
 
-Coverage display is rounded to six decimal places; decisions use the underlying ratio. Each dimension repeats the formula within its own denominator; its `weight` exposes its contribution to the total. Dimension scores are not summed. The upper bound assumes every unresolved check passes. It is not a forecast, probability or confidence interval.
+Coverage display is rounded to six decimal places; decisions use the underlying ratio. Each dimension repeats the formula within its own denominator; its `weight` exposes its contribution to the total. Dimension scores are not summed.
+
+An assessment always lists the six fixed dimensions, in this order: identity, authority, security, reliability, accountability, operations, whether or not the profile uses them. A dimension with checks reports `earned` as floor(1000 × P / W), `possible` 1000, `upperBound` as floor(1000 × (P + W − K) / W) and `coverage` as K / W rounded to six decimals, each within that dimension only, and `weight` as the sum of its check weights. A dimension with no frozen checks reports earned 0, possible 0, upperBound 0, coverage 0 and weight 0. A check whose dimension is not one of the six is refused. Report digests depend on this list (a team-built second implementation listed only the dimensions its profile used and disagreed on `reportDigest`). The upper bound assumes every unresolved check passes. It is not a forecast, probability or confidence interval.
 
 | Result | Points | Observed coverage |
 | :--- | :--- | :--- |
@@ -29,7 +31,7 @@ Revoked subject yields `revoked`; invalid subject time yields `expired`. A criti
 
 ## Named blocker codes
 
-An assessment never withholds a result silently. Each human-readable entry in `blockers` has a stable machine-readable code at the same index of `blockerCodes`, so relying software can branch on a code while the wording may change. The list is append-only: a code is never reused for a different meaning. Reports written before `blockerCodes` existed omit it, keep their original digest and still verify; when present it must hold exactly one known code per blocker.
+An assessment never withholds a result silently. Each human-readable entry in `blockers` has a stable machine-readable code at the same index of `blockerCodes`, so relying software can branch on a code while the wording may change. The list is append-only: a code is never reused for a different meaning. Reports written before `blockerCodes` existed omit it, keep their original digest and still verify; when present it must hold exactly one known code per blocker. A verifier also refuses a code list that contradicts the report it sits in: a `qualified` report has no codes, and unless a subject code (`SUBJECT_REVOKED`, `SUBJECT_EXPIRED` or `SUBJECT_NOT_YET_VALID`) is present, the number of `CRITICAL_CHECK_FAILED` codes equals the number of checks whose `critical` is true and whose `status` is `fail`.
 
 | Code | Decision | Fires when |
 | :--- | :--- | :--- |
@@ -43,7 +45,7 @@ An assessment never withholds a result silently. Each human-readable entry in `b
 | `SCORE_BELOW_POLICY` | `blocked` | A sufficiently observed result scores below `minScore` |
 | `AMBIGUOUS_RUNS` | `insufficient-evidence` | Several runs tie for most recent |
 | `RUN_CONFLICT` | `insufficient-evidence` | The selected run holds quarantined duplicate evidence IDs |
-| `RUN_INVALIDATED` | `insufficient-evidence` | The latest bound run holds revoked, expired or stale receipts; no fallback to an older run |
+| `RUN_INVALIDATED` | `insufficient-evidence` | The latest bound run holds revoked, expired, stale or quarantined (duplicate ID) receipts; no fallback to an older run |
 | `MIXED_RUN_ISSUERS` | `insufficient-evidence` | One frozen run has several evaluator signers |
 | `REPEATED_RUN_CHECKS` | `insufficient-evidence` | One frozen check has repeated observations in a run |
 | `NO_SCORED_OBSERVATIONS` | `insufficient-evidence` | No check is a known pass or fail |

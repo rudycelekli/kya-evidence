@@ -4743,6 +4743,71 @@
           "title": "metamorphic e regression: replaying a failing receipt cannot let a sibling pass count toward the score"
         }
       ]
+    },
+    {
+      "id": "KYA-FRL-001",
+      "level": "MUST",
+      "area": "fieldrules",
+      "section": "Reports and viewers",
+      "statement": "Every record has exactly the members its schema lists, and the identifier, text, hash, timestamp, range, enumeration, uniqueness and containment rules stated in the Field rules paragraph of the specification MUST be enforced as refusals of the whole input, except that an invalid evidence or incident entry is a rejection.",
+      "tests": [
+        {
+          "file": "test/spec-field-rules.test.mjs",
+          "title": "the specification states the field rules and the scoring document states the dimension layout"
+        }
+      ]
+    },
+    {
+      "id": "KYA-DIM-001",
+      "level": "MUST",
+      "area": "scoring",
+      "section": "Reports and viewers",
+      "statement": "An assessment MUST list the six fixed dimensions in the stated order, and a dimension with no frozen checks MUST report zero for earned, possible, upper bound, coverage and weight.",
+      "tests": [
+        {
+          "file": "test/spec-field-rules.test.mjs",
+          "title": "an assessment always lists the six fixed dimensions in order and a dimension without checks is all zero"
+        }
+      ]
+    },
+    {
+      "id": "KYA-RUN-005",
+      "level": "MUST",
+      "area": "run-selection",
+      "section": "Reports and viewers",
+      "statement": "The issuer, repeated-check and duplicate-ID rules MUST be evaluated over the bound receipts, including those later rejected, an evidence ID MUST be duplicated across the whole bundle, and eligibility reasons MUST take precedence over run exclusion reasons for every run.",
+      "tests": [
+        {
+          "file": "test/spec-field-rules.test.mjs",
+          "title": "the specification states which receipts the run rules are evaluated over"
+        }
+      ]
+    },
+    {
+      "id": "KYA-VEC-010",
+      "level": "MUST",
+      "area": "vectors",
+      "section": "Interoperability and versioning",
+      "statement": "A vector MUST carry exactly one of `inputs` and `rawInput`, the harness MUST send `rawInput` verbatim as stdin, and an empty `reasonContains` MUST accept any non-empty reason and refuse a missing or empty one.",
+      "tests": [
+        {
+          "file": "test/assessment-vectors.test.mjs",
+          "title": "a vector with rawInput sends exactly that text on stdin and a vector needs exactly one of inputs and rawInput"
+        }
+      ]
+    },
+    {
+      "id": "KYA-VEC-011",
+      "level": "SHOULD",
+      "area": "vectors",
+      "section": "Interoperability and versioning",
+      "statement": "Vectors that restate one input in another spelling (member order, escapes, number spellings, indentation) SHOULD expect exactly the result of the plain spelling.",
+      "tests": [
+        {
+          "file": "test/assessment-vectors.test.mjs",
+          "title": "vectors that restate the same input in another spelling expect exactly the same result and the spelling really differs"
+        }
+      ]
     }
   ]
 }

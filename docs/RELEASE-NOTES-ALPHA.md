@@ -20,7 +20,7 @@ Details and dates: [CHANGELOG.md](../CHANGELOG.md).
 ## What is explicitly NOT shown or validated
 
 - **No outside security review.** Several rounds of review were done inside the team. Their fixes are in the changelog. They are not an independent review and no retest by an outside party exists.
-- **No outside implementation.** The second implementation of assessment and currency semantics, and the Python byte checker, were written by the same team. The second implementation matches all 111 assessment vectors byte for byte, which shows the written spec is precise enough for the team to follow. It does not show that an unrelated implementer would read it the same way.
+- **No outside implementation.** The second implementation of assessment and currency semantics, and the Python byte checker, were written by the same team. The second implementation matches all 272 assessment vectors byte for byte, which shows the written spec is precise enough for the team to follow. It does not show that an unrelated implementer would read it the same way.
 - **No relying-party pilot.** No organization has used this evidence for a real decision.
 - **Captured evidence is simulated.** The reference capture cell is a simulation. No real, measured capture environment exists, and receipts from the demo and benchmarks are synthetic fixtures. A perfect fixture score says nothing about Claude Code, Codex, a bot or any other real agent.
 - **Calibration is unmeasured.** The study design is written down and pre-registered as a template; no data has been collected, so no threshold in any profile is shown to separate good agents from bad ones.

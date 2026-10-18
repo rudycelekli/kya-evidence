@@ -65,9 +65,10 @@ test('CONFORMANCE no longer says no second implementation has run the vectors', 
   assert.ok(doc.includes('not independent'));
 });
 
-test('the implementers guide reports all 111 vectors byte for byte for the second implementation', () => {
+test('the implementers guide reports every vector byte for byte for the second implementation', () => {
   const doc = read('docs/IMPLEMENTERS-GUIDE.md');
-  assert.ok(doc.includes('now matches all 111 byte for byte'));
+  const published = JSON.parse(read('evidence/assessment-vectors.json')).vectors.length;
+  assert.ok(doc.includes(`now matches all ${published} byte for byte`), 'the guide does not state the published vector count ' + published);
   assert.ok(doc.includes('43') && doc.includes('79'));
 });
 

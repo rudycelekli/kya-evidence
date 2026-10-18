@@ -90,31 +90,36 @@ export const isStr = (s, max = 512) => typeof s === 'string' && s.length > 0 && 
 export const isPem = s => typeof s === 'string' && s.length > 0 && s.length <= 2000;
 export const isId = s => typeof s === 'string' && s.length <= 128 && /^[A-Za-z0-9][A-Za-z0-9:._\/-]*$/.test(s);
 export const exactKeys = (o, req, opt = []) => isObj(o) && req.every(k => Object.hasOwn(o, k)) && Object.keys(o).every(k => req.includes(k) || opt.includes(k));
-const uniqueStrs = a => Array.isArray(a) && a.every(x => isStr(x)) && new Set(a).size === a.length;
+const uniqueIds = (a, max = 256) => Array.isArray(a) && a.length <= max && a.every(x => isId(x)) && new Set(a).size === a.length;
+const DIMENSIONS = ['identity', 'authority', 'security', 'reliability', 'accountability', 'operations'];
 
 // ---------------------------------------------------------------- validators (top-level failures are refusals)
 
 export function validManifest(m) {
   if (!exactKeys(m, ['schema', 'agent', 'principal', 'system', 'scope', 'issuedAt', 'expiresAt'])) refuse('manifest keys');
   if (m.schema !== 'kya.manifest/v1') refuse('manifest schema');
-  if (!exactKeys(m.agent, ['id', 'name', 'version']) || !isStr(m.agent.id) || !isStr(m.agent.name) || !isStr(m.agent.version)) refuse('manifest agent');
-  if (!exactKeys(m.principal, ['id'], ['accountableParty']) || !isStr(m.principal.id)) refuse('manifest principal');
+  if (!exactKeys(m.agent, ['id', 'name', 'version']) || !isId(m.agent.id) || !isStr(m.agent.name) || !isStr(m.agent.version, 128)) refuse('manifest agent');
+  if (!exactKeys(m.principal, ['id'], ['accountableParty']) || !isId(m.principal.id)) refuse('manifest principal');
   if (m.principal.accountableParty !== undefined) {
     const p = m.principal.accountableParty;
-    if (!exactKeys(p, ['kind', 'ref']) || !['natural-person', 'legal-entity'].includes(p.kind) || !isStr(p.ref)) refuse('accountable party');
-    if (p.ref === m.agent.id) refuse('agent cannot be its own accountable party');
+    if (!exactKeys(p, ['kind', 'ref']) || !['natural-person', 'legal-entity'].includes(p.kind) || !isId(p.ref)) refuse('accountable party');
+    if (p.ref.toLowerCase() === m.agent.id.toLowerCase()) refuse('agent cannot be its own accountable party');
   }
   const s = m.system;
   if (!exactKeys(s, ['harness', 'harnessVersion', 'model', 'artifactDigest', 'configDigest', 'tools'])) refuse('manifest system');
-  for (const k of ['harness', 'harnessVersion', 'model']) if (!isStr(s[k])) refuse('manifest system ' + k);
+  for (const k of ['harness', 'harnessVersion', 'model']) if (!isStr(s[k], 128)) refuse('manifest system ' + k);
   for (const k of ['artifactDigest', 'configDigest']) if (!HEX64.test(s[k])) refuse('manifest ' + k);
-  if (!Array.isArray(s.tools)) refuse('tools');
+  if (!Array.isArray(s.tools) || s.tools.length > 128) refuse('tools');
   const sc = m.scope;
-  if (!exactKeys(sc, ['id', 'purpose', 'permissions', 'forbidden', 'approvalRequired']) || !isStr(sc.id) || !isStr(sc.purpose, 4096)) refuse('manifest scope');
-  for (const k of ['permissions', 'forbidden', 'approvalRequired']) if (!uniqueStrs(sc[k])) refuse('scope ' + k);
+  if (!exactKeys(sc, ['id', 'purpose', 'permissions', 'forbidden', 'approvalRequired']) || !isId(sc.id) || !isStr(sc.purpose)) refuse('manifest scope');
+  for (const k of ['permissions', 'forbidden', 'approvalRequired']) if (!uniqueIds(sc[k])) refuse('scope ' + k);
   if (sc.forbidden.some(x => sc.permissions.includes(x))) refuse('allowed and forbidden permissions overlap');
+  if (sc.approvalRequired.some(x => !sc.permissions.includes(x))) refuse('approval permission is outside scope');
+  const toolIds = new Set();
   for (const t of s.tools) {
-    if (!exactKeys(t, ['id', 'version', 'permissions']) || !isStr(t.id) || !isStr(t.version) || !uniqueStrs(t.permissions)) refuse('tool');
+    if (!exactKeys(t, ['id', 'version', 'permissions']) || !isId(t.id) || !isStr(t.version, 128) || !uniqueIds(t.permissions)) refuse('tool');
+    if (toolIds.has(t.id)) refuse('duplicate tool ID');
+    toolIds.add(t.id);
     if (t.permissions.some(p => !sc.permissions.includes(p))) refuse('tool permission not allowed in scope');
   }
   if (!isTs(m.issuedAt) || !isTs(m.expiresAt)) refuse('manifest time');
@@ -123,11 +128,11 @@ export function validManifest(m) {
 
 function validProfile(p) {
   if (!exactKeys(p, ['schema', 'id', 'version', 'title', 'checks']) || p.schema !== 'kya.profile/v1') refuse('profile');
-  if (!isStr(p.id) || !isStr(p.version) || !isStr(p.title) || !Array.isArray(p.checks) || !p.checks.length) refuse('profile fields');
+  if (!isId(p.id) || !isStr(p.version, 64) || !isStr(p.title) || !Array.isArray(p.checks) || !p.checks.length || p.checks.length > 256) refuse('profile fields');
   const ids = new Set();
   for (const c of p.checks) {
-    if (!exactKeys(c, ['id', 'dimension', 'title', 'weight', 'critical']) || !isStr(c.id) || !isStr(c.dimension) || !isStr(c.title)) refuse('profile check');
-    if (!Number.isInteger(c.weight) || c.weight < 1 || typeof c.critical !== 'boolean') refuse('profile check weight');
+    if (!exactKeys(c, ['id', 'dimension', 'title', 'weight', 'critical']) || !isId(c.id) || !DIMENSIONS.includes(c.dimension) || !isStr(c.title)) refuse('profile check');
+    if (!Number.isInteger(c.weight) || c.weight < 1 || c.weight > 100000 || typeof c.critical !== 'boolean') refuse('profile check weight');
     if (ids.has(c.id)) refuse('duplicate profile check');
     ids.add(c.id);
   }
@@ -139,30 +144,31 @@ export function validPolicy(p, profileDigest, scopeId, checkIds) {
   const bound = profileDigest !== null;
   const req = ['schema', 'id', 'profileDigest', 'scopeId', 'minCoverage', 'minScore', 'minIndependentCoverage', 'allowedSources', 'maxEvidenceAgeSeconds', 'trustedKeys', 'revokedKeyIds', 'revokedEvidenceIds', 'revokedSubjectDigests'];
   if (!exactKeys(p, req, ['requirePrincipalBinding', 'mandatoryMinimums', 'maxAssessmentAgeSeconds']) || p.schema !== 'kya.policy/v1') refuse('policy');
-  if (!isStr(p.id) || !HEX64.test(p.profileDigest) || !isStr(p.scopeId)) refuse('policy fields');
+  if (!isId(p.id) || !HEX64.test(p.profileDigest) || !isId(p.scopeId)) refuse('policy fields');
   if (bound && p.profileDigest !== profileDigest) refuse('policy binds another profile');
   if (bound && p.scopeId !== scopeId) refuse('policy binds another scope');
   for (const k of ['minCoverage', 'minIndependentCoverage']) if (typeof p[k] !== 'number' || !(p[k] >= 0 && p[k] <= 1)) refuse(k);
   if (!Number.isInteger(p.minScore) || p.minScore < 0 || p.minScore > 1000) refuse('minScore');
   if (!Array.isArray(p.allowedSources) || p.allowedSources.some(s => !SOURCES.includes(s)) || new Set(p.allowedSources).size !== p.allowedSources.length) refuse('allowedSources');
-  if (!Number.isInteger(p.maxEvidenceAgeSeconds) || p.maxEvidenceAgeSeconds < 1) refuse('maxEvidenceAgeSeconds');
-  if (p.maxAssessmentAgeSeconds !== undefined && (!Number.isInteger(p.maxAssessmentAgeSeconds) || p.maxAssessmentAgeSeconds < 1)) refuse('maxAssessmentAgeSeconds');
+  if (!Number.isInteger(p.maxEvidenceAgeSeconds) || p.maxEvidenceAgeSeconds < 1 || p.maxEvidenceAgeSeconds > 31536000) refuse('maxEvidenceAgeSeconds');
+  if (p.maxAssessmentAgeSeconds !== undefined && (!Number.isInteger(p.maxAssessmentAgeSeconds) || p.maxAssessmentAgeSeconds < 1 || p.maxAssessmentAgeSeconds > 31536000)) refuse('maxAssessmentAgeSeconds');
   if (p.requirePrincipalBinding !== undefined && typeof p.requirePrincipalBinding !== 'boolean') refuse('requirePrincipalBinding');
-  if (!Array.isArray(p.trustedKeys)) refuse('trustedKeys');
+  if (!Array.isArray(p.trustedKeys) || p.trustedKeys.length > 256) refuse('trustedKeys');
   const kids = new Set();
   for (const k of p.trustedKeys) {
     if (!exactKeys(k, ['id', 'publicKey', 'role']) || !HEX64.test(k.id) || !isPem(k.publicKey) || strictPublicKey(k.publicKey).problem || !ROLES.includes(k.role)) refuse('trusted key');
+    if (sha256hex(strictPublicKey(k.publicKey).der) !== k.id) refuse('trust anchor fingerprint differs');
     if (kids.has(k.id)) refuse('duplicate trusted key');
     kids.add(k.id);
   }
-  if (!Array.isArray(p.revokedKeyIds) || p.revokedKeyIds.some(x => !HEX64.test(x))) refuse('revokedKeyIds');
-  if (!Array.isArray(p.revokedSubjectDigests) || p.revokedSubjectDigests.some(x => !HEX64.test(x))) refuse('revokedSubjectDigests');
-  if (!Array.isArray(p.revokedEvidenceIds) || p.revokedEvidenceIds.some(x => !isStr(x))) refuse('revokedEvidenceIds');
+  if (!Array.isArray(p.revokedKeyIds) || p.revokedKeyIds.length > 4096 || new Set(p.revokedKeyIds).size !== p.revokedKeyIds.length || p.revokedKeyIds.some(x => !HEX64.test(x))) refuse('revokedKeyIds');
+  if (!Array.isArray(p.revokedSubjectDigests) || p.revokedSubjectDigests.length > 4096 || new Set(p.revokedSubjectDigests).size !== p.revokedSubjectDigests.length || p.revokedSubjectDigests.some(x => !HEX64.test(x))) refuse('revokedSubjectDigests');
+  if (!uniqueIds(p.revokedEvidenceIds, 4096)) refuse('revokedEvidenceIds');
   if (p.mandatoryMinimums !== undefined) {
-    if (!Array.isArray(p.mandatoryMinimums) || !p.mandatoryMinimums.length) refuse('mandatoryMinimums');
+    if (!Array.isArray(p.mandatoryMinimums) || !p.mandatoryMinimums.length || p.mandatoryMinimums.length > 256) refuse('mandatoryMinimums');
     const seen = new Set();
     for (const m of p.mandatoryMinimums) {
-      if (!exactKeys(m, ['checkId', 'minimum']) || !['pass', 'independent-pass'].includes(m.minimum)) refuse('minimum entry');
+      if (!exactKeys(m, ['checkId', 'minimum']) || !isId(m.checkId) || !['pass', 'independent-pass'].includes(m.minimum)) refuse('minimum entry');
       if (bound && !checkIds.has(m.checkId)) refuse('minimum names unknown check');
       if (seen.has(m.checkId)) refuse('minimum duplicate check');
       seen.add(m.checkId);
@@ -320,6 +326,8 @@ export function assess(inp) {
     if (t > NOW) { rejected.set(i, 'Observation is in the future'); return; }
     if (t < ms(manifest.issuedAt)) { rejected.set(i, 'Observation predates manifest'); return; }
     rec.bound = true;
+    // Revocation, expiry and freshness apply to every bound receipt, in every run; the first reason in the written order wins.
+    rec.why = revKeys.has(env.proof.keyId) ? 'Signing key is revoked' : revEv.has(p.id) ? 'Evidence is revoked' : ms(p.expiresAt) <= NOW ? 'Evidence is expired' : NOW - t >= policy.maxEvidenceAgeSeconds * 1000 ? 'Evidence exceeds freshness policy' : null;
   });
 
   const W = profile.checks.reduce((a, c) => a + c.weight, 0);
@@ -347,6 +355,10 @@ export function assess(inp) {
     runs.set(r.p.runId, g);
   }
   const quarantinedChecks = new Set();
+  // An evidence ID is duplicated when more than one bound receipt in the whole bundle, in any run, carries it.
+  const idCount = new Map();
+  for (const r of recs) if (r.bound) idCount.set(r.p.id, (idCount.get(r.p.id) ?? 0) + 1);
+  const isDup = r => r.bound && idCount.get(r.p.id) > 1;
   let selected = null, ambiguous = false;
   if (runs.size) {
     const top = Math.max(...[...runs.values()].map(g => g.latest));
@@ -354,43 +366,37 @@ export function assess(inp) {
     ambiguous = tied.length > 1;
     tied.sort((a, b) => (b.failedCritical - a.failedCritical) || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
     selected = tied[0];
-    for (const g of runs.values()) if (g !== selected) for (const r of g.recs) {
-      rejected.set(r.i, g.latest === top ? 'Equally recent run excluded; ambiguous runs cannot qualify' : 'Older run excluded; checks cannot be mixed across runs');
+  }
+  // Reasons in the written order: eligibility (revoked, expired, stale), then duplicate ID, then run exclusion.
+  for (const r of recs) if (r.bound) {
+    if (r.why) rejected.set(r.i, r.why);
+    else if (isDup(r)) rejected.set(r.i, 'Duplicate evidence ID');
+    else {
+      const g = runs.get(r.p.runId);
+      if (g !== selected) rejected.set(r.i, g.latest === Math.max(...[...runs.values()].map(x => x.latest)) ? 'Equally recent run excluded; ambiguous runs cannot qualify' : 'Older run excluded; checks cannot be mixed across runs');
     }
   }
   let invalidated = false, conflict = false, repeated = false, mixed = false;
   const kept = [];
   if (selected) {
-    // exclusions inside the selected run
     const live = [];
     for (const r of selected.recs) {
-      const p = r.p;
-      let why = null;
-      if (revKeys.has(r.env.proof.keyId)) why = 'Signing key is revoked';
-      else if (revEv.has(p.id)) why = 'Evidence is revoked';
-      else if (ms(p.expiresAt) <= NOW) why = 'Evidence is expired';
-      else if (NOW - ms(p.observedAt) >= policy.maxEvidenceAgeSeconds * 1000) why = 'Evidence exceeds freshness policy';
-      if (why) { rejected.set(r.i, why); invalidated = true; } else live.push(r);
+      if (r.why) invalidated = true;
+      else if (isDup(r)) { conflict = true; invalidated = true; quarantinedChecks.add(r.p.checkId); }
+      else live.push(r);
     }
-    // duplicate IDs among live receipts (whole bundle of eligible receipts)
-    const idCount = new Map();
-    for (const r of live) idCount.set(r.p.id, (idCount.get(r.p.id) ?? 0) + 1);
-    // repeated checks counted before quarantine
+    // Run rules are evaluated over every bound receipt of the selected run, including those rejected above.
     const perCheck = new Map();
-    for (const r of live) perCheck.set(r.p.checkId, [...(perCheck.get(r.p.checkId) ?? []), r]);
-    for (const g of perCheck.values()) if (g.length > 1) repeated = true;
-    const survivors = [];
-    for (const r of live) {
-      if (idCount.get(r.p.id) > 1) { rejected.set(r.i, 'Duplicate evidence ID'); conflict = true; invalidated = true; quarantinedChecks.add(r.p.checkId); } else survivors.push(r);
-    }
+    for (const r of selected.recs) perCheck.set(r.p.checkId, (perCheck.get(r.p.checkId) ?? 0) + 1);
+    for (const n of perCheck.values()) if (n > 1) repeated = true;
+    if (new Set(selected.recs.map(r => r.env.proof.keyId)).size > 1) mixed = true;
     const bycheck = new Map();
-    for (const r of survivors) bycheck.set(r.p.checkId, [...(bycheck.get(r.p.checkId) ?? []), r]);
+    for (const r of live) bycheck.set(r.p.checkId, [...(bycheck.get(r.p.checkId) ?? []), r]);
     for (const g of bycheck.values()) {
       g.sort((a, b) => (SEVERITY_RANK[b.p.outcome] - SEVERITY_RANK[a.p.outcome]) || (ms(a.p.observedAt) - ms(b.p.observedAt)) || (a.i - b.i));
       kept.push(g[0]);
       for (const r of g.slice(1)) rejected.set(r.i, 'Superseded observation within selected run');
     }
-    if (new Set(kept.map(r => r.env.proof.keyId)).size > 1) mixed = true;
   }
   // A check with a quarantined duplicate-ID receipt is unproven (replaying a failure must not let a sibling pass count).
   const results = new Map(kept.filter(r => !quarantinedChecks.has(r.p.checkId)).map(r => [r.p.checkId, r]));
@@ -414,7 +420,7 @@ function finalize(o) {
   }
   const score = { earned: Math.floor(1000 * P / W), possible: 1000, upperBound: Math.floor(1000 * (P + W - K) / W) };
   const coverage = K / W, indep = I / W;
-  const dimensions = [...dims.values()].map(d => ({ id: d.id, earned: Math.floor(1000 * d.P / d.W), possible: 1000, upperBound: Math.floor(1000 * (d.P + d.W - d.K) / d.W), coverage: r6(d.K / d.W), weight: d.weight }));
+  const dimensions = DIMENSIONS.map(id => dims.get(id)).map((d, i) => d ? { id: d.id, earned: Math.floor(1000 * d.P / d.W), possible: 1000, upperBound: Math.floor(1000 * (d.P + d.W - d.K) / d.W), coverage: r6(d.K / d.W), weight: d.weight } : { id: DIMENSIONS[i], earned: 0, possible: 0, upperBound: 0, coverage: 0, weight: 0 });
 
   let decision = o.decision;
   if (!decision) {
