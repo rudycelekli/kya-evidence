@@ -2,7 +2,7 @@
 
 This alpha is experimental; independent security review is pending. Fixture scores and report checksums cannot authorize real actions. Recompute from trusted inputs and isolate adapters from production secrets/accounts.
 
-Use the repository's private vulnerability-reporting channel when available. Otherwise contact the maintainer through an established private channel before disclosing exploit details. No security mailbox or response SLA is promised. Never send credentials, personal records or raw private traces.
+If the repository Security tab offers a private report button, use it. Otherwise do not post exploit details publicly: open a public issue titled Security contact request containing no technical details, and the maintainer will reply with a private channel. No response time is promised. Never send credentials, personal records or raw private traces. No security mailbox is promised and no monitored private channel is confirmed today.
 
 Include affected version/release digest, sanitized reproduction, expected and actual behavior, severity rationale and affected trust boundaries. Maintainers should freeze affected promotion, reproduce, repair with adversarial/mutation tests, independently review and disclose a correction after an authorized fix is ready.
 

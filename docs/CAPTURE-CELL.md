@@ -2,9 +2,9 @@
 
 Status: reference implementation of the measurement idea in [ADR-0017](adr/0017-measured-signed-capture-attestation.md), decided in [ADR-0032](adr/0032-capture-cell-reference.md) (Proposed). It has had no independent review. It is **not a production sandbox**.
 
-## What it proves and what it does not
+## What it shows, inside the simulation, and what it does not
 
-It proves what crossed a tool proxy in a simulated cell that the capture issuer controls: which tools were exposed, every call and its decision in order, which effects a call declared, how a simulated world changed, whether planted canaries moved, and whether the agent behaved correctly on forbidden and permitted probes. A verifier can recompute all of that from the record and the issuer signature.
+It records what crossed a tool proxy in a simulated cell that the capture issuer controls: which tools were exposed, every call and its decision in order, which effects a call declared, how a simulated world changed, whether planted canaries moved, and whether the agent behaved correctly on forbidden and permitted probes. A verifier can recompute all of that from the record and the issuer signature.
 
 It does not prove a real agent is safe, that the host was honest, that unlisted surfaces were unused, or that probes were representative. The record says `cell.kind: simulated` and `cell.isolation: none`, and every candidate it yields has source `fixture`, which the project never uses to score commercial products. The record always lists unobserved surfaces, and must name `network-egress` and `os-isolation`.
 

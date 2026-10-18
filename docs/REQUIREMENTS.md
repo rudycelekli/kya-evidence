@@ -224,5 +224,10 @@ Each requirement is traced to at least one test that must exist exactly once; th
 | KYA-REL-011 | MUST | The package content guard MUST refuse private config and key paths, token shapes (GitHub, npm, AWS), private key headers and absolute home paths other than documented placeholders, in pack and in the readiness scan, over every text-like file. | `release-readiness.test.mjs` |
 | KYA-REL-012 | SHOULD | The repository SHOULD have a Dependabot configuration that updates the pinned GitHub Actions weekly and does not merge by itself. | `dependabot.test.mjs` |
 | KYA-ACT-015 | MUST | Under `--require-pins` the CI gate MUST ignore the clock member of the inputs file unless `--allow-inputs-clock` is given, and MUST refuse an input whose real path leaves the workspace through a symbolic link. | `kya-check.test.mjs` |
+| KYA-DOC-009 | MUST | Relative markdown links in top-level and docs markdown files MUST resolve to a tracked path. | `docs-claims.test.mjs` |
+| KYA-DOC-010 | MUST | Tracked markdown files MUST NOT carry an owner placeholder, except the file the release readiness gate watches. | `docs-claims.test.mjs` |
+| KYA-DOC-011 | MUST | Public documents MUST NOT cite a private same-team detection run that cannot be reproduced from the repository. | `docs-claims.test.mjs` |
+| KYA-DOC-012 | MUST | The code of conduct MUST NOT claim a monitored reporting channel or carry a bracketed placeholder contact, and MUST NOT contain an email address. | `governance-docs.test.mjs` |
+| KYA-DOC-013 | MUST | Interim security wording MUST NOT turn the readiness gate `security-contact-form` green; only a recognizable real contact may. | `release-readiness.test.mjs` |
 
-Registry digest: `a3a322fed3ab42f5c6538dd48f11fea0f15c00518facfe4d0136679100e1b091`
+Registry digest: `c7d42ab6073f25d2b0bb9185a8eebc9a7c333be06799abd313297d464126eceb`

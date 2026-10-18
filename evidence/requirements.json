@@ -4204,6 +4204,71 @@
           "title": "an input path whose parent directory is a symlink out of the workspace is refused"
         }
       ]
+    },
+    {
+      "id": "KYA-DOC-009",
+      "level": "MUST",
+      "area": "docs",
+      "section": "Interoperability and versioning",
+      "statement": "Relative markdown links in top-level and docs markdown files MUST resolve to a tracked path.",
+      "tests": [
+        {
+          "file": "test/docs-claims.test.mjs",
+          "title": "every relative markdown link in top-level and docs markdown files resolves to a tracked path"
+        }
+      ]
+    },
+    {
+      "id": "KYA-DOC-010",
+      "level": "MUST",
+      "area": "docs",
+      "section": "Governance documents",
+      "statement": "Tracked markdown files MUST NOT carry an owner placeholder, except the file the release readiness gate watches.",
+      "tests": [
+        {
+          "file": "test/docs-claims.test.mjs",
+          "title": "no tracked markdown file carries an owner placeholder except the file the readiness gate watches"
+        }
+      ]
+    },
+    {
+      "id": "KYA-DOC-011",
+      "level": "MUST",
+      "area": "docs",
+      "section": "Interoperability and versioning",
+      "statement": "Public documents MUST NOT cite a private same-team detection run that cannot be reproduced from the repository.",
+      "tests": [
+        {
+          "file": "test/docs-claims.test.mjs",
+          "title": "no public doc cites a private same-team detection run"
+        }
+      ]
+    },
+    {
+      "id": "KYA-DOC-012",
+      "level": "MUST",
+      "area": "docs",
+      "section": "Governance documents",
+      "statement": "The code of conduct MUST NOT claim a monitored reporting channel or carry a bracketed placeholder contact, and MUST NOT contain an email address.",
+      "tests": [
+        {
+          "file": "test/governance-docs.test.mjs",
+          "title": "code of conduct claims no monitored channel and has no email address"
+        }
+      ]
+    },
+    {
+      "id": "KYA-DOC-013",
+      "level": "MUST",
+      "area": "docs",
+      "section": "Interoperability and versioning",
+      "statement": "Interim security wording MUST NOT turn the readiness gate `security-contact-form` green; only a recognizable real contact may.",
+      "tests": [
+        {
+          "file": "test/release-readiness.test.mjs",
+          "title": "the interim security wording cannot turn the contact form gate green"
+        }
+      ]
     }
   ]
 }

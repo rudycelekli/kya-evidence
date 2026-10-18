@@ -3,6 +3,7 @@
 # Expires field, and recommends an Expires value less than a year in the future. The owner must replace every
 # value in angle brackets, then publish the file at /.well-known/security.txt on the project's web site.
 # No email address has been invented. Do not publish this file with the placeholders in place.
+# Until the owner completes it, the reporting process that applies is the interim one in SECURITY.md (repository root).
 
 Contact: <SET-BY-OWNER: a URI such as a private reporting URL or a mailto: address the owner controls>
 Expires: <SET-BY-OWNER: date-time in ISO 8601 format, less than one year ahead>
