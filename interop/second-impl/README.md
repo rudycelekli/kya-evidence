@@ -14,8 +14,8 @@ This was written by the same team, in the same repository, by an agent that has 
 
 | Measure | Value |
 | :--- | :--- |
-| Vectors, decision and every semantic field (`--semantic-only`) | 272 of 272 |
-| Vectors, byte-exact including `reportDigest` and `resultDigest` | 272 of 272 |
+| Vectors, decision and every semantic field (`--semantic-only`) | 485 of 485 (272 for assess and currency, 213 for the four version 2 operations) |
+| Vectors, byte-exact including `reportDigest` and `resultDigest` | 485 of 485 |
 | Digest-only failures | 0 |
 
 After the `spec-gaps-2` texts (rounds 1 and 2) were implemented, and only those texts, every vector passes byte for byte. This is still a same-team second implementation: passing the published vectors shows the written text plus the vectors are enough to rebuild the reference output for these vectors, not that the specification is complete or that the expected values are right. Behaviour that no vector pins is still guesswork (`AMBIGUITIES.md` sections B and C).
@@ -45,4 +45,8 @@ The shape of the `kya.assessment/v1` report (field names, dimension fields, limi
 
 ## Tests
 
-`test/second-impl.test.mjs` runs the harness against the adapter. It asserts a semantic pass on every published vector (272 of 272 at this writing), a refusal on every refusal vector (83), and that the byte-exact count equals the published count. It reads the count from the vectors file, so a vector added later is held to the same bar.
+`test/second-impl.test.mjs` runs the harness against the adapter. It asserts a semantic pass on every published vector (485 of 485 at this writing), a refusal on every refusal vector (166), and that the byte-exact count equals the published count. It reads the count from the vectors file, so a vector added later is held to the same bar.
+
+## Contract version 2
+
+`ops.mjs` implements `canonicalize`, `digest`, `verify-envelope` and `compare` from the specification text and the contract README (`adapter.mjs` dispatches to it; an unknown operation still replies `unsupported`). `parseStrict` follows "Canonical form and strict parsing" (refused names, depth 32, number judgement, 100000 values, strict UTF-8 on stdin). First run, before any expected value of the new vectors was read: 205 of 205 new vectors and the 272 old ones passed byte for byte. The guesses the vectors do not pin are in `AMBIGUITIES.md`, section E. Same-team implementation, not independent review.

@@ -4,6 +4,7 @@
 // It uses only the public package API, so it proves the harness and defines the result shape; it is not an independent implementation.
 import { assess, checkCurrency, digest } from '../../src/index.mjs';
 import { parseJson } from '../../src/shared/canonical.mjs';
+import { V2_OPERATIONS } from './js-operations.mjs';
 
 function assessResult(r) {
   return { schema: 'kya.impl-result/v1', operation: 'assess', decision: r.decision, evidenceMode: r.evidenceMode, ambiguousRuns: r.ambiguousRuns, selectedRunId: r.selectedRunId, score: r.score, coverage: r.coverage, independentCoverage: r.independentCoverage, blockerCodes: r.blockerCodes, validUntil: r.validUntil,
@@ -25,6 +26,7 @@ try {
   let out;
   if (input.operation === 'assess') out = assessResult(assess(input.inputs));
   else if (input.operation === 'currency') { const { assessment, ...rest } = input.inputs; out = currencyResult(checkCurrency(assessment, rest)); }
+  else if (typeof input.operation === 'string' && Object.hasOwn(V2_OPERATIONS, input.operation)) out = V2_OPERATIONS[input.operation](input.inputs);
   else out = { schema: 'kya.impl-result/v1', operation: String(input.operation), unsupported: true };
   process.stdout.write(JSON.stringify(out) + '\n');
 } catch (e) { console.error('refused: ' + e.message); process.exit(2); }

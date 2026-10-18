@@ -49,7 +49,7 @@ The Node interoperability tests launch a fixed Python checker with argument arra
 
 ## Assessment vectors
 
-Beside the byte and signature vectors, `evidence/assessment-vectors.json` holds assessment and currency vectors with expected decisions, blockers and digests. The harness is `scripts/run-vectors.mjs`; the contract is in `interop/impl-contract/README.md`. The vectors are public and their expected values come from the JavaScript reference, so they are not an independent check until an outside implementation reproduces them. The team-built second implementation in `interop/second-impl/` reproduced all 272 byte for byte, but it is not independent.
+Beside the byte and signature vectors, `evidence/assessment-vectors.json` holds assessment, currency, canonicalization, digest, envelope verification and comparison vectors (contract version 2) with expected decisions, blockers, digests and failure codes. The harness is `scripts/run-vectors.mjs`; the contract is in `interop/impl-contract/README.md`. The vectors are public and their expected values come from the JavaScript reference, so they are not an independent check until an outside implementation reproduces them. The team-built second implementation in `interop/second-impl/` reproduced all 485 byte for byte, but it is not independent.
 
 ## Verification evidence and remaining work
 

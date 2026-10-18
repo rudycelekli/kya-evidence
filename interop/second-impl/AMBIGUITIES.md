@@ -92,3 +92,23 @@ The new vectors were written from `docs/SPECIFICATION.md` and `docs/SCORING.md` 
 | D9 | `blockerCodes` must be known codes and agree with the failed critical checks | Length only | Full check |
 
 Still guesses no vector pins: input size and nesting bounds beyond the contract, a byte order mark, lone surrogate escapes, number spellings other than those the vectors use, and the tie-break for reporting `selectedRunId` among tied runs.
+
+## E. Contract version 2 (canonicalize, digest, verify-envelope, compare)
+
+Named "E" because section D above already exists (round 3). Written from `docs/SPECIFICATION.md` and the contract README only, before any `expected` member of the 205 new vectors was read. First run: all 205 new vectors passed, so the vectors exposed no disagreement. Same-team work, not independent review. The places where the text does not determine the behaviour and a choice was made anyway (the vectors do not pin them):
+
+| # | Where the text is silent | Choice made |
+| :-- | :--- | :--- |
+| E1 | The field rules of an incident payload (`kya.incident/v1`) are not in the specification, yet `digest` of `incident-signing-input` and `verify-envelope` of kind `incident` need them (the contract says only "a value that breaks the field rules of its record type is a refusal"). | Reused the grammar of the existing currency code: exactly `detailsDigest`, `id`, `kind`, `refId`, `reportedAt`, `schema`, `severity`, `subjectDigest`; `kind` report, resolution or appeal; `severity` low, medium, high or critical; `refId` null for a report and a different identifier for the others. |
+| E2 | "a `status`" in the compare field list does not say which type or values. | A string; any other string is `CHECKS_INCOMPLETE`, a non-string is a refusal. |
+| E3 | The compare list says an integer `weight` and an integer `score.earned`, with no range. | Any integer. Check entries are not required to carry `critical`; a `critical` that is not `true` does not count as a failed critical check in the `blockerCodes` cross-check. |
+| E4 | `blockerCodes` rules for compare: "the `blockerCodes` rules above" are in SCORING.md; whether `blockers` must then be an array is not said. | When `blockerCodes` is present `blockers` must be an array of the same length. A report without `blockerCodes` is not checked further. |
+| E5 | Whether the parse limits (depth 32, 100000 values) apply to the whole stdin object or only to the text given to `canonicalize`. | Both. Effect: a `digest` value or `assess` input nested more than 30 levels below `inputs` is refused, and an `assess` evidence array garbage entry deeper than that is a refusal, not a rejection. The 4 MiB process limit replaces the 1 MiB input limit for stdin. |
+| E6 | An unpaired surrogate formed across an escape and a raw character, for example a raw high surrogate followed by an escaped low one. | The raw-character rule looks only at raw characters, so this is accepted as a surrogate pair once decoded. |
+| E7 | `digest` for `policy` and `profile` when a policy names checks (`mandatoryMinimums`): there is no profile to check the names against. | The names are not checked (unbound validation). |
+| E8 | The order of step 5 checks (a `keyId` that is not a hash against a bad `publicKey`) | Both give `INVALID_KEY`, so the order is unobservable. |
+| E9 | The scalar-below-group-order rule is listed inside step 8 | Implemented as an explicit `S < L` test before the library verify, reported as `SIGNATURE_INVALID`. |
+
+Parser change: `parseStrict` was rewritten from the "Canonical form and strict parsing" text. It previously refused only `__proto__` (the text refuses `__proto__`, `prototype` and `constructor`), allowed depth 64 (text: 32), had no value-count, string-length or byte limits, accepted integer-valued numbers beyond 9007199254740991 and non-finite values only by accident of `JSON.parse`, and the adapter decoded stdin leniently (replacement characters instead of refusing ill-formed UTF-8). These now follow the text.
+
+Update after the specification text caught up: E1 (incident payload grammar), E2 and E4 (compare `status` string, `blockers` array), E5 (the whole stdin object is read by the strict parser, so stdin above 1,048,576 bytes is now refused; the earlier 4 MiB bound is gone from `adapter.mjs`) and E7 (`mandatoryMinimums` names are resolved only at assess time) are now stated in `docs/SPECIFICATION.md` and the contract README. My guessed incident grammar passed the 8 new `digest.incident-*` vectors unchanged. E3, E6, E8 and E9 remain unstated.

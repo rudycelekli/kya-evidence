@@ -8,7 +8,19 @@ Entries come from `git log` and the merged pull requests (#1 to #30) of the repo
 
 ## [Unreleased]
 
+### Added
+
+- Conformance contract version 2 (ADR-0034, status Proposed): four pure operations `canonicalize`, `digest`, `verify-envelope` and `compare` beside `assess` and `currency`, in `interop/impl-contract/` (reference adapter, `js-operations.mjs`), the vector generator, the harness and `interop/second-impl/ops.mjs`. The envelope and result schema strings stay `kya.impl-input/v1` and `kya.impl-result/v1`; the vectors file becomes `kya.assessment-vectors/v2` with a `contract` member; the 272 earlier vectors are unchanged byte for byte. 213 vectors added (83 refusals), 485 in total; the reference and the same-team second implementation pass all 485. Registry effect measured with the harness: 39 of 252 requirements `pass` (was 37), 213 `not-run`. No outside implementation has run any vector.
+
+### Clarified
+
+- SPECIFICATION CLARIFICATION (no behaviour change for any earlier vector): the specification now states the canonical form and strict parsing rules the reference already followed (refused member names `__proto__`, `prototype` and `constructor`; UTF-16 code unit order of member names; numbers judged by value with the 2^53-1 integer bound; the shortest round-trip number form; lowercase escapes; literal U+007F, U+2028 and U+2029; unpaired surrogate escapes kept; depth 32, 100000 values and 1 MiB bounds), that record digests are not domain separated (only the two signing inputs are), the one public key spelling and RFC 8032 point rules, the order of the envelope verification steps with eight failure codes, the field rules of an incident payload, and the comparison rules (reason codes in order, the evidence mode check, the shape checks on a report).
+- CONTRACT CLARIFICATION: the implementation contract said input of up to 4 MiB; the strict parser, and so the reference, always refused above 1 MiB. The text now says so.
+
 ### Changed
+
+- BEHAVIOR CHANGE in the alpha: `compareAssessments` now refuses (instead of comparing as equal by absence) a report that lacks a profile, evaluator or policy digest as a hash, a scope identifier, an evidence mode, a decision, an integer `score.earned` or well formed check entries. It is split into `describeComparison`, which names the first reason a pair cannot be compared. The second implementation's stdin parser now follows the written strict parsing rules (it refused one prototype name, allowed depth 64 and had no size bounds).
+- The harness accepts the version 2 operations and a vectors file of schema v1 or v2. For a refusal vector of a version 2 operation, the exact `unsupported` reply for that operation is `not-run`, not `fail`.
 
 - Assessment vectors grew from 111 to 272 (161 new, 71 of them refusals), written from the specification text before the reference was consulted: blocker order, scoring arithmetic, run recency, rejection reason precedence, public key strictness as proof key and trust anchor, strict parsing through a new `rawInput` vector field, field rules, principal binding, mandatory minimums and incident handling. Harness: `rawInput` and an empty `reasonContains`. Requirements passing in the harness report rose from 31 to 37 of 245. The writing exposed rules the reference enforced but the text did not state; they are now in `docs/SPECIFICATION.md` and `docs/SCORING.md` and the same-team second implementation was fixed against that text (it failed 26 of the 161 before). Nothing was tagged or published; no outside implementation has run the vectors.
 

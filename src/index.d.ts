@@ -36,6 +36,7 @@ export function verifyIncident(envelope:ReadonlyInput<IncidentEnvelope>):{payloa
 export function validateIncident(value:ReadonlyInput<Incident>):Incident;
 export function checkCurrency(assessment:ReadonlyInput<Assessment>,context:{manifest:ReadonlyInput<Manifest>;policy:ReadonlyInput<Policy>;now:string;incidents?:ReadonlyInput<IncidentEnvelope>[]}):CurrencyReport;
 export function compareAssessments(left:ReadonlyInput<Assessment>,right:ReadonlyInput<Assessment>):{schema:'kya.comparison/v1';left:string;right:string;scoreDelta:number;decisionChanged:boolean;measurement:string};
+export function describeComparison(left:ReadonlyInput<Assessment>,right:ReadonlyInput<Assessment>):{left:Assessment;right:Assessment;reason:'SCOPE_ID_DIFFERS'|'SCOPE_DIGEST_DIFFERS'|'PROFILE_DIFFERS'|'EVALUATOR_DIFFERS'|'POLICY_DIFFERS'|'EVIDENCE_MODE_DIFFERS'|'CHECK_POPULATION_DIFFERS'|'CHECKS_INCOMPLETE'|null};
 export function importDeclarations(format:'open-kya-alpha'|'a2a-1',value:unknown):Record<string,unknown>;
 export const DIMENSIONS:readonly Dimension[];
 export const SOURCES:readonly Source[];

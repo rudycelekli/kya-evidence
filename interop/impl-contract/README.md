@@ -1,4 +1,6 @@
-# KYA implementation contract v1
+# KYA implementation contract, version 2
+
+Contract version 2 adds four pure operations (`canonicalize`, `digest`, `verify-envelope`, `compare`) to the two of version 1 (`assess`, `currency`). It is a strict superset: the envelope schema stays `kya.impl-input/v1` and the result schema stays `kya.impl-result/v1`, the two version 1 operations are unchanged byte for byte, and an implementation that predates version 2 already replies `unsupported` to an operation it does not know (see the process rules), so it scores its version 1 vectors exactly as before and the new vectors are `not-run` for it, never `fail`. The version is carried by the vectors file (`kya.assessment-vectors/v2`, member `contract`), not by the envelope, so that older implementations keep working without a change.
 
 Any implementation of KYA assessment semantics, in any language, is **one command** that the harness runs once per vector.
 
@@ -12,20 +14,20 @@ The command is split on whitespace (single or double quotes group an argument) a
 
 | Rule | Value |
 | :--- | :--- |
-| Input | Exactly one JSON object on **stdin**, then EOF. UTF-8. At most 4 MiB. |
+| Input | Exactly one JSON object on **stdin**, then EOF. UTF-8 (ill-formed UTF-8 is a refusal). The harness sends at most 4 MiB, and the object is read by the strict parser of the specification ("Canonical form and strict parsing"), so its limits apply to the whole input: more than 1,048,576 bytes, nesting deeper than 32 or more than 100,000 values is a refusal. (An earlier text said "at most 4 MiB" and the reference already refused above 1 MiB; this states what was always so.) |
 | Output | Exactly one JSON object on **stdout**, then exit code **0**. At most 1 MiB (1,048,576 bytes). Anything else on stdout fails the vector. |
 | Strict JSON | Output must be a single strict JSON value: no duplicate object members, no trailing text. |
 | Refusal or crash | A **non-zero exit code**. Stdout is ignored. Messages go to stderr (the first line is shown in failures). |
 | Timeout | 15 s per vector by default (`--timeout-ms`). A timeout is a failure. |
 | Statelessness | Each vector is a fresh process. No state between vectors, no network, no clock: every time is in the input. |
-| Unsupported | An implementation that does not implement an operation exits 0 with `{"schema":"kya.impl-result/v1","operation":"<op>","unsupported":true}`. The vector is then **not-run**, never pass. This does not apply to a vector whose expected result is a refusal: an `unsupported` reply exits 0, so it is a **fail** there. Refuse with a non-zero exit instead. |
+| Unsupported | An implementation that does not implement an operation exits 0 with `{"schema":"kya.impl-result/v1","operation":"<op>","unsupported":true}`. The vector is then **not-run**, never pass. This does not apply to a vector of a version 1 operation (`assess`, `currency`) whose expected result is a refusal: an `unsupported` reply exits 0, so it is a **fail** there. Refuse with a non-zero exit instead. For a refusal vector of a version 2 operation, the exact reply `{"schema":"kya.impl-result/v1","operation":"<the vector's operation>","unsupported":true}` (those three members, operation echoed) is **not-run**, so that an implementation that predates version 2 is not marked as failing refusals it never claimed to implement; any other exit-0 reply is still a **fail**. |
 
 The harness does not give the vector ID, description, rationale or expected value to the command. Switching on input content to return memorised answers defeats the purpose; see the limits in [`docs/IMPLEMENTERS-GUIDE.md`](../../docs/IMPLEMENTERS-GUIDE.md).
 
 ## Input: `kya.impl-input/v1`
 
 ```json
-{ "schema": "kya.impl-input/v1", "operation": "assess" | "currency", "inputs": { ... } }
+{ "schema": "kya.impl-input/v1", "operation": "assess" | "currency" | "canonicalize" | "digest" | "verify-envelope" | "compare", "inputs": { ... } }
 ```
 
 `assess` inputs are the six assessment inputs of the specification:
@@ -84,6 +86,64 @@ Field semantics are those of [`docs/SCORING.md`](../../docs/SCORING.md) and [`do
 
 `triggers` are in firing order (clock-regression, subject-changed, policy-changed, subject-revoked, assessment-expired, assessment-aged, incident-open). `incidents.ignored` is sorted by `id` (null first) then `reason`, by UTF-16 code units. `resultDigest` is the SHA-256 of the canonical complete `kya.currency/v1` result.
 
+## Version 2 operations
+
+For every operation the `inputs` object has exactly the members listed, no more and no fewer, and each has the stated type; anything else is a refusal. The semantics are normative in `docs/SPECIFICATION.md` ("Canonical form and strict parsing", "Digests and signing inputs", "Envelope verification", "Comparison of assessments").
+
+### `canonicalize`
+
+```json
+{ "text": "<a JSON text, as a string>" }
+```
+
+Strictly parses `text` and writes its canonical form. Result:
+
+```json
+{ "schema": "kya.impl-result/v1", "operation": "canonicalize", "canonical": "<canonical text>", "sha256": "<64 hex of the UTF-8 bytes of canonical>" }
+```
+
+A text the strict parser refuses (duplicate or prototype members, trailing text, numbers outside the supported subset, depth or size limits, bad escapes) is a **refusal** (non-zero exit).
+
+### `digest`
+
+```json
+{ "artifact": "manifest | scope | profile | policy | evidence-signing-input | incident-signing-input", "value": { } }
+```
+
+Result: `{ "schema": "kya.impl-result/v1", "operation": "digest", "artifact": "<as given>", "preimage": "<exact text hashed>", "digest": "<64 hex>" }`. `value` is a manifest (`manifest`, `scope`), a profile, a policy, an evidence payload or an incident payload; a value that breaks the field rules of its record type is a refusal, as is an unknown `artifact`. Only the two signing input artifacts are domain separated.
+
+### `verify-envelope`
+
+```json
+{ "kind": "evidence | incident", "envelope": { } }
+```
+
+Result:
+
+```json
+{ "schema": "kya.impl-result/v1", "operation": "verify-envelope", "kind": "evidence", "valid": true, "failure": null, "keyId": "<64 hex>", "envelopeDigest": "<64 hex>", "signingInputSha256": "<64 hex>" }
+```
+
+When the envelope fails a step of the specification, `valid` is `false`, `failure` is the code of the first failing step (`MALFORMED_ENVELOPE`, `INVALID_PAYLOAD`, `MALFORMED_PROOF`, `UNSUPPORTED_ALGORITHM`, `INVALID_KEY`, `KEY_ID_MISMATCH`, `INVALID_SIGNATURE_ENCODING`, `SIGNATURE_INVALID`) and `keyId`, `envelopeDigest` and `signingInputSha256` are `null`. An envelope that is not valid is a **result**, not a refusal; only an unknown `kind` or a malformed `inputs` object is a refusal. `valid: true` says nothing about trust.
+
+### `compare`
+
+```json
+{ "left": { }, "right": { } }
+```
+
+Both are complete `kya.assessment/v1` reports. A report that is not a well-formed assessment for comparison (checksum, `blockerCodes` rules, missing or mistyped members, a legacy report without a full-scope digest) is a refusal. Otherwise:
+
+```json
+{ "schema": "kya.impl-result/v1", "operation": "compare", "comparable": true, "reason": null, "left": "<report digest>", "right": "<report digest>", "scoreDelta": 0, "decisionChanged": false, "measurement": "same-policy evidence comparison; not a causal improvement claim" }
+```
+
+When the pair is not comparable, `comparable` is `false`, `reason` is the first failing code (`SCOPE_ID_DIFFERS`, `SCOPE_DIGEST_DIFFERS`, `PROFILE_DIFFERS`, `EVALUATOR_DIFFERS`, `POLICY_DIFFERS`, `EVIDENCE_MODE_DIFFERS`, `CHECK_POPULATION_DIFFERS`, `CHECKS_INCOMPLETE`) and `scoreDelta`, `decisionChanged` and `measurement` are `null`; `left` and `right` are still the two report digests.
+
+### What the new vectors cannot show
+
+Size limits (a 1 MiB input is too large to commit) and the 100000 value bound are not exercised by a vector, an implementation in a language whose number formatting differs from ECMAScript has to implement the shortest round-trip rule itself, and the `S` below the group order rule is exercised only through one vector whose signature has `S` replaced by `S + L`.
+
 ## How the harness compares
 
 1. The result must equal the vector's `expected` **key for key**: a missing key, an extra key or any value difference fails, and the first differing JSON path is reported (for example `$.score.earned: expected 800, got 1000`).
@@ -105,4 +165,4 @@ The specification does not state these; the vectors do, and a second implementat
 
 The harness emits a `kya.conformance-report/v1` through `src/conformance-report`: evidence class `portable-vector`, executed IDs are vector IDs. A requirement is `pass` only if **all** vectors citing it passed, `fail` if any failed, otherwise `not-run`. A requirement no vector cites is `not-run`. The report is unsigned and says nothing about who ran it.
 
-`js-reference.mjs` implements this contract with the JavaScript reference. It exists to prove the harness and to fix the result shape; it is not an independent implementation.
+`js-reference.mjs` implements this contract (version 2) with the JavaScript reference through `js-operations.mjs`. It exists to prove the harness and to fix the result shape; it is not an independent implementation.
