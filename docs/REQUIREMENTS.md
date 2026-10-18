@@ -253,5 +253,10 @@ Each requirement is traced to at least one test that must exist exactly once; th
 | KYA-SCR-014 | MUST | The benchmark documentation MUST tell a reviewer how to reproduce a card and MUST repeat the non-claim wording and the same-team boundary of the second verifier. | `kya-score-second-verifier.test.mjs` |
 | KYA-MET-001 | MUST | An assessment MUST be treated as not current at the instant equal to its `validUntil` and after it, by `assess` and by the currency check alike. | `assessment.test.mjs` |
 | KYA-MET-002 | MUST | A check whose receipt is quarantined as a duplicate in the selected run MUST be unproven, and replaying a failing receipt MUST NOT let a sibling pass on the same check count toward the score. | `metamorphic.test.mjs` |
+| KYA-FRL-001 | MUST | Every record has exactly the members its schema lists, and the identifier, text, hash, timestamp, range, enumeration, uniqueness and containment rules stated in the Field rules paragraph of the specification MUST be enforced as refusals of the whole input, except that an invalid evidence or incident entry is a rejection. | `spec-field-rules.test.mjs` |
+| KYA-DIM-001 | MUST | An assessment MUST list the six fixed dimensions in the stated order, and a dimension with no frozen checks MUST report zero for earned, possible, upper bound, coverage and weight. | `spec-field-rules.test.mjs` |
+| KYA-RUN-005 | MUST | The issuer, repeated-check and duplicate-ID rules MUST be evaluated over the bound receipts, including those later rejected, an evidence ID MUST be duplicated across the whole bundle, and eligibility reasons MUST take precedence over run exclusion reasons for every run. | `spec-field-rules.test.mjs` |
+| KYA-VEC-010 | MUST | A vector MUST carry exactly one of `inputs` and `rawInput`, the harness MUST send `rawInput` verbatim as stdin, and an empty `reasonContains` MUST accept any non-empty reason and refuse a missing or empty one. | `assessment-vectors.test.mjs` |
+| KYA-VEC-011 | SHOULD | Vectors that restate one input in another spelling (member order, escapes, number spellings, indentation) SHOULD expect exactly the result of the plain spelling. | `assessment-vectors.test.mjs` |
 
-Registry digest: `5487cf9fdbbf0072d51a4f69916a69bf0eda99829563583d11e058757e30ad0c`
+Registry digest: `8ae1f0e01f32ab84722ba03b56a75e2593f2f7f234417fb47d25f0c2adfffd22`

@@ -14,11 +14,15 @@ This was written by the same team, in the same repository, by an agent that has 
 
 | Measure | Value |
 | :--- | :--- |
-| Vectors, decision and every semantic field (`--semantic-only`) | 111 of 111 |
-| Vectors, byte-exact including `reportDigest` and `resultDigest` | 111 of 111 |
+| Vectors, decision and every semantic field (`--semantic-only`) | 272 of 272 |
+| Vectors, byte-exact including `reportDigest` and `resultDigest` | 272 of 272 |
 | Digest-only failures | 0 |
 
 After the `spec-gaps-2` texts (rounds 1 and 2) were implemented, and only those texts, every vector passes byte for byte. This is still a same-team second implementation: passing the published vectors shows the written text plus the vectors are enough to rebuild the reference output for these vectors, not that the specification is complete or that the expected values are right. Behaviour that no vector pins is still guesswork (`AMBIGUITIES.md` sections B and C).
+
+## Round 3: fix lane 11
+
+The vector file grew from 111 to 272 vectors, 161 of them written from the specification text before the reference was consulted. Before this round the implementation failed 26 of the 161 (four dimension digests, nine field rule refusals, six run rule cases, five reason precedence cases, two blocker code checks). It now passes all 272 byte for byte. The fixes correspond to eight rules that the reference enforced but the text did not state clearly; those rules are now in `docs/SPECIFICATION.md` ("Field rules" and the run rules paragraph) and `docs/SCORING.md` (dimension list, `blockerCodes` cross-checks), and this implementation was changed against that text. The list is in `docs/IMPLEMENTERS-GUIDE.md`, "Spec gaps found while writing the vectors", items 6 to 13. Same-team work; not independent review.
 
 ## Sources used
 
@@ -41,4 +45,4 @@ The shape of the `kya.assessment/v1` report (field names, dimension fields, limi
 
 ## Tests
 
-`test/second-impl.test.mjs` runs the harness against the adapter. It asserts 111 of 111 semantic passes, 12 refusals, and that every non-passing vector fails only on a digest field with the byte-exact count (floor 111) not regressing. It deliberately does not assert that all vectors pass byte for byte, because they do not.
+`test/second-impl.test.mjs` runs the harness against the adapter. It asserts a semantic pass on every published vector (272 of 272 at this writing), a refusal on every refusal vector (83), and that the byte-exact count equals the published count. It reads the count from the vectors file, so a vector added later is held to the same bar.

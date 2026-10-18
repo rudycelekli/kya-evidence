@@ -3,6 +3,7 @@ import { Refusal, digest, isTs, isObj, HEX64, exactKeys, isId, ms, validManifest
 
 const refuse = m => { throw new Refusal(m); };
 const DECISIONS = ['qualified', 'insufficient-evidence', 'blocked', 'expired', 'revoked'];
+const BLOCKER_CODES = ['SUBJECT_REVOKED', 'SUBJECT_EXPIRED', 'SUBJECT_NOT_YET_VALID', 'CRITICAL_CHECK_FAILED', 'CRITICAL_CHECK_UNPROVEN', 'COVERAGE_BELOW_POLICY', 'INDEPENDENT_COVERAGE_BELOW_POLICY', 'SCORE_BELOW_POLICY', 'AMBIGUOUS_RUNS', 'RUN_CONFLICT', 'RUN_INVALIDATED', 'MIXED_RUN_ISSUERS', 'REPEATED_RUN_CHECKS', 'NO_SCORED_OBSERVATIONS', 'NO_OBSERVED_CHECKS', 'PRINCIPAL_UNBOUND', 'MANDATORY_MINIMUM_NOT_MET', 'MANDATORY_MINIMUM_UNPROVEN'];
 const SEVERITIES = ['low', 'medium', 'high', 'critical'];
 const INCIDENT_KEYS = ['detailsDigest', 'id', 'kind', 'refId', 'reportedAt', 'schema', 'severity', 'subjectDigest'];
 
@@ -17,7 +18,16 @@ function checkAssessment(a) {
   if (ms(a.validUntil) < ms(a.assessedAt)) refuse('assessment validUntil precedes assessedAt');
   if (!DECISIONS.includes(a.decision)) refuse('assessment decision');
   if (!Array.isArray(a.blockers)) refuse('assessment blockers');
-  if (a.blockerCodes !== undefined && (!Array.isArray(a.blockerCodes) || a.blockerCodes.length !== a.blockers.length)) refuse('assessment blockerCodes');
+  if (a.blockerCodes !== undefined) {
+    const c = a.blockerCodes;
+    if (!Array.isArray(c) || c.length !== a.blockers.length || c.some(x => !BLOCKER_CODES.includes(x))) refuse('assessment blockerCodes');
+    if (a.decision === 'qualified' && c.length) refuse('qualified assessment carries blocker codes');
+    // Unless a subject code is present, the critical failure codes match the failed critical checks of the report itself.
+    if (Array.isArray(a.checks) && !c.some(x => ['SUBJECT_REVOKED', 'SUBJECT_EXPIRED', 'SUBJECT_NOT_YET_VALID'].includes(x))) {
+      const failed = a.checks.filter(x => isObj(x) && x.critical === true && x.status === 'fail').length;
+      if (c.filter(x => x === 'CRITICAL_CHECK_FAILED').length !== failed) refuse('blocker codes contradict the critical failures');
+    }
+  }
   if (a.decision === 'qualified' && a.blockers.length) refuse('qualified assessment carries blockers');
 }
 

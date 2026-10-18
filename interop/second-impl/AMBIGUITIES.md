@@ -4,7 +4,7 @@ Each entry: what was unspecified, how it was resolved (guess, or a vector), and 
 
 ## A. Byte-exact failures after round 2 (none)
 
-After merging the round 2 `spec-gaps-2` texts (trigger detail strings, the four `limits` strings, the limitations list with the fixture string, the PEM exemption with a 2000 character bound, the wording-table order rule, the `SCORE_BELOW_POLICY` rule, `<status>` equal to `unknown`, and no 128 character cut) and applying only them: 111 of 111 vectors pass byte for byte and 111 of 111 pass semantically. The earlier gaps A1 (fixture limitation string), A2 (trigger detail), A3 (limits strings) and A4 (member set of the currency result) are closed by the text; the layout member set was confirmed by the digests now matching.
+After merging the round 2 `spec-gaps-2` texts (trigger detail strings, the four `limits` strings, the limitations list with the fixture string, the PEM exemption with a 2000 character bound, the wording-table order rule, the `SCORE_BELOW_POLICY` rule, `<status>` equal to `unknown`, and no 128 character cut) and applying only them: 111 of 111 vectors pass byte for byte and 111 of 111 pass semantically. (Round 3 later raised the vector count to 272; see section D.) The earlier gaps A1 (fixture limitation string), A2 (trigger detail), A3 (limits strings) and A4 (member set of the currency result) are closed by the text; the layout member set was confirmed by the digests now matching.
 
 For this vector set the documented text closes the digest gap. That shows the text is sufficient for these 111 vectors, not that it is complete: wording for paths no vector reaches (for example `NO_OBSERVED_CHECKS`, which is unreachable) was not exercised, and sections B and C below are still guesses or vector-resolved choices for behaviour the text leaves open.
 
@@ -74,3 +74,21 @@ New gaps found while implementing the texts:
 | C12 | `revokedSubjectDigests` is tested against the assessed subject digest (trigger `subject-revoked`), independently of `subject-changed`. | the current manifest's digest |
 | C13 | Incident payload grammar: id pattern, `refId` must be a different identifier for resolution and appeal and `null` for report, severities `low`, `medium`, `high`, `critical`. | the contract only shows examples |
 | C14 | Duplicate members in stdin JSON, prototype keys and nesting deeper than 64 are refused. | the limits are mine |
+
+## D. Round 3 (fix lane 11): 161 new vectors, 26 failures, all closed by text and code
+
+The new vectors were written from `docs/SPECIFICATION.md` and `docs/SCORING.md` and then run against this implementation as it stood before the round. It failed 26 of 161; the JavaScript reference failed none. Each row is a rule the reference enforced and the text did not state (or stated only in the registry). The text was extended first, then this implementation was changed against the text.
+
+| # | Rule | Before | After |
+| :-- | :--- | :--- | :--- |
+| D1 | The assessment lists the six fixed dimensions in order, zeros for an unused one | Listed only used dimensions (4 digest failures) | Fixed list |
+| D2 | Identifier fields use the identifier grammar (agent ID, principal ID, scope ID, accountable party reference, tool ID, permissions) | Accepted any text of length 512 | Identifier grammar and length |
+| D3 | Tool IDs are unique; approval permissions are inside the scope's permissions; list bounds | Not checked | Checked |
+| D4 | A trust anchor ID equals the SHA-256 of the key's DER SPKI; a check dimension is one of six | Not checked | Checked |
+| D5 | The accountable party reference differs from the agent ID without regard to case | Exact comparison | Case-insensitive |
+| D6 | Issuer, repeated-check and duplicate-ID rules use all bound receipts of the selected run, including later rejected ones | Used survivors only | Bound receipts |
+| D7 | Evidence IDs are duplicated across the whole bundle, in any run | Selected run only | Whole bundle |
+| D8 | Revocation, expiry and freshness reasons apply to receipts of older and tied runs | Run exclusion reason reported | Eligibility reason first |
+| D9 | `blockerCodes` must be known codes and agree with the failed critical checks | Length only | Full check |
+
+Still guesses no vector pins: input size and nesting bounds beyond the contract, a byte order mark, lone surrogate escapes, number spellings other than those the vectors use, and the tie-break for reporting `selectedRunId` among tied runs.
