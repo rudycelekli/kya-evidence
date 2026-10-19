@@ -1,9 +1,27 @@
 // verify-credential (contract version 2) of the second implementation, written from "Credential verification" in
 // docs/SPECIFICATION.md. Team-built, NOT independent.
 import { createPublicKey, verify as edVerify } from 'node:crypto';
-import { gunzipSync } from 'node:zlib';
+import { inflateRawSync } from 'node:zlib';
 import { Refusal, canonical, digest, sha256hex, parseStrict, isObj, isTs, ms, HEX64, validPolicy, strictPublicKey } from './kya2.mjs';
 import { checkBlockerCodes } from './ops.mjs';
+
+// One RFC 1952 member and nothing after it. node's gunzipSync joins concatenated members and drops trailing zero bytes, which other
+// decoders refuse, so it is not used. Written here from the specification text, not shared with the reference.
+const CRC_T = Array.from({ length: 256 }, (_, n) => { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1; return c >>> 0; });
+const crcOf = buf => { let c = 0xffffffff; for (const x of buf) c = CRC_T[(c ^ x) & 0xff] ^ (c >>> 8); return (c ^ 0xffffffff) >>> 0; };
+function gunzipOne(b, max) {
+  if (b.length < 18 || b[0] !== 0x1f || b[1] !== 0x8b || b[2] !== 8 || (b[3] & 0xe0)) throw Error('gzip header');
+  let p = 10;
+  if (b[3] & 4) { if (p + 2 > b.length) throw Error('gzip'); p += 2 + b.readUInt16LE(p); }
+  for (const f of [8, 16]) if (b[3] & f) { const z = b.indexOf(0, p); if (z < 0) throw Error('gzip'); p = z + 1; }
+  if (b[3] & 2) { if (p + 2 > b.length || (crcOf(b.subarray(0, p)) & 0xffff) !== b.readUInt16LE(p)) throw Error('gzip'); p += 2; }
+  if (p > b.length - 8) throw Error('gzip');
+  const body = b.subarray(p), r = inflateRawSync(body, { info: true, maxOutputLength: max });
+  if (body.length - r.engine.bytesWritten !== 8) throw Error('gzip trailing');
+  const t = body.subarray(r.engine.bytesWritten);
+  if (t.readUInt32LE(0) !== crcOf(r.buffer) || t.readUInt32LE(4) !== r.buffer.length % 4294967296) throw Error('gzip trailer');
+  return r.buffer;
+}
 
 const refuse = m => { throw new Refusal(m); };
 const RESULT = 'kya.impl-result/v1';
@@ -187,7 +205,7 @@ function statusCheck(entry, token, issuer, now) {
   const gz = b64uDecode(enc.slice(1));
   if (!gz) return { code: 'STATUS_LIST_INVALID' };
   let bits;
-  try { bits = gunzipSync(gz, { maxOutputLength: 2097152 }); } catch { return { code: 'STATUS_LIST_INVALID' }; }
+  try { bits = gunzipOne(gz, 2097152); } catch { return { code: 'STATUS_LIST_INVALID' }; }
   if (bits.length < 16384) return { code: 'STATUS_LIST_LENGTH_ERROR' };
   const index = BigInt(entry.statusListIndex);
   if (index >= BigInt(bits.length) * 8n) return { code: 'RANGE_ERROR' };

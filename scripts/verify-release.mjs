@@ -1,4 +1,4 @@
-import { readFile } from 'node:fs/promises';
+import { readBounded } from './lib/bounded-read.mjs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseJson } from '../src/index.mjs';
@@ -15,6 +15,6 @@ for(let i=0;i<argv.length;i++){
   else{process.stderr.write('verify-release: usage: node scripts/verify-release.mjs [--expect-commit SHA]\n');process.exit(1);}
 }
 const out=fileURLToPath(new URL('../dist/',import.meta.url));
-const r=parseJson(await readFile(join(out,'release-receipt.json'),'utf8'));
+const r=parseJson(await readBounded(join(out,'release-receipt.json'),'utf8'));
 if(typeof r.archive!=='string'||!/^[A-Za-z0-9][A-Za-z0-9._-]{0,127}\.tgz$/.test(r.archive))throw Error('Unsafe archive filename');
-console.log(JSON.stringify(verifyReleaseReceipt(r,await readFile(join(out,r.archive)),{expectCommit,bindPackage:true})));
+console.log(JSON.stringify(verifyReleaseReceipt(r,await readBounded(join(out,r.archive),undefined,20_000_000),{expectCommit,bindPackage:true})));

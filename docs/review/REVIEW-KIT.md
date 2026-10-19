@@ -163,12 +163,12 @@ Every row is recomputed by `node scripts/review-kit-check.mjs` from the reposito
 | `vectors.verify-score-card` | `72` | operation `verify-score-card` |
 | `vectors.compare-score-cards` | `19` | operation `compare-score-cards` |
 | `mutationControls` | `87` | `node scripts/mutation-check.mjs --preflight`, field `controls` |
-| `testFiles` | `84` | files matching `test/*.test.mjs` |
-| `testDeclarations` | `1006` | lines that begin with `test(` in those files. The four `test/property-*.test.mjs` files declare 38 seeded properties through a helper and contribute no such line. |
+| `testFiles` | `85` | files matching `test/*.test.mjs` |
+| `testDeclarations` | `1031` | lines that begin with `test(` in those files. The four `test/property-*.test.mjs` files declare 38 seeded properties through a helper and contribute no such line. |
 | `adrs` | `35` | files `docs/adr/NNNN-*.md` (20 marked Implemented and 15 Proposed in their status lines when counted) |
 | `coreProfileChecks` | `18` | length of `checks` in `profiles/core-v1.json` |
-| `srcFiles` | `88` | `.mjs` files under `src/` |
-| `srcLines` | `5400` | newline characters in those files. The code is dense: long lines, so line count understates size. |
+| `srcFiles` | `89` | `.mjs` files under `src/` |
+| `srcLines` | `5434` | newline characters in those files. The code is dense: long lines, so line count understates size. |
 | `evaluatorDigestPinned` | `d0bc7f7840e5ddf1a71eb3b9ac92e5c4d0be5d156eea2c6f4f909f7066b5e31b` | `evidence/evaluator-identity.json`; the checker also requires it to equal the digest computed from source |
 | `harness.vectorsPass` | `799` | `node scripts/run-vectors.mjs --impl "node interop/impl-contract/js-reference.mjs"`, field `vectors.pass` |
 | `harness.vectorsFail` | `0` | same command, field `vectors.fail` |

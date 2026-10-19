@@ -1,6 +1,6 @@
 import { createHmac, createPublicKey } from 'node:crypto';
-import { gunzipSync } from 'node:zlib';
 import { gzipDeterministic } from '../shared/gzip-deterministic.mjs';
+import { gunzipStrict } from '../shared/gunzip-strict.mjs';
 import { hash, validatePolicy } from '../identity/domain/services/validation.mjs';
 import { b64u } from './encoding.mjs';
 import { fail, signCompact, privateKeyObject, VcBridgeError } from './jws.mjs';
@@ -32,7 +32,7 @@ export function decodeList(encoded, { maxBytes = DEFAULT_MAX_DECODED_BYTES } = {
   if (encoded[0] !== 'u') fail('STATUS_LIST_INVALID', 'encodedList must use multibase prefix u (base64url)');
   let packed;
   try { packed = b64u.decode(encoded.slice(1)); } catch (e) { return fail('STATUS_LIST_INVALID', 'encodedList has invalid base64url encoding'); }
-  try { return Uint8Array.from(gunzipSync(packed, { maxOutputLength: maxBytes })); }
+  try { return Uint8Array.from(gunzipStrict(packed, { maxBytes })); }
   catch (e) {
     if (e?.code === 'ERR_BUFFER_TOO_LARGE' || /larger than|exceeds/i.test(e?.message ?? '')) fail('STATUS_LIST_INVALID', `Decoded status list exceeds ${maxBytes} bytes`);
     return fail('STATUS_LIST_INVALID', 'encodedList is not valid gzip data');
@@ -89,7 +89,8 @@ export function checkStatus(listJwt, entry, { now, expectedIssuerKeys = [], mini
   if (ttl !== undefined && checkTime(now, 'now') >= Date.parse(c.validFrom) + ttl) fail('STATUS_LIST_EXPIRED', 'Status list ttl has elapsed; refetch a fresh list');
   if (!c.type?.includes?.('BitstringStatusListCredential') || c.credentialSubject?.type !== 'BitstringStatusList') fail('STATUS_VERIFICATION_ERROR', 'Not a BitstringStatusListCredential');
   const url = expectedUrl ?? entry.statusListCredential;
-  if (c.id !== url) fail('STATUS_VERIFICATION_ERROR', 'Status list credential id differs from the entry statusListCredential URL');
+  // Two missing values must never read as equal: an entry without a URL and a list without an id would otherwise match.
+  if (typeof url !== 'string' || typeof c.id !== 'string' || c.id !== url) fail('STATUS_VERIFICATION_ERROR', 'Status list credential id differs from the entry statusListCredential URL');
   const purposes = [].concat(c.credentialSubject.statusPurpose);
   if (!purposes.includes(entry.statusPurpose)) fail('STATUS_VERIFICATION_ERROR', 'Entry purpose is not provided by this status list');
   const bits = wrap(() => decodeList(c.credentialSubject.encodedList, { maxBytes: maxDecodedBytes }));
