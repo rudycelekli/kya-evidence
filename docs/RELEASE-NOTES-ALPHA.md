@@ -1,6 +1,6 @@
 # KYA Evidence 0.1.0-alpha.4: launch note
 
-Status: alpha, built from a checkout. Nothing is published: there is no npm package, no git tag and no GitHub release yet. `package.json` reads `0.1.0-alpha.4`. This repository carries 292 traced requirements, 799 conformance vectors across nine operations, 16 frozen controls and 87 mutation controls. Counts change as the repository does; `node scripts/review-kit-check.mjs --print` prints the current values and no test count is quoted here.
+Status: alpha, built from a checkout. Nothing is published: there is no npm package, no git tag and no GitHub release yet. `package.json` reads `0.1.0-alpha.4`. This repository carries 301 traced requirements, 799 conformance vectors across nine operations, 16 frozen controls and 87 mutation controls. Counts change as the repository does; `node scripts/review-kit-check.mjs --print` prints the current values and no test count is quoted here.
 
 ## What this is
 

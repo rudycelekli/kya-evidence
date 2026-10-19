@@ -8,10 +8,13 @@ import { fileURLToPath } from 'node:url';
 import { createHash } from 'node:crypto';
 import { runVectors } from '../scripts/run-vectors.mjs';
 
-// interop/python-impl/adapter.py implements four of the nine contract operations in Python 3 with the standard
-// library only, including Ed25519 verification written from RFC 8032. It was written from the specification text,
-// the contract README and ADR-0034, then run against the vectors. It is a same-team implementation in a different
-// language, not outside review. The other five operations answer unsupported and so are not-run.
+// interop/python-impl/adapter.py implements six of the nine contract operations in Python 3 with the standard
+// library only, including Ed25519 verification written from RFC 8032. canonicalize, digest, verify-envelope and
+// compare were written first; assess and currency were added in a second round, from the specification text, the
+// scoring document, the implementers guide and the contract README, then run against the vectors. It is a
+// same-team implementation in a different language, not outside review. The other three operations
+// (verify-credential, verify-score-card, compare-score-cards) answer unsupported and so are not-run. The title of
+// the unsupported test below still says five because the registry traces tests by exact title.
 const ROOT = fileURLToPath(new URL('../', import.meta.url));
 const ADAPTER = join(ROOT, 'interop/python-impl/adapter.py');
 const VECTORS = join(ROOT, 'evidence/assessment-vectors.json');
@@ -19,8 +22,8 @@ const probe = spawnSync('python3', ['--version'], { encoding: 'utf8', timeout: 2
 const hasPython = !probe.error && probe.status === 0;
 const SKIP = !hasPython && 'Python 3 is optional; unavailable on this host, so the Python implementation was NOT run';
 
-const IMPLEMENTED = { canonicalize: 72, digest: 38, 'verify-envelope': 68, compare: 35 };
-const UNSUPPORTED = ['assess', 'currency', 'verify-credential', 'verify-score-card', 'compare-score-cards'];
+const IMPLEMENTED = { canonicalize: 72, digest: 38, 'verify-envelope': 68, compare: 35, assess: 212, currency: 60 };
+const UNSUPPORTED = ['verify-credential', 'verify-score-card', 'compare-score-cards'];
 const file = JSON.parse(readFileSync(VECTORS, 'utf8'));
 
 // Every vector of the four implemented operations, plus up to four vectors per other operation (non-refusals first,
@@ -71,6 +74,15 @@ test('python passes every compare vector through the harness', { skip: SKIP }, (
   assert.deepEqual(counts('compare'), { pass: 35 });
 });
 
+test('python passes every assess vector through the harness', { skip: SKIP }, () => {
+  assert.deepEqual(counts('assess'), { pass: 212 });
+});
+
+test('python passes every currency vector through the harness', { skip: SKIP }, () => {
+  assert.deepEqual(counts('currency'), { pass: 60 });
+});
+
+// The title says five for the registry; the operations Python does not implement are now the three of UNSUPPORTED.
 test('python answers unsupported for the five operations it does not implement so the harness records not-run', { skip: SKIP }, () => {
   for (const op of UNSUPPORTED) assert.deepEqual(counts(op), { unsupported: 3 }, op);
 });
@@ -93,7 +105,7 @@ test('python refuses input that the strict parser refuses before it looks at the
   assert.notEqual(ill.status, 0);
 });
 
-const STDLIB = new Set(['sys', 're', 'json', 'hashlib', 'base64', 'binascii']);
+const STDLIB = new Set(['sys', 're', 'json', 'hashlib', 'base64', 'binascii', 'calendar', 'time']);
 const SOURCE = readFileSync(ADAPTER, 'utf8');
 
 test('the python source imports only standard library modules', () => {
@@ -199,4 +211,76 @@ test('python and the reference refuse a signature that satisfies only the cofact
   const [py2, js2] = both('verify-envelope', honest);
   assert.equal(JSON.parse(py2.stdout).valid, true);
   assert.deepEqual(JSON.parse(py2.stdout), JSON.parse(js2.stdout));
+});
+
+// Free text for a record that never passed shape and signature validation is implementation specific by design, so the
+// reason (and the digest that covers it) is masked before two implementations are compared.
+function maskFree(text) {
+  const o = JSON.parse(text);
+  let masked = false;
+  for (const list of [o.rejectedEvidence, o.incidents && o.incidents.ignored]) {
+    if (Array.isArray(list)) for (const e of list) if (e.id === null) { e.reason = 'free text'; masked = true; }
+  }
+  if (masked) { delete o.reportDigest; delete o.resultDigest; }
+  return o;
+}
+const sameMasked = (op, inputs) => {
+  const [py, js] = both(op, inputs);
+  assert.equal(py.status === 0, js.status === 0, 'python status ' + py.status + ' reference status ' + js.status);
+  if (py.status === 0) assert.deepEqual(maskFree(py.stdout), maskFree(js.stdout));
+  return py.status === 0;
+};
+const inputsOf = id => structuredClone(file.vectors.find(v => v.id === id).inputs);
+
+test('python and the reference agree at the freshness boundary of a receipt and on the validity bound of an assessment', { skip: SKIP }, () => {
+  const base = inputsOf('assess.qualified-all-pass-runtime');
+  const at = Date.parse(base.now);
+  const ages = base.evidence.map(e => (at - Date.parse(e.payload.observedAt)) / 1000);
+  const oldest = Math.max(...ages);
+  assert.ok(Number.isInteger(oldest) && oldest > 2);
+  for (const limit of [oldest - 1, oldest, oldest + 1]) {
+    const i = structuredClone(base);
+    i.policy.maxEvidenceAgeSeconds = limit;
+    assert.equal(sameMasked('assess', i), true);
+  }
+  const aged = structuredClone(base);
+  aged.policy.maxAssessmentAgeSeconds = 60;
+  assert.equal(sameMasked('assess', aged), true);
+  const result = JSON.parse(both('assess', aged)[0].stdout);
+  assert.equal(result.validUntil, JSON.parse(both('assess', base)[0].stdout).validUntil);
+});
+
+test('python and the reference agree on the evidence bundle digest with entries that are not envelopes and on the entry bounds', { skip: SKIP }, () => {
+  const base = inputsOf('assess.qualified-all-pass-runtime');
+  for (const junk of [null, 5, 'x', [], {}, { payload: 1, proof: 2 }, [1, [2]], 1.5]) {
+    const i = structuredClone(base);
+    i.evidence.splice(2, 0, junk);
+    assert.equal(sameMasked('assess', i), true);
+  }
+  const many = structuredClone(base);
+  many.evidence = new Array(4097).fill(null);
+  assert.equal(sameMasked('assess', many), false);
+  const few = structuredClone(base);
+  few.evidence = new Array(4096).fill(null);
+  assert.equal(sameMasked('assess', few), true);
+  const cur = inputsOf('currency.current-and-reliable');
+  cur.incidents = new Array(1025).fill(null);
+  assert.equal(sameMasked('currency', cur), false);
+  cur.incidents = new Array(1024).fill(null);
+  assert.equal(sameMasked('currency', cur), true);
+});
+
+test('python and the reference agree on incident handling when records are reordered duplicated or moved in time', { skip: SKIP }, () => {
+  const withIncidents = file.vectors.filter(v => v.operation === 'currency' && v.inputs && Array.isArray(v.inputs.incidents) && v.inputs.incidents.length > 0 && typeof v.inputs.now === 'string');
+  assert.ok(withIncidents.length >= 20);
+  for (const v of withIncidents.filter((_, i) => i % 2 === 0)) {
+    const rev = structuredClone(v.inputs); rev.incidents.reverse();
+    assert.equal(sameMasked('currency', rev), true, v.id + ' reversed');
+    const dup = structuredClone(v.inputs); dup.incidents.push(structuredClone(dup.incidents[0]));
+    assert.equal(sameMasked('currency', dup), true, v.id + ' duplicated');
+    const early = structuredClone(v.inputs); early.now = new Date(Date.parse(early.now) - 86400000).toISOString();
+    assert.equal(sameMasked('currency', early), true, v.id + ' earlier');
+    const late = structuredClone(v.inputs); late.now = new Date(Date.parse(late.now) + 7 * 86400000).toISOString();
+    assert.equal(sameMasked('currency', late), true, v.id + ' later');
+  }
 });

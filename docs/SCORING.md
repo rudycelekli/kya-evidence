@@ -85,7 +85,7 @@ The order of the wording table is the normative blocker order; the order of the 
 
 Order and short circuit: a revoked subject yields only `SUBJECT_REVOKED`; an expired or not-yet-valid subject yields only its own code. Otherwise a critical failure yields only `CRITICAL_CHECK_FAILED` entries and suppresses the insufficiency blockers below it. When no critical check failed, the insufficiency blockers appear in table order from `CRITICAL_CHECK_UNPROVEN` through `NO_SCORED_OBSERVATIONS`, or `SCORE_BELOW_POLICY` for a sufficiently observed result. Mandatory-minimum entries are appended after those, and `NO_OBSERVED_CHECKS` last.
 
-`evidenceBundleDigest` is the digest of the array of the captured evidence envelopes' digests, in input order.
+`evidenceBundleDigest` is the digest of the array of the captured evidence envelopes' digests, in input order: one digest for every entry of the supplied evidence array, each the digest of that entry as supplied, whether or not it is a valid envelope. The layout of the report, the `validUntil` rule, the boundary comparisons against `now` and the binary64 rounding of coverage are in `docs/SPECIFICATION.md` ("Assessment report layout and arithmetic").
 
 ## Mandatory minimums
 

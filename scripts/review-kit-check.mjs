@@ -1,5 +1,5 @@
-import { readFileSync, existsSync, readdirSync, statSync } from 'node:fs';
-import { join, dirname } from 'node:path';
+import { readFileSync, existsSync, readdirSync, statSync, realpathSync } from 'node:fs';
+import { join, dirname, relative, sep, isAbsolute } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { spawnSync } from 'node:child_process';
 import { isMain } from './lib/is-main.mjs';
@@ -17,6 +17,14 @@ const TOP = /^(?:src|test|scripts|docs|evidence|interop|profiles|examples|schema
 const TOP_FILES = new Set(['README.md', 'SECURITY.md', 'CHANGELOG.md', 'CONTRIBUTING.md', 'AGENTS.md', 'LICENSE', 'NOTICE', 'package.json', 'DESIGN.md', 'PRODUCT.md']);
 
 const read = (root, p) => readFileSync(join(root, p), 'utf8');
+// A path a kit names counts as present only when it is inside the checkout once ".." and symbolic links are resolved: a kit that
+// cites docs/../../x must not pass because some file exists outside the repository.
+function presentInside(root, rel) {
+  try {
+    const base = realpathSync(root), real = realpathSync(join(root, rel)), r = relative(base, real);
+    return r === '' || (!r.startsWith('..' + sep) && r !== '..' && !isAbsolute(r));
+  } catch { return false; }
+}
 function walk(dir, ext, out = []) {
   for (const e of readdirSync(dir, { withFileTypes: true })) {
     const p = join(dir, e.name);
@@ -82,7 +90,7 @@ export function parseNumbers(text) {
 
 function commandsIn(text) {
   const out = [];
-  for (const m of text.matchAll(/`([^`\n]+)`|^\s*((?:node|npm|git)\s[^\n]*)$/gm)) {
+  for (const m of text.matchAll(/`([^`\n]+)`|^[ \t]*((?:node|npm|git)[ \t][^\n]*)$/gm)) {
     const s = (m[1] ?? m[2] ?? '').trim();
     if (/^(?:node|npm)\s/.test(s)) out.push(s);
   }
@@ -145,7 +153,7 @@ export async function checkKit({ root = ROOT, text = {}, actuals = null, deep = 
       if (!target || target.startsWith('-')) continue;
       const rel = target.replace(/^"?\$KYA\//, '').replace(/"$/, '');
       if (/[<$]/.test(rel)) continue;
-      if (/\.(?:mjs|js)$/.test(rel) && !existsSync(join(root, rel))) { problems.push(`${p}: command names missing script ${rel}`); continue; }
+      if (/\.(?:mjs|js)$/.test(rel) && !presentInside(root, rel)) { problems.push(`${p}: command names missing script ${rel}`); continue; }
       if (rel === 'bin/kya.mjs' && w[2] && !w[2].startsWith('-') && !/[<$]/.test(w[2])) {
         help ??= run(root, ['bin/kya.mjs', '--help']).stdout;
         if (!new RegExp('^\\s+kya ' + w[2].replace(/[^A-Za-z0-9-]/g, '') + '\\b', 'm').test(help)) problems.push(`${p}: kya has no subcommand ${w[2]}`);
@@ -153,8 +161,8 @@ export async function checkKit({ root = ROOT, text = {}, actuals = null, deep = 
     }
     for (const f of pathsIn(docs[p])) {
       const g = f.replace(/[)\]]+$/, '');
-      if (g.includes('*')) { const d = g.slice(0, g.indexOf('*')).replace(/\/[^/]*$/, ''); if (!existsSync(join(root, d))) problems.push(`${p}: glob base ${d} does not exist`); continue; }
-      if (!existsSync(join(root, g)) && !existsSync(join(root, g.replace(/\/$/, '')))) problems.push(`${p}: referenced path ${g} does not exist`);
+      if (g.includes('*')) { const d = g.slice(0, g.indexOf('*')).replace(/\/[^/]*$/, ''); if (!presentInside(root, d)) problems.push(`${p}: glob base ${d} does not exist`); continue; }
+      if (!presentInside(root, g) && !presentInside(root, g.replace(/\/$/, ''))) problems.push(`${p}: referenced path ${g} does not exist`);
     }
     checked.push(`commands and paths in ${p}`);
   }
