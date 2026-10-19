@@ -5168,6 +5168,61 @@
           "title": "every specified credential code, score card problem code and comparison reason appears in at least one vector"
         }
       ]
+    },
+    {
+      "id": "KYA-DET-001",
+      "level": "MUST",
+      "area": "credential",
+      "section": "Interoperability and versioning",
+      "statement": "The encoded status list that the reference exports MUST be a pure function of the bitstring, with a fixed GZIP header and no dependence on the platform, so that an exported credential is byte-reproducible.",
+      "tests": [
+        {
+          "file": "test/gzip-deterministic.test.mjs",
+          "title": "encodeList uses the deterministic encoder so exported status list bytes are pinned"
+        },
+        {
+          "file": "test/gzip-deterministic.test.mjs",
+          "title": "deterministic gzip golden bytes pin the exact output so a platform difference fails loudly"
+        },
+        {
+          "file": "test/gzip-deterministic.test.mjs",
+          "title": "deterministic gzip is repeatable and independent of the input container type"
+        }
+      ]
+    },
+    {
+      "id": "KYA-DET-002",
+      "level": "MUST",
+      "area": "credential",
+      "section": "Interoperability and versioning",
+      "statement": "The deterministic GZIP output MUST decode to the original bytes with a standard decoder and carry a correct CRC32 and size trailer.",
+      "tests": [
+        {
+          "file": "test/gzip-deterministic.test.mjs",
+          "title": "deterministic gzip round trips empty zeros ones and seeded random input through node zlib"
+        },
+        {
+          "file": "test/gzip-deterministic.test.mjs",
+          "title": "deterministic gzip writes a fixed header and a correct CRC32 and ISIZE trailer"
+        },
+        {
+          "file": "test/gzip-deterministic.test.mjs",
+          "title": "deterministic gzip output decodes with an independent python gzip decoder"
+        }
+      ]
+    },
+    {
+      "id": "KYA-DET-003",
+      "level": "MUST",
+      "area": "vectors",
+      "section": "Interoperability and versioning",
+      "statement": "A drift between the generated and the committed vectors file MUST be reported with the first differing vector id, the JSON path and bounded escaped context.",
+      "tests": [
+        {
+          "file": "test/assessment-vectors.test.mjs",
+          "title": "drift description names the first differing vector id, the JSON path and bounded escaped context"
+        }
+      ]
     }
   ]
 }

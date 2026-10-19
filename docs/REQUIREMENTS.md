@@ -278,5 +278,8 @@ Each requirement is traced to at least one test that must exist exactly once; th
 | KYA-SCR-015 | MUST | Score card verification MUST recompute every derived number from the embedded items and manifest, MUST judge a value that is not a card as invalid without refusing, and MUST accept a re-sealed edit of a manifest member that no computation reads. | `contract-credential-score.test.mjs` |
 | KYA-SCR-016 | MUST | Score card verification MUST fail a card below the evidence floor or with a lowered floor, and comparison MUST NOT compare cards unless both are valid and their suite and evaluator digests match. | `contract-credential-score.test.mjs` |
 | KYA-VEC-014 | MUST | Adding operations to contract version 2 MUST leave the earlier vectors and the keys byte for byte unchanged, MUST score an operation an implementation does not claim as not-run and not fail, at least a third of the later vectors MUST be refusals, and every specified code MUST appear in at least one vector. | `contract-credential-score.test.mjs`, `contract-operations.test.mjs` |
+| KYA-DET-001 | MUST | The encoded status list that the reference exports MUST be a pure function of the bitstring, with a fixed GZIP header and no dependence on the platform, so that an exported credential is byte-reproducible. | `gzip-deterministic.test.mjs` |
+| KYA-DET-002 | MUST | The deterministic GZIP output MUST decode to the original bytes with a standard decoder and carry a correct CRC32 and size trailer. | `gzip-deterministic.test.mjs` |
+| KYA-DET-003 | MUST | A drift between the generated and the committed vectors file MUST be reported with the first differing vector id, the JSON path and bounded escaped context. | `assessment-vectors.test.mjs` |
 
-Registry digest: `f7789c1172611d5fe0744dfd22011177517eaea226fce6f0407908ef9b49ae9e`
+Registry digest: `96d1f350ed2ac04518d88d6756d2525ef5aa241538e08ccea29a6afac36cac2e`

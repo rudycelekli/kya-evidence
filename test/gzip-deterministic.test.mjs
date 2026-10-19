@@ -49,7 +49,7 @@ test('deterministic gzip of the 2097153 byte inflate past the bound case stays w
   assert.throws(() => second(g), /larger|exceeds|limit/i);
 });
 
-test('deterministic gzip output decodes with an independent python gzip decoder', t => {
+test('deterministic gzip output decodes with an independent python gzip decoder', (t) => {
   const d = Buffer.concat([statusList(), xorshift(3000), Buffer.alloc(9000, 7)]);
   const r = spawnSync('python3', ['-I', '-c', 'import sys,gzip,hashlib;sys.stdout.write(hashlib.sha256(gzip.decompress(sys.stdin.buffer.read())).hexdigest())'], { input: gzipDeterministic(d), encoding: 'utf8' });
   if (r.error) return t.skip('python3 is not available');
