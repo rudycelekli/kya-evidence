@@ -34,14 +34,16 @@ export function parseCompact(token) {
   try { headerBytes = b64u.decode(parts[0]); payloadBytes = b64u.decode(parts[1]); signature = parts[2] === '' ? Buffer.alloc(0) : b64u.decode(parts[2]); }
   catch (e) { fail('MALFORMED', e.message); }
   let header, payload;
-  try { header = parseJson(headerBytes.toString('utf8')); } catch (e) { fail('MALFORMED', 'Header is not strict JSON: ' + e.message); }
+  // Ill-formed UTF-8 is refused, never replaced (docs/SPECIFICATION.md, Credential verification). A byte order mark is kept so the strict parser refuses it.
+  const utf8 = bytes => new TextDecoder('utf-8', { fatal: true, ignoreBOM: true }).decode(bytes);
+  try { header = parseJson(utf8(headerBytes)); } catch (e) { fail('MALFORMED', 'Header is not strict JSON: ' + e.message); }
   if (!header || typeof header !== 'object' || Array.isArray(header)) fail('MALFORMED', 'Header must be an object');
   // Algorithm is judged before the payload or any key is touched.
   if (header.alg !== 'EdDSA') fail('ALG_NOT_ALLOWED', 'Only alg EdDSA is accepted; none, HMAC and every other algorithm are refused');
   for (const k of Object.keys(header)) if (!ALLOWED_HEADER.has(k)) fail('HEADER_MEMBER_NOT_ALLOWED', `Header member ${k.slice(0, 32)} is not accepted (no embedded keys, URLs or critical extensions)`);
   if (header.typ !== 'vc+jwt' || (Object.hasOwn(header, 'cty') && header.cty !== 'vc')) fail('TYP_NOT_ALLOWED', 'typ must be vc+jwt and cty, if present, vc');
   if (typeof header.kid !== 'string') fail('MALFORMED', 'kid is required');
-  try { payload = parseJson(payloadBytes.toString('utf8')); } catch (e) { fail('MALFORMED', 'Payload is not strict JSON: ' + e.message); }
+  try { payload = parseJson(utf8(payloadBytes)); } catch (e) { fail('MALFORMED', 'Payload is not strict JSON: ' + e.message); }
   if (!payload || typeof payload !== 'object' || Array.isArray(payload)) fail('MALFORMED', 'Payload must be an object');
   return { header, payload, signingInput: Buffer.from(`${parts[0]}.${parts[1]}`), signature };
 }

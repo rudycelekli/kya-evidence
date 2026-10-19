@@ -107,7 +107,7 @@
               "ref": "test/assessment-vectors.test.mjs"
             }
           ],
-          "notes": "485 public vectors across six operations; expected values come from the JavaScript reference; not verified by anyone outside the project"
+          "notes": "799 public vectors across nine operations; expected values come from the JavaScript reference; not verified by anyone outside the project"
         },
         {
           "id": "WS3-02",

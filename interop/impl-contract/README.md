@@ -2,6 +2,8 @@
 
 Contract version 2 adds four pure operations (`canonicalize`, `digest`, `verify-envelope`, `compare`) to the two of version 1 (`assess`, `currency`). It is a strict superset: the envelope schema stays `kya.impl-input/v1` and the result schema stays `kya.impl-result/v1`, the two version 1 operations are unchanged byte for byte, and an implementation that predates version 2 already replies `unsupported` to an operation it does not know (see the process rules), so it scores its version 1 vectors exactly as before and the new vectors are `not-run` for it, never `fail`. The version is carried by the vectors file (`kya.assessment-vectors/v2`, member `contract`), not by the envelope, so that older implementations keep working without a change.
 
+Contract version 2 was later extended with three more pure operations (`verify-credential`, `verify-score-card`, `compare-score-cards`). No schema string and no vector file schema changed, so the version number stays 2: an implementation that does not know one of them already answers `unsupported` (see the process rules) and those vectors are `not-run` for it, never `fail`, and every vector that existed before is byte for byte unchanged. The version number changes only when a schema string or the vector file schema must change; operations are added by listing them in the `contract.operations` member of the vectors file.
+
 Any implementation of KYA assessment semantics, in any language, is **one command** that the harness runs once per vector.
 
 ```text
@@ -27,7 +29,7 @@ The harness does not give the vector ID, description, rationale or expected valu
 ## Input: `kya.impl-input/v1`
 
 ```json
-{ "schema": "kya.impl-input/v1", "operation": "assess" | "currency" | "canonicalize" | "digest" | "verify-envelope" | "compare", "inputs": { ... } }
+{ "schema": "kya.impl-input/v1", "operation": "assess" | "currency" | "canonicalize" | "digest" | "verify-envelope" | "compare" | "verify-credential" | "verify-score-card" | "compare-score-cards", "inputs": { ... } }
 ```
 
 `assess` inputs are the six assessment inputs of the specification:
@@ -140,9 +142,42 @@ Both are complete `kya.assessment/v1` reports. A report that is not a well-forme
 
 When the pair is not comparable, `comparable` is `false`, `reason` is the first failing code (`SCOPE_ID_DIFFERS`, `SCOPE_DIGEST_DIFFERS`, `PROFILE_DIFFERS`, `EVALUATOR_DIFFERS`, `POLICY_DIFFERS`, `EVIDENCE_MODE_DIFFERS`, `CHECK_POPULATION_DIFFERS`, `CHECKS_INCOMPLETE`) and `scoreDelta`, `decisionChanged` and `measurement` are `null`; `left` and `right` are still the two report digests.
 
+### `verify-credential`
+
+The semantics are normative in `docs/SPECIFICATION.md` ("Credential verification"). Inputs, exactly these members:
+
+```json
+{ "jwt": "<compact vc+jwt>", "now": "<ISO>", "expectedIssuers": [ "did:key:z..." ], "policy": { } | null, "statusLists": { "<url>": "<compact vc+jwt of that list>" }, "requireStatusCheck": false, "report": { } | null }
+```
+
+`expectedIssuers` entries must begin `did:key:`, `policy` (when not null) must satisfy the policy field rules, every `statusLists` value must be a non-empty string, `report` is a `kya.assessment/v1` object or null; anything else is a **refusal**. A credential that fails verification is a **result**:
+
+```json
+{ "schema": "kya.impl-result/v1", "operation": "verify-credential", "valid": false, "errors": [ "SIGNATURE_INVALID" ], "authenticated": false,
+  "issuer": "did:key:z..." | null, "issuerTrust": "unchecked | expected | anchored" | null, "issuerRole": "independent" | null,
+  "reportChecked": false, "reportMismatch": [ ],
+  "status": { "checked": false, "entries": [ { "purpose": "revocation" | null, "checked": true, "set": false | null, "error": null } ] } | null }
+```
+
+`errors` holds codes only (never messages), in the order the specification records them; a failure to open the credential gives exactly one code and leaves `issuer`, `issuerTrust`, `issuerRole` and `status` null. `reportMismatch` is the sorted list of top level member names that differ from the report. `valid: true` says the issuer key signed these bytes and the claims are consistent; it says nothing about truthful execution, identity or authorisation.
+
+### `verify-score-card`
+
+Normative text: "Score card verification". Inputs: `{ "card": <any JSON value> }`. A value that is not a valid card is a **result**, not a refusal:
+
+```json
+{ "schema": "kya.impl-result/v1", "operation": "verify-score-card", "valid": true, "problems": [ ], "score": 800, "cardDigest": "<64 hex>" }
+```
+
+`problems` are the codes of the specification in the order listed there; `score` and `cardDigest` are null when the card is not valid.
+
+### `compare-score-cards`
+
+Inputs: `{ "left": <any JSON value>, "right": <any JSON value> }`. Result: `{ "schema": "kya.impl-result/v1", "operation": "compare-score-cards", "comparable": true, "reasons": [ ], "delta": 40, "distinguishable": false }`. When not comparable, `delta` and `distinguishable` are null and `reasons` is `["card-invalid"]` or the reasons `suite-digest-differs` and `evaluator-digest-differs` that apply, in that order. `delta` is the left headline score minus the right.
+
 ### What the new vectors cannot show
 
-Size limits (a 1 MiB input is too large to commit) and the 100000 value bound are not exercised by a vector, an implementation in a language whose number formatting differs from ECMAScript has to implement the shortest round-trip rule itself, and the `S` below the group order rule is exercised only through one vector whose signature has `S` replaced by `S + L`.
+Size limits (a 1 MiB input is too large to commit) and the 100000 value bound are not exercised by a vector, an implementation in a language whose number formatting differs from ECMAScript has to implement the shortest round-trip rule itself, and the `S` below the group order rule is exercised only through one vector whose signature has `S` replaced by `S + L`. For `verify-credential` and `verify-score-card`, no vector pins GZIP streams with trailing data or concatenated members, the card size bounds (2000 items, 32 runs) or the `unverifiable` problem, and the sfc32 arithmetic, the round-half-up rule and UTF-8 decoding agree between the two JavaScript implementations partly by construction; a non-JavaScript implementation is the real test.
 
 ## How the harness compares
 

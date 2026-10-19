@@ -6,6 +6,8 @@ import {
   validManifest, validProfile, validPolicy, evidencePayloadShape, strictPublicKey
 } from './kya2.mjs';
 import { incidentPayloadShape } from './currency.mjs';
+import { verifyCredentialOp } from './credential.mjs';
+import { verifyScoreCardOp, compareScoreCardsOp } from './scorecard.mjs';
 
 const refuse = m => { throw new Refusal(m); };
 const RESULT = 'kya.impl-result/v1';
@@ -94,7 +96,7 @@ const MODES = ['none', 'runtime', 'fixture', 'mixed'];
 const BLOCKER_CODES = ['SUBJECT_REVOKED', 'SUBJECT_EXPIRED', 'SUBJECT_NOT_YET_VALID', 'CRITICAL_CHECK_FAILED', 'CRITICAL_CHECK_UNPROVEN', 'COVERAGE_BELOW_POLICY', 'INDEPENDENT_COVERAGE_BELOW_POLICY', 'SCORE_BELOW_POLICY', 'AMBIGUOUS_RUNS', 'RUN_CONFLICT', 'RUN_INVALIDATED', 'MIXED_RUN_ISSUERS', 'REPEATED_RUN_CHECKS', 'NO_SCORED_OBSERVATIONS', 'NO_OBSERVED_CHECKS', 'PRINCIPAL_UNBOUND', 'MANDATORY_MINIMUM_NOT_MET', 'MANDATORY_MINIMUM_UNPROVEN'];
 const SUBJECT_CODES = ['SUBJECT_REVOKED', 'SUBJECT_EXPIRED', 'SUBJECT_NOT_YET_VALID'];
 
-function checkReport(r) {
+export function checkReport(r) {
   if (!isObj(r) || r.schema !== 'kya.assessment/v1') refuse('report is not a kya.assessment/v1');
   if (typeof r.reportDigest !== 'string' || !HEX64.test(r.reportDigest)) refuse('report checksum member');
   const { reportDigest, ...rest } = r;
@@ -108,11 +110,17 @@ function checkReport(r) {
   for (const c of r.checks) {
     if (!isObj(c) || !isId(c.id) || !Number.isInteger(c.weight) || typeof c.status !== 'string') refuse('report check entry');
   }
+  checkBlockerCodes(r);
+}
+
+// the blockerCodes rules alone (also used by verify-credential, which applies no other shape check)
+export function checkBlockerCodes(r) {
   if (r.blockerCodes !== undefined) {
     const c = r.blockerCodes;
     if (!Array.isArray(r.blockers) || !Array.isArray(c) || c.length !== r.blockers.length || c.some(x => !BLOCKER_CODES.includes(x))) refuse('report blockerCodes');
     if (r.decision === 'qualified' && c.length) refuse('qualified report carries blocker codes');
     if (!c.some(x => SUBJECT_CODES.includes(x))) {
+      if (!Array.isArray(r.checks)) refuse('report checks');
       const failed = r.checks.filter(x => x.critical === true && x.status === 'fail').length;
       if (c.filter(x => x === 'CRITICAL_CHECK_FAILED').length !== failed) refuse('blocker codes contradict the critical failures');
     }
@@ -145,5 +153,6 @@ export function compareOp(inputs) {
 }
 
 export const OPERATIONS = {
-  canonicalize: canonicalizeOp, digest: digestOp, 'verify-envelope': verifyEnvelopeOp, compare: compareOp
+  canonicalize: canonicalizeOp, digest: digestOp, 'verify-envelope': verifyEnvelopeOp, compare: compareOp,
+  'verify-credential': verifyCredentialOp, 'verify-score-card': verifyScoreCardOp, 'compare-score-cards': compareScoreCardsOp
 };

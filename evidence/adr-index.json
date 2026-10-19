@@ -438,8 +438,21 @@
         "ADR-0016",
         "ADR-0014"
       ]
+    },
+    {
+      "id": "ADR-0035",
+      "title": "Conformance contract operations for credentials and score cards (verify-credential, verify-score-card, compare-score-cards)",
+      "status": "Proposed",
+      "file": "docs/adr/0035-conformance-contract-credentials-and-score-cards.md",
+      "contentDigest": "676705cb89fa348ef4c9025cc0092cb294f61e153d9f06f354e84911f562bb61",
+      "related": [
+        "ADR-0034",
+        "ADR-0026",
+        "ADR-0022",
+        "ADR-0033"
+      ]
     }
   ],
-  "digest": "66088271c309684d0f3c864dc522b8014a949a2a216120974406c33e76214318",
+  "digest": "0f247298f123de7bed06669c487082e67812b1f826fd68859f652cc93c3873f1",
   "store": "portable local file; not a claim of AgentDB graph persistence"
 }
