@@ -57,7 +57,7 @@ Points counsel must decide:
 
 ## 8. Prohibited contributions
 
-The project is clean-room. Contributors must not submit any of the following, as stated in `AGENTS.md`:
+The project was written independently: ideas from the owner's private product informed the design and no code or data was copied. Contributors must not submit any of the following, as stated in `AGENTS.md`:
 
 - customer data or records of any person or organisation;
 - credentials, API keys, tokens, passwords or signing keys, including test keys that were issued as live keys;

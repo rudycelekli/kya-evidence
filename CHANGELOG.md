@@ -4,7 +4,7 @@ All notable changes to KYA Evidence are recorded here. The format follows [Keep 
 
 Read this file with two facts in mind. First, no version has been tagged, published to npm or released on GitHub: the alpha labels below mark the `version` field in `package.json` at the commit named in each heading, and nothing more. Second, nothing here is a certification, a safety claim or an outside validation. Every "Added" line means "the reference implementation now does this and a test checks it", not "an outside party confirmed it". The list of what is still not shown is in [docs/RELEASE-NOTES-ALPHA.md](docs/RELEASE-NOTES-ALPHA.md).
 
-Entries come from `git log` and the merged pull requests (#1 to #30) of the repository. Where a commit message was too short to say what changed, the entry is limited to what the message says.
+Entries come from `git log` and the merged pull requests (#1 to #46, the highest merged pull request number in the history at the time of writing) of the repository. Where a commit message was too short to say what changed, the entry is limited to what the message says.
 
 ## [Unreleased]
 
@@ -81,7 +81,7 @@ Everything after the commit that set `0.1.0-alpha.3`. Not tagged or published; t
 ### Fixed
 
 - Incident evaluation no longer depends on the clock: a future-dated copy of a report ID could make a resolved report reopen as time passed (finding F-1 from the fuzz tests, PR #3).
-- Incident and currency handling fail closed after independent review: all report records are kept, a resolution applies only when its reference is unambiguous, and currency inputs are validated.
+- Incident and currency handling fail closed after internal adversarial review: all report records are kept, a resolution applies only when its reference is unambiguous, and currency inputs are validated.
 - Campaign harness hardening after review: symlink-safe private directory, head pinning, mandatory signer trust, retry and duplicate-evidence rules, stricter evidence uniqueness (PR #6).
 
 ### Security

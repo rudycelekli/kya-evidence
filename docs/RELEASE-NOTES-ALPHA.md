@@ -1,6 +1,6 @@
 # KYA Evidence 0.1.0-alpha.4: launch note
 
-Status: alpha, built from a checkout. Nothing is published: there is no npm package, no git tag and no GitHub release yet. `package.json` reads `0.1.0-alpha.4`. At the commit the pull request #29 merged, the project's continuous integration reported 915 tests passing with none skipped or pending. This repository carries 211 traced requirements, 111 assessment vectors, 16 frozen controls and 87 mutation controls.
+Status: alpha, built from a checkout. Nothing is published: there is no npm package, no git tag and no GitHub release yet. `package.json` reads `0.1.0-alpha.4`. This repository carries 284 traced requirements, 799 conformance vectors across nine operations, 16 frozen controls and 87 mutation controls. Counts change as the repository does; `node scripts/review-kit-check.mjs --print` prints the current values and no test count is quoted here.
 
 ## What this is
 
@@ -20,7 +20,7 @@ Details and dates: [CHANGELOG.md](../CHANGELOG.md).
 ## What is explicitly NOT shown or validated
 
 - **No outside security review.** Several rounds of review were done inside the team. Their fixes are in the changelog. They are not an independent review and no retest by an outside party exists.
-- **No outside implementation.** The second implementation of assessment and currency semantics, and the Python byte checker, were written by the same team. The second implementation matches all 272 assessment vectors byte for byte, which shows the written spec is precise enough for the team to follow. It does not show that an unrelated implementer would read it the same way.
+- **No outside implementation.** The second implementation of the nine conformance operations, and the Python byte checker, were written by the same team. The second implementation matches all 799 vectors byte for byte, which shows the written spec is precise enough for the team to follow. It does not show that an unrelated implementer would read it the same way.
 - **No relying-party pilot.** No organization has used this evidence for a real decision.
 - **Captured evidence is simulated.** The reference capture cell is a simulation. No real, measured capture environment exists, and receipts from the demo and benchmarks are synthetic fixtures. A perfect fixture score says nothing about Claude Code, Codex, a bot or any other real agent.
 - **Calibration is unmeasured.** The study design is written down and pre-registered as a template; no data has been collected, so no threshold in any profile is shown to separate good agents from bad ones.

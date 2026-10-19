@@ -54,11 +54,11 @@ Maintainers apply these steps in proportion to the breach:
 3. **Temporary restriction.** Limited participation for a stated period.
 4. **Permanent restriction.** Removal from project spaces.
 
-Maintainers who are involved in a report do not decide it. A person who is the subject of a report may give their account in writing before a decision is taken.
+Maintainers who are involved in a report do not decide it. While the project has a single maintainer, recusal is not possible and the maintainer may be the only person able to decide. A person who is the subject of a report may give their account in writing before a decision is taken.
 
 ## Appeals
 
-A person sanctioned under this code may ask for a review by a maintainer who was not involved. The review is recorded. The project has no independent panel yet (see `docs/governance/DECISION-PROCESS.md`).
+A person sanctioned under this code may ask for a review by a maintainer who was not involved. While the project has a single maintainer, independent appeal is not possible. The review is recorded. The project has no independent panel yet (see `docs/governance/DECISION-PROCESS.md`).
 
 ## Relationship to other documents
 

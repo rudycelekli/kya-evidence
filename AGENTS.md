@@ -1,6 +1,6 @@
 # KYA Evidence development contract
 
-This is a clean-room, Apache-2.0 implementation. Do not copy private Gradia code, client data, credentials, internal paths or operational logs into distributable files.
+This is an independently written, Apache-2.0 implementation (ideas from the owner's private product informed the design; no code or data was copied). Do not copy private Gradia code, client data, credentials, internal paths or operational logs into distributable files.
 
 Bind every assessment to exact manifest, suite, evaluator, policy and evidence digests. Signature validity proves integrity and possession of a signing key; it does not prove truthful execution, human identity, legal authority or independent review.
 
