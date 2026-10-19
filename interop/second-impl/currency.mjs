@@ -33,7 +33,9 @@ function checkAssessment(a) {
 
 function incidentShape(e) {
   if (!exactKeys(e, ['payload', 'proof'])) return 'envelope must hold payload and proof';
-  const p = e.payload;
+  return incidentPayloadShape(e.payload);
+}
+export function incidentPayloadShape(p) {
   if (!exactKeys(p, INCIDENT_KEYS) || p.schema !== 'kya.incident/v1') return 'payload keys or schema';
   if (!isId(p.id)) return 'id';
   if (!['report', 'resolution', 'appeal'].includes(p.kind)) return 'kind';

@@ -321,14 +321,15 @@
       "title": "Golden assessment vectors and a language-neutral harness",
       "status": "Implemented",
       "file": "docs/adr/0026-golden-assessment-vectors.md",
-      "contentDigest": "1f96732729cc2db0dd65b7094777e63e58b97f5b84e1948739a80b2e0255b1cb",
+      "contentDigest": "bcb9e7357e640015a0f10da76de5d1d44dbc696594410e114c66c42a2a6418b4",
       "related": [
         "ADR-0003",
         "ADR-0008",
         "ADR-0013",
         "ADR-0014",
         "ADR-0015",
-        "ADR-0016"
+        "ADR-0016",
+        "ADR-0034"
       ]
     },
     {
@@ -425,8 +426,20 @@
         "ADR-0032",
         "ADR-0021"
       ]
+    },
+    {
+      "id": "ADR-0034",
+      "title": "Conformance contract version 2 (canonicalize, digest, verify-envelope, compare)",
+      "status": "Proposed",
+      "file": "docs/adr/0034-conformance-contract-version-2.md",
+      "contentDigest": "df8db1bd0e0c65e6e95e897484858532d6bce2c260bff365a2a882a7e2662904",
+      "related": [
+        "ADR-0026",
+        "ADR-0016",
+        "ADR-0014"
+      ]
     }
   ],
-  "digest": "f1c13b1e054ee33e044fcb2ec1223cf29cef108ab3279c32bc65ad19fd5c9439",
+  "digest": "66088271c309684d0f3c864dc522b8014a949a2a216120974406c33e76214318",
   "store": "portable local file; not a claim of AgentDB graph persistence"
 }

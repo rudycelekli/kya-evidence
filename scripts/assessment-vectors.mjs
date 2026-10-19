@@ -4,6 +4,7 @@ import { fileURLToPath } from 'node:url';
 import { parseJson } from '../src/shared/canonical.mjs';
 import { assess, checkCurrency, signEvidence, signIncident, digest, hashBytes, keyId, canonical, BLOCKER_CODES, CURRENCY_CODES } from '../src/index.mjs';
 import { isMain } from "./lib/is-main.mjs";
+import { V2_OPERATIONS } from '../interop/impl-contract/js-operations.mjs';
 
 // Golden ASSESSMENT vectors (kya.assessment-vectors/v1). The JS reference is called only through its public
 // API (src/index.mjs). Every vector also carries a hand-written claim below; the generator refuses to write
@@ -11,7 +12,7 @@ import { isMain } from "./lib/is-main.mjs";
 // Keys are PUBLIC SYNTHETIC: seeds are SHA-256 of a published string. Never use them as trust anchors.
 // No clock is read: every time below is a fixed ISO string.
 
-const SCHEMA = 'kya.assessment-vectors/v1';
+const SCHEMA = 'kya.assessment-vectors/v2';
 const OUT = fileURLToPath(new URL('../evidence/assessment-vectors.json', import.meta.url));
 const REGISTRY = fileURLToPath(new URL('../evidence/requirements.json', import.meta.url));
 
@@ -464,6 +465,265 @@ C('currency.refuse-resealed-blocker-code-is-unknown', ['KYA-REF-002', 'KYA-MON-0
 C('currency.refuse-resealed-blocker-codes-fewer-than-blockers', ['KYA-REF-002', 'KYA-MON-003'], 'A blocked assessment is resealed with an empty blockerCodes list while its blockers remain.', 'KYA-REF-002: blockerCodes holds exactly one code per blocker.', { w: { ev: t => t.all({}, { 'id.binding': 'fail' }) }, a: a => reseal({ ...a, blockerCodes: [] }) }, REFUSE);
 C('currency.assessment-without-blocker-codes-is-accepted', ['KYA-REF-002', 'KYA-REF-004'], 'An assessment written before blockerCodes existed, with its own digest, is checked.', 'KYA-REF-002: reports without the field are accepted and keep their digests.', { a: a => { const { blockerCodes, ...rest } = a; return reseal(rest); } }, { current: true, reliable: true, action: 'none', triggers: [] });
 
+
+// ---- contract version 2 operations (ADR-0034): canonicalize, digest, verify-envelope, compare ----
+// A claim is an object (subset check) or a function that returns an error text or null. The expected value comes from the reference
+// operations in interop/impl-contract/js-operations.mjs; the generator refuses to write when it disagrees with a claim.
+const OPS = [];
+const O = (id, operation, requirements, description, rationale, inputs, claim) => OPS.push({ id, operation, requirements, description, rationale, inputs, claim });
+const must = (cond, msg) => cond ? null : msg;
+const shortJson = v => { const t = JSON.stringify(v); return t.length > 72 ? t.slice(0, 69) + '...' : t; };
+const sha = s => sha256(Buffer.from(s, 'utf8'));
+const W0 = world();
+const M0 = W0.manifest, P0 = W0.profile, PO0 = W0.policy;
+const dig = (artifact, value) => V2_OPERATIONS.digest({ artifact, value });
+
+// canonicalize: accepted texts
+const CZ = (name, reqs, text, rationale, canonicalText, description) => O('canonicalize.' + name, 'canonicalize', reqs, description ?? `Canonicalize the text ${shortJson(text)}.`, rationale, { text }, typeof canonicalText === 'function' ? canonicalText : { canonical: canonicalText });
+const CZR = (name, reqs, text, rationale, description) => O('canonicalize.refuse-' + name, 'canonicalize', reqs, description ?? `Canonicalize the text ${shortJson(text)}, which the strict parser must refuse.`, rationale, { text }, REFUSE);
+const GOLD = ['KYA-INT-003', 'KYA-INT-001'];
+CZ('member-order', GOLD, '{"b":2,"a":1}', 'KYA-INT-001: canonical bytes do not depend on the order members arrive in.', '{"a":1,"b":2}');
+CZ('nested-member-order', GOLD, '{"z":{"b":[{"d":1,"c":2}],"a":null},"y":true}', 'KYA-INT-001: sorting applies at every depth and arrays keep their order.', '{"y":true,"z":{"a":null,"b":[{"c":2,"d":1}]}}');
+CZ('insignificant-whitespace-removed', GOLD, ' \t\r\n{ "a" : [ 1 , 2 ] , "b" : { } } \n', 'KYA-INT-003: the canonical form carries no whitespace, so golden bytes are exact.', '{"a":[1,2],"b":{}}');
+CZ('member-names-sort-by-utf16-code-unit', GOLD, '{"\\ue000":1,"\\ud83d\\ude00":2,"\\uffff":3}', 'KYA-INT-001: names sort by UTF-16 code unit, so a character outside the Basic Multilingual Plane sorts before U+E000 even though its code point is larger.', '{"\u{1f600}":2,"":1,"￿":3}');
+CZ('member-names-sort-digits-before-letters-and-upper-before-lower', GOLD, '{"b":1,"B":2,"a":3,"10":4,"9":5}', 'KYA-INT-001: code unit order puts 10 before 9, and uppercase before lowercase.', '{"10":4,"9":5,"B":2,"a":3,"b":1}');
+CZ('empty-containers', GOLD, '{"a":{},"b":[]}', 'KYA-INT-003: empty objects and arrays are written as {} and [].', '{"a":{},"b":[]}');
+CZ('top-level-string', GOLD, '"x"', 'KYA-INT-003: any JSON value is canonicalized, not only objects.', '"x"');
+CZ('top-level-number', GOLD, '7', 'KYA-INT-003: a top level number is canonicalized.', '7');
+CZ('top-level-null', GOLD, 'null', 'KYA-INT-003: a top level null is canonicalized.', 'null');
+CZ('member-name-written-as-escape-sorts-by-decoded-name', GOLD, '{"\\u0062":1,"a":2}', 'KYA-INT-001: names are decoded before sorting and the canonical form writes them literally.', '{"a":2,"b":1}');
+CZ('solidus-escape-is-written-literally', ['KYA-INT-003', 'KYA-INT-002'], '"a\\/b\\"c\\\\d"', 'KYA-INT-002: escapes are preserved by value; the canonical form re-escapes only quote and backslash.', '"a/b\\"c\\\\d"');
+CZ('control-characters-use-short-or-lowercase-u00-escapes', ['KYA-INT-003', 'KYA-INT-002'], '"\\u0000\\u0008\\u0009\\u000a\\u000c\\u000d\\u001f"', 'KYA-INT-003: backspace, tab, line feed, form feed and carriage return use their short escapes; every other control character uses a lowercase u00xx escape.', '"\\u0000\\b\\t\\n\\f\\r\\u001f"');
+CZ('uppercase-hex-in-input-is-lowercase-or-literal-in-output', ['KYA-INT-003', 'KYA-INT-002'], '"\\u00E9\\u00e9\\u001F"', 'KYA-INT-002: hexadecimal digits of either case are accepted; the output is literal text or lowercase hex.', '"éé\\u001f"');
+CZ('del-and-line-separators-stay-literal', ['KYA-INT-003', 'KYA-INT-002'], '"\\u007f\\u2028\\u2029"', 'KYA-INT-003: U+007F, U+2028 and U+2029 are not escaped, which differs from some other JSON writers.', '"\u007f  "');
+CZ('surrogate-pair-escape-becomes-the-character', ['KYA-INT-003', 'KYA-INT-002'], '"\\ud83d\\ude00"', 'KYA-INT-002: a valid surrogate pair of escapes denotes one character, written literally.', '"\u{1f600}"');
+CZ('unpaired-surrogate-escape-is-kept-as-lowercase-escape', ['KYA-INT-003', 'KYA-INT-002'], '"\\ud800 \\udc00\\ud800"', 'KYA-INT-002: an unpaired surrogate escape is accepted and re-escaped in lowercase, never replaced or refused.', '"\\ud800 \\udc00\\ud800"');
+CZ('literal-non-ascii-text-is-kept', ['KYA-INT-003', 'KYA-INT-001'], '"Café \u{1f9ed} é"', 'KYA-INT-001: no Unicode normalisation is applied; composed and decomposed forms stay distinct.', '"Café \u{1f9ed} é"');
+CZ('integral-spellings-are-written-as-integers', ['KYA-INT-003', 'KYA-INT-002'], '[1.0,1e2,5E0,-0,-0.0,0e5,1.00e1]', 'KYA-INT-002: numbers are judged by value, so integral spellings become plain integers and negative zero becomes 0.', '[1,100,5,0,0,0,10]');
+CZ('fractions-are-written-positionally', ['KYA-INT-003', 'KYA-INT-002'], '[0.1,0.25,123.456,-1.5,0.000001]', 'KYA-INT-003: a magnitude of at least 1e-6 is written positionally.', '[0.1,0.25,123.456,-1.5,0.000001]');
+CZ('small-magnitudes-use-an-exponent', ['KYA-INT-003', 'KYA-INT-002'], '[1e-7,1.5e-7,5e-324,1.2345e-10,0.0000001]', 'KYA-INT-003: below 1e-6 the number is written with an unpadded e- exponent.', '[1e-7,1.5e-7,5e-324,1.2345e-10,1e-7]');
+CZ('shortest-round-trip-digits', ['KYA-INT-003', 'KYA-INT-002'], '[0.30000000000000004,3.141592653589793238,0.1000000000000000055511151231257827]', 'KYA-INT-003: a number is written with the shortest digits that read back to the same value.', '[0.30000000000000004,3.141592653589793,0.1]');
+CZ('literal-rounding-to-an-integer-is-judged-after-rounding', ['KYA-INT-003', 'KYA-INT-002'], '0.99999999999999999999', 'KYA-INT-002: the literal rounds to the number 1, which is an integer and is written as 1.', '1');
+CZ('largest-safe-integers-are-accepted', ['KYA-INT-003', 'KYA-INT-002'], '[9007199254740991,-9007199254740991]', 'KYA-INT-002: integers up to 2^53-1 in magnitude are supported exactly.', '[9007199254740991,-9007199254740991]');
+CZ('non-integral-near-the-integer-limit-is-accepted', ['KYA-INT-003', 'KYA-INT-002'], '4503599627370495.5', 'KYA-INT-002: only integer-valued numbers are bounded by the safe integer limit.', '4503599627370495.5');
+CZ('underflow-to-zero-is-accepted', ['KYA-INT-003', 'KYA-INT-002'], '1e-400', 'KYA-INT-002: a literal below the smallest positive number is the finite value 0.', '0');
+CZ('nesting-to-depth-32-is-accepted', ['KYA-INT-002', 'KYA-INT-001'], '['.repeat(32) + '1' + ']'.repeat(32), 'KYA-INT-002: depth is bounded; the root is depth 0 and a value at depth 32 is allowed.', '['.repeat(32) + '1' + ']'.repeat(32));
+CZ('sha256-is-over-the-utf8-bytes-of-the-canonical-text', ['KYA-INT-003'], '{"name":"é\u{1f9ed}"}', 'KYA-INT-003: the digest hashes UTF-8 bytes, so non-ASCII text hashes as multi-byte sequences.', exp => must(exp.canonical === '{"name":"é\u{1f9ed}"}' && exp.sha256 === sha(exp.canonical), 'canonical text or sha256 differs from the claim'));
+
+// canonicalize: refusals
+const STRICT = ['KYA-INT-002', 'KYA-INT-004'];
+CZR('duplicate-member', STRICT, '{"a":1,"a":2}', 'KYA-INT-002: duplicate members are refused whichever value a lenient parser would keep.');
+CZR('duplicate-member-with-equal-values', STRICT, '{"a":1,"a":1}', 'KYA-INT-002: a duplicate is refused even when the values agree.');
+CZR('duplicate-member-nested', STRICT, '{"o":{"k":[{"x":1,"x":2}]}}', 'KYA-INT-002: duplicates are refused at any depth.');
+CZR('duplicate-member-spelled-with-escape', STRICT, '{"a":1,"\\u0061":2}', 'KYA-INT-002: duplicates are judged on the decoded member name.');
+CZR('prototype-name-__proto__', STRICT, '{"__proto__":{"x":1}}', 'KYA-INT-002: strict JSON refuses the name __proto__.');
+CZR('prototype-name-constructor', STRICT, '{"constructor":1}', 'KYA-INT-002: strict JSON refuses the name constructor.');
+CZR('prototype-name-prototype', STRICT, '{"prototype":1}', 'KYA-INT-002: strict JSON refuses the name prototype.');
+CZR('prototype-name-nested-and-escaped', STRICT, '{"a":[{"\\u0063onstructor":1}]}', 'KYA-INT-002: the refused names are refused at any depth and when spelled with an escape.');
+CZR('text-after-the-value', STRICT, '{} {}', 'KYA-INT-002: the input is exactly one value; trailing text is refused.');
+CZR('garbage-after-a-number', STRICT, '1x', 'KYA-INT-002: trailing characters after a value are refused.');
+CZR('byte-order-mark', STRICT, '﻿{}', 'KYA-INT-002: a byte order mark is not whitespace.');
+CZR('no-break-space-is-not-whitespace', STRICT, ' {}', 'KYA-INT-002: only space, tab, line feed and carriage return are whitespace.');
+CZR('empty-text', STRICT, '', 'KYA-INT-002: an empty text holds no value.');
+CZR('only-whitespace', STRICT, ' \n', 'KYA-INT-002: whitespace alone holds no value.');
+CZR('leading-zero', STRICT, '01', 'KYA-INT-002: RFC 8259 forbids leading zeros.');
+CZR('negative-leading-zero', STRICT, '-01', 'KYA-INT-002: RFC 8259 forbids leading zeros after a minus sign.');
+CZR('leading-plus', STRICT, '+1', 'KYA-INT-002: RFC 8259 forbids a leading plus.');
+CZR('bare-fraction', STRICT, '.5', 'KYA-INT-002: a number needs an integer part.');
+CZR('bare-decimal-point', STRICT, '1.', 'KYA-INT-002: a decimal point needs digits after it.');
+CZR('empty-exponent', STRICT, '1e', 'KYA-INT-002: an exponent needs digits.');
+CZR('hexadecimal-number', STRICT, '0x10', 'KYA-INT-002: hexadecimal is not JSON.');
+CZR('nan-literal', STRICT, 'NaN', 'KYA-INT-002: NaN is not JSON.');
+CZR('infinity-literal', STRICT, '-Infinity', 'KYA-INT-002: Infinity is not JSON.');
+CZR('number-overflow-to-infinity', STRICT, '1e400', 'KYA-INT-002: a number that is not finite is refused.');
+CZR('integer-above-the-safe-limit', STRICT, '9007199254740992', 'KYA-INT-002: an integer-valued number above 2^53-1 is refused, not rounded.');
+CZR('negative-integer-below-the-safe-limit', STRICT, '-9007199254740992', 'KYA-INT-002: the bound applies to magnitude.');
+CZR('large-integer-spelled-as-exponent', STRICT, '1e22', 'KYA-INT-002: the bound applies to the value, whatever the spelling.');
+CZR('integer-valued-decimal-above-the-limit', STRICT, '9007199254740993.0', 'KYA-INT-002: the literal rounds to 2^53, an integer above the limit.');
+CZR('twenty-digit-integer', STRICT, '12345678901234567890', 'KYA-INT-002: a number that cannot be held exactly is refused, not approximated.');
+CZR('trailing-comma-in-object', STRICT, '{"a":1,}', 'KYA-INT-002: trailing commas are not JSON.');
+CZR('trailing-comma-in-array', STRICT, '[1,]', 'KYA-INT-002: trailing commas are not JSON.');
+CZR('single-quoted-string', STRICT, "'a'", 'KYA-INT-002: strings use double quotes.');
+CZR('unquoted-member-name', STRICT, '{a:1}', 'KYA-INT-002: member names are strings.');
+CZR('comment', STRICT, '{/*x*/}', 'KYA-INT-002: comments are not JSON.');
+CZR('raw-tab-inside-a-string', STRICT, '"a\tb"', 'KYA-INT-002: a raw control character inside a string is refused.');
+CZR('raw-line-feed-inside-a-string', STRICT, '"a\nb"', 'KYA-INT-002: a raw control character inside a string is refused.');
+CZR('unknown-escape', STRICT, '"\\x41"', 'KYA-INT-002: only the RFC 8259 escapes are accepted.');
+CZR('short-unicode-escape', STRICT, '"\\u12"', 'KYA-INT-002: a unicode escape has exactly four hexadecimal digits.');
+CZR('unterminated-string', STRICT, '"abc', 'KYA-INT-002: an unterminated string is refused.');
+CZR('missing-colon', STRICT, '{"a" 1}', 'KYA-INT-002: a member needs a colon.');
+CZR('nesting-to-depth-33', STRICT, '['.repeat(33) + '1' + ']'.repeat(33), 'KYA-INT-002: a value deeper than 32 is refused.');
+CZR('unpaired-surrogate-as-a-raw-character', STRICT, '"\ud800"', 'KYA-INT-002: a text that holds an unpaired surrogate as a raw character is not well formed Unicode and is refused.', 'Canonicalize a text whose string holds an unpaired surrogate as a raw character.');
+O('canonicalize.refuse-text-is-not-a-string', 'canonicalize', STRICT, 'The text member is the number 1, not a string.', 'KYA-INT-004: input of the wrong type is refused, not coerced.', { text: 1 }, REFUSE);
+O('canonicalize.refuse-extra-input-member', 'canonicalize', STRICT, 'The inputs carry a member besides text.', 'KYA-INT-004: operation inputs have exactly the listed members.', { text: '1', extra: true }, REFUSE);
+O('canonicalize.refuse-missing-text', 'canonicalize', STRICT, 'The inputs are an empty object.', 'KYA-INT-004: a missing member is refused.', {}, REFUSE);
+
+// digest
+const DG = (name, reqs, description, rationale, artifact, value, claim) => O('digest.' + name, 'digest', reqs, description, rationale, () => ({ artifact, value: typeof value === 'function' ? value() : value }), claim);
+const DGR = (name, reqs, description, rationale, artifact, value) => DG('refuse-' + name, reqs, description, rationale, artifact, value, REFUSE);
+const baseDigest = a => dig(a, a === 'scope' ? M0 : a === 'profile' ? P0 : a === 'policy' ? PO0 : M0).digest;
+const SUBJECT_REQS = ['KYA-INT-003', 'KYA-BND-001'];
+DG('manifest-subject-digest', SUBJECT_REQS, 'The subject digest of the base vector manifest.', 'KYA-BND-001: the subject digest is the digest of the complete canonical manifest.', 'manifest', () => clone(M0), exp => must(exp.preimage.startsWith('{"agent":{"id":"agent:vector-subject","name":"Synthetic vector subject","version":"1"},"expiresAt":"2027-04-14T00:00:00.000Z"') && exp.digest === sha(exp.preimage), 'preimage or digest differs from the claim'));
+DG('manifest-member-order-does-not-change-the-digest', ['KYA-INT-001', 'KYA-INT-003'], 'The base manifest delivered with every object in reverse member order.', 'KYA-INT-001: the digest is a function of the canonical form, not of delivery order.', 'manifest', () => flip(M0), exp => must(exp.digest === baseDigest('manifest'), 'digest differs from the base manifest digest'));
+const manifestChange = (name, description, edit) => DG('manifest-' + name + '-changes-the-subject-digest', SUBJECT_REQS, description, 'KYA-BND-001: changing any manifest field creates a new subject and so invalidates old evidence for it.', 'manifest', () => { const m = clone(M0); edit(m); return m; }, exp => must(exp.digest !== baseDigest('manifest') && exp.digest === sha(exp.preimage), 'digest equals the base digest'));
+manifestChange('tool-version', 'One tool version is changed from 1 to 2.', m => { m.system.tools[0].version = '2'; });
+manifestChange('model', 'The model name is changed.', m => { m.system.model = 'other-model'; });
+manifestChange('principal', 'The principal ID is changed.', m => { m.principal.id = 'controller:other'; });
+manifestChange('artifact-digest', 'The artifact digest is changed.', m => { m.system.artifactDigest = hashBytes('other artifact'); });
+manifestChange('scope-permission', 'A scope permission is added.', m => { m.scope.permissions = ['read', 'write', 'list']; });
+DG('scope-digest-of-the-base-manifest', ['KYA-INT-003', 'KYA-BND-003'], 'The full-scope digest of the base manifest.', 'KYA-BND-003: the scope digest hashes the whole scope member, so purpose and permissions are part of it.', 'scope', () => clone(M0), exp => must(exp.preimage === '{"approvalRequired":["write"],"forbidden":["publish"],"id":"scope:vector","permissions":["read","write"],"purpose":"Synthetic assessment vectors"}' && exp.digest === sha(exp.preimage), 'preimage differs from the claim'));
+DG('scope-digest-ignores-the-rest-of-the-manifest', ['KYA-BND-003'], 'The agent name and the model are changed; the scope is not.', 'KYA-BND-003: the scope digest depends only on the scope member.', 'scope', () => { const m = clone(M0); m.agent.name = 'Renamed'; m.system.model = 'other'; return m; }, exp => must(exp.digest === baseDigest('scope'), 'scope digest changed with fields outside the scope'));
+DG('scope-digest-changes-with-purpose-at-the-same-scope-id', ['KYA-BND-003'], 'The scope ID stays scope:vector and the purpose changes.', 'KYA-BND-003: equal scope names with different purpose must not look alike, so the scope digest differs.', 'scope', () => { const m = clone(M0); m.scope.purpose = 'A different purpose'; return m; }, exp => must(exp.digest !== baseDigest('scope'), 'scope digest equals the base'));
+DG('scope-digest-changes-with-permissions-at-the-same-scope-id', ['KYA-BND-003'], 'The scope ID stays scope:vector and a permission is added.', 'KYA-BND-003: different permissions give a different scope digest.', 'scope', () => { const m = clone(M0); m.scope.permissions = ['read', 'write', 'list']; return m; }, exp => must(exp.digest !== baseDigest('scope'), 'scope digest equals the base'));
+DG('profile-digest-is-the-value-a-policy-binds', ['KYA-INT-003', 'KYA-BND-001'], 'The digest of the base profile.', 'KYA-BND-001: a policy binds the digest of the canonical profile.', 'profile', () => clone(P0), exp => must(exp.digest === PO0.profileDigest && exp.digest === sha(exp.preimage), 'profile digest differs from the digest the base policy binds'));
+DG('policy-digest', ['KYA-INT-003'], 'The digest of the base policy.', 'KYA-INT-003: a policy digest is the digest of its canonical form, trust anchors included.', 'policy', () => clone(PO0), exp => must(exp.preimage.startsWith('{"allowedSources":["runtime"],"id":"vector-policy-v1"') && exp.digest === sha(exp.preimage), 'preimage differs from the claim'));
+DG('evidence-signing-input-is-domain-separated', ['KYA-INT-003'], 'A receipt payload as the evidence signing input.', 'KYA-INT-003: the signing input is the evidence domain text, a line feed and the canonical payload.', 'evidence-signing-input', () => clone(W0.evidence[0].payload), exp => must(exp.preimage === 'kya.evidence/v1\n' + canonical(W0.evidence[0].payload) && exp.digest === sha(exp.preimage) && exp.digest !== digest(W0.evidence[0].payload), 'signing input is not domain separated'));
+const INC0 = incTools(W0).inc('inc-1', 'report');
+DG('incident-signing-input-is-domain-separated', ['KYA-INT-003'], 'An incident payload as the incident signing input.', 'KYA-INT-003: the incident signing input uses its own domain text.', 'incident-signing-input', () => clone(INC0.payload), exp => must(exp.preimage === 'kya.incident/v1\n' + canonical(INC0.payload) && exp.digest === sha(exp.preimage) && exp.digest !== digest(INC0.payload), 'signing input is not domain separated'));
+DGR('manifest-unknown-field', ['KYA-INT-004', 'KYA-BND-002'], 'The manifest carries a member the schema does not define.', 'KYA-INT-004: an invalid record has no digest.', 'manifest', () => ({ ...clone(M0), note: 'x' }));
+DGR('manifest-expires-before-it-is-issued', ['KYA-BND-002', 'KYA-INT-004'], 'The manifest expiry precedes its issue time.', 'KYA-BND-002: temporal inconsistency is refused.', 'manifest', () => ({ ...clone(M0), expiresAt: '2026-10-13T00:00:00.000Z' }));
+DGR('manifest-permission-both-allowed-and-forbidden', ['KYA-BND-002', 'KYA-INT-004'], 'A permission is both allowed and forbidden.', 'KYA-BND-002: conflicting permissions are refused.', 'manifest', () => { const m = clone(M0); m.scope.forbidden = ['read']; return m; });
+DGR('scope-of-an-invalid-manifest', ['KYA-INT-004'], 'The scope digest of a manifest that breaks the field rules.', 'KYA-INT-004: the scope digest is defined only for a valid manifest.', 'scope', () => { const m = clone(M0); m.agent.id = '-bad'; return m; });
+DGR('profile-with-a-duplicate-check', ['KYA-INT-004', 'KYA-BND-002'], 'Two profile checks share an ID.', 'KYA-BND-002: duplicate identifiers are refused.', 'profile', () => { const p = clone(P0); p.checks[1].id = p.checks[0].id; return p; });
+DGR('policy-with-a-noncanonical-trust-anchor-key', ['KYA-ENV-001', 'KYA-INT-004'], 'A trust anchor key is spelled with CRLF line endings.', 'KYA-ENV-001: a key has one accepted spelling.', 'policy', () => { const p = clone(PO0); p.trustedKeys[0].publicKey = p.trustedKeys[0].publicKey.replace(/\n/g, '\r\n'); return p; });
+DGR('evidence-payload-with-an-unknown-outcome', ['KYA-INT-004'], 'A receipt payload names an outcome that is not defined.', 'KYA-INT-004: an invalid payload has no signing input.', 'evidence-signing-input', () => ({ ...clone(W0.evidence[0].payload), outcome: 'maybe' }));
+DGR('incident-that-references-itself', ['KYA-INT-004'], 'An incident resolution names its own ID as the reference.', 'KYA-INT-004: an invalid payload has no signing input.', 'incident-signing-input', () => ({ ...clone(INC0.payload), kind: 'resolution', refId: INC0.payload.id }));
+const incEdit = patch => () => ({ ...clone(INC0.payload), ...patch });
+DG('incident-resolution-signing-input', ['KYA-INT-003'], 'A resolution payload that references a report.', 'KYA-INT-003: a resolution is a valid incident payload when it names another incident.', 'incident-signing-input', incEdit({ kind: 'resolution', refId: 'inc-0', severity: 'low' }), exp => must(exp.preimage.startsWith('kya.incident/v1\n{"detailsDigest":') && exp.preimage.includes('"refId":"inc-0"') && exp.digest === sha(exp.preimage), 'signing input differs from the claim'));
+DG('incident-appeal-signing-input', ['KYA-INT-003'], 'An appeal payload that references a report.', 'KYA-INT-003: an appeal is a valid incident payload when it names another incident.', 'incident-signing-input', incEdit({ kind: 'appeal', refId: 'inc-0' }), exp => must(exp.preimage.includes('"kind":"appeal"') && exp.digest === sha(exp.preimage), 'signing input differs from the claim'));
+DGR('incident-report-that-references-another-incident', ['KYA-INT-004'], 'A report payload carries a reference.', 'KYA-INT-004: a report has a null reference.', 'incident-signing-input', incEdit({ refId: 'inc-0' }));
+DGR('incident-resolution-without-a-reference', ['KYA-INT-004'], 'A resolution payload has a null reference.', 'KYA-INT-004: a resolution names the incident it resolves.', 'incident-signing-input', incEdit({ kind: 'resolution', refId: null }));
+DGR('incident-with-an-unknown-severity', ['KYA-INT-004'], 'The severity is urgent.', 'KYA-INT-004: severity is one of four values.', 'incident-signing-input', incEdit({ severity: 'urgent' }));
+DGR('incident-with-an-unknown-kind', ['KYA-INT-004'], 'The kind is comment.', 'KYA-INT-004: kind is one of three values.', 'incident-signing-input', incEdit({ kind: 'comment' }));
+DGR('incident-with-an-extra-member', ['KYA-INT-004'], 'The incident payload carries a narrative member.', 'KYA-INT-004: incident records carry no narrative and no unknown fields.', 'incident-signing-input', incEdit({ narrative: 'details' }));
+DGR('incident-details-digest-is-not-a-hash', ['KYA-INT-004'], 'The details digest is short text.', 'KYA-INT-004: the details digest is a hash.', 'incident-signing-input', incEdit({ detailsDigest: 'details' }));
+DGR('evidence-payload-offered-as-an-incident', ['KYA-INT-003', 'KYA-INT-004'], 'A receipt payload is given to the incident signing input.', 'KYA-INT-003: the two signing domains are not interchangeable, and a payload of the other type is invalid.', 'incident-signing-input', () => clone(W0.evidence[0].payload));
+DGR('incident-payload-offered-as-evidence', ['KYA-INT-003', 'KYA-INT-004'], 'An incident payload is given to the evidence signing input.', 'KYA-INT-003: the two signing domains are not interchangeable.', 'evidence-signing-input', () => clone(INC0.payload));
+DGR('manifest-offered-as-a-profile', ['KYA-INT-004'], 'A manifest is given as a profile.', 'KYA-INT-004: a value of the wrong record type is refused.', 'profile', () => clone(M0));
+DGR('unknown-artifact', ['KYA-INT-004'], 'The artifact name is not one of the six.', 'KYA-INT-004: an unknown artifact is refused.', 'assessment', () => ({}));
+DGR('value-is-a-string', ['KYA-INT-004'], 'The value is a string, not a record.', 'KYA-INT-004: input of the wrong type is refused.', 'manifest', 'not a record');
+O('digest.refuse-extra-input-member', 'digest', ['KYA-INT-004'], 'The inputs carry a member besides artifact and value.', 'KYA-INT-004: operation inputs have exactly the listed members.', () => ({ artifact: 'profile', value: clone(P0), extra: 1 }), REFUSE);
+O('digest.refuse-missing-value', 'digest', ['KYA-INT-004'], 'The inputs carry no value member.', 'KYA-INT-004: a missing member is refused.', { artifact: 'profile' }, REFUSE);
+
+// verify-envelope
+const VE = (name, reqs, description, rationale, kind, envelope, claim) => O('verify-envelope.' + name, 'verify-envelope', reqs, description, rationale, () => ({ kind, envelope: typeof envelope === 'function' ? envelope() : envelope }), claim);
+const VF = (name, reqs, description, rationale, kind, envelope, failure) => VE(name, reqs, description, rationale, kind, envelope, { valid: false, failure, keyId: null, envelopeDigest: null, signingInputSha256: null });
+const EV = key => signEvidence(W0.evidence[0].payload, KEYS[key].priv);
+const ev = (edit, key = 'self') => () => { const e = clone(EV(key)); edit(e); return e; };
+const ie = (edit, key = 'self') => () => { const e = clone(signIncident(INC0.payload, KEYS[key].priv)); edit(e); return e; };
+const ENVR = ['KYA-ENV-001', 'KYA-INT-003'];
+const validOk = (key, kind = 'evidence') => exp => must(exp.valid === true && exp.failure === null && exp.keyId === KEYS[key].id && exp.signingInputSha256 === sha((kind === 'evidence' ? 'kya.evidence/v1\n' : 'kya.incident/v1\n') + canonical(kind === 'evidence' ? W0.evidence[0].payload : INC0.payload)), 'valid envelope differs from the claim');
+VE('valid-evidence-signed-by-a-self-key', ENVR, 'A receipt signed by a self-role key.', 'KYA-INT-003: the signing input and the envelope digest of a valid envelope are exact.', 'evidence', ev(() => {}, 'self'), validOk('self'));
+VE('valid-evidence-signed-by-an-independent-key', ENVR, 'A receipt signed by an independent-role key.', 'KYA-INT-003: verification does not read roles, so the result has the same shape.', 'evidence', ev(() => {}, 'indep'), validOk('indep'));
+VE('valid-evidence-signed-by-a-capture-issuer-key', ['KYA-TRU-001', 'KYA-INT-003'], 'A receipt signed by a key whose policy role is capture-issuer.', 'KYA-TRU-001: signature validity is checked separately from trust, so a valid envelope from a key that cannot issue scoring evidence is still valid.', 'evidence', ev(() => {}, 'capture'), validOk('capture'));
+VE('valid-evidence-signed-by-a-key-no-policy-trusts', ['KYA-TRU-001', 'KYA-INT-003'], 'A receipt signed by a key that no trust anchor lists.', 'KYA-TRU-001: a receipt does not make its own key trusted, and verification does not consult trust, so validity says nothing about trust.', 'evidence', ev(() => {}, 'untrusted'), validOk('untrusted'));
+VE('valid-evidence-member-order-does-not-matter', ['KYA-INT-001', 'KYA-INT-003'], 'The same valid envelope delivered with every object in reverse member order.', 'KYA-INT-001: verification and the envelope digest use the canonical form.', 'evidence', () => flip(clone(EV('self'))), exp => must(exp.valid === true && exp.envelopeDigest === digest(EV('self')), 'envelope digest differs from the digest of the same envelope in the other order'));
+VE('valid-incident-envelope', ENVR, 'A signed incident report.', 'KYA-INT-003: incident envelopes are verified with their own signing domain.', 'incident', ie(() => {}), validOk('self', 'incident'));
+VF('payload-tampered-after-signing', ['KYA-INT-003', 'KYA-TRU-002'], 'The outcome in the payload is changed after signing.', 'KYA-TRU-002: a tampered payload does not verify.', 'evidence', ev(e => { e.payload.outcome = 'fail'; }), 'SIGNATURE_INVALID');
+VF('incident-payload-tampered-after-signing', ['KYA-INT-003', 'KYA-TRU-002'], 'The severity in an incident payload is changed after signing.', 'KYA-TRU-002: a tampered incident does not verify.', 'incident', ie(e => { e.payload.severity = 'low'; }), 'SIGNATURE_INVALID');
+VF('signature-of-another-payload', ['KYA-INT-003'], 'A valid signature over a different payload of the same key.', 'KYA-INT-003: the signature binds the exact canonical bytes.', 'evidence', ev(e => { e.proof.signature = EV('self').proof.signature; e.payload.id = 'run-1:other'; }), 'SIGNATURE_INVALID');
+VF('all-zero-signature', ['KYA-INT-003', 'KYA-ENV-002'], 'The signature is 64 zero bytes in canonical spelling.', 'KYA-ENV-002: a well formed but wrong signature is an invalid signature, not an encoding error.', 'evidence', ev(e => { e.proof.signature = 'A'.repeat(86); }), 'SIGNATURE_INVALID');
+VF('evidence-payload-signed-in-the-incident-domain', ['KYA-INT-003'], 'The receipt payload is signed with the incident domain text instead of the evidence one.', 'KYA-INT-003: domain separation means a signature made for another protocol does not verify.', 'evidence', ev(e => { e.proof.signature = sign(null, Buffer.from('kya.incident/v1\n' + canonical(e.payload)), KEYS.self.priv).toString('base64url'); }), 'SIGNATURE_INVALID');
+VF('incident-signed-in-the-evidence-domain', ['KYA-INT-003'], 'The incident payload is signed with the evidence domain text.', 'KYA-INT-003: an evidence domain signature does not verify as an incident.', 'incident', ie(e => { e.proof.signature = sign(null, Buffer.from('kya.evidence/v1\n' + canonical(e.payload)), KEYS.self.priv).toString('base64url'); }), 'SIGNATURE_INVALID');
+VF('signature-over-bytes-without-the-domain-text', ['KYA-INT-003'], 'The payload is signed without any domain text.', 'KYA-INT-003: the signing input always starts with the domain text.', 'evidence', ev(e => { e.proof.signature = sign(null, Buffer.from(canonical(e.payload)), KEYS.self.priv).toString('base64url'); }), 'SIGNATURE_INVALID');
+VF('signature-over-a-non-canonical-payload-text', ['KYA-INT-001', 'KYA-INT-003'], 'The payload is signed in its natural member order and not in canonical order.', 'KYA-INT-001: the signed bytes are the canonical form, so another spelling of the same payload does not verify.', 'evidence', ev(e => { const p = e.payload; const unsorted = '{"schema":"kya.evidence/v1","id":' + JSON.stringify(p.id) + ',' + Object.keys(p).filter(k => !['schema', 'id'].includes(k)).map(k => JSON.stringify(k) + ':' + JSON.stringify(p[k])).join(',') + '}'; e.proof.signature = sign(null, Buffer.from('kya.evidence/v1\n' + unsorted), KEYS.self.priv).toString('base64url'); }), 'SIGNATURE_INVALID');
+VF('scalar-malleated-by-adding-the-group-order', ['KYA-ENV-002', 'KYA-INT-003'], 'The scalar half S of a valid signature is replaced by S plus the group order L.', 'KYA-ENV-002: a verifier requires the scalar to be below the group order, so the malleated signature does not verify.', 'evidence', ev(e => { const sig = Buffer.from(e.proof.signature, 'base64url'); const L = (1n << 252n) + 27742317777372353535851937790883648493n; let S = 0n; for (let i = 31; i >= 0; i--) S = (S << 8n) | BigInt(sig[32 + i]); let t = S + L; for (let i = 0; i < 32; i++) { sig[32 + i] = Number(t & 0xffn); t >>= 8n; } e.proof.signature = sig.toString('base64url'); }), 'SIGNATURE_INVALID');
+VF('attacker-replaces-the-key-and-its-id-but-keeps-the-signature', ['KYA-TRU-002', 'KYA-INT-003'], 'The proof key and its matching key ID are swapped for another key while the signature stays.', 'KYA-TRU-002: key substitution gives a consistent proof whose signature does not verify.', 'evidence', ev(e => { e.proof.publicKey = KEYS.indep.pem; e.proof.keyId = KEYS.indep.id; }), 'SIGNATURE_INVALID');
+VF('key-id-names-another-key', ['KYA-TRU-002'], 'The key ID is the ID of another valid key while the public key is unchanged.', 'KYA-TRU-002: the key ID must be the fingerprint of the carried key.', 'evidence', ev(e => { e.proof.keyId = KEYS.indep.id; }), 'KEY_ID_MISMATCH');
+VF('key-id-is-a-hash-of-nothing-in-particular', ['KYA-TRU-002'], 'The key ID is a well formed hash that fingerprints no key.', 'KYA-TRU-002: a well formed key ID that does not match is a mismatch.', 'evidence', ev(e => { e.proof.keyId = hashBytes('no such key'); }), 'KEY_ID_MISMATCH');
+VF('another-valid-key-with-the-original-key-id', ['KYA-TRU-002'], 'The public key is replaced by another valid key while the key ID stays.', 'KYA-TRU-002: substituting only the key breaks the fingerprint.', 'evidence', ev(e => { e.proof.publicKey = KEYS.indep.pem; }), 'KEY_ID_MISMATCH');
+for (const [name, fn] of Object.entries(spellings)) VF('public-key-spelling-' + name, ['KYA-ENV-001'], `The proof key is spelled as ${name.replace(/-/g, ' ')} while the key ID and the signature are unchanged.`, 'KYA-ENV-001: a key has exactly one accepted spelling, so a re-encoded key is refused as a key before any signature is considered.', 'evidence', ev(e => { e.proof.publicKey = fn(e.proof.publicKey); }), 'INVALID_KEY');
+const keyEdit = mk => e => { const k = mk(); e.proof.publicKey = k.publicKey; e.proof.keyId = k.id; e.proof.signature = Buffer.concat([Buffer.from([1]), Buffer.alloc(63)]).toString('base64url'); };
+VF('small-order-identity-point-with-a-forged-signature', ['KYA-ENV-002'], 'The proof key is the Ed25519 identity point, with the key ID of that key and signature 01 followed by zeros.', 'KYA-ENV-002: a small order key is refused as a key; otherwise it would verify any payload.', 'evidence', ev(keyEdit(() => rawPoint('01' + '00'.repeat(31)))), 'INVALID_KEY');
+VF('small-order-two-point', ['KYA-ENV-002'], 'The proof key is the order two point.', 'KYA-ENV-002: small order keys are refused.', 'evidence', ev(keyEdit(() => rawPoint('ec' + 'ff'.repeat(30) + '7f'))), 'INVALID_KEY');
+VF('off-curve-point', ['KYA-ENV-002'], 'The proof key encodes y equal to 2, which is not on the curve.', 'KYA-ENV-002: off-curve keys are refused.', 'evidence', ev(keyEdit(() => rawPoint('02' + '00'.repeat(31)))), 'INVALID_KEY');
+VF('non-canonical-y-coordinate', ['KYA-ENV-002'], 'The proof key encodes y equal to the field prime.', 'KYA-ENV-002: non-canonical encodings are refused.', 'evidence', ev(keyEdit(() => rawPoint('ed' + 'ff'.repeat(30) + '7f'))), 'INVALID_KEY');
+VF('der-with-a-long-form-length', ['KYA-ENV-001'], 'The proof key is the same key with a long form DER length byte, with the key ID of those bytes.', 'KYA-ENV-001: any other DER spelling of a key is refused.', 'evidence', ev(e => { e.proof.publicKey = pemOfDer(longFormDer); e.proof.keyId = sha256(longFormDer); }, 'indep2'), 'INVALID_KEY');
+VF('der-with-bytes-after-the-spki', ['KYA-ENV-001'], 'The proof key carries one zero byte after the 44 byte SPKI.', 'KYA-ENV-001: bytes after the SPKI are refused.', 'evidence', ev(e => { e.proof.publicKey = pemOfDer(trailingDer); e.proof.keyId = sha256(trailingDer); }, 'indep2'), 'INVALID_KEY');
+VF('key-id-in-uppercase-hexadecimal', ['KYA-ENV-001'], 'The key ID is the right fingerprint written in uppercase.', 'KYA-ENV-001: a hash is 64 lowercase hexadecimal characters.', 'evidence', ev(e => { e.proof.keyId = e.proof.keyId.toUpperCase(); }), 'INVALID_KEY');
+VF('key-id-too-short', ['KYA-ENV-001'], 'The key ID is 63 characters.', 'KYA-ENV-001: a hash has exactly 64 characters.', 'evidence', ev(e => { e.proof.keyId = e.proof.keyId.slice(1); }), 'INVALID_KEY');
+VF('key-id-is-not-a-string', ['KYA-ENV-001'], 'The key ID is the number 7.', 'KYA-ENV-001: a key ID is a hash string.', 'evidence', ev(e => { e.proof.keyId = 7; }), 'INVALID_KEY');
+VF('public-key-is-not-a-string', ['KYA-ENV-001'], 'The public key is an object.', 'KYA-ENV-001: a public key is the PEM text.', 'evidence', ev(e => { e.proof.publicKey = {}; }), 'INVALID_KEY');
+VF('bad-key-is-judged-before-the-key-id-mismatch', ['KYA-ENV-001'], 'The key is spelled with CRLF and the key ID is also wrong.', 'KYA-ENV-001: the key step comes before the fingerprint step.', 'evidence', ev(e => { e.proof.publicKey = e.proof.publicKey.replace(/\n/g, '\r\n'); e.proof.keyId = KEYS.indep.id; }), 'INVALID_KEY');
+VF('signature-with-padding', ['KYA-INT-003'], 'The signature is followed by an equals sign, 87 characters.', 'KYA-INT-003: the signature is exactly 86 characters of base64url without padding.', 'evidence', ev(e => { e.proof.signature += '='; }), 'INVALID_SIGNATURE_ENCODING');
+VF('signature-one-character-short', ['KYA-INT-003'], 'The signature is 85 characters.', 'KYA-INT-003: the signature has exactly 86 characters.', 'evidence', ev(e => { e.proof.signature = e.proof.signature.slice(0, 85); }), 'INVALID_SIGNATURE_ENCODING');
+VF('signature-in-the-standard-base64-alphabet', ['KYA-INT-003'], 'The first signature character is replaced by a plus sign.', 'KYA-INT-003: only the base64url alphabet is accepted.', 'evidence', ev(e => { e.proof.signature = '+' + e.proof.signature.slice(1); }), 'INVALID_SIGNATURE_ENCODING');
+VF('signature-with-nonzero-trailing-bits', ['KYA-INT-003'], 'The last signature character is changed so the text no longer re-encodes to itself.', 'KYA-INT-003: a signature has one spelling, so one signed payload has one envelope digest.', 'evidence', ev(e => { const alpha = ALPHA64.replace('+', '-').replace('/', '_'); const idx = alpha.indexOf(e.proof.signature.at(-1)); e.proof.signature = e.proof.signature.slice(0, 85) + alpha[(idx + 1) % 64]; }), 'INVALID_SIGNATURE_ENCODING');
+VF('signature-is-empty', ['KYA-INT-003'], 'The signature is the empty string.', 'KYA-INT-003: an empty signature is an encoding failure.', 'evidence', ev(e => { e.proof.signature = ''; }), 'INVALID_SIGNATURE_ENCODING');
+VF('signature-is-not-a-string', ['KYA-INT-003'], 'The signature is the number 0.', 'KYA-INT-003: a signature is text.', 'evidence', ev(e => { e.proof.signature = 0; }), 'INVALID_SIGNATURE_ENCODING');
+VF('algorithm-rsa', ['KYA-INT-004'], 'The proof names the algorithm RSA.', 'KYA-INT-004: an unsupported algorithm is refused, not approximated.', 'evidence', ev(e => { e.proof.algorithm = 'RSA'; }), 'UNSUPPORTED_ALGORITHM');
+VF('algorithm-in-lowercase', ['KYA-INT-004'], 'The proof names ed25519 in lowercase.', 'KYA-INT-004: the algorithm name is exact.', 'evidence', ev(e => { e.proof.algorithm = 'ed25519'; }), 'UNSUPPORTED_ALGORITHM');
+VF('algorithm-is-judged-before-the-key', ['KYA-INT-004'], 'The algorithm is wrong and the key ID is not a hash.', 'KYA-INT-004: the algorithm step comes before the key steps.', 'evidence', ev(e => { e.proof.algorithm = 'RSA'; e.proof.keyId = 'x'; }), 'UNSUPPORTED_ALGORITHM');
+VF('proof-with-an-extra-member', ['KYA-INT-004'], 'The proof carries a fifth member.', 'KYA-INT-004: unknown fields are rejected, never ignored.', 'evidence', ev(e => { e.proof.note = 'x'; }), 'MALFORMED_PROOF');
+VF('proof-without-a-signature-member', ['KYA-INT-004'], 'The proof lacks the signature member.', 'KYA-INT-004: a missing field is rejected.', 'evidence', ev(e => { delete e.proof.signature; }), 'MALFORMED_PROOF');
+VF('proof-is-null', ['KYA-INT-004'], 'The proof is null.', 'KYA-INT-004: a proof must be an object.', 'evidence', ev(e => { e.proof = null; }), 'MALFORMED_PROOF');
+VF('proof-members-are-judged-before-the-algorithm', ['KYA-INT-004'], 'The proof has an extra member and an unsupported algorithm.', 'KYA-INT-004: the proof shape comes before the algorithm.', 'evidence', ev(e => { e.proof.note = 'x'; e.proof.algorithm = 'RSA'; }), 'MALFORMED_PROOF');
+VF('payload-with-an-unknown-outcome', ['KYA-INT-004'], 'The payload names an outcome that is not defined.', 'KYA-INT-004: a payload that breaks the field rules is invalid whatever the signature.', 'evidence', ev(e => { e.payload.outcome = 'maybe'; }), 'INVALID_PAYLOAD');
+VF('payload-with-an-extra-member', ['KYA-INT-004'], 'The payload carries a member the schema does not define.', 'KYA-INT-004: unknown fields are rejected.', 'evidence', ev(e => { e.payload.note = 'x'; }), 'INVALID_PAYLOAD');
+VF('payload-is-not-an-object', ['KYA-INT-004'], 'The payload is a string.', 'KYA-INT-004: a payload is an object.', 'evidence', ev(e => { e.payload = 'text'; }), 'INVALID_PAYLOAD');
+VF('incident-envelope-offered-as-evidence', ['KYA-INT-003', 'KYA-INT-004'], 'A valid incident envelope is verified as evidence.', 'KYA-INT-003: the record type asked for is part of the question; an incident payload is not a receipt payload.', 'evidence', ie(() => {}), 'INVALID_PAYLOAD');
+VF('evidence-envelope-offered-as-an-incident', ['KYA-INT-003', 'KYA-INT-004'], 'A valid receipt envelope is verified as an incident.', 'KYA-INT-003: a receipt payload is not an incident payload.', 'incident', ev(() => {}), 'INVALID_PAYLOAD');
+VF('payload-is-judged-before-the-proof', ['KYA-INT-004'], 'The payload outcome is invalid and the proof algorithm is also wrong.', 'KYA-INT-004: the payload step comes before the proof steps.', 'evidence', ev(e => { e.payload.outcome = 'maybe'; e.proof.algorithm = 'RSA'; }), 'INVALID_PAYLOAD');
+VF('payload-is-judged-before-the-proof-shape', ['KYA-INT-004'], 'The payload outcome is invalid and the proof has an extra member.', 'KYA-INT-004: the payload step comes before the proof shape step.', 'evidence', ev(e => { e.payload.outcome = 'maybe'; e.proof.note = 'x'; }), 'INVALID_PAYLOAD');
+VF('envelope-with-an-extra-member', ['KYA-INT-004'], 'The envelope carries a third member.', 'KYA-INT-004: an envelope has exactly payload and proof.', 'evidence', ev(e => { e.note = 'x'; }), 'MALFORMED_ENVELOPE');
+VF('envelope-without-a-proof', ['KYA-INT-004'], 'The envelope has only a payload.', 'KYA-INT-004: an envelope has exactly payload and proof.', 'evidence', ev(e => { delete e.proof; }), 'MALFORMED_ENVELOPE');
+VF('envelope-is-an-array', ['KYA-INT-004'], 'The envelope is an empty array.', 'KYA-INT-004: an envelope is an object.', 'evidence', () => [], 'MALFORMED_ENVELOPE');
+VF('envelope-is-a-string', ['KYA-INT-004'], 'The envelope is a string.', 'KYA-INT-004: an envelope is an object.', 'incident', 'envelope', 'MALFORMED_ENVELOPE');
+VF('envelope-is-null', ['KYA-INT-004'], 'The envelope is null.', 'KYA-INT-004: an envelope is an object.', 'evidence', null, 'MALFORMED_ENVELOPE');
+const VR = (name, reqs, description, rationale, inputs) => O('verify-envelope.refuse-' + name, 'verify-envelope', reqs, description, rationale, inputs, REFUSE);
+VR('unknown-kind', ['KYA-INT-004'], 'The kind is assessment, which this operation does not verify.', 'KYA-INT-004: an unknown kind is refused.', () => ({ kind: 'assessment', envelope: clone(EV('self')) }));
+VR('kind-is-a-number', ['KYA-INT-004'], 'The kind is the number 1.', 'KYA-INT-004: input of the wrong type is refused.', () => ({ kind: 1, envelope: clone(EV('self')) }));
+VR('missing-envelope', ['KYA-INT-004'], 'The inputs carry no envelope member.', 'KYA-INT-004: a missing member is refused.', { kind: 'evidence' });
+VR('extra-input-member', ['KYA-INT-004'], 'The inputs carry a member besides kind and envelope.', 'KYA-INT-004: operation inputs have exactly the listed members.', () => ({ kind: 'evidence', envelope: clone(EV('self')), trusted: true }));
+VR('inputs-are-empty', ['KYA-INT-004'], 'The inputs are an empty object.', 'KYA-INT-004: a missing member is refused.', {});
+
+// compare
+const reportOf = spec => { const w = world(spec); return assess(clone({ manifest: w.manifest, profile: w.profile, policy: w.policy, evidence: w.evidence, evaluatorDigest: w.evaluatorDigest, now: w.now })); };
+const resealEdit = (r, edit) => { const body = clone(r); delete body.reportDigest; edit(body); return { ...body, reportDigest: digest(body) }; };
+const R_ALL = reportOf({});
+const R_FAIL1 = reportOf({ ev: t => t.all({}, { 'rel.retry': 'fail' }) });
+const R_CRIT = reportOf({ ev: t => t.all({}, { 'id.binding': 'fail' }) });
+const CMP = (name, reqs, description, rationale, left, right, claim) => O('compare.' + name, 'compare', reqs, description, rationale, () => ({ left: clone(typeof left === 'function' ? left() : left), right: clone(typeof right === 'function' ? right() : right) }), claim);
+const CMPR = (name, reqs, description, rationale, left, right) => CMP('refuse-' + name, reqs, description, rationale, left, right, REFUSE);
+const BNDR = ['KYA-BND-003', 'KYA-INT-004'];
+CMP('same-population-different-scores', ['KYA-BND-003'], 'A complete passing run against a run with one failed non critical check, same policy.', 'KYA-BND-003: reports under one policy, profile, evaluator, scope and population compare, and the score difference is reported without a causal claim.', R_ALL, R_FAIL1, { comparable: true, reason: null, scoreDelta: -100, decisionChanged: false, measurement: 'same-policy evidence comparison; not a causal improvement claim' });
+CMP('improvement-has-a-positive-delta', ['KYA-BND-003'], 'The same pair in the other order.', 'KYA-BND-003: the delta is the right score minus the left score.', R_FAIL1, R_ALL, { comparable: true, scoreDelta: 100, decisionChanged: false });
+CMP('critical-failure-changes-the-decision', ['KYA-BND-003'], 'A qualified run against a run with a critical failure.', 'KYA-BND-003: the comparison reports that the decision changed.', R_ALL, R_CRIT, { comparable: true, scoreDelta: -200, decisionChanged: true });
+CMP('identical-reports', ['KYA-BND-003'], 'A report compared with itself.', 'KYA-BND-003: identical reports compare with a zero difference.', R_ALL, R_ALL, exp => must(exp.comparable === true && exp.scoreDelta === 0 && exp.decisionChanged === false && exp.left === R_ALL.reportDigest && exp.right === R_ALL.reportDigest, 'identical reports did not compare as equal'));
+CMP('two-blocked-reports-do-not-change-decision', ['KYA-BND-003'], 'Two runs that are both blocked by a critical failure, with different scores.', 'KYA-BND-003: the decision is unchanged when both are blocked.', R_CRIT, reportOf({ ev: t => t.all({}, { 'id.binding': 'fail', 'rel.retry': 'fail' }) }), { comparable: true, scoreDelta: -100, decisionChanged: false });
+CMP('reports-carry-their-own-digests', ['KYA-BND-003'], 'Digests of both reports in the result.', 'KYA-BND-003: the result names the two compared reports by their digests.', R_ALL, R_FAIL1, exp => must(exp.left === R_ALL.reportDigest && exp.right === R_FAIL1.reportDigest, 'result does not carry the report digests'));
+CMP('report-member-order-does-not-matter', ['KYA-BND-003', 'KYA-INT-001'], 'Both reports delivered with every object in reverse member order.', 'KYA-INT-001: the checksum is over the canonical form, so delivery order is irrelevant.', () => flip(R_ALL), () => flip(R_FAIL1), { comparable: true, scoreDelta: -100 });
+const NC = (name, reason, description, rationale, left, right) => CMP('not-comparable-' + name, ['KYA-BND-003'], description, rationale, left, right, { comparable: false, reason, scoreDelta: null, decisionChanged: null, measurement: null });
+NC('different-scope-id', 'SCOPE_ID_DIFFERS', 'The second report is for the scope scope:other.', 'KYA-BND-003: reports for different scope IDs do not compare.', R_ALL, reportOf({ m: m => ({ ...m, scope: { ...m.scope, id: 'scope:other' } }) }));
+NC('same-scope-id-different-purpose', 'SCOPE_DIGEST_DIFFERS', 'Both scopes are scope:vector and the purpose differs.', 'KYA-BND-003: equal scope names with different purpose must not compare.', R_ALL, reportOf({ m: m => ({ ...m, scope: { ...m.scope, purpose: 'A different purpose' } }) }));
+NC('same-scope-id-different-permissions', 'SCOPE_DIGEST_DIFFERS', 'Both scopes are scope:vector and the second allows one more permission.', 'KYA-BND-003: equal scope names with different permissions must not compare.', R_ALL, reportOf({ m: m => ({ ...m, scope: { ...m.scope, permissions: ['read', 'write', 'list'] } }) }));
+NC('different-profile', 'PROFILE_DIFFERS', 'The second run uses a profile with another title.', 'KYA-BND-003: reports under different frozen profiles do not compare; the profile is judged before the policy that binds it.', R_ALL, reportOf({ pr: p => ({ ...p, title: 'Vector profile B' }) }));
+NC('different-evaluator', 'EVALUATOR_DIFFERS', 'The second run was scored under another evaluator digest.', 'KYA-BND-003: reports from different evaluators do not compare.', R_ALL, (() => { const X = hashBytes('another evaluator'); const w = world({ ev: t => t.all({ patch: { evaluatorDigest: X } }) }); return assess(clone({ manifest: w.manifest, profile: w.profile, policy: w.policy, evidence: w.evidence, evaluatorDigest: X, now: w.now })); })());
+NC('different-policy', 'POLICY_DIFFERS', 'The second run is under a policy with a lower score floor.', 'KYA-BND-003: reports under different policies do not compare.', R_ALL, reportOf({ p: p => ({ ...p, minScore: 650 }) }));
+const BOTH_SOURCES = p => ({ ...p, allowedSources: ['fixture', 'runtime'] });
+NC('different-evidence-mode', 'EVIDENCE_MODE_DIFFERS', 'The same policy allows runtime and fixture evidence; one run is runtime and the other fixture.', 'KYA-BND-003: runtime and fixture results are different kinds of evidence and do not compare.', reportOf({ p: BOTH_SOURCES }), reportOf({ p: BOTH_SOURCES, ev: t => t.all({ source: 'fixture' }) }));
+NC('scope-id-is-judged-before-the-scope-digest', 'SCOPE_ID_DIFFERS', 'The second report differs in scope ID, purpose and policy.', 'KYA-BND-003: the first failing rule is the reason.', R_ALL, reportOf({ m: m => ({ ...m, scope: { ...m.scope, id: 'scope:other', purpose: 'Elsewhere' } }), p: p => ({ ...p, minScore: 650 }) }));
+NC('population-with-a-check-removed', 'CHECK_POPULATION_DIFFERS', 'A resealed second report lists five checks instead of six.', 'KYA-BND-003: complete check populations are required; a shorter list does not compare.', R_ALL, resealEdit(R_ALL, b => { b.checks = b.checks.slice(0, 5); }));
+NC('population-with-a-different-weight', 'CHECK_POPULATION_DIFFERS', 'A resealed second report gives one check another weight.', 'KYA-BND-003: the same checks with the same weights are required.', R_ALL, resealEdit(R_ALL, b => { b.checks = b.checks.map((c, i) => i === 0 ? { ...c, weight: c.weight + 1 } : c); }));
+NC('population-in-another-order', 'CHECK_POPULATION_DIFFERS', 'A resealed second report lists the checks in reverse order.', 'KYA-BND-003: populations are compared position by position in frozen profile order.', R_ALL, resealEdit(R_ALL, b => { b.checks = [...b.checks].reverse(); }));
+NC('population-with-a-renamed-check', 'CHECK_POPULATION_DIFFERS', 'A resealed second report renames one check.', 'KYA-BND-003: the same check IDs are required.', R_ALL, resealEdit(R_ALL, b => { b.checks = b.checks.map((c, i) => i === 2 ? { ...c, id: 'sec.other' } : c); }));
+NC('check-without-evidence-on-one-side', 'CHECKS_INCOMPLETE', 'The second run has no evidence for one check, which stays unknown.', 'KYA-BND-003: a score over an incomplete population is not comparable, because omission could not then be told from failure.', R_ALL, reportOf({ ev: t => t.all({}, { 'rel.retry': 'omit' }) }));
+NC('check-abstains-on-one-side', 'CHECKS_INCOMPLETE', 'The first run has one abstained check.', 'KYA-BND-003: abstain is neither pass nor fail, so the population is incomplete.', reportOf({ ev: t => t.all({}, { 'sec.inject': 'abstain' }) }), R_ALL);
+NC('check-errors-on-both-sides', 'CHECKS_INCOMPLETE', 'Both runs report an error outcome for the same check.', 'KYA-BND-003: an errored check is incomplete on either side.', reportOf({ ev: t => t.all({}, { 'ops.cost': 'error' }) }), reportOf({ ev: t => t.all({}, { 'ops.cost': 'error', 'rel.retry': 'fail' }) }));
+NC('population-is-judged-before-completeness', 'CHECK_POPULATION_DIFFERS', 'The second report both lists fewer checks and holds an unknown check.', 'KYA-BND-003: population is judged before completeness.', R_ALL, resealEdit(reportOf({ ev: t => t.all({}, { 'rel.retry': 'omit' }) }), b => { b.checks = b.checks.slice(0, 5); }));
+CMPR('report-edited-without-resealing', BNDR, 'The decision of the second report is edited and the checksum is left as it was.', 'KYA-BND-003: a report whose checksum does not match is refused, not compared.', R_ALL, () => ({ ...clone(R_FAIL1), decision: 'blocked' }));
+CMPR('blocker-codes-contradict-the-decision', BNDR, 'A resealed second report says qualified and carries a blocker code.', 'KYA-BND-003: the blocker code rules apply before any comparison.', R_ALL, resealEdit(R_ALL, b => { b.blockers = ['Score below policy']; b.blockerCodes = ['SCORE_BELOW_POLICY']; }));
+CMPR('legacy-report-without-a-full-scope-digest', BNDR, 'A resealed report lacks the scope digest, as reports from before the digest did.', 'KYA-BND-003: a legacy report must be recomputed before exact-scope comparison.', R_ALL, resealEdit(R_ALL, b => { delete b.scopeDigest; }));
+CMPR('report-without-a-policy-digest', BNDR, 'A resealed report lacks the policy digest.', 'KYA-BND-003: absent members are never equal by absence.', resealEdit(R_ALL, b => { delete b.policyDigest; }), resealEdit(R_FAIL1, b => { delete b.policyDigest; }));
+CMPR('report-with-a-malformed-profile-digest', BNDR, 'A resealed report holds a profile digest that is not a hash.', 'KYA-BND-003: the digests compared must be hashes.', R_ALL, resealEdit(R_ALL, b => { b.profileDigest = 'not-a-hash'; }));
+CMPR('score-is-not-an-integer', BNDR, 'A resealed report holds a text score.', 'KYA-BND-003: the score difference needs integer scores.', R_ALL, resealEdit(R_FAIL1, b => { b.score.earned = '900'; }));
+CMPR('decision-is-not-recognised', BNDR, 'A resealed report holds a decision outside the five.', 'KYA-BND-003: the decision must be one of the five.', R_ALL, resealEdit(R_ALL, b => { b.decision = 'approved'; }));
+CMPR('evidence-mode-is-not-recognised', BNDR, 'A resealed report holds an evidence mode outside the four.', 'KYA-BND-003: the evidence mode must be one of the four.', R_ALL, resealEdit(R_ALL, b => { b.evidenceMode = 'live'; }));
+CMPR('checks-are-not-an-array', BNDR, 'A resealed report holds an object where the checks belong.', 'KYA-BND-003: the check population must be an array.', R_ALL, resealEdit(R_ALL, b => { b.checks = {}; }));
+CMPR('left-is-not-an-object', BNDR, 'The left report is a string.', 'KYA-BND-003: the operands are reports.', 'report', R_ALL);
+O('compare.refuse-missing-right', 'compare', BNDR, 'The inputs carry no right report.', 'KYA-BND-003: a missing member is refused.', () => ({ left: clone(R_ALL) }), REFUSE);
+O('compare.refuse-extra-input-member', 'compare', BNDR, 'The inputs carry a member besides left and right.', 'KYA-BND-003: operation inputs have exactly the listed members.', () => ({ left: clone(R_ALL), right: clone(R_ALL), force: true }), REFUSE);
+
 // ---- build ----
 function subset(claim, got, path = '') {
   if (claim === null || typeof claim !== 'object') { if (!Object.is(claim, got)) return `${path}: claimed ${JSON.stringify(claim)}, reference ${JSON.stringify(got)}`; return null; }
@@ -508,6 +768,18 @@ export function buildVectors(registry) {
     if (miss) throw Error(`Vector ${d.id}: reference disagrees with the written claim at ${miss}`);
     vectors.push({ id: d.id, description: d.description, requirements: [...d.requirements].sort(), rationale: d.rationale, operation: d.operation, ...(rawInput === undefined ? { inputs } : { rawInput }), expected, ...(reproducible ? {} : { digestReproducible: false }) });
   }
+  // Contract version 2 operations. The expected value is the reference result; a claim (object or function) is written by hand and must hold.
+  for (const d of OPS) {
+    if (seen.has(d.id)) throw Error('Duplicate vector ID ' + d.id); seen.add(d.id);
+    for (const r of d.requirements) if (!known.has(r)) throw Error(`Vector ${d.id} cites unknown requirement ${r}`);
+    const inputs = clone(typeof d.inputs === 'function' ? d.inputs() : d.inputs);
+    let got;
+    const err = refuses(() => { got = V2_OPERATIONS[d.operation](clone(inputs)); });
+    const expected = err ? REFUSE : got;
+    const miss = typeof d.claim === 'function' ? (err ? 'the reference refused' : d.claim(expected)) : subset(d.claim, expected);
+    if (miss) throw Error(`Vector ${d.id}: reference disagrees with the written claim at ${miss}`);
+    vectors.push({ id: d.id, description: d.description, requirements: [...d.requirements].sort(), rationale: d.rationale, operation: d.operation, inputs, expected });
+  }
   const blockerCoverage = Object.fromEntries(BLOCKER_CODES.map(c => [c, vectors.filter(v => v.expected.blockerCodes?.includes(c)).map(v => v.id)]));
   const currencyCoverage = Object.fromEntries(Object.values(CURRENCY_CODES).map(c => [c, vectors.filter(v => v.expected.triggers?.some(t => t.code === c)).map(v => v.id)]));
   // NO_OBSERVED_CHECKS can only follow a would-be qualification with no scored check, and a qualification needs known weight above zero,
@@ -516,7 +788,7 @@ export function buildVectors(registry) {
   for (const [c, ids] of Object.entries(blockerCoverage)) if (!ids.length && !unreachable.some(u => u.code === c)) throw Error('No vector exercises blocker code ' + c);
   for (const [c, ids] of Object.entries(currencyCoverage)) if (!ids.length) throw Error('No vector exercises currency code ' + c);
   const keys = Object.fromEntries(Object.values(KEYS).map(k => [k.name, { role: k.role ?? 'not-a-trust-anchor', seedDerivation: 'SHA-256 of the UTF-8 string "kya.assessment-vectors/v1 public synthetic key seed: ' + k.name + '"', seedHex: k.seedHex, keyId: k.id, publicKey: k.pem }]));
-  return { schema: SCHEMA, warning: 'PUBLIC SYNTHETIC keys, receipts and times for conformance testing only; never use these keys, seeds or trust anchors in a real assessment. Expected values were produced by the JavaScript reference and checked against hand-written claims in the generator; they are not independently derived.',
+  return { schema: SCHEMA, contract: { version: 2, operations: ['assess', 'currency', 'canonicalize', 'digest', 'verify-envelope', 'compare'] }, warning: 'PUBLIC SYNTHETIC keys, receipts and times for conformance testing only; never use these keys, seeds or trust anchors in a real assessment. Expected values were produced by the JavaScript reference and checked against hand-written claims in the generator; they are not independently derived.',
     runAtDefault: '2026-10-14T12:00:00.000Z', evaluatorDigestDerivation: 'SHA-256 of the UTF-8 string "kya.assessment-vectors/v1 synthetic evaluator"',
     comparison: 'Result must equal expected key for key. reasonContains is a lowercase keyword that must appear, case-insensitively, in the implementation reason. When digestReproducible is false the reportDigest or resultDigest is not compared, because the report includes implementation specific error text. {"refused":true} means the implementation must exit non-zero.',
     keys, unreachableBlockerCodes: unreachable, coverage: { blockerCodes: blockerCoverage, currencyCodes: currencyCoverage }, vectors };

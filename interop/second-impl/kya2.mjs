@@ -28,23 +28,33 @@ export function canonical(v, depth = 0) {
 export const sha256hex = b => createHash('sha256').update(b).digest('hex');
 export const digest = v => sha256hex(canonical(v));
 
-// Strict JSON parse rejecting duplicate members (the stdin text is parsed with this).
-export function parseStrict(text) {
-  let i = 0;
-  const ws = () => { while (i < text.length && ' \t\n\r'.includes(text[i])) i++; };
+// Strict JSON parse written from "Canonical form and strict parsing" in docs/SPECIFICATION.md.
+// Input is a JS string (callers decode UTF-8 strictly). Limits: depth 32, 100000 values, strings of 1048576 code units,
+// input of maxBytes UTF-8 bytes (default 1048576). Member names __proto__, prototype and constructor are refused.
+const REFUSED_NAMES = new Set(['__proto__', 'prototype', 'constructor']);
+export function parseStrict(text, { maxBytes = 1048576 } = {}) {
   const fail = m => refuse('bad JSON: ' + m);
+  if (typeof text !== 'string') fail('not a text');
+  if (text.length > maxBytes || Buffer.byteLength(text, 'utf8') > maxBytes) fail('input too long');
+  // an unpaired surrogate as a raw character is refused (escapes are ASCII, so this only sees raw characters)
+  if (/[\ud800-\udbff](?![\udc00-\udfff])|(?<![\ud800-\udbff])[\udc00-\udfff]/.test(text)) fail('unpaired surrogate');
+  let i = 0, count = 0;
+  const ws = () => { while (i < text.length && (text[i] === ' ' || text[i] === '\t' || text[i] === '\n' || text[i] === '\r')) i++; };
+  const NUM = /-?(?:0|[1-9][0-9]*)(?:\.[0-9]+)?(?:[eE][+-]?[0-9]+)?/y;
+  const ESC = { '"': '"', '\\': '\\', '/': '/', b: '\b', f: '\f', n: '\n', r: '\r', t: '\t' };
   function value(depth) {
-    if (depth > 64) fail('depth');
+    if (depth > 32) fail('depth');
     ws();
+    if (++count > 100000) fail('too many values');
     const c = text[i];
     if (c === '{') {
       i++; const o = {}; const seen = new Set(); ws();
       if (text[i] === '}') { i++; return o; }
       for (;;) {
-        ws(); if (text[i] !== '"') fail('key');
+        ws(); if (text[i] !== '"') fail('member name');
         const k = str(); if (seen.has(k)) fail('duplicate member'); seen.add(k);
-        if (k === '__proto__') fail('prototype key');
-        ws(); if (text[i++] !== ':') fail(':');
+        if (REFUSED_NAMES.has(k)) fail('prototype member name');
+        ws(); if (text[i++] !== ':') fail('colon');
         o[k] = value(depth + 1); ws();
         if (text[i] === ',') { i++; continue; }
         if (text[i] === '}') { i++; return o; }
@@ -62,17 +72,35 @@ export function parseStrict(text) {
       }
     }
     if (c === '"') return str();
-    const m = /^(?:true|false|null|-?(?:0|[1-9]\d*)(?:\.\d+)?(?:[eE][+-]?\d+)?)/.exec(text.slice(i, i + 400));
+    for (const [w, v] of [['true', true], ['false', false], ['null', null]]) if (text.startsWith(w, i)) { i += w.length; return v; }
+    NUM.lastIndex = i;
+    const m = NUM.exec(text);
     if (!m) fail('token');
     i += m[0].length;
-    return JSON.parse(m[0]);
+    const n = Number(m[0]);
+    if (!Number.isFinite(n)) fail('number is not finite');
+    if (Number.isInteger(n) && Math.abs(n) > 9007199254740991) fail('integer beyond the safe range');
+    return n;
   }
   function str() {
-    const start = i; i++;
-    while (i < text.length && text[i] !== '"') { if (text[i] === '\\') i++; i++; }
-    if (i >= text.length) fail('string');
-    i++;
-    return JSON.parse(text.slice(start, i));
+    i++; let out = '';
+    for (;;) {
+      if (i >= text.length) fail('unterminated string');
+      const ch = text[i++];
+      if (ch === '"') return out;
+      if (ch.charCodeAt(0) < 0x20) fail('control character in string');
+      if (ch !== '\\') { out += ch; if (out.length > 1048576) fail('string too long'); continue; }
+      const e = text[i++];
+      if (e === 'u') {
+        const h = text.slice(i, i + 4);
+        if (!/^[0-9a-fA-F]{4}$/.test(h)) fail('bad unicode escape');
+        out += String.fromCharCode(parseInt(h, 16)); i += 4;
+      } else {
+        if (e === undefined || !Object.hasOwn(ESC, e)) fail('bad escape');
+        out += ESC[e];
+      }
+      if (out.length > 1048576) fail('string too long');
+    }
   }
   const v = value(0); ws();
   if (i !== text.length) fail('trailing text');
@@ -126,7 +154,7 @@ export function validManifest(m) {
   if (ms(m.expiresAt) <= ms(m.issuedAt)) refuse('manifest expires before issue');
 }
 
-function validProfile(p) {
+export function validProfile(p) {
   if (!exactKeys(p, ['schema', 'id', 'version', 'title', 'checks']) || p.schema !== 'kya.profile/v1') refuse('profile');
   if (!isId(p.id) || !isStr(p.version, 64) || !isStr(p.title) || !Array.isArray(p.checks) || !p.checks.length || p.checks.length > 256) refuse('profile fields');
   const ids = new Set();
@@ -241,7 +269,9 @@ export function verifyProof(domain, payload, proof) {
 const EVIDENCE_KEYS = ['artifactDigest', 'checkId', 'evaluatorDigest', 'expiresAt', 'id', 'observedAt', 'outcome', 'profileDigest', 'runId', 'schema', 'scopeId', 'source', 'subjectDigest'];
 function evidenceShape(e) {
   if (!exactKeys(e, ['payload', 'proof'])) return 'Malformed envelope: expected payload and proof';
-  const p = e.payload;
+  return evidencePayloadShape(e.payload);
+}
+export function evidencePayloadShape(p) {
   if (!exactKeys(p, EVIDENCE_KEYS)) return 'Malformed envelope: payload keys';
   if (p.schema !== 'kya.evidence/v1') return 'Malformed envelope: payload schema';
   for (const k of ['id', 'runId', 'checkId', 'scopeId']) if (!isId(p[k])) return 'Malformed envelope: ' + k;

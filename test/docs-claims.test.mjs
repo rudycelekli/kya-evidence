@@ -124,7 +124,8 @@ test('the relying party quickstart lists observations.json and shows how to auth
 });
 
 test('the implementers guide says an unsupported reply to a refusal vector fails', () => {
-  assert.ok(read('docs/IMPLEMENTERS-GUIDE.md').includes('`unsupported` reply to a vector whose expected result is a refusal is a `fail`'));
+  assert.ok(read('docs/IMPLEMENTERS-GUIDE.md').includes('`unsupported` reply to a vector of `assess` or `currency` whose expected result is a refusal is a `fail`'));
+  assert.ok(read('docs/IMPLEMENTERS-GUIDE.md').includes('refusal vector of one of the four newer operations, the exact `unsupported` reply for that operation is `not-run`'));
   assert.ok(read('interop/impl-contract/README.md').includes('so it is a **fail** there'));
 });
 

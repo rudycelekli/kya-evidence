@@ -28,7 +28,7 @@ async function script(dir, name, body) { const p = join(dir, name); await writeF
 
 test('assessment vector generator reproduces the committed file byte for byte', async () => {
   assert.equal(await generate(), await readFile(VECTORS, 'utf8'));
-  assert.equal(FILE.schema, 'kya.assessment-vectors/v1');
+  assert.equal(FILE.schema, 'kya.assessment-vectors/v2');
 });
 
 test('assessment vector generator check mode succeeds on the committed file', () => {
@@ -42,7 +42,7 @@ test('assessment vector IDs are unique and the set is large enough to be meaning
   assert.ok(ids.length >= 60, `only ${ids.length} vectors`);
   assert.ok(FILE.vectors.filter(v => v.operation === 'assess').length >= 40);
   assert.ok(FILE.vectors.filter(v => v.operation === 'currency').length >= 20);
-  for (const v of FILE.vectors) assert.ok(['assess', 'currency'].includes(v.operation), v.id);
+  for (const v of FILE.vectors) assert.ok(['assess', 'currency', 'canonicalize', 'digest', 'verify-envelope', 'compare'].includes(v.operation), v.id);
 });
 
 test('every cited requirement ID exists in the registry and every vector states a rationale that names one', () => {
@@ -203,9 +203,15 @@ test('a refusal vector fails when the implementation answers with output and exi
 
 test('unsupported operations are not-run and never pass', async () => {
   await withTmp(async dir => {
-    const none = await script(dir, 'none.mjs', "for await (const _ of process.stdin) {}\nprocess.stdout.write(JSON.stringify({schema:'kya.impl-result/v1',unsupported:true}));\n");
+    // The reply echoes the operation, so a refusal vector of a version 2 operation is also not-run (interop/impl-contract/README.md, Unsupported).
+    const none = await script(dir, 'none.mjs', "let s = '';\nfor await (const c of process.stdin) s += c;\nprocess.stdout.write(JSON.stringify({schema:'kya.impl-result/v1',operation:JSON.parse(s).operation,unsupported:true}));\n");
     const r = await run(none);
-    assert.equal(r.summary.vectors.unsupported, FILE.vectors.filter(v => !v.expected.refused).length);
+    const v1 = v => ['assess', 'currency'].includes(v.operation);
+    assert.equal(r.summary.vectors.unsupported, FILE.vectors.filter(v => !v.expected.refused || !v1(v)).length);
+    // A version 1 refusal vector still fails when the implementation answers unsupported with exit 0 (a few raw inputs crash this stub's own JSON.parse and so count as refused).
+    const v1Refusals = FILE.vectors.filter(v => v.expected.refused && v1(v)).length;
+    assert.ok(r.summary.vectors.fail > 0 && r.summary.vectors.fail <= v1Refusals, String(r.summary.vectors.fail));
+    assert.equal(r.summary.vectors.fail + r.summary.vectors.unsupported + r.summary.vectors.pass, FILE.vectors.length);
     assert.equal(r.report.summary.pass, 0);
     assert.ok(r.report.results.every(x => x.result !== 'pass'));
     // A refusal vector is satisfied by any non-zero exit, so a requirement that cites only refusals could pass; that is stated in the guide.

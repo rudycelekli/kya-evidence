@@ -4808,6 +4808,128 @@
           "title": "vectors that restate the same input in another spelling expect exactly the same result and the spelling really differs"
         }
       ]
+    },
+    {
+      "id": "KYA-INT-005",
+      "level": "MUST",
+      "area": "integrity",
+      "section": "Records and bindings",
+      "statement": "Canonical form MUST sort object members by UTF-16 code unit, MUST write numbers by value in the shortest round-trip form with escapes in lowercase, and strict parsing MUST refuse duplicate members, the member names `__proto__`, `prototype` and `constructor`, integer-valued numbers above 9007199254740991, non-finite numbers, trailing text and nesting deeper than 32.",
+      "tests": [
+        {
+          "file": "test/contract-operations.test.mjs",
+          "title": "canonicalize sorts members by UTF-16 code units and writes numbers by value"
+        },
+        {
+          "file": "test/contract-operations.test.mjs",
+          "title": "canonicalize writes escapes in lowercase and leaves DEL and the line separators literal"
+        },
+        {
+          "file": "test/contract-operations.test.mjs",
+          "title": "canonicalize refuses duplicates, prototype names, bad numbers, trailing text and deep nesting"
+        },
+        {
+          "file": "test/contract-operations.test.mjs",
+          "title": "canonicalize accepts a value at depth 32 and refuses one at depth 33"
+        }
+      ]
+    },
+    {
+      "id": "KYA-INT-006",
+      "level": "MUST",
+      "area": "integrity",
+      "section": "Records and bindings",
+      "statement": "A record digest MUST be the SHA-256 of the canonical form of a valid record without a domain prefix, a signing input MUST be the domain text, a line feed and the canonical payload, and a record that breaks its field rules MUST have no digest.",
+      "tests": [
+        {
+          "file": "test/contract-operations.test.mjs",
+          "title": "digest of a signing input is domain separated and a record digest is not"
+        },
+        {
+          "file": "test/contract-operations.test.mjs",
+          "title": "operations refuse unknown input members and wrong input types"
+        }
+      ]
+    },
+    {
+      "id": "KYA-ENV-007",
+      "level": "MUST",
+      "area": "envelope",
+      "section": "Records and bindings",
+      "statement": "Envelope verification MUST apply its steps in the specified order and name the first failing step, and a valid envelope MUST NOT be treated as trusted.",
+      "tests": [
+        {
+          "file": "test/contract-operations.test.mjs",
+          "title": "verify-envelope reports a tampered payload as an invalid signature and trust is not consulted"
+        },
+        {
+          "file": "test/contract-operations.test.mjs",
+          "title": "verify-envelope applies its steps in the order the specification lists"
+        },
+        {
+          "file": "test/contract-operations.test.mjs",
+          "title": "every specified failure code and reason code appears in at least one vector"
+        }
+      ]
+    },
+    {
+      "id": "KYA-BND-004",
+      "level": "MUST",
+      "area": "binding",
+      "section": "Reports and viewers",
+      "statement": "Comparison MUST refuse a report that fails its checksum, blocker code rules or shape checks, MUST name the first failing comparability rule, and MUST NOT compare an incomplete population.",
+      "tests": [
+        {
+          "file": "test/contract-operations.test.mjs",
+          "title": "compare refuses a resealed report that lacks a digest member and compareAssessments agrees"
+        },
+        {
+          "file": "test/contract-operations.test.mjs",
+          "title": "compare gives a reason code for each rule and the first failing rule wins"
+        }
+      ]
+    },
+    {
+      "id": "KYA-VEC-012",
+      "level": "MUST",
+      "area": "vectors",
+      "section": "Interoperability and versioning",
+      "statement": "Contract version 2 MUST leave the vectors of earlier operations byte for byte unchanged, MUST score an operation an implementation does not claim as not-run and not fail, and at least a third of the vectors of the new operations MUST be refusals.",
+      "tests": [
+        {
+          "file": "test/contract-operations.test.mjs",
+          "title": "the vectors file is version 2, adds the four operations and keeps the 272 version 1 vectors byte for byte"
+        },
+        {
+          "file": "test/contract-operations.test.mjs",
+          "title": "at least a third of the new vectors are refusals and every new vector cites a requirement and names it in its rationale"
+        },
+        {
+          "file": "test/contract-operations.test.mjs",
+          "title": "an implementation that predates version 2 scores its version 1 vectors as before and the new vectors are not-run"
+        },
+        {
+          "file": "test/contract-operations.test.mjs",
+          "title": "the new operations do not change the result of a version 1 assessment"
+        }
+      ]
+    },
+    {
+      "id": "KYA-VEC-013",
+      "level": "MUST",
+      "area": "vectors",
+      "section": "Interoperability and versioning",
+      "statement": "The reference adapter and the second implementation MUST refuse stdin above 1048576 bytes and accept an input just inside the bound, and the reference adapter MUST answer the four operations.",
+      "tests": [
+        {
+          "file": "test/contract-operations.test.mjs",
+          "title": "both adapters refuse stdin above one mebibyte and accept an input just inside it"
+        },
+        {
+          "file": "test/contract-operations.test.mjs",
+          "title": "the reference adapter answers the four operations and still refuses malformed input"
+        }
+      ]
     }
   ]
 }

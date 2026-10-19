@@ -14,6 +14,10 @@ import { isMain } from "./lib/is-main.mjs";
 const usage = 'usage: run-vectors.mjs --impl "<command and args>" [--vectors FILE] [--now ISO] [--out FILE] [--name NAME] [--impl-version V] [--language L] [--timeout-ms N] [--jobs N] [--semantic-only]';
 export const LIMITS = Object.freeze({ outputBytes: 1_048_576, inputBytes: 4_194_304, timeoutMs: 15_000, failuresShown: 25 });
 const DIGEST_FIELDS = ['reportDigest', 'resultDigest'];
+// Contract version 1 operations, then the version 2 additions (interop/impl-contract/README.md).
+export const V1_OPERATIONS = Object.freeze(['assess', 'currency']);
+export const OPERATIONS = Object.freeze([...V1_OPERATIONS, 'canonicalize', 'digest', 'verify-envelope', 'compare']);
+const VECTOR_SCHEMAS = ['kya.assessment-vectors/v1', 'kya.assessment-vectors/v2'];
 
 function parseArgs(argv) {
   const o = {};
@@ -90,6 +94,12 @@ async function evaluate(vector, impl, o) {
   const refusedExpected = vector.expected?.refused === true;
   if (refusedExpected) {
     if (r.code !== 0 || r.signal) return { status: o.semanticOnly ? 'semantic-pass' : 'pass', detail: 'refused as required' };
+    // An implementation that predates contract version 2 answers a new operation with exactly the unsupported reply: not-run, not fail.
+    if (!V1_OPERATIONS.includes(vector.operation)) {
+      let reply = null;
+      try { reply = parseJson(r.stdout.toString('utf8')); } catch { /* not the unsupported reply */ }
+      if (reply && typeof reply === 'object' && !Array.isArray(reply) && Object.keys(reply).length === 3 && reply.schema === 'kya.impl-result/v1' && reply.operation === vector.operation && reply.unsupported === true) return { status: 'unsupported', detail: `operation ${vector.operation} declared unsupported` };
+    }
     return { status: 'fail', detail: 'expected a refusal (non-zero exit), implementation exited 0' };
   }
   if (r.code !== 0) return { status: 'fail', detail: `exit ${r.code ?? r.signal}: refused or crashed${r.stderr ? ' (' + r.stderr.trim().split('\n')[0].slice(0, 120) + ')' : ''}` };
@@ -104,11 +114,11 @@ async function evaluate(vector, impl, o) {
 }
 
 function validateVectors(file, registryIds) {
-  if (file?.schema !== 'kya.assessment-vectors/v1' || !Array.isArray(file.vectors) || !file.vectors.length) throw Error('Not a kya.assessment-vectors/v1 file');
+  if (!VECTOR_SCHEMAS.includes(file?.schema) || !Array.isArray(file.vectors) || !file.vectors.length) throw Error('Not a kya.assessment-vectors/v1 file');
   const ids = new Set();
   for (const v of file.vectors) {
     if (typeof v.id !== 'string' || ids.has(v.id)) throw Error('Duplicate or missing vector ID ' + v.id); ids.add(v.id);
-    if (!['assess', 'currency'].includes(v.operation)) throw Error(`Vector ${v.id}: unknown operation`);
+    if (!OPERATIONS.includes(v.operation)) throw Error(`Vector ${v.id}: unknown operation`);
     if (!Array.isArray(v.requirements) || !v.requirements.length || v.requirements.some(r => !registryIds.has(r))) throw Error(`Vector ${v.id}: cites a requirement that is not in the registry`);
     const hasInputs = typeof v.inputs === 'object' && v.inputs !== null, hasRaw = typeof v.rawInput === 'string';
     if (hasInputs === hasRaw) throw Error(`Vector ${v.id}: exactly one of inputs and rawInput is required`);

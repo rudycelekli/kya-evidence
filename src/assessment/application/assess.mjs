@@ -175,11 +175,36 @@ export function verifyAssessment(report) {
   return {integrity:true,reportDigest,authenticated:false,warning:'Report checksum is not an evaluator signature; recompute from trusted inputs for decisions'};
 }
 
-export function compareAssessments(left,right) {
+const COMPARE_MESSAGES = Object.freeze({ SCOPE_ID_DIFFERS:'Cannot compare different scopeId', SCOPE_DIGEST_DIFFERS:'Cannot compare different scopeDigest', PROFILE_DIFFERS:'Cannot compare different profileDigest', EVALUATOR_DIFFERS:'Cannot compare different evaluatorDigest', POLICY_DIFFERS:'Cannot compare different policyDigest', EVIDENCE_MODE_DIFFERS:'Cannot compare different evidenceMode', CHECK_POPULATION_DIFFERS:'Cannot compare incomplete or different check populations', CHECKS_INCOMPLETE:'Cannot compare incomplete or different check populations' });
+const COMPARE_DECISIONS = ['qualified','insufficient-evidence','blocked','expired','revoked'];
+// Shape a report must have before it may be compared (docs/SPECIFICATION.md, Comparison of assessments). A report that lacks one of
+// these members is refused rather than compared as equal by absence.
+function assertComparableShape(r,label) {
+  verifyAssessment(r);
+  hash(r.scopeDigest,`${label} exact scope digest`);
+  for (const k of ['profileDigest','evaluatorDigest','policyDigest']) hash(r[k],`${label} ${k}`);
+  insist(typeof r.scopeId==='string' && /^[A-Za-z0-9][A-Za-z0-9:._/-]{0,127}$/.test(r.scopeId),`${label} scopeId is not an identifier`);
+  insist(['none','runtime','fixture','mixed'].includes(r.evidenceMode),`${label} evidenceMode is not recognised`);
+  insist(COMPARE_DECISIONS.includes(r.decision),`${label} decision is not recognised`);
+  insist(r.score && typeof r.score==='object' && Number.isSafeInteger(r.score.earned),`${label} score is not an integer`);
+  insist(Array.isArray(r.checks) && r.checks.every(c=>c && typeof c==='object' && typeof c.id==='string' && /^[A-Za-z0-9][A-Za-z0-9:._/-]{0,127}$/.test(c.id) && Number.isSafeInteger(c.weight) && typeof c.status==='string'),`${label} checks are malformed`);
+}
+
+/** The first reason two assessments cannot be compared, or null. Throws when either report is not a well formed assessment. */
+export function describeComparison(left,right) {
   left=JSON.parse(canonical(left));right=JSON.parse(canonical(right));
-  verifyAssessment(left); verifyAssessment(right);
-  hash(left.scopeDigest,'Left exact scope digest'); hash(right.scopeDigest,'Right exact scope digest');
-  for (const k of ['scopeId','scopeDigest','profileDigest','evaluatorDigest','policyDigest','evidenceMode']) insist(left[k]===right[k],`Cannot compare different ${k}`);
-  insist(left.checks.length===right.checks.length && left.checks.every((c,i)=>c.id===right.checks[i].id && c.weight===right.checks[i].weight && ['pass','fail'].includes(c.status) && ['pass','fail'].includes(right.checks[i].status)),'Cannot compare incomplete or different check populations');
-  return {schema:'kya.comparison/v1',left:left.reportDigest,right:right.reportDigest,scoreDelta:right.score.earned-left.score.earned,decisionChanged:left.decision!==right.decision,measurement:'same-policy evidence comparison; not a causal improvement claim'};
+  assertComparableShape(left,'Left'); assertComparableShape(right,'Right');
+  const rules=[['scopeId','SCOPE_ID_DIFFERS'],['scopeDigest','SCOPE_DIGEST_DIFFERS'],['profileDigest','PROFILE_DIFFERS'],['evaluatorDigest','EVALUATOR_DIFFERS'],['policyDigest','POLICY_DIFFERS'],['evidenceMode','EVIDENCE_MODE_DIFFERS']];
+  let reason=null;
+  for (const [k,code] of rules) if (left[k]!==right[k]) { reason=code; break; }
+  if (!reason && !(left.checks.length===right.checks.length && left.checks.every((c,i)=>c.id===right.checks[i].id && c.weight===right.checks[i].weight))) reason='CHECK_POPULATION_DIFFERS';
+  if (!reason && ![...left.checks,...right.checks].every(c=>['pass','fail'].includes(c.status))) reason='CHECKS_INCOMPLETE';
+  return {left,right,reason};
+}
+
+export function compareAssessments(left,right) {
+  const d=describeComparison(left,right);
+  insist(d.reason===null,COMPARE_MESSAGES[d.reason]);
+  const {left:l,right:r}=d;
+  return {schema:'kya.comparison/v1',left:l.reportDigest,right:r.reportDigest,scoreDelta:r.score.earned-l.score.earned,decisionChanged:l.decision!==r.decision,measurement:'same-policy evidence comparison; not a causal improvement claim'};
 }
