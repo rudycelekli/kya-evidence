@@ -5223,6 +5223,27 @@
           "title": "drift description names the first differing vector id, the JSON path and bounded escaped context"
         }
       ]
+    },
+    {
+      "id": "KYA-DET-004",
+      "level": "SHOULD",
+      "area": "release",
+      "section": "Interoperability and versioning",
+      "statement": "The release archive SHOULD be a pure function of the committed blobs, with a fixed GZIP encoder, so that the same commit gives the same archive bytes on any machine.",
+      "tests": [
+        {
+          "file": "test/pack-determinism.test.mjs",
+          "title": "pack builds the release archive twice in clean directories with byte identical output"
+        },
+        {
+          "file": "test/pack-determinism.test.mjs",
+          "title": "pack golden archive over a tiny fixed file tree pins the exact bytes"
+        },
+        {
+          "file": "test/pack-determinism.test.mjs",
+          "title": "pack source does not call node zlib gzip so the archive bytes do not depend on the build of zlib"
+        }
+      ]
     }
   ]
 }
