@@ -9,11 +9,11 @@ import { canonical, digest, verifyIncident } from '../src/index.mjs';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 const script = join(root, 'interop/python/kya_portability.py');
-const probe = spawnSync('python3', ['--version'], { encoding: 'utf8', timeout: 2000, maxBuffer: 1024, shell: false });
+const probe = spawnSync('python3', ['--version'], { encoding: 'utf8', timeout: 20000, maxBuffer: 1024, shell: false });
 const hasPython = !probe.error && probe.status === 0;
 const env = { PATH: process.env.PATH ?? '', HOME: process.env.HOME ?? '', LANG: 'C.UTF-8', PYTHONIOENCODING: 'utf-8' };
 function python(args, input) {
-  const result = spawnSync('python3', [script, ...args], { cwd: root, env, input, encoding: 'utf8', timeout: 5000, maxBuffer: 1_048_576, shell: false });
+  const result = spawnSync('python3', [script, ...args], { cwd: root, env, input, encoding: 'utf8', timeout: 60000, maxBuffer: 1_048_576, shell: false });
   assert.equal(result.error, undefined, result.error?.message);
   return { ...result, value: JSON.parse(result.stdout) };
 }

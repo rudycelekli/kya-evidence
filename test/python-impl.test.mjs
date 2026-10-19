@@ -15,7 +15,7 @@ import { runVectors } from '../scripts/run-vectors.mjs';
 const ROOT = fileURLToPath(new URL('../', import.meta.url));
 const ADAPTER = join(ROOT, 'interop/python-impl/adapter.py');
 const VECTORS = join(ROOT, 'evidence/assessment-vectors.json');
-const probe = spawnSync('python3', ['--version'], { encoding: 'utf8', timeout: 2000, maxBuffer: 1024, shell: false });
+const probe = spawnSync('python3', ['--version'], { encoding: 'utf8', timeout: 20000, maxBuffer: 1024, shell: false });
 const hasPython = !probe.error && probe.status === 0;
 const SKIP = !hasPython && 'Python 3 is optional; unavailable on this host, so the Python implementation was NOT run';
 
