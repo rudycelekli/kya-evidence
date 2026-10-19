@@ -119,13 +119,13 @@ Replace the commit with the handover commit. Then run the cheap checks first. Ea
 
 | Step | Command | Expected result |
 | :--- | :--- | :--- |
-| 1 | `node scripts/requirements.mjs --check` | exit 0; one JSON line starting `{"requirements":266,"areas":` and ending with `"traceable":true,"registryDigest":"456293123e32eed9d02ada1ccab3f239674ae1e070bba0ef1fdfd24b93fe86d1"}` |
+| 1 | `node scripts/requirements.mjs --check` | exit 0; one JSON line starting `{"requirements":275,"areas":` and ending with `"traceable":true,"registryDigest":"96d1f350ed2ac04518d88d6756d2525ef5aa241538e08ccea29a6afac36cac2e"}` |
 | 2 | `node scripts/assessment-vectors.mjs --check` | exit 0; the line `Assessment vectors match` |
 | 3 | `node scripts/mutation-check.mjs --preflight` | exit 0; `{"preflight":"ok","controls":87,"anchorsPresent":true,"allMutantsParse":true}` |
 | 4 | `node scripts/check.mjs` | exit 0; one JSON line with `"syntax":"passed"`, `"schemas":"matched"`, `"requirementTraceability":"passed"`, `"statusLedger":"passed"` (the `files` figure depends on the directory scanned and is not quoted) |
 | 5 | `node scripts/privacy-scan.mjs examples test/fixtures profiles policies suites` | exit 0; `"clean": true` and `"findings": 0` |
 | 6 | `node scripts/profile-registry.mjs --check` | exit 0; `Profile registry matches` |
-| 7 | `node scripts/run-vectors.mjs --impl "node interop/impl-contract/js-reference.mjs"` | exit 0 after about ten seconds; summary with `"vectors":{"total":485,"pass":485,...,"fail":0,"unsupported":0}` and `"requirements"` with `"pass":39`, `"notRun":227`, `"total":266` |
+| 7 | `node scripts/run-vectors.mjs --impl "node interop/impl-contract/js-reference.mjs"` | exit 0 after about ten seconds; summary with `"vectors":{"total":799,"pass":799,...,"fail":0,"unsupported":0}` and `"requirements"` with `"pass":60`, `"notRun":215`, `"total":275` |
 | 8 | `node scripts/run-vectors.mjs --impl "node interop/second-impl/adapter.mjs"` | exit 0 after about thirty seconds; the same vector and requirement counts. This is the same team's second implementation. |
 | 8b | `node scripts/adr-index.mjs` | exit 0; `{"records":34,"danglingRefs":0,"storage":"evidence/adr-index.json"}`. It rewrites that file; `git status` must stay clean afterwards. |
 | 9 | `node scripts/review-kit-check.mjs --deep` | exit 0; `"ok": true`. Confirms every number in the table below, including the harness rows. |
@@ -150,29 +150,32 @@ Every row is recomputed by `node scripts/review-kit-check.mjs` from the reposito
 
 | Key | Value | How it is measured |
 | :--- | :--- | :--- |
-| `requirements` | `266` | `node scripts/requirements.mjs`, field `requirements` |
-| `requirementsRegistryDigest` | `456293123e32eed9d02ada1ccab3f239674ae1e070bba0ef1fdfd24b93fe86d1` | same command, field `registryDigest` |
-| `vectorsTotal` | `485` | length of `vectors` in `evidence/assessment-vectors.json` |
+| `requirements` | `275` | `node scripts/requirements.mjs`, field `requirements` |
+| `requirementsRegistryDigest` | `96d1f350ed2ac04518d88d6756d2525ef5aa241538e08ccea29a6afac36cac2e` | same command, field `registryDigest` |
+| `vectorsTotal` | `799` | length of `vectors` in `evidence/assessment-vectors.json` |
 | `vectors.assess` | `212` | vectors whose `operation` is `assess` |
 | `vectors.currency` | `60` | operation `currency` |
 | `vectors.canonicalize` | `72` | operation `canonicalize` |
 | `vectors.digest` | `38` | operation `digest` |
 | `vectors.verify-envelope` | `68` | operation `verify-envelope` |
 | `vectors.compare` | `35` | operation `compare` |
+| `vectors.verify-credential` | `223` | operation `verify-credential` |
+| `vectors.verify-score-card` | `72` | operation `verify-score-card` |
+| `vectors.compare-score-cards` | `19` | operation `compare-score-cards` |
 | `mutationControls` | `87` | `node scripts/mutation-check.mjs --preflight`, field `controls` |
-| `testFiles` | `73` | files matching `test/*.test.mjs` |
-| `testDeclarations` | `898` | lines that begin with `test(` in those files. The four `test/property-*.test.mjs` files declare 38 seeded properties through a helper and contribute no such line. |
-| `adrs` | `34` | files `docs/adr/NNNN-*.md` (20 marked Implemented and 14 Proposed in their status lines when counted) |
+| `testFiles` | `75` | files matching `test/*.test.mjs` |
+| `testDeclarations` | `921` | lines that begin with `test(` in those files. The four `test/property-*.test.mjs` files declare 38 seeded properties through a helper and contribute no such line. |
+| `adrs` | `35` | files `docs/adr/NNNN-*.md` (20 marked Implemented and 15 Proposed in their status lines when counted) |
 | `coreProfileChecks` | `18` | length of `checks` in `profiles/core-v1.json` |
-| `srcFiles` | `87` | `.mjs` files under `src/` |
-| `srcLines` | `5325` | newline characters in those files. The code is dense: long lines, so line count understates size. |
+| `srcFiles` | `88` | `.mjs` files under `src/` |
+| `srcLines` | `5400` | newline characters in those files. The code is dense: long lines, so line count understates size. |
 | `evaluatorDigestPinned` | `d0bc7f7840e5ddf1a71eb3b9ac92e5c4d0be5d156eea2c6f4f909f7066b5e31b` | `evidence/evaluator-identity.json`; the checker also requires it to equal the digest computed from source |
-| `harness.vectorsPass` | `485` | `node scripts/run-vectors.mjs --impl "node interop/impl-contract/js-reference.mjs"`, field `vectors.pass` |
+| `harness.vectorsPass` | `799` | `node scripts/run-vectors.mjs --impl "node interop/impl-contract/js-reference.mjs"`, field `vectors.pass` |
 | `harness.vectorsFail` | `0` | same command, field `vectors.fail` |
-| `harness.requirementsPass` | `39` | same command, field `requirements.pass`: requirements for which a vector passed |
-| `harness.requirementsNotRun` | `227` | same command, field `requirements.notRun` |
+| `harness.requirementsPass` | `60` | same command, field `requirements.pass`: requirements for which a vector passed |
+| `harness.requirementsNotRun` | `215` | same command, field `requirements.notRun` |
 
-Read the harness rows carefully: 39 of 266 requirements are exercised by a vector. The other 227 are covered, if at all, by in process tests. That is a statement about where the evidence lives, not about defects.
+Read the harness rows carefully: 60 of 275 requirements are exercised by a vector. The other 215 are covered, if at all, by in process tests. That is a statement about where the evidence lives, not about defects.
 
 ## 7. Known limitations
 
@@ -180,7 +183,7 @@ Taken from the threat model "Not mitigated" list, the changelog "Known issues" a
 
 - No outside review of any kind (this document, the threat model, the code, the vectors).
 - Most of the code was written with AI assistance. The same assistant class wrote many of the tests. Tests and code can share a misreading of the specification.
-- The expected values of all 485 vectors come from the JavaScript reference, checked against hand written claims by the same team. Agreement of two same team implementations shows the text is precise enough to follow, not that it is right.
+- The expected values of all 799 vectors come from the JavaScript reference, checked against hand written claims by the same team. Agreement of two same team implementations shows the text is precise enough to follow, not that it is right.
 - The second implementation, the Python checker and the Python score verifier were written by the same team. They are not independent.
 - The capture cell is a simulation (`cell.isolation: none`). No real measured capture environment exists. Evidence from a native agent adapter is declaration source and cannot satisfy scored checks.
 - All shipped scores are synthetic fixtures. No real agent has been scored in a way the project would publish.

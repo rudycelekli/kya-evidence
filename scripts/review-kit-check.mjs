@@ -39,7 +39,7 @@ export async function computeActuals(root = ROOT, { deep = false } = {}) {
   a.requirementsRegistryDigest = rj.registryDigest;
   const vec = JSON.parse(read(root, 'evidence/assessment-vectors.json')).vectors;
   a.vectorsTotal = vec.length;
-  for (const op of ['assess', 'currency', 'canonicalize', 'digest', 'verify-envelope', 'compare']) a['vectors.' + op] = vec.filter(v => (v.operation ?? v.op) === op).length;
+  for (const op of ['assess', 'currency', 'canonicalize', 'digest', 'verify-envelope', 'compare', 'verify-credential', 'verify-score-card', 'compare-score-cards']) a['vectors.' + op] = vec.filter(v => (v.operation ?? v.op) === op).length;
   const mut = run(root, ['scripts/mutation-check.mjs', '--preflight']);
   if (mut.status !== 0) throw new Error('mutation preflight failed: ' + mut.stderr.slice(0, 200));
   a.mutationControls = JSON.parse(mut.stdout).controls;
@@ -126,7 +126,7 @@ export async function checkKit({ root = ROOT, text = {}, actuals = null, deep = 
   }
   if (act.evaluatorDigestPinned !== act.evaluatorDigestComputed) problems.push(`pinned evaluator digest ${act.evaluatorDigestPinned} differs from the computed ${act.evaluatorDigestComputed}`);
   else checked.push('pinned evaluator digest equals the computed digest');
-  const opSum = ['assess', 'currency', 'canonicalize', 'digest', 'verify-envelope', 'compare'].reduce((n, op) => n + act['vectors.' + op], 0);
+  const opSum = ['assess', 'currency', 'canonicalize', 'digest', 'verify-envelope', 'compare', 'verify-credential', 'verify-score-card', 'compare-score-cards'].reduce((n, op) => n + act['vectors.' + op], 0);
   if (opSum !== act.vectorsTotal) problems.push(`vector operation counts sum to ${opSum}, not ${act.vectorsTotal}`);
 
   // 2. commands and files

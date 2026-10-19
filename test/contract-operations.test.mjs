@@ -12,6 +12,7 @@ import { runVectors } from '../scripts/run-vectors.mjs';
 const ROOT = fileURLToPath(new URL('../', import.meta.url));
 const FILE = JSON.parse(readFileSync(join(ROOT, 'evidence/assessment-vectors.json'), 'utf8'));
 const NEW_OPS = ['canonicalize', 'digest', 'verify-envelope', 'compare'];
+const LATER_OPS = ['verify-credential', 'verify-score-card', 'compare-score-cards'];
 const run = (op, inputs) => V2_OPERATIONS[op](inputs);
 const REFERENCE = join(ROOT, 'interop/impl-contract/js-reference.mjs');
 
@@ -110,7 +111,7 @@ test('compare gives a reason code for each rule and the first failing rule wins'
 
 test('the vectors file is version 2, adds the four operations and keeps the 272 version 1 vectors byte for byte', () => {
   assert.equal(FILE.schema, 'kya.assessment-vectors/v2');
-  assert.deepEqual(FILE.contract, { version: 2, operations: ['assess', 'currency', ...NEW_OPS] });
+  assert.deepEqual(FILE.contract, { version: 2, operations: ['assess', 'currency', ...NEW_OPS, ...LATER_OPS] });
   const v1 = FILE.vectors.filter(v => ['assess', 'currency'].includes(v.operation));
   assert.equal(v1.length, 272);
   assert.equal(digest(v1.map(v => digest(v))), 'f72c4804607f372b65b3d641c49f9c0cfaaf4a14d73cd6dcc5badf957d650821');
@@ -152,9 +153,11 @@ test('an implementation that predates version 2 scores its version 1 vectors as 
   try {
     writeFileSync(join(dir, 'old.mjs'), wrap);
     const { summary } = await runVectors({ impl: `"${process.execPath}" "${join(dir, 'old.mjs')}"`, vectorsFile: join(ROOT, 'evidence/assessment-vectors.json'), timeoutMs: 120000, jobs: 4 });
-    assert.equal(summary.vectors.pass, 272);
+    // A refusal vector whose stdin text is not even JSON is refused by this wrapper like by any implementation, so it passes; every other new vector is not-run.
+    const notJson = FILE.vectors.filter(v => !['assess', 'currency'].includes(v.operation) && typeof v.rawInput === 'string' && (() => { try { JSON.parse(v.rawInput); return false; } catch { return true; } })()).length;
+    assert.equal(summary.vectors.pass, 272 + notJson);
     assert.equal(summary.vectors.fail, 0);
-    assert.equal(summary.vectors.unsupported, FILE.vectors.length - 272);
+    assert.equal(summary.vectors.unsupported, FILE.vectors.length - 272 - notJson);
   } finally { rmSync(dir, { recursive: true, force: true }); }
 });
 
@@ -178,4 +181,22 @@ test('both adapters refuse stdin above one mebibyte and accept an input just ins
     assert.notEqual(refused.status, 0, adapter);
     assert.equal(refused.stdout, '', adapter);
   }
+});
+
+test('an implementation of the six earlier operations scores the three later ones as not-run and keeps every other result', async () => {
+  const six = ['assess', 'currency', 'canonicalize', 'digest', 'verify-envelope', 'compare'];
+  const wrap = `import { spawnSync } from 'node:child_process';import { readFileSync } from 'node:fs';const input = readFileSync(0, 'utf8');let op = null;try { op = JSON.parse(input).operation; } catch { process.exit(2); }if (!${JSON.stringify(six)}.includes(op)) { process.stdout.write(JSON.stringify({schema:'kya.impl-result/v1',operation:op,unsupported:true})); process.exit(0); }const r = spawnSync(process.execPath, [${JSON.stringify(REFERENCE)}], { input, encoding: 'utf8' });process.stdout.write(r.stdout);process.exit(r.status);`;
+  const { mkdtempSync, writeFileSync, rmSync } = await import('node:fs');
+  const { tmpdir } = await import('node:os');
+  const dir = mkdtempSync(join(tmpdir(), 'kya-six-'));
+  try {
+    const earlier = six.flatMap(op => FILE.vectors.filter(v => v.operation === op).slice(0, 6));
+    const later = LATER_OPS.flatMap(op => [...FILE.vectors.filter(v => v.operation === op && v.expected.refused !== true).slice(0, 5), ...FILE.vectors.filter(v => v.operation === op && v.expected.refused === true && v.inputs).slice(0, 3)]);
+    writeFileSync(join(dir, 'old.mjs'), wrap);
+    writeFileSync(join(dir, 'vectors.json'), JSON.stringify({ ...FILE, vectors: [...earlier, ...later] }));
+    const { summary } = await runVectors({ impl: `"${process.execPath}" "${join(dir, 'old.mjs')}"`, vectorsFile: join(dir, 'vectors.json'), timeoutMs: 120000, jobs: 4 });
+    assert.equal(summary.vectors.fail, 0);
+    assert.equal(summary.vectors.pass, earlier.length);
+    assert.equal(summary.vectors.unsupported, later.length);
+  } finally { rmSync(dir, { recursive: true, force: true }); }
 });

@@ -10,7 +10,7 @@ This page is for a person or team outside the project who might write a second i
 | :--- | :--- | :--- |
 | Specification | `docs/SPECIFICATION.md`, `docs/SCORING.md` | The normative text. Each requirement in `docs/REQUIREMENTS.md` names the section it comes from. |
 | Requirement registry | `evidence/requirements.json`, `docs/REQUIREMENTS.md` | Every MUST, MUST NOT, SHOULD and MAY with an ID, its section and the tests that check the reference. |
-| Assessment vectors | `evidence/assessment-vectors.json` | Public vectors for six operations: `assess`, `currency`, `canonicalize`, `digest`, `verify-envelope` and `compare`. Each carries its input, the expected result, the requirement IDs it exercises and a rationale. Refusals (inputs that must be rejected) are included. |
+| Assessment vectors | `evidence/assessment-vectors.json` | Public vectors for nine operations: `assess`, `currency`, `canonicalize`, `digest`, `verify-envelope`, `compare`, `verify-credential`, `verify-score-card` and `compare-score-cards`. Each carries its input, the expected result, the requirement IDs it exercises and a rationale. Refusals (inputs that must be rejected) are included. |
 | Byte level vectors | `evidence/golden-vectors.json` | Canonical bytes, digests, signing inputs and incident vectors. Start here: if your digests differ, nothing above can match. |
 | Contract | `interop/impl-contract/README.md` | How an implementation is wrapped: one command, one JSON object on standard input, one on standard output, a non zero exit for a refusal, no state, no network, no clock. |
 | Harness | `scripts/run-vectors.mjs` | Runs your command once per vector and reports passes, failures, `unsupported` and the first differing JSON path. |

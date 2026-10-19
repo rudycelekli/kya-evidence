@@ -1,5 +1,6 @@
 import { createHmac, createPublicKey } from 'node:crypto';
-import { gzipSync, gunzipSync } from 'node:zlib';
+import { gunzipSync } from 'node:zlib';
+import { gzipDeterministic } from '../shared/gzip-deterministic.mjs';
 import { hash, validatePolicy } from '../identity/domain/services/validation.mjs';
 import { b64u } from './encoding.mjs';
 import { fail, signCompact, privateKeyObject, VcBridgeError } from './jws.mjs';
@@ -21,8 +22,8 @@ const check = (bits, i) => { if (!Number.isSafeInteger(i) || i < 0 || i >= bits.
 export function setBit(bits, i, on = true) { check(bits, i); const m = 0x80 >> (i % 8); bits[i >> 3] = on ? bits[i >> 3] | m : bits[i >> 3] & ~m; }
 export function getBit(bits, i) { check(bits, i); return (bits[i >> 3] >> (7 - (i % 8))) & 1; }
 
-/** GZIP, then multibase base64url (prefix u, no padding). */
-export function encodeList(bits) { return 'u' + b64u.encode(gzipSync(Buffer.from(bits), { level: 9 })); }
+/** GZIP (the repository deterministic encoder, never node:zlib, so the bytes do not depend on the platform), then multibase base64url (prefix u, no padding). */
+export function encodeList(bits) { return 'u' + b64u.encode(gzipDeterministic(bits)); }
 
 /** Decode with a hard ceiling on decompressed size, so a small gzip bomb cannot exhaust memory. */
 export function decodeList(encoded, { maxBytes = DEFAULT_MAX_DECODED_BYTES } = {}) {

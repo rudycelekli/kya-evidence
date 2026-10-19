@@ -8,6 +8,7 @@ import { fileURLToPath } from 'node:url';
 import { BLOCKER_CODES, CURRENCY_CODES } from '../src/index.mjs';
 import { validateReport } from '../src/conformance-report/index.mjs';
 import { generate } from '../scripts/assessment-vectors.mjs';
+import { describeDrift } from '../scripts/lib/vector-drift.mjs';
 import { runVectors, firstDifference, splitCommand, LIMITS } from '../scripts/run-vectors.mjs';
 
 const ROOT = fileURLToPath(new URL('../', import.meta.url));
@@ -27,8 +28,23 @@ async function subsetFile(dir, ids, mutate = v => v) {
 async function script(dir, name, body) { const p = join(dir, name); await writeFile(p, body); return `${q(process.execPath)} ${q(p)}`; }
 
 test('assessment vector generator reproduces the committed file byte for byte', async () => {
-  assert.equal(await generate(), await readFile(VECTORS, 'utf8'));
+  const generated = await generate(), committed = await readFile(VECTORS, 'utf8');
+  assert.ok(generated === committed, describeDrift(committed, generated));
   assert.equal(FILE.schema, 'kya.assessment-vectors/v2');
+});
+
+test('drift description names the first differing vector id, the JSON path and bounded escaped context', () => {
+  const doc = JSON.stringify({ schema: 'x', vectors: [{ id: 'one', expected: { n: 1 } }, { id: 'two', expected: { text: 'a'.repeat(500) + 'LINE\nBREAK' } }] }, null, 2) + '\n';
+  assert.equal(describeDrift(doc, doc), null);
+  const changed = doc.replace('LINE', 'LIN3');
+  const msg = describeDrift(doc, changed);
+  assert.match(msg, /first differing vector id two;/);
+  assert.match(msg, /JSON path \$\.vectors\[1\]\.expected\.text;/);
+  assert.match(msg, /committed context "[^"]*LINE/);
+  assert.ok(msg.length < 1200, String(msg.length));
+  assert.ok(!msg.includes('\n'), 'context must be escaped, never raw newlines');
+  assert.match(describeDrift(doc, doc.replace('"schema": "x"', '"schema": "y"')), /vector id none/);
+  assert.match(describeDrift(doc, '{not json'), /JSON path unavailable/);
 });
 
 test('assessment vector generator check mode succeeds on the committed file', () => {
@@ -42,7 +58,7 @@ test('assessment vector IDs are unique and the set is large enough to be meaning
   assert.ok(ids.length >= 60, `only ${ids.length} vectors`);
   assert.ok(FILE.vectors.filter(v => v.operation === 'assess').length >= 40);
   assert.ok(FILE.vectors.filter(v => v.operation === 'currency').length >= 20);
-  for (const v of FILE.vectors) assert.ok(['assess', 'currency', 'canonicalize', 'digest', 'verify-envelope', 'compare'].includes(v.operation), v.id);
+  for (const v of FILE.vectors) assert.ok(['assess', 'currency', 'canonicalize', 'digest', 'verify-envelope', 'compare', 'verify-credential', 'verify-score-card', 'compare-score-cards'].includes(v.operation), v.id);
 });
 
 test('every cited requirement ID exists in the registry and every vector states a rationale that names one', () => {
@@ -207,7 +223,9 @@ test('unsupported operations are not-run and never pass', async () => {
     const none = await script(dir, 'none.mjs', "let s = '';\nfor await (const c of process.stdin) s += c;\nprocess.stdout.write(JSON.stringify({schema:'kya.impl-result/v1',operation:JSON.parse(s).operation,unsupported:true}));\n");
     const r = await run(none);
     const v1 = v => ['assess', 'currency'].includes(v.operation);
-    assert.equal(r.summary.vectors.unsupported, FILE.vectors.filter(v => !v.expected.refused || !v1(v)).length);
+    // A raw input that is not even JSON crashes this stub's own JSON.parse, which any implementation does for it, so such a vector counts as refused.
+    const notJson = v => typeof v.rawInput === 'string' && (() => { try { JSON.parse(v.rawInput); return false; } catch { return true; } })();
+    assert.equal(r.summary.vectors.unsupported, FILE.vectors.filter(v => (!v.expected.refused || !v1(v)) && !notJson(v)).length);
     // A version 1 refusal vector still fails when the implementation answers unsupported with exit 0 (a few raw inputs crash this stub's own JSON.parse and so count as refused).
     const v1Refusals = FILE.vectors.filter(v => v.expected.refused && v1(v)).length;
     assert.ok(r.summary.vectors.fail > 0 && r.summary.vectors.fail <= v1Refusals, String(r.summary.vectors.fail));

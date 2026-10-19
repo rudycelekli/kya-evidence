@@ -5,6 +5,8 @@ import { verify as edVerify } from 'node:crypto';
 import { canonical, digest, hashBytes, parseJson } from '../../src/shared/canonical.mjs';
 import { validateManifest, validateProfile, validatePolicy, validateEvidence, keyId, describeComparison, verifyEvidence, verifyIncident, validateIncident } from '../../src/index.mjs';
 import { validatePublicPem, publicKeyObject } from '../../src/identity/domain/services/validation.mjs';
+import { verifyAssessmentCredential } from '../../src/vc-bridge/index.mjs';
+import { verifyScoreCard, compareScoreCards } from '../../src/kya-score/index.mjs';
 
 const RESULT = 'kya.impl-result/v1';
 const isObject = v => v !== null && typeof v === 'object' && !Array.isArray(v);
@@ -77,4 +79,36 @@ function compareOp(inputs) {
   return { schema: RESULT, operation: 'compare', comparable: true, reason: null, left: left.reportDigest, right: right.reportDigest, scoreDelta: right.score.earned - left.score.earned, decisionChanged: left.decision !== right.decision, measurement: 'same-policy evidence comparison; not a causal improvement claim' };
 }
 
-export const V2_OPERATIONS = Object.freeze({ canonicalize: canonicalizeOp, digest: digestOp, 'verify-envelope': verifyEnvelopeOp, compare: compareOp });
+// Credential verification (docs/SPECIFICATION.md, Credential verification). The reference calls the library and reshapes its result.
+const NO_STATUS = null;
+function verifyCredentialOp(inputs) {
+  exactInputs(inputs, ['jwt', 'now', 'expectedIssuers', 'policy', 'statusLists', 'requireStatusCheck', 'report']);
+  const { jwt, now, expectedIssuers, policy, statusLists, requireStatusCheck, report } = inputs;
+  if (typeof jwt !== 'string') throw Error('jwt must be a string');
+  if (typeof now !== 'string') throw Error('now must be a string');
+  if (!Array.isArray(expectedIssuers) || !expectedIssuers.every(d => typeof d === 'string' && d.startsWith('did:key:'))) throw Error('expectedIssuers must be an array of did:key strings');
+  if (policy !== null) validatePolicy(policy);
+  if (!isObject(statusLists) || !Object.values(statusLists).every(v => typeof v === 'string' && v.length > 0)) throw Error('statusLists must map URLs to non-empty strings');
+  if (typeof requireStatusCheck !== 'boolean') throw Error('requireStatusCheck must be a boolean');
+  if (report !== null && !isObject(report)) throw Error('report must be an object or null');
+  const r = verifyAssessmentCredential(jwt, { now, expectedIssuerKeys: expectedIssuers, policy: policy ?? undefined, statusLists, requireStatusCheck, report: report ?? undefined });
+  const opened = Object.hasOwn(r, 'issuer');
+  const entry = e => ({ purpose: typeof e.purpose === 'string' ? e.purpose : null, checked: e.checked, set: e.checked ? e.set : null, error: e.error ?? null });
+  return { schema: RESULT, operation: 'verify-credential', valid: r.valid, errors: r.errors.map(e => e.code), authenticated: false,
+    issuer: opened ? r.issuer : null, issuerTrust: opened ? r.issuerTrust : null, issuerRole: opened ? r.issuerRole : null,
+    reportChecked: opened ? r.reportChecked : false, reportMismatch: opened ? r.reportMismatch : [],
+    status: opened ? { checked: r.status.checked, entries: r.status.entries.map(entry) } : NO_STATUS };
+}
+
+function verifyScoreCardOp(inputs) {
+  exactInputs(inputs, ['card']);
+  const r = verifyScoreCard(inputs.card);
+  return { schema: RESULT, operation: 'verify-score-card', valid: r.valid, problems: r.problems, score: r.valid ? r.score : null, cardDigest: r.valid ? r.cardDigest : null };
+}
+function compareScoreCardsOp(inputs) {
+  exactInputs(inputs, ['left', 'right']);
+  const r = compareScoreCards(inputs.left, inputs.right);
+  return { schema: RESULT, operation: 'compare-score-cards', comparable: r.comparable, reasons: r.reasons, delta: r.delta, distinguishable: r.distinguishable };
+}
+
+export const V2_OPERATIONS = Object.freeze({ canonicalize: canonicalizeOp, digest: digestOp, 'verify-envelope': verifyEnvelopeOp, compare: compareOp, 'verify-credential': verifyCredentialOp, 'verify-score-card': verifyScoreCardOp, 'compare-score-cards': compareScoreCardsOp });

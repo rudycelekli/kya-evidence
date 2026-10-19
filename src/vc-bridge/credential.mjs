@@ -23,6 +23,7 @@ const fixtureModes = m => m === 'fixture' || m === 'mixed';
 const hasFixtureLimitation = l => Array.isArray(l) && l.includes(FIXTURE_LIMITATION);
 
 function statusEntry(purpose, spec) {
+  insist(purpose !== undefined, 'status purpose is required');
   insist(spec && typeof spec.statusListCredential === 'string' && /^https?:\/\/\S+$/.test(spec.statusListCredential), 'status list credential must be a URL');
   const i = spec.statusListIndex;
   insist(Number.isSafeInteger(i) && i >= 0 || (typeof i === 'string' && /^(0|[1-9]\d{0,15})$/.test(i)), 'status list index must be a non-negative integer');
@@ -90,7 +91,7 @@ function checkClaims(c) {
   else if (fixtureModes(s.evidenceMode) !== hasFixtureLimitation(s.limitations)) errs.push(['EVIDENCE_MODE_LIMITATION_MISMATCH', 'evidenceMode and the fixture limitation disagree']);
   if (!Array.isArray(s.limitations) || !s.limitations.length) errs.push(['PAYLOAD_INVALID', 'limitations are required']);
   if (s.id !== `urn:kya:subject:sha256:${s.subjectDigest}`) errs.push(['PAYLOAD_INVALID', 'Subject id does not match subjectDigest']);
-  const ev = c.evidence?.[0];
+  const ev = Array.isArray(c.evidence) ? c.evidence[0] : undefined;
   if (!ev || ev.type !== 'KyaInputDigests' || ev.reportDigest !== s.reportDigest || ev.subjectDigest !== s.subjectDigest || ev.profileDigest !== s.profileDigest || ev.policyDigest !== s.policyDigest || ev.evaluatorDigest !== s.evaluatorDigest) errs.push(['EVIDENCE_REFERENCE_MISMATCH', 'Evidence input digests do not match the subject']);
   return errs;
 }
@@ -133,13 +134,19 @@ export function verifyAssessmentCredential(token, { now = new Date().toISOString
   catch (e) { return { ...base, valid: false, errors: [{ code: e.code ?? 'MALFORMED', message: e.message }] }; }
   const { credential, issuer } = opened;
   for (const [code, message] of checkClaims(credential)) errors.push({ code, message });
-  let reportChecked = false;
+  let reportChecked = false, reportMismatch = [];
   if (report !== undefined) {
     try { verifyAssessment(report); } catch (e) { errors.push({ code: 'REPORT_INVALID', message: e.message }); report = undefined; }
     if (report !== undefined) {
-      const diffs = compareToReport(credential, report);
-      if (diffs.length) errors.push({ code: 'REPORT_MISMATCH', message: `Credential differs from the supplied report in: ${diffs.join(', ')}` });
-      reportChecked = true;
+      let diffs = [];
+      // A report that passes its checksum but lacks a member the rebuild reads cannot be rebuilt from: that is an invalid report, not a crash.
+      try { diffs = compareToReport(credential, report); }
+      catch (e) { errors.push({ code: 'REPORT_INVALID', message: 'Report cannot be rebuilt into a credential: ' + e.message }); report = undefined; }
+      if (report !== undefined) {
+        reportMismatch = [...new Set(diffs.map(d => d.split(' ')[0]))].sort();
+        if (diffs.length) errors.push({ code: 'REPORT_MISMATCH', message: `Credential differs from the supplied report in: ${diffs.join(', ')}` });
+        reportChecked = true;
+      }
     }
   }
   let issuerTrust = opened.issuerTrust, issuerRole = null;
@@ -152,7 +159,9 @@ export function verifyAssessmentCredential(token, { now = new Date().toISOString
   const status = { checked: false, entries: [] };
   let all = entries.length > 0;
   for (const entry of entries) {
-    const list = statusLists?.[entry?.statusListCredential];
+    // Own members only, and only for a string URL: a name such as toString or a number must never find an inherited or coerced list.
+    const url = entry?.statusListCredential;
+    const list = typeof url === 'string' && statusLists && Object.hasOwn(statusLists, url) ? statusLists[url] : undefined;
     if (!list) { all = false; status.entries.push({ purpose: entry?.statusPurpose, checked: false }); continue; }
     try {
       const r = checkStatus(list, entry, { now, expectedIssuerKeys: [issuer] });
@@ -162,5 +171,5 @@ export function verifyAssessmentCredential(token, { now = new Date().toISOString
   }
   status.checked = all;
   if (requireStatusCheck && !all) errors.push({ code: 'STATUS_NOT_CHECKED', message: 'Status was required but not fully checked' });
-  return { ...base, valid: errors.length === 0, errors, issuer, issuerTrust, issuerRole, credential, status, validAt: now, reportChecked };
+  return { ...base, valid: errors.length === 0, errors, issuer, issuerTrust, issuerRole, credential, status, validAt: now, reportChecked, reportMismatch };
 }

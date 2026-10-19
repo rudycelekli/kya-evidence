@@ -5062,6 +5062,167 @@
           "title": "the quoted number table has a row for every number the checker recomputes for the review"
         }
       ]
+    },
+    {
+      "id": "KYA-VCB-017",
+      "level": "MUST",
+      "area": "vcb",
+      "section": "Interoperability and versioning",
+      "statement": "Credential verification MUST apply its opening steps in the specified order and name the first failing step by code, and MUST NOT infer issuer trust from a valid signature: trust is relative to expected issuers or a policy anchor that is not revoked.",
+      "tests": [
+        {
+          "file": "test/contract-credential-score.test.mjs",
+          "title": "verify-credential applies its opening steps in the order the specification lists"
+        },
+        {
+          "file": "test/contract-credential-score.test.mjs",
+          "title": "verify-credential never infers trust from a signature and trust by policy needs a live anchor"
+        }
+      ]
+    },
+    {
+      "id": "KYA-VCB-018",
+      "level": "MUST",
+      "area": "vcb",
+      "section": "Interoperability and versioning",
+      "statement": "Credential verification MUST refuse ill-formed UTF-8 in a token, MUST read the evidence block only from an array, MUST look a status list up by own member and string URL only, and MUST report a report that cannot be rebuilt from as invalid instead of failing; without the source report it MUST claim internal consistency only.",
+      "tests": [
+        {
+          "file": "test/contract-credential-score.test.mjs",
+          "title": "the credential library refuses ill-formed UTF-8 and reads only an array as the evidence block"
+        },
+        {
+          "file": "test/contract-credential-score.test.mjs",
+          "title": "verify-credential status checks use own members of statusLists only and name each failure"
+        },
+        {
+          "file": "test/contract-credential-score.test.mjs",
+          "title": "verify-credential reports internal consistency only without the report and names the differing member with it"
+        }
+      ]
+    },
+    {
+      "id": "KYA-VCB-019",
+      "level": "MUST",
+      "area": "vcb",
+      "section": "Interoperability and versioning",
+      "statement": "The credential verification operation MUST refuse input of the wrong shape, type or policy field rules and MUST NOT return a result for it.",
+      "tests": [
+        {
+          "file": "test/contract-credential-score.test.mjs",
+          "title": "verify-credential refuses input outside the contract and never returns a result for it"
+        }
+      ]
+    },
+    {
+      "id": "KYA-SCR-015",
+      "level": "MUST",
+      "area": "benchmarks",
+      "section": "Interoperability and versioning",
+      "statement": "Score card verification MUST recompute every derived number from the embedded items and manifest, MUST judge a value that is not a card as invalid without refusing, and MUST accept a re-sealed edit of a manifest member that no computation reads.",
+      "tests": [
+        {
+          "file": "test/contract-credential-score.test.mjs",
+          "title": "verify-score-card recomputes every number from the items and judges a value that is not a card without refusing"
+        }
+      ]
+    },
+    {
+      "id": "KYA-SCR-016",
+      "level": "MUST",
+      "area": "benchmarks",
+      "section": "Interoperability and versioning",
+      "statement": "Score card verification MUST fail a card below the evidence floor or with a lowered floor, and comparison MUST NOT compare cards unless both are valid and their suite and evaluator digests match.",
+      "tests": [
+        {
+          "file": "test/contract-credential-score.test.mjs",
+          "title": "verify-score-card fails a card whose evidence is below the floor or whose floor was lowered"
+        },
+        {
+          "file": "test/contract-credential-score.test.mjs",
+          "title": "compare-score-cards compares only valid cards of one suite and evaluator"
+        }
+      ]
+    },
+    {
+      "id": "KYA-VEC-014",
+      "level": "MUST",
+      "area": "vectors",
+      "section": "Interoperability and versioning",
+      "statement": "Adding operations to contract version 2 MUST leave the earlier vectors and the keys byte for byte unchanged, MUST score an operation an implementation does not claim as not-run and not fail, at least a third of the later vectors MUST be refusals, and every specified code MUST appear in at least one vector.",
+      "tests": [
+        {
+          "file": "test/contract-credential-score.test.mjs",
+          "title": "the vectors file lists nine operations and keeps the earlier 485 vectors and the keys byte for byte"
+        },
+        {
+          "file": "test/contract-credential-score.test.mjs",
+          "title": "at least a third of the later vectors are refusals and every one cites a requirement and names it in its rationale"
+        },
+        {
+          "file": "test/contract-operations.test.mjs",
+          "title": "an implementation of the six earlier operations scores the three later ones as not-run and keeps every other result"
+        },
+        {
+          "file": "test/contract-credential-score.test.mjs",
+          "title": "every specified credential code, score card problem code and comparison reason appears in at least one vector"
+        }
+      ]
+    },
+    {
+      "id": "KYA-DET-001",
+      "level": "MUST",
+      "area": "credential",
+      "section": "Interoperability and versioning",
+      "statement": "The encoded status list that the reference exports MUST be a pure function of the bitstring, with a fixed GZIP header and no dependence on the platform, so that an exported credential is byte-reproducible.",
+      "tests": [
+        {
+          "file": "test/gzip-deterministic.test.mjs",
+          "title": "encodeList uses the deterministic encoder so exported status list bytes are pinned"
+        },
+        {
+          "file": "test/gzip-deterministic.test.mjs",
+          "title": "deterministic gzip golden bytes pin the exact output so a platform difference fails loudly"
+        },
+        {
+          "file": "test/gzip-deterministic.test.mjs",
+          "title": "deterministic gzip is repeatable and independent of the input container type"
+        }
+      ]
+    },
+    {
+      "id": "KYA-DET-002",
+      "level": "MUST",
+      "area": "credential",
+      "section": "Interoperability and versioning",
+      "statement": "The deterministic GZIP output MUST decode to the original bytes with a standard decoder and carry a correct CRC32 and size trailer.",
+      "tests": [
+        {
+          "file": "test/gzip-deterministic.test.mjs",
+          "title": "deterministic gzip round trips empty zeros ones and seeded random input through node zlib"
+        },
+        {
+          "file": "test/gzip-deterministic.test.mjs",
+          "title": "deterministic gzip writes a fixed header and a correct CRC32 and ISIZE trailer"
+        },
+        {
+          "file": "test/gzip-deterministic.test.mjs",
+          "title": "deterministic gzip output decodes with an independent python gzip decoder"
+        }
+      ]
+    },
+    {
+      "id": "KYA-DET-003",
+      "level": "MUST",
+      "area": "vectors",
+      "section": "Interoperability and versioning",
+      "statement": "A drift between the generated and the committed vectors file MUST be reported with the first differing vector id, the JSON path and bounded escaped context.",
+      "tests": [
+        {
+          "file": "test/assessment-vectors.test.mjs",
+          "title": "drift description names the first differing vector id, the JSON path and bounded escaped context"
+        }
+      ]
     }
   ]
 }
