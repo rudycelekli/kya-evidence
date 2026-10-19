@@ -119,13 +119,13 @@ Replace the commit with the handover commit. Then run the cheap checks first. Ea
 
 | Step | Command | Expected result |
 | :--- | :--- | :--- |
-| 1 | `node scripts/requirements.mjs --check` | exit 0; one JSON line starting `{"requirements":276,"areas":` and ending with `"traceable":true,"registryDigest":"5b8e62d0438d985b411566174139c25648b12758510e5a495d173e5a34d4f50c"}` |
+| 1 | `node scripts/requirements.mjs --check` | exit 0; one JSON line starting `{"requirements":284,"areas":` and ending with `"traceable":true,"registryDigest":"c92b9ca4a09b1c97068cfef208be9ad6749d7dd0c9dd0cd0d36aa07958d6adf7"}` |
 | 2 | `node scripts/assessment-vectors.mjs --check` | exit 0; the line `Assessment vectors match` |
 | 3 | `node scripts/mutation-check.mjs --preflight` | exit 0; `{"preflight":"ok","controls":87,"anchorsPresent":true,"allMutantsParse":true}` |
 | 4 | `node scripts/check.mjs` | exit 0; one JSON line with `"syntax":"passed"`, `"schemas":"matched"`, `"requirementTraceability":"passed"`, `"statusLedger":"passed"` (the `files` figure depends on the directory scanned and is not quoted) |
 | 5 | `node scripts/privacy-scan.mjs examples test/fixtures profiles policies suites` | exit 0; `"clean": true` and `"findings": 0` |
 | 6 | `node scripts/profile-registry.mjs --check` | exit 0; `Profile registry matches` |
-| 7 | `node scripts/run-vectors.mjs --impl "node interop/impl-contract/js-reference.mjs"` | exit 0 after about ten seconds; summary with `"vectors":{"total":799,"pass":799,...,"fail":0,"unsupported":0}` and `"requirements"` with `"pass":60`, `"notRun":216`, `"total":276` |
+| 7 | `node scripts/run-vectors.mjs --impl "node interop/impl-contract/js-reference.mjs"` | exit 0 after about ten seconds; summary with `"vectors":{"total":799,"pass":799,...,"fail":0,"unsupported":0}` and `"requirements"` with `"pass":60`, `"notRun":224`, `"total":284` |
 | 8 | `node scripts/run-vectors.mjs --impl "node interop/second-impl/adapter.mjs"` | exit 0 after about thirty seconds; the same vector and requirement counts. This is the same team's second implementation. |
 | 8b | `node scripts/adr-index.mjs` | exit 0; `{"records":34,"danglingRefs":0,"storage":"evidence/adr-index.json"}`. It rewrites that file; `git status` must stay clean afterwards. |
 | 9 | `node scripts/review-kit-check.mjs --deep` | exit 0; `"ok": true`. Confirms every number in the table below, including the harness rows. |
@@ -150,8 +150,8 @@ Every row is recomputed by `node scripts/review-kit-check.mjs` from the reposito
 
 | Key | Value | How it is measured |
 | :--- | :--- | :--- |
-| `requirements` | `276` | `node scripts/requirements.mjs`, field `requirements` |
-| `requirementsRegistryDigest` | `5b8e62d0438d985b411566174139c25648b12758510e5a495d173e5a34d4f50c` | same command, field `registryDigest` |
+| `requirements` | `284` | `node scripts/requirements.mjs`, field `requirements` |
+| `requirementsRegistryDigest` | `c92b9ca4a09b1c97068cfef208be9ad6749d7dd0c9dd0cd0d36aa07958d6adf7` | same command, field `registryDigest` |
 | `vectorsTotal` | `799` | length of `vectors` in `evidence/assessment-vectors.json` |
 | `vectors.assess` | `212` | vectors whose `operation` is `assess` |
 | `vectors.currency` | `60` | operation `currency` |
@@ -173,9 +173,9 @@ Every row is recomputed by `node scripts/review-kit-check.mjs` from the reposito
 | `harness.vectorsPass` | `799` | `node scripts/run-vectors.mjs --impl "node interop/impl-contract/js-reference.mjs"`, field `vectors.pass` |
 | `harness.vectorsFail` | `0` | same command, field `vectors.fail` |
 | `harness.requirementsPass` | `60` | same command, field `requirements.pass`: requirements for which a vector passed |
-| `harness.requirementsNotRun` | `216` | same command, field `requirements.notRun` |
+| `harness.requirementsNotRun` | `224` | same command, field `requirements.notRun` |
 
-Read the harness rows carefully: 60 of 276 requirements are exercised by a vector. The other 216 are covered, if at all, by in process tests. That is a statement about where the evidence lives, not about defects.
+Read the harness rows carefully: 60 of 284 requirements are exercised by a vector. The other 224 are covered, if at all, by in process tests. That is a statement about where the evidence lives, not about defects.
 
 ## 7. Known limitations
 
