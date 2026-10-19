@@ -164,7 +164,7 @@ Every row is recomputed by `node scripts/review-kit-check.mjs` from the reposito
 | `vectors.compare-score-cards` | `19` | operation `compare-score-cards` |
 | `mutationControls` | `87` | `node scripts/mutation-check.mjs --preflight`, field `controls` |
 | `testFiles` | `84` | files matching `test/*.test.mjs` |
-| `testDeclarations` | `1006` | lines that begin with `test(` in those files. The four `test/property-*.test.mjs` files declare 38 seeded properties through a helper and contribute no such line. |
+| `testDeclarations` | `1011` | lines that begin with `test(` in those files. The four `test/property-*.test.mjs` files declare 38 seeded properties through a helper and contribute no such line. |
 | `adrs` | `35` | files `docs/adr/NNNN-*.md` (20 marked Implemented and 15 Proposed in their status lines when counted) |
 | `coreProfileChecks` | `18` | length of `checks` in `profiles/core-v1.json` |
 | `srcFiles` | `88` | `.mjs` files under `src/` |
