@@ -5625,6 +5625,105 @@
           "title": "a drifted ADR record count in the kit fails the check"
         }
       ]
+    },
+    {
+      "id": "KYA-PYI-001",
+      "level": "SHOULD",
+      "area": "interoperability",
+      "section": "Interoperability and versioning",
+      "statement": "A second-language implementation of the four version 2 operations canonicalize, digest, verify-envelope and compare SHOULD reproduce every published vector of those operations, and an operation it does not implement MUST be answered with the exact unsupported reply so that the harness records not-run.",
+      "tests": [
+        {
+          "file": "test/python-impl.test.mjs",
+          "title": "python passes every canonicalize vector through the harness",
+          "hostConditional": true
+        },
+        {
+          "file": "test/python-impl.test.mjs",
+          "title": "python passes every digest vector through the harness",
+          "hostConditional": true
+        },
+        {
+          "file": "test/python-impl.test.mjs",
+          "title": "python passes every verify-envelope vector through the harness",
+          "hostConditional": true
+        },
+        {
+          "file": "test/python-impl.test.mjs",
+          "title": "python passes every compare vector through the harness",
+          "hostConditional": true
+        },
+        {
+          "file": "test/python-impl.test.mjs",
+          "title": "python answers unsupported for the five operations it does not implement so the harness records not-run",
+          "hostConditional": true
+        },
+        {
+          "file": "test/python-impl.test.mjs",
+          "title": "the unsupported reply is exactly the three member object of the contract",
+          "hostConditional": true
+        }
+      ]
+    },
+    {
+      "id": "KYA-PYI-002",
+      "level": "MUST",
+      "area": "interoperability",
+      "section": "Records and bindings",
+      "statement": "A verifier that reads untrusted input MUST refuse input the strict parser refuses before it looks at the operation, and a standard library only implementation MUST NOT import a package outside the standard library or make a network, subprocess, file or dynamic code call.",
+      "tests": [
+        {
+          "file": "test/python-impl.test.mjs",
+          "title": "python refuses input that the strict parser refuses before it looks at the operation",
+          "hostConditional": true
+        },
+        {
+          "file": "test/python-impl.test.mjs",
+          "title": "the python source imports only standard library modules"
+        },
+        {
+          "file": "test/python-impl.test.mjs",
+          "title": "the python source makes no network subprocess file or dynamic code calls"
+        },
+        {
+          "file": "test/python-impl.test.mjs",
+          "title": "the python adapter is one file that does not read src or the vectors"
+        }
+      ]
+    },
+    {
+      "id": "KYA-PYI-003",
+      "level": "MUST",
+      "area": "interoperability",
+      "section": "Trust and eligibility",
+      "statement": "Two implementations MUST agree on the rules the specification states for control characters, repeated mandatory minimums, profile check members, blocker code cross-checks of a compared report, number formatting, member order outside the Basic Multilingual Plane, and the cofactorless Ed25519 equation.",
+      "tests": [
+        {
+          "file": "test/python-impl.test.mjs",
+          "title": "the rules the disagreement log says were written into the specification agree between python and the reference",
+          "hostConditional": true
+        },
+        {
+          "file": "test/python-impl.test.mjs",
+          "title": "python and the reference agree on the blocker code rules of a compared report",
+          "hostConditional": true
+        },
+        {
+          "file": "test/python-impl.test.mjs",
+          "title": "python and the reference agree on number formatting for a spread of doubles",
+          "hostConditional": true
+        },
+        {
+          "file": "test/python-impl.test.mjs",
+          "title": "python and the reference agree on member order and escapes outside the basic multilingual plane",
+          "hostConditional": true
+        },
+        {
+          "file": "test/python-impl.test.mjs",
+          "title": "python and the reference refuse a signature that satisfies only the cofactored equation and accept the honest one",
+          "hostConditional": true
+        }
+      ]
     }
   ]
 }
