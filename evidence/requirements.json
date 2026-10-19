@@ -5724,6 +5724,58 @@
           "hostConditional": true
         }
       ]
+    },
+    {
+      "id": "KYA-PYA-001",
+      "level": "SHOULD",
+      "area": "interoperability",
+      "section": "Run selection and qualification",
+      "statement": "A second-language implementation of the version 2 operations assess and currency SHOULD reproduce every published vector of those operations, and an operation it does not implement MUST be answered with the exact unsupported reply so that the harness records not-run.",
+      "tests": [
+        {
+          "file": "test/python-impl.test.mjs",
+          "title": "python passes every assess vector through the harness",
+          "hostConditional": true
+        },
+        {
+          "file": "test/python-impl.test.mjs",
+          "title": "python passes every currency vector through the harness",
+          "hostConditional": true
+        }
+      ]
+    },
+    {
+      "id": "KYA-PYA-002",
+      "level": "MUST",
+      "area": "interoperability",
+      "section": "Reports and viewers",
+      "statement": "Two implementations MUST agree on the rules the specification states for the assessment report, namely the freshness boundary of a receipt, the validity bound of an assessment, the digest of every supplied evidence entry in the bundle digest, and the bounds on the number of evidence and incident entries.",
+      "tests": [
+        {
+          "file": "test/python-impl.test.mjs",
+          "title": "python and the reference agree at the freshness boundary of a receipt and on the validity bound of an assessment",
+          "hostConditional": true
+        },
+        {
+          "file": "test/python-impl.test.mjs",
+          "title": "python and the reference agree on the evidence bundle digest with entries that are not envelopes and on the entry bounds",
+          "hostConditional": true
+        }
+      ]
+    },
+    {
+      "id": "KYA-PYA-003",
+      "level": "MUST",
+      "area": "interoperability",
+      "section": "Trust and eligibility",
+      "statement": "Two implementations MUST agree on incident evaluation when records are reordered, delivered twice or moved in time, including the grouping of conflicting records and the lists open, resolved, appealed and observed.",
+      "tests": [
+        {
+          "file": "test/python-impl.test.mjs",
+          "title": "python and the reference agree on incident handling when records are reordered duplicated or moved in time",
+          "hostConditional": true
+        }
+      ]
     }
   ]
 }
