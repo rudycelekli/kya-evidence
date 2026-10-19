@@ -167,3 +167,4 @@ Do not post the announcement anywhere (social posts, mailing lists, standards gr
 1. Delete `dist/`.
 2. Open the next `## [Unreleased]` section if it was not created, and move the readiness outside gates forward as they close (record each closure with its evidence, not a checkmark).
 3. If anything about the release surprised you, change this document in the same week.
+4. The outside gates (an outside security review, a first relying-party pilot, an independent implementation) are prepared, not closed. The kits for them are [docs/review/REVIEW-KIT.md](review/REVIEW-KIT.md), [docs/pilot/PILOT-KIT.md](pilot/PILOT-KIT.md) and [docs/pilot/IMPLEMENTER-INVITATION.md](pilot/IMPLEMENTER-INVITATION.md). Run `node scripts/review-kit-check.mjs` at the release commit: it fails when a number or command quoted in the kits is stale, and `--print` shows the current values to paste in. Nothing in the kits authorizes contacting anyone.

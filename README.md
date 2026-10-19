@@ -143,6 +143,8 @@ A secondary [Python byte checker](docs/INTEROPERABILITY.md) reconstructs the pub
 
 Contribute reproducible failures, evaluator challenges, transport adapters or specification criticism. Read [CONTRIBUTING.md](CONTRIBUTING.md), [governance](docs/GOVERNANCE.md) and [SECURITY.md](SECURITY.md). Ongoing development uses bounded hypotheses, frozen comparisons, review by someone other than the author (no outside review exists yet) and explicit `ACCEPT`, `REJECT` or `INCONCLUSIVE` outcomes. A roadmap does not imply a running scheduler. Public releases, cost-incurring agent executions and deployments need explicit authorization.
 
+Outside review, pilot and implementer kits: [external security review kit](docs/review/REVIEW-KIT.md), [private pilot kit](docs/pilot/PILOT-KIT.md) and [invitation to an independent implementer](docs/pilot/IMPLEMENTER-INVITATION.md). They describe what an outsider would need; no outside review, pilot or implementation exists yet. `node scripts/review-kit-check.mjs` fails when a number or command in them goes stale.
+
 Releasing: the procedure, the owner-only steps and the gate list are in [docs/RELEASING.md](docs/RELEASING.md); `npm run release:readiness` prints which gates pass and which stay open.
 
 ## What this is not

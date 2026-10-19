@@ -128,7 +128,7 @@ S spoofing, T tampering, R repudiation, I information disclosure, D denial of se
 | CI gate and Action | T | Untrusted strings start workflow commands or inject Markdown | Escaping of annotations, summary and outputs (KYA-ACT-003) | None known |
 | CI gate and Action | I | Secrets printed | Environment secrets are not printed (KYA-ACT-003) | None known |
 | CI gate and Action | S/E | Fixture result gates as reliable | KYA-ACT-008, KYA-ACT-006 | None known |
-| CI gate and Action | T | Mutable third-party actions | `action/action.yml` pins `actions/setup-node` by commit SHA; `.github/workflows/ci.yml` uses tag refs (`actions/checkout@v4`, `actions/setup-node@v4`) | Mutable tags in the project's own CI; see [SUPPLY-CHAIN.md](SUPPLY-CHAIN.md) |
+| CI gate and Action | T | Mutable third-party actions | `action/action.yml`, `.github/workflows/ci.yml` and `.github/workflows/release.yml` pin every `uses:` by full commit SHA with a version comment | The SHAs were resolved by the project and not independently re-checked against the action source; a pinned SHA can still be a malicious commit if it was resolved wrongly; see [SUPPLY-CHAIN.md](SUPPLY-CHAIN.md) |
 | Holdouts | T | Swap, drop, duplicate or reorder cases after commit | KYA-HLD-001, KYA-HLD-004 | Commitment only useful if recorded before the campaign |
 | Holdouts | I | One reveal leaks siblings or salt | KYA-HLD-003 | Pre-reveal leakage not prevented (A14) |
 | Holdouts | S | Leaf and node confusion | KYA-HLD-003 | None known |
@@ -146,7 +146,7 @@ S spoofing, T tampering, R repudiation, I information disclosure, D denial of se
 | AC6 | Attacker who steals one trusted signing key | Sign new receipts; backdate | Policy revocation of the key id (KYA-TRU-004) | Backdating is possible until the key is revoked; revocation voids legitimate older receipts too; no anchor to separate them |
 | AC7 | Model vendor or contractor with access to hidden cases | Train on the holdout | Commit-reveal exposes post-hoc changes only (KYA-HLD-004) | Leakage not detected |
 | AC8 | Author of a second implementation or a malformed input | Parser differential so two verifiers disagree | Strict parser, golden vectors, Python second implementation (KYA-INT-002, KYA-INT-003, KYA-INT-004) | Python checker covers a declared subset only |
-| AC9 | Account takeover of a maintainer or a CI action | Publish altered code or a tampered archive | Zero runtime dependencies; deterministic archive and receipt (KYA-REL-001) | Releases are unsigned and CI action refs are mutable tags; see [SUPPLY-CHAIN.md](SUPPLY-CHAIN.md) |
+| AC9 | Account takeover of a maintainer or a CI action | Publish altered code or a tampered archive | Zero runtime dependencies; deterministic archive and receipt (KYA-REL-001) | No release has been made, so no archive is signed or attested. The manual release workflow contains a provenance attestation job that has never been run. CI action refs are SHA pins that the project resolved itself; see [SUPPLY-CHAIN.md](SUPPLY-CHAIN.md) |
 | AC10 | Contributor or AI assistant adding a hollow or skipped test | Make a requirement appear traced | Requirement gate and CI zero-skip rule (KYA-REQ-001) | Hollow assertions pass the gate; review is the control |
 
 ## Existing attack catalogue
@@ -204,8 +204,8 @@ This package does not verify human identity, legal delegation, actual organizati
 - Key compromise response beyond policy revocation: there is no effective-time revocation and no key rotation protocol (guidance only, see [CRYPTO-AGILITY.md](CRYPTO-AGILITY.md)).
 - A malicious or mistaken trusted key flooding incident reports.
 - Pre-reveal leakage of holdout cases, and a holder who chooses easy cases before committing.
-- Release authenticity: archives and the release receipt are unsigned; there is no build provenance and no signed tag (see [SUPPLY-CHAIN.md](SUPPLY-CHAIN.md)).
-- Mutable action references in the project's own CI workflow.
+- Release authenticity: no release exists, so no archive, receipt or tag is signed or attested. The manual release workflow has a build provenance attestation job that has never been run, so it is untested in practice (see [SUPPLY-CHAIN.md](SUPPLY-CHAIN.md)).
+- Correctness of the action commit SHAs the project pinned: they were resolved by the project and not independently re-checked against the action source.
 - A pull request that edits the CI workflow to bypass the gate, absent branch protection.
 - Cryptanalytic or quantum attacks on Ed25519 and SHA-256 (A10).
 - Hollow test assertions behind a traced requirement.
