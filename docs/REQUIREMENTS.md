@@ -290,5 +290,10 @@ Each requirement is traced to at least one test that must exist exactly once; th
 | KYA-RDN-006 | MUST | Assessor standing MUST ignore a disclosure whose signer, key fingerprint or domain does not match, a declaration from the assessor or an untrusted or revoked key, and a withdrawal by a key that did not sign its target, and MUST apply its time boundaries to the millisecond. | `mutation-redundancy-assessor.test.mjs` |
 | KYA-RDN-007 | MUST | A bridge export MUST NOT state qualified when currency was not checked, and profile metadata MUST be refused when its digest does not match the profile, when a sign-off record is malformed, or when a draft profile carries a sign-off. | `mutation-redundancy-profiles-bridges.test.mjs` |
 | KYA-RDN-008 | MUST | The privacy scan MUST NOT print a matched value, a malformed structural value, a narrative value or a sensitive object key, and its shape mask MUST replace letters and numerals with class markers. | `mutation-redundancy-privacy.test.mjs` |
+| KYA-DOC-022 | MUST | The README assess example MUST NOT pin `--now`, because `kya demo` stamps its manifest with the current clock. | `docs-claims.test.mjs` |
+| KYA-DOC-023 | MUST | Counts quoted in the alpha release notes MUST equal the repository values. | `docs-claims.test.mjs` |
+| KYA-DOC-024 | MUST | SUPPLY-CHAIN.md MUST NOT deny build provenance while `release.yml` contains an attestation step, and every `uses:` in `release.yml` MUST be SHA pinned. | `docs-claims.test.mjs` |
+| KYA-DOC-025 | MUST | Top-level documents MUST NOT claim clean-room origin, a pending security review or a published security contact. | `docs-claims.test.mjs` |
+| KYA-RVK-008 | MUST | The review kit checker MUST fail when the kit names a handover commit that is not an ancestor of HEAD, names the retired commit 5ab469e, or quotes an ADR record count that differs from the repository. | `review-kit.test.mjs` |
 
-Registry digest: `c92b9ca4a09b1c97068cfef208be9ad6749d7dd0c9dd0cd0d36aa07958d6adf7`
+Registry digest: `044e2fdb945668211cb7439c49e5e90fed999c6a819e231d1ba6acc1a823d87e`

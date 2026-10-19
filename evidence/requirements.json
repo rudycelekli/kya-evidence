@@ -5552,6 +5552,79 @@
           "title": "malformed coded identifiers are masked in line oriented output"
         }
       ]
+    },
+    {
+      "id": "KYA-DOC-022",
+      "level": "MUST",
+      "area": "docs",
+      "section": "Interoperability and versioning",
+      "statement": "The README assess example MUST NOT pin `--now`, because `kya demo` stamps its manifest with the current clock.",
+      "tests": [
+        {
+          "file": "test/docs-claims.test.mjs",
+          "title": "the README assess example carries no hardcoded --now and the demo path it describes is qualified"
+        }
+      ]
+    },
+    {
+      "id": "KYA-DOC-023",
+      "level": "MUST",
+      "area": "docs",
+      "section": "Interoperability and versioning",
+      "statement": "Counts quoted in the alpha release notes MUST equal the repository values.",
+      "tests": [
+        {
+          "file": "test/docs-claims.test.mjs",
+          "title": "every requirement and vector count quoted in the alpha release notes equals the repository value"
+        }
+      ]
+    },
+    {
+      "id": "KYA-DOC-024",
+      "level": "MUST",
+      "area": "docs",
+      "section": "Interoperability and versioning",
+      "statement": "SUPPLY-CHAIN.md MUST NOT deny build provenance while `release.yml` contains an attestation step, and every `uses:` in `release.yml` MUST be SHA pinned.",
+      "tests": [
+        {
+          "file": "test/docs-claims.test.mjs",
+          "title": "SUPPLY-CHAIN.md does not deny build provenance while release.yml has an attest-build-provenance step"
+        }
+      ]
+    },
+    {
+      "id": "KYA-DOC-025",
+      "level": "MUST",
+      "area": "docs",
+      "section": "Interoperability and versioning",
+      "statement": "Top-level documents MUST NOT claim clean-room origin, a pending security review or a published security contact.",
+      "tests": [
+        {
+          "file": "test/docs-claims.test.mjs",
+          "title": "top-level documents do not claim clean-room, a pending review or a published contact"
+        }
+      ]
+    },
+    {
+      "id": "KYA-RVK-008",
+      "level": "MUST",
+      "area": "release",
+      "section": "Interoperability and versioning",
+      "statement": "The review kit checker MUST fail when the kit names a handover commit that is not an ancestor of HEAD, names the retired commit 5ab469e, or quotes an ADR record count that differs from the repository.",
+      "tests": [
+        {
+          "file": "test/review-kit.test.mjs",
+          "title": "a handover commit that is an ancestor of HEAD passes, and the shipped kit names no commit"
+        },
+        {
+          "file": "test/review-kit.test.mjs",
+          "title": "a kit that names the frozen commit 5ab469e or drops the handover line fails the check"
+        },
+        {
+          "file": "test/review-kit.test.mjs",
+          "title": "a drifted ADR record count in the kit fails the check"
+        }
+      ]
     }
   ]
 }
