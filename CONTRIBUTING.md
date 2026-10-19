@@ -1,6 +1,6 @@
 # Contributing
 
-Bring a replayable boundary failure, a sharper evaluator or a working adapter. This Apache-2.0 project is clean-room: no private product code, client records, credentials, internal paths or unapproved traces.
+Bring a replayable boundary failure, a sharper evaluator or a working adapter. This Apache-2.0 project was written independently: ideas from the owner's private product informed the design and no code or data was copied. Contributions must not include private product code, client records, credentials, internal paths or unapproved traces.
 
 Questions and reproducible failures: open an issue; security reports: see [SECURITY.md](SECURITY.md).
 
@@ -26,7 +26,7 @@ Code under `src/conformance/` must not change without an ADR. The evaluator dige
 
 ## Developer Certificate of Origin
 
-Every commit proposed for this repository must carry a `Signed-off-by:` line with your real name and a working email address. By adding it you certify the Developer Certificate of Origin (https://developercertificate.org). Use `git commit -s`. Maintainers are asked not to merge a pull request without the sign-off. This is a review practice only: no automated check enforces it, so a missing sign-off is caught only when a maintainer looks. An AI co-author trailer does not replace the sign-off. The full terms are in [IPR-POLICY.md](docs/governance/IPR-POLICY.md), which also covers the Apache-2.0 patent grant, essential-patent disclosure, employer permission and prohibited material.
+Contributions from outside the maintainer team must carry a sign-off. Earlier maintainer commits predate this rule. Use a `Signed-off-by:` line with your real name and a working email address. By adding it you certify the Developer Certificate of Origin (https://developercertificate.org). Use `git commit -s`. Maintainers are asked not to merge a pull request without the sign-off. This is a review practice only: no automated check enforces it, so a missing sign-off is caught only when a maintainer looks. An AI co-author trailer does not replace the sign-off. The full terms are in [IPR-POLICY.md](docs/governance/IPR-POLICY.md), which also covers the Apache-2.0 patent grant, essential-patent disclosure, employer permission and prohibited material.
 
 ## Governance documents
 

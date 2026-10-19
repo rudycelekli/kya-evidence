@@ -4,7 +4,7 @@
 
 **A passport says what an agent is. Evidence shows what an exact agent system did, under an exact scope.**
 
-KYA Evidence is local-first open infrastructure for **Know Your Agent**: signed check receipts over an exact agent manifest (a declaration, not a passport or identity credential), configurable relying-party policies and explainable assurance assessments. The vision is a neutral standard that people, organizations and independent assessors can implement, reproduce and contest. The current deliverable is a dependency-free Node.js reference implementation, **v0.1.0-alpha.4**, not an adopted industry standard. No GitHub release or npm package exists yet; build from a checkout.
+KYA Evidence is local-first open infrastructure for **Know Your Agent**: signed check receipts over an exact agent manifest (a declaration, not a passport or identity credential), configurable relying-party policies and explainable assurance assessments. The vision is a neutral standard that people, organizations and independent assessors can implement, reproduce and contest. The current deliverable is a dependency-free Node.js reference implementation, **v0.1.0-alpha.4**, not an adopted industry standard. No GitHub release or npm package exists yet; build from a checkout. The manual release workflow (`.github/workflows/release.yml`, including its provenance attestation job) has never been run. Most of the code, tests and documents were written with AI assistance, and no independent party has reviewed them.
 
 Every person may eventually delegate to an agent. Every relying party will need a better answer than “trust the prompt.” Start with an exact question: **does this configuration meet this party's policy for this scope, on this evidence?** Keep the result portable, the decision explainable and the correction process open.
 
@@ -55,7 +55,6 @@ node bin/kya.mjs assess \
   --policy ./policy.json \
   --evidence ./evidence.json \
   --evaluator <64-character-evaluator-digest> \
-  --now 2026-10-13T12:00:00.000Z \
   --out ./artifacts/assessment
 
 node bin/kya.mjs inspect .
@@ -64,7 +63,7 @@ node bin/kya.mjs probe --out ./artifacts/runtime-probes.json
 node bin/kya.mjs benchmark --out ./artifacts/benchmark
 ```
 
-The evaluator digest comes from `kya init DIR` (also `evaluatorDigest` in `evidence/evaluator-identity.json`). `./manifest.json`, `./policy.json` and `./evidence.json` are files from the `kya demo` output folder or from `kya init`; `./profiles/core-v1.json` is in this repository. Use generated demo inputs and the [adapter protocol](docs/ADAPTERS.md) to connect an explicitly authorized runtime. `probe` checks executable availability and version, never competence or safety. A command adapter is a transport, not an operating-system sandbox. `verify` checks report checksum integrity; it does not authenticate the report or recompute its claims.
+`kya demo` stamps its manifest and evidence with the current clock, so leave `--now` out or pass a time after the demo ran; a fixed earlier time makes the decision `expired` with score 0. Demo evidence expires one hour after it was made, so re-run `kya demo` to refresh it. The evaluator digest comes from `kya init DIR` (also `evaluatorDigest` in `evidence/evaluator-identity.json`). `./manifest.json`, `./policy.json` and `./evidence.json` are files from the `kya demo` output folder or from `kya init`; `./profiles/core-v1.json` is in this repository. Use generated demo inputs and the [adapter protocol](docs/ADAPTERS.md) to connect an explicitly authorized runtime. `probe` checks executable availability and version, never competence or safety. A command adapter is a transport, not an operating-system sandbox. `verify` checks report checksum integrity; it does not authenticate the report or recompute its claims.
 
 The typed SDK includes strict Claude Code result and Codex event parsers, explicit command plans and opt-in native factories. Native model claims remain declarations and cannot earn observed-action credit. Claude execution is blocked until effective managed policy can be established. Codex requires verified subscription auth and explicit binding of included global instructions. See [execution gates and private transcript retention](docs/ADAPTERS.md) and [validation boundaries](docs/VALIDATION.md).
 
@@ -115,13 +114,13 @@ Six dimensions: **identity, authority, security, reliability, accountability and
 
 The vision is broader than a single scoring service: interoperable signed check receipts, independently operated assessors, explicit relying-party policy, issuer accountability, reproducible comparisons and a shared correction protocol. Scores should travel with their evidence and limits. No central authority should quietly redefine a person's agent reputation.
 
-[Open-KYA](https://github.com/open-kya/kya-standard) explores agent identity in alpha incubation. [W3C Verifiable Credentials 2.0](https://www.w3.org/TR/vc-data-model-2.0/) supplies a credential data model. [A2A](https://a2a-protocol.org/latest/specification/) and [MCP authorization](https://modelcontextprotocol.io/specification/2025-11-25/basic/authorization) address other agent and tool interaction concerns. This project explores the executable assessment layer. These efforts can complement one another; no affiliation, certification or adoption is asserted.
+[Open-KYA](https://github.com/open-kya/kya-standard) is an agent-identity effort this project has not reviewed first-hand. [W3C Verifiable Credentials 2.0](https://www.w3.org/TR/vc-data-model-2.0/) supplies a credential data model. [A2A](https://a2a-protocol.org/latest/specification/) and [MCP authorization](https://modelcontextprotocol.io/specification/2025-11-25/basic/authorization) address other agent and tool interaction concerns. This project explores the executable assessment layer. These efforts can complement one another; no affiliation, certification or adoption is asserted.
 
 To become a useful standard, the protocol needs independent implementations, public interoperability cases, protected evaluation, real use-case calibration, accessible governance and external critique. [Roadmap](docs/ROADMAP.md) defines those gates. A future credential bridge must preserve exact digests and source class; it cannot turn a declaration into measured evidence.
 
 ## Built to be challenged
 
-This clean-room implementation applies evidence-first engineering: exact revisions, replayable tests, visible uncertainty, review by someone other than the author (no outside review exists yet) before promotion and reversible change. Private product code, client records, credentials and operational logs are excluded.
+This implementation was written independently: design ideas from the owner's private product Gradia informed it, and no Gradia code, data, paths or logs were copied in (see [ADR-0016](docs/adr/0016-named-blocker-codes-and-mandatory-minimums.md)). It applies evidence-first engineering: exact revisions, replayable tests, visible uncertainty, review by someone other than the author (no outside review exists yet) before promotion and reversible change. Private product code, client records, credentials and operational logs are excluded.
 
 Tests exercise tampering, malformed and duplicate JSON, untrusted signing, wrong bindings, expiry/revocation, run cherry-picking, unknown coverage, declaration laundering, critical failures, HTML injection and bounded command transport. Evaluator mutation tests must detect weakened gates. Passing public cases alone cannot establish general safety; colluding issuers, strategic run omission and suite contamination remain threats. The [requirement registry](docs/REQUIREMENTS.md) lists every normative requirement with its test traces, each traced to tests that the gate checks for staleness; CI fails on any skipped or `todo` test. `scripts/mutation-check.mjs` applies 87 targeted gate mutations over the assessment and incident, campaign, assessor, bridge, profile-validation and privacy-scanner source and requires each to be detected. [Threat model](docs/THREAT-MODEL.md) lists what is not mitigated.
 

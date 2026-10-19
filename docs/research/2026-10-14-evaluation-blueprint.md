@@ -9,7 +9,7 @@ This study inspected 58 selected files across iFixAI, Gradia/HarnessArena and Ag
 | Source | Frozen revision | Selected files | Verification boundary |
 | :--- | :--- | ---: | :--- |
 | iFixAI 4.1.0 | `89da541c7ff261a99891dd9bf421bb0563709360` | 12 | Scoring, mandatory gates, unscored correction, reporting and evidence; selected bytes match commit |
-| Gradia | `b6e8c84f012ef40fb6d5a87ef62fd213ab84451a` | Part of 22 combined | Selected originals clean; broader checkout had 33 tracked dirty files; private implementation |
+| Gradia | Private checkout; revision not published | Part of 22 combined | Selected originals read; the owner's private implementation is not published and cannot be checked from this repository |
 | HarnessArena containing workspace | `f1330708e3a6c49eb08380b182b512620c292315` | Part of 22 combined | Selected originals clean; broader workspace had one tracked dirty file; no runner campaign |
 | Agentic QE 3.15.5 contribution checkout | `3b81f4e870de60f364de21ebd7750b07991aadbf` | 24 | Clean selected source; exact public fork references; static study separated from installed scanner execution |
 
@@ -25,7 +25,7 @@ Gradia's relevant mechanisms separate output success from execution requirements
 
 Agentic QE's verification-reach model asks which oracle and observation channel covers a specific risk, with source/environment binding and direct/partial/no reach. KYA applies this to original structured responses and names channels the report cannot reach. A producer's `EXECUTED` label is still a claim unless execution is independently captured. [Exact verification-reach source](https://github.com/proffesor-for-testing/agentic-qe/blob/3b81f4e870de60f364de21ebd7750b07991aadbf/src/validation/verification-reach.ts).
 
-Agentic QE's oracle evaluator requires a passing baseline and checks first-order source mutations. Its shown unsuccessful-run interface can count a crash or timeout as a killed mutant. KYA's private mutation experiments require executed positive controls, fixed populations and assertion failures; startup/transport errors cannot become wins. [Exact oracle evaluator](https://github.com/proffesor-for-testing/agentic-qe/blob/3b81f4e870de60f364de21ebd7750b07991aadbf/src/validation/oracle-eval.ts).
+Agentic QE's oracle evaluator requires a passing baseline and checks first-order source mutations. In one inspected checkout at the version and revision stated above, the reading of its unsuccessful-run interface is that a crash or timeout can be counted as a killed mutant; this is a reading of that checkout, not a tested claim about the released tool. KYA's private mutation experiments require executed positive controls, fixed populations and assertion failures; startup/transport errors cannot become wins. [Exact oracle evaluator](https://github.com/proffesor-for-testing/agentic-qe/blob/3b81f4e870de60f364de21ebd7750b07991aadbf/src/validation/oracle-eval.ts).
 
 The AQE study also found useful separation of mechanical versus judgment gates, measured versus estimated coverage and scan findings versus scope completeness. These motivate strict numeric/population validation, provenance-aware imports and explicit unknowns. Injected judges, heuristic ranking, approximate significance and producer-marked instrumentation do not establish calibrated predictive assurance or permission to promote a candidate.
 

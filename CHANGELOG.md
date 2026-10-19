@@ -4,7 +4,7 @@ All notable changes to KYA Evidence are recorded here. The format follows [Keep 
 
 Read this file with two facts in mind. First, no version has been tagged, published to npm or released on GitHub: the alpha labels below mark the `version` field in `package.json` at the commit named in each heading, and nothing more. Second, nothing here is a certification, a safety claim or an outside validation. Every "Added" line means "the reference implementation now does this and a test checks it", not "an outside party confirmed it". The list of what is still not shown is in [docs/RELEASE-NOTES-ALPHA.md](docs/RELEASE-NOTES-ALPHA.md).
 
-Entries come from `git log` and the merged pull requests (#1 to #30) of the repository. Where a commit message was too short to say what changed, the entry is limited to what the message says.
+Entries come from `git log` and the merged pull requests (#1 to #46, the highest merged pull request number in the history at the time of writing) of the repository. Where a commit message was too short to say what changed, the entry is limited to what the message says.
 
 ## [Unreleased]
 
@@ -14,8 +14,11 @@ Entries come from `git log` and the merged pull requests (#1 to #30) of the repo
 
 - Three more pure contract operations, `verify-credential`, `verify-score-card` and `compare-score-cards` (ADR-0035, status Proposed), listed in the `contract.operations` member of the vectors file. The contract version stays 2: no schema string and no earlier vector changed (the earlier 485 are byte for byte identical, pinned in `test/contract-credential-score.test.mjs`), and an implementation that does not know them answers `unsupported` and gets `not-run`. 309 new vectors (refusals counted in `docs/fixlane14-integration.md`), the reference adapter operations in `interop/impl-contract/js-operations.mjs`, generators in `scripts/lib/vectors-credential.mjs` and `scripts/lib/vectors-score.mjs`, and a second implementation in `interop/second-impl/` written by a separate agent session from the specification text and the contract README (same team, not independent).
 
+- A Python 3 implementation of four contract operations (`canonicalize`, `digest`, `verify-envelope`, `compare`) in `interop/python-impl/adapter.py`: one file, standard library only, with Ed25519 verification written from RFC 8032; the other five operations answer `unsupported` and are `not-run`. It passes all 213 vectors of the four operations (first run of the first draft: 212 of 213). Same team, different language, not outside review; tests in `test/python-impl.test.mjs`, the disagreement log in `docs/IMPLEMENTERS-GUIDE.md` and proposals in `docs/fixlane19-integration.md`. Not run on Linux or Windows.
+
 ### Clarified
 
+- SPECIFICATION CLARIFICATION (found by the Python implementation; no vector result changed): `docs/SPECIFICATION.md` now lists the members of a manifest, profile, policy and evidence payload, including the `title` member of a profile check and the six dimension names (`identity`, `authority`, `security`, `reliability`, `accountability`, `operations`); defines a control character as U+0000 to U+001F and U+007F and counts text length in UTF-16 code units; requires the `checkId` values of `mandatoryMinimums` to be unique; points the `blockerCodes` rules of a comparison at the vocabulary and cross-checks of `docs/SCORING.md`; and states that envelope signatures are checked with the cofactorless Ed25519 equation. Each states what the reference already did.
 - SPECIFICATION CLARIFICATION: `docs/SPECIFICATION.md` gained "Credential verification" (the 21 opening steps and their codes, the six claim rules, report binding, policy trust, the status list check and the result order) and "Score card verification" (layout, generator, aggregates, rounding, problem codes and comparison). Both restate behaviour the reference already had, from `docs/VC-BRIDGE.md` and ADR-0033, so that a reader of the specification alone can reproduce it.
 - SPECIFICATION CLARIFICATION (no behaviour change for any earlier vector): the specification now states the canonical form and strict parsing rules the reference already followed (refused member names `__proto__`, `prototype` and `constructor`; UTF-16 code unit order of member names; numbers judged by value with the 2^53-1 integer bound; the shortest round-trip number form; lowercase escapes; literal U+007F, U+2028 and U+2029; unpaired surrogate escapes kept; depth 32, 100000 values and 1 MiB bounds), that record digests are not domain separated (only the two signing inputs are), the one public key spelling and RFC 8032 point rules, the order of the envelope verification steps with eight failure codes, the field rules of an incident payload, and the comparison rules (reason codes in order, the evidence mode check, the shape checks on a report).
 - CONTRACT CLARIFICATION: the implementation contract said input of up to 4 MiB; the strict parser, and so the reference, always refused above 1 MiB. The text now says so.
@@ -81,7 +84,7 @@ Everything after the commit that set `0.1.0-alpha.3`. Not tagged or published; t
 ### Fixed
 
 - Incident evaluation no longer depends on the clock: a future-dated copy of a report ID could make a resolved report reopen as time passed (finding F-1 from the fuzz tests, PR #3).
-- Incident and currency handling fail closed after independent review: all report records are kept, a resolution applies only when its reference is unambiguous, and currency inputs are validated.
+- Incident and currency handling fail closed after internal adversarial review: all report records are kept, a resolution applies only when its reference is unambiguous, and currency inputs are validated.
 - Campaign harness hardening after review: symlink-safe private directory, head pinning, mandatory signer trust, retry and duplicate-evidence rules, stricter evidence uniqueness (PR #6).
 
 ### Security

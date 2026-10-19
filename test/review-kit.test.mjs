@@ -107,10 +107,34 @@ test('removing the owner approval rule from the pilot kit fails the check', asyn
 });
 
 test('a frozen commit that is not in this history fails the check', async () => {
-  const bad = doc(REVIEW).replace(/Frozen commit to review: `[0-9a-f]+`/, 'Frozen commit to review: `0000000`');
+  const bad = doc(REVIEW).replace(/^Handover commit: none set\..*$/m, 'Handover commit: `' + '0'.repeat(40) + '`');
   const r = await checkKit({ root, actuals, text: { [REVIEW]: bad } });
-  const gitKnows = r.notChecked.some(s => s.includes('frozen commit ancestry'));
-  assert.ok(gitKnows || r.problems.some(p => p.includes('frozen commit')));
+  assert.equal(r.ok, false);
+  assert.ok(r.problems.some(p => p.includes('handover commit')), r.problems.join('; '));
+});
+
+test('a handover commit that is an ancestor of HEAD passes, and the shipped kit names no commit', async () => {
+  assert.match(doc(REVIEW), /^Handover commit: none set\./m);
+  const head = spawnSync('git', ['rev-parse', 'HEAD'], { cwd: root, encoding: 'utf8' }).stdout.trim();
+  if (!/^[0-9a-f]{40}$/.test(head)) return;
+  const ok = doc(REVIEW).replace(/^Handover commit: none set\..*$/m, 'Handover commit: `' + head + '`');
+  const r = await checkKit({ root, actuals, text: { [REVIEW]: ok } });
+  assert.deepEqual(r.problems, []);
+});
+
+test('a kit that names the frozen commit 5ab469e or drops the handover line fails the check', async () => {
+  const named = await checkKit({ root, actuals, text: { [REVIEW]: doc(REVIEW) + '\nFrozen at 5ab469e.\n' } });
+  assert.ok(named.problems.some(p => p.includes('5ab469e')));
+  const dropped = await checkKit({ root, actuals, text: { [REVIEW]: doc(REVIEW).replace(/^Handover commit:.*$/m, '') } });
+  assert.ok(dropped.problems.some(p => p.includes('Handover commit')));
+});
+
+test('a drifted ADR record count in the kit fails the check', async () => {
+  const bad = doc(REVIEW).replace('"records":' + actuals.adrs + ',', '"records":' + (actuals.adrs - 1) + ',');
+  assert.notEqual(bad, doc(REVIEW));
+  const r = await checkKit({ root, actuals, text: { [REVIEW]: bad } });
+  assert.equal(r.ok, false);
+  assert.ok(r.problems.some(p => p.includes('ADR records')));
 });
 
 test('an unmodified override passes and a non ASCII byte fails the check', async () => {

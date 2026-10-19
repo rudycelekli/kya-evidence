@@ -10,7 +10,7 @@ import { renderVectorFile, VECTOR_FILE } from '../scripts/score-vectors.mjs';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 const verifier = join(root, 'interop/score-verifier/verify_score_card.py');
-const probe = spawnSync('python3', ['--version'], { encoding: 'utf8', timeout: 2000, maxBuffer: 1024, shell: false });
+const probe = spawnSync('python3', ['--version'], { encoding: 'utf8', timeout: 20000, maxBuffer: 1024, shell: false });
 const hasPython = !probe.error && probe.status === 0;
 const vectors = JSON.parse(readFileSync(VECTOR_FILE, 'utf8')).vectors;
 const pythonEnv = { PATH: process.env.PATH ?? '', HOME: process.env.HOME ?? '', LANG: 'C.UTF-8', PYTHONIOENCODING: 'utf-8', PYTHONDONTWRITEBYTECODE: '1' };

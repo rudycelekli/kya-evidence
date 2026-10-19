@@ -159,14 +159,26 @@ export async function checkKit({ root = ROOT, text = {}, actuals = null, deep = 
     checked.push(`commands and paths in ${p}`);
   }
 
-  // 3. base commit, if git is available
-  const base = /Frozen commit to review: `([0-9a-f]{7,40})`/.exec(docs[KIT_FILES[0]]);
-  if (!base) problems.push('REVIEW-KIT.md does not name the frozen commit to review');
+  // 3. handover commit: the kit either says none is set, or names a full 40 character id that must be an ancestor of HEAD.
+  // A document cannot name the commit that merges it, so a shipped kit says "none set" and the owner replaces the line.
+  const lines = docs[KIT_FILES[0]].split('\n').filter(l => /^Handover commit:/.test(l));
+  if (lines.length !== 1) problems.push(`REVIEW-KIT.md must have exactly one "Handover commit:" line, found ${lines.length}`);
   else {
-    const g = spawnSync('git', ['merge-base', '--is-ancestor', base[1], 'HEAD'], { cwd: root, encoding: 'utf8' });
-    if (g.error || g.status === 128) notChecked.push('frozen commit ancestry (git unavailable or commit unknown here)');
-    else if (g.status !== 0) problems.push(`frozen commit ${base[1]} is not an ancestor of HEAD`);
-    else checked.push(`frozen commit ${base[1]} is an ancestor of HEAD`);
+    const named = /^Handover commit: `([0-9a-f]{40})`/.exec(lines[0]);
+    if (named) {
+      const g = spawnSync('git', ['merge-base', '--is-ancestor', named[1], 'HEAD'], { cwd: root, encoding: 'utf8' });
+      if (g.error || g.status === 128) problems.push(`handover commit ${named[1]} is unknown to this checkout`);
+      else if (g.status !== 0) problems.push(`handover commit ${named[1]} is not an ancestor of HEAD`);
+      else checked.push(`handover commit ${named[1]} is an ancestor of HEAD`);
+    } else if (/^Handover commit: none set\./.test(lines[0])) checked.push('handover commit line says none set');
+    else problems.push('the Handover commit line must say "none set." or name a full 40 character id in backticks');
+  }
+  if (/\b5ab469e/.test(docs[KIT_FILES[0]])) problems.push('REVIEW-KIT.md still names the frozen commit 5ab469e, which does not contain the kit');
+
+  // 3b. every quoted ADR record count equals the number of ADR files
+  for (const p of KIT_FILES) for (const m of docs[p].matchAll(/"records":(\d+)/g)) {
+    if (Number(m[1]) !== act.adrs) problems.push(`${p} quotes ${m[1]} ADR records but the repository has ${act.adrs}`);
+    else checked.push(`${p} ADR record count ${m[1]}`);
   }
 
   // 4. required plain statements

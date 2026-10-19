@@ -46,7 +46,7 @@ A disagreement is a vector where your result differs from `expected`, or a requi
 4. Say whether you had read the reference source or the gap log before you reached the disagreement. That decides how much weight an agreement or a disagreement carries.
 5. Report a crash or a hang as a failure, not as a skip.
 
-A disagreement about specified behaviour is reported as a public issue if the repository offers one. No contact is published yet, see [SECURITY.md](../../SECURITY.md); until the owner publishes one, send nothing private to the project and ask the person who shared this page how to reach the owner. If you believe a disagreement is a security defect (for example a way to make a verifier accept what it must refuse), do not post the details publicly: follow [SECURITY.md](../../SECURITY.md) and use the findings template in [REVIEW-KIT.md](../review/REVIEW-KIT.md).
+A disagreement about specified behaviour is reported as a public issue if the repository offers one. No contact is published and no monitored channel exists; the only interim route is the one written in [SECURITY.md](../../SECURITY.md). Send nothing private to the project and ask the person who shared this page how to reach the owner. If you believe a disagreement is a security defect (for example a way to make a verifier accept what it must refuse), do not post the details publicly: follow [SECURITY.md](../../SECURITY.md) and use the findings template in [REVIEW-KIT.md](../review/REVIEW-KIT.md).
 
 A resolution is recorded by the project as a specification change, an ADR when the semantics change and a new vector with a regression test. The project does not promise a response time, and it does not promise to agree.
 

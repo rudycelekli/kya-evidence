@@ -13,24 +13,24 @@ The ambition is neutral infrastructure for signed check receipts over an exact a
 | 6 · Portable ecosystem | Credential/discovery bridges, relying-policy exchange, issuer accountability | Tested mappings, source-class preservation, correction/revocation/appeal interoperability |
 | 7 · Empirical assurance | Use-case-specific weights and thresholds | Prospective outcome validation, failure-severity calibration and fairness scrutiny |
 
-Alpha3 adds response-bound [diagnostic dossiers](DOSSIERS.md), [16 frozen public evaluator controls](BENCHMARKS.md) and exact full-scope comparison. The [source-grounded blueprint](research/2026-10-14-evaluation-blueprint.md) explains inherited mechanisms and remaining capture/calibration gaps. Local project-lane review is distinct from the external challenge required at stage 1. The Python byte checker is a team-built second implementation of a restricted byte/signature subset, distinct from independently governed full protocol implementations at stage 5.
+Alpha.4 builds on alpha.3, which added response-bound [diagnostic dossiers](DOSSIERS.md), [16 frozen public evaluator controls](BENCHMARKS.md) and exact full-scope comparison. The [source-grounded blueprint](research/2026-10-14-evaluation-blueprint.md) explains inherited mechanisms and remaining capture/calibration gaps. Local project-lane review is distinct from the external challenge required at stage 1. The Python byte checker is a team-built second implementation of a restricted byte/signature subset, distinct from independently governed full protocol implementations at stage 5.
 
 ## Stage status at 2026-10-14
 
 | Stage | Status | Basis |
 | :--- | :--- | :--- |
-| 0 · Reference core | Implemented for the alpha3 scope | `npm test` passes with 0 skipped tests. Every requirement in the registry is traced to a test (see REQUIREMENTS.md). The mutation gates in `scripts/mutation-check.mjs` run in CI. Package reproducibility is checked in CI |
+| 0 · Reference core | Implemented for the alpha.4 scope | `npm test` passes with 0 skipped tests. Every requirement in the registry is traced to a test (see REQUIREMENTS.md). The mutation gates in `scripts/mutation-check.mjs` run in CI. Package reproducibility is checked in CI |
 | 1 · Independent challenge | Open | No external review is recorded. The reviews named in ADR-0014 were project-lane reviews |
 | 2 · Authorized runtime lanes | Partial, not promoted | Typed Claude Code and Codex parsers and adapter plans exist. The README states that Claude execution is blocked until managed policy can be established. No official invocation verification is recorded |
 | 3 · Stronger capture | Open | No tool side-effect capture. Currency and incident records are offline checks over supplied data |
 | 4 · Protected evaluation | Open | Public controls only |
-| 5 · Multi-implementation protocol | Open | The team-built Python checker reconstructs vectors for a restricted subset, including incident-record vectors per [INTEROPERABILITY](INTEROPERABILITY.md). It is not an independent implementation |
+| 5 · Multi-implementation protocol | Open | A nine-operation conformance contract with shared vectors exists (`interop/impl-contract/`). Two same-team implementations pass it: the JavaScript reference and `interop/second-impl/`. Neither is independent and no implementation outside the team exists. The team-built Python checker reconstructs vectors for a restricted subset, including incident-record vectors per [INTEROPERABILITY](INTEROPERABILITY.md); it is not an independent implementation either |
 | 6 · Portable ecosystem | Open | W3C VC 2.0 export bridge implemented (`kya vc`, not validated by any external VC library). No correction, revocation or appeal interoperability |
 | 7 · Empirical assurance | Open | No outcome validation or calibration |
 
 ## Done and next (2026-10-14)
 
-Done, committed on `python-conformance` and tested locally. None of it has external review:
+Done, committed to the repository and tested locally. None of it has external review:
 
 - Optional `principal.accountableParty` and policy `requirePrincipalBinding` (ADR-0012).
 - `checkCurrency` and `kya currency` with named monitoring triggers (ADR-0013; incident-open added by ADR-0014).

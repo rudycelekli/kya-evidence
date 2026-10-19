@@ -1,6 +1,6 @@
 # Security policy
 
-This alpha is experimental; independent security review is pending. Fixture scores and report checksums cannot authorize real actions. Recompute from trusted inputs and isolate adapters from production secrets/accounts.
+This alpha is experimental; no independent security review has taken place. Fixture scores and report checksums cannot authorize real actions. Recompute from trusted inputs and isolate adapters from production secrets/accounts.
 
 If the repository Security tab offers a private report button, use it. Otherwise do not post exploit details publicly: open a public issue titled Security contact request containing no technical details, and the maintainer will reply with a private channel. No response time is promised. Never send credentials, personal records or raw private traces. No security mailbox is promised and no monitored private channel is confirmed today.
 

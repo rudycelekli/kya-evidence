@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync, existsSync } from 'node:fs';
+import { readFileSync, existsSync, mkdtempSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { spawnSync } from 'node:child_process';
@@ -172,4 +173,62 @@ test('no tracked markdown file carries an owner placeholder except the file the 
   }
   assert.deepEqual(bad, []);
   assert.ok(existsSync(join(root, 'docs/security.txt')), 'the draft security.txt must stay');
+});
+
+test('the README assess example carries no hardcoded --now and the demo path it describes is qualified', () => {
+  const readme = read('README.md');
+  const start = readme.indexOf('kya.mjs assess');
+  assert.ok(start > 0, 'README has no assess example');
+  const block = readme.slice(start, readme.indexOf('```', start));
+  assert.ok(!/--now\b/.test(block), 'the assess example must not pin --now: kya demo stamps its manifest with the real clock');
+  assert.ok(/stamps its manifest and evidence with the current clock/.test(readme) && /leave `--now` out/.test(readme), 'README must explain the demo clock and --now');
+  const dir = mkdtempSync(join(tmpdir(), 'kya-readme-'));
+  try {
+    const d = spawnSync(process.execPath, ['bin/kya.mjs', 'demo', '--out', dir], { cwd: root, encoding: 'utf8' });
+    assert.equal(d.status, 0, d.stderr);
+    const evaluator = JSON.parse(read('evidence/evaluator-identity.json')).evaluatorDigest;
+    const a = spawnSync(process.execPath, ['bin/kya.mjs', 'assess', '--manifest', join(dir, 'manifest.json'), '--profile', 'profiles/core-v1.json', '--policy', join(dir, 'policy.json'), '--evidence', join(dir, 'evidence.json'), '--evaluator', evaluator, '--out', join(dir, 'assessment')], { cwd: root, encoding: 'utf8' });
+    assert.equal(a.status, 0, a.stderr);
+    assert.equal(JSON.parse(a.stdout).decision, 'qualified');
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
+test('every requirement and vector count quoted in the alpha release notes equals the repository value', () => {
+  const notes = read('docs/RELEASE-NOTES-ALPHA.md');
+  const req = JSON.parse(spawnSync(process.execPath, ['scripts/requirements.mjs'], { cwd: root, encoding: 'utf8' }).stdout).requirements;
+  const vectors = JSON.parse(read('evidence/assessment-vectors.json')).vectors.length;
+  const mut = JSON.parse(spawnSync(process.execPath, ['scripts/mutation-check.mjs', '--preflight'], { cwd: root, encoding: 'utf8' }).stdout).controls;
+  const found = {
+    requirements: [...notes.matchAll(/(\d+) (?:traced )?requirements/g)].map(m => +m[1]),
+    vectors: [...notes.matchAll(/(\d+) (?:\w+ )?vectors/g)].map(m => +m[1]),
+    mutation: [...notes.matchAll(/(\d+) mutation controls/g)].map(m => +m[1])
+  };
+  assert.ok(found.requirements.length >= 1 && found.vectors.length >= 2 && found.mutation.length >= 1, 'release notes quote no counts');
+  for (const n of found.requirements) assert.equal(n, req, 'requirement count');
+  for (const n of found.vectors) assert.equal(n, vectors, 'vector count');
+  for (const n of found.mutation) assert.equal(n, mut, 'mutation control count');
+  assert.ok(!/\d+ tests passing/.test(notes), 'release notes must not quote a CI test count');
+});
+
+test('top-level documents do not claim clean-room, a pending review or a published contact', () => {
+  for (const p of ['README.md', 'CONTRIBUTING.md', 'NOTICE', 'AGENTS.md', 'docs/governance/IPR-POLICY.md']) {
+    assert.ok(!/clean-room/i.test(read(p)), `${p} still says clean-room, which conflicts with ADR-0016 and NOTICE`);
+  }
+  assert.ok(!/review is pending/.test(read('SECURITY.md')) && /no independent security review has taken place/.test(read('SECURITY.md')));
+  for (const p of ['docs/review/REVIEW-KIT.md', 'docs/pilot/IMPLEMENTER-INVITATION.md', 'docs/pilot/PILOT-KIT.md']) {
+    assert.ok(/no monitored channel exists/.test(read(p)), `${p} must say no monitored channel exists`);
+  }
+  assert.ok(!/alpha incubation/.test(read('README.md')), 'README characterizes a project docs/VC-BRIDGE.md says was not fetched');
+});
+
+test('SUPPLY-CHAIN.md does not deny build provenance while release.yml has an attest-build-provenance step', () => {
+  const release = read('.github/workflows/release.yml');
+  const doc = read('docs/SUPPLY-CHAIN.md');
+  assert.ok(/actions\/attest-build-provenance@/.test(release), 'release.yml lost its attestation step');
+  assert.ok(!/\bNo build provenance(?! has)/.test(doc), 'SUPPLY-CHAIN.md denies build provenance that the workflow implements');
+  assert.ok(/never (?:been )?run/.test(doc), 'SUPPLY-CHAIN.md must say the workflow has never run');
+  assert.ok(!/How a release SHOULD be signed/.test(doc) && !/Generate a build-provenance attestation/.test(doc), 'stale not-implemented wording remains');
+  assert.ok(!/Pin `actions\/checkout`/.test(doc), 'pinning is done and must not be backlog');
+  const unpinned = [...release.matchAll(/^\s*-?\s*uses:\s*(\S+)/gm)].filter(m => !/@[0-9a-f]{40}$/.test(m[1]));
+  assert.deepEqual(unpinned.map(m => m[1]), [], 'release.yml has an action that is not SHA-pinned');
 });

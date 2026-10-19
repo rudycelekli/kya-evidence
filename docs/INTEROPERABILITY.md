@@ -1,6 +1,6 @@
 # Secondary Python byte implementation
 
-`interop/python/kya_portability.py` independently reconstructs canonical JSON and SHA-256 bytes for a declared subset of the JavaScript protocol. The implementation was written by another lane of this project team. It is a secondary implementation, not external independent adoption, a standards certification, or a second assessment engine.
+`interop/python/kya_portability.py` separately reconstructs canonical JSON and SHA-256 bytes for a declared subset of the JavaScript protocol. The implementation was written by another lane of this project team. It is a secondary implementation, not external independent adoption, a standards certification, or a second assessment engine.
 
 The standard-library checker reconstructs every canonical case in `evidence/golden-vectors.json`, hashes the reconstructed bytes, reconstructs the domain-separated signing input from the receipt payload, and checks the envelope digest and public-key fingerprint. It never returns the vector's expected canonical text as its calculation. Existing Ed25519 support is optional.
 

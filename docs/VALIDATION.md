@@ -31,7 +31,7 @@ python3 interop/python/kya_portability.py check-vectors evidence/golden-vectors.
 
 The Python checker can exit zero with `status: "partial"` when signature verification is unavailable. Read the status and verification fields; zero exit alone is not a signature pass. See [interoperability scope](INTEROPERABILITY.md).
 
-Alpha3's [diagnostic contract](DOSSIERS.md) and [benchmark catalog](BENCHMARKS.md) explain their exact observation boundaries. Standalone report checks are deliberately weaker than replay from trusted original inputs. The source-grounded [evaluation study](research/2026-10-14-evaluation-blueprint.md) records the inspected revisions and the measured repair controls without importing upstream capability claims.
+Alpha.4's [diagnostic contract](DOSSIERS.md) and [benchmark catalog](BENCHMARKS.md) explain their exact observation boundaries. Standalone report checks are deliberately weaker than replay from trusted original inputs. The source-grounded [evaluation study](research/2026-10-14-evaluation-blueprint.md) records the inspected revisions and the measured repair controls without importing upstream capability claims.
 
 From a clean committed Git checkout, build and verify the exact local artifact:
 
@@ -44,7 +44,7 @@ Repeat the build with the same source revision and supported runtime; compare th
 
 ## Measured runtime status
 
-A local Codex subscription trial attempted two public synthetic output cases. The provider rejected the configured model; zero final responses were accepted. Two complete raw stdout originals were retained privately with readback hashes. Declaration-only evidence earned zero scored coverage. Offline reanalysis and exact historical-engine replay preserve this failure instead of replacing it with a successful fixture.
+A local Codex subscription trial attempted two public synthetic output cases. The provider rejected the configured model; zero final responses were accepted. Two complete raw stdout originals were retained privately with readback hashes; that trial and those originals are not included in this repository and not reproducible from it. Declaration-only evidence earned zero scored coverage. Offline reanalysis and exact historical-engine replay preserve this failure instead of replacing it with a successful fixture.
 
 Claude has an unresolved effective managed-policy gate and remains blocked by its native factory. Other bots and agent harnesses remain unmeasured until a specific version, authorized execution lane and instrumentation contract are reviewed. [Adapter documentation](ADAPTERS.md) records the implemented interfaces and open gates.
 

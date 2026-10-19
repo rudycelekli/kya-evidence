@@ -18,7 +18,7 @@ It is not a test of any agent. The shipped command line has no command that runs
 | Pilot operator | The pilot owner or someone they appoint | Runs the commands on their own machine and fills in the result log. |
 | Project owner | The owner of this repository | Supplies this kit and answers questions. Receives only what the pilot owner approves in writing. Does not receive credentials, keys, traces or agent output. |
 
-The project does not operate any agent for the pilot, does not receive access to any subscription or account and does not run anything on the pilot owner's machine. No contact is published yet, see [SECURITY.md](../../SECURITY.md); how pilot questions reach the project is for the project owner and pilot owner to agree in writing before the pilot starts.
+The project does not operate any agent for the pilot, does not receive access to any subscription or account and does not run anything on the pilot owner's machine. No contact is published and no monitored channel exists; the only interim route is the one written in [SECURITY.md](../../SECURITY.md). How pilot questions reach the project is for the project owner and pilot owner to agree in writing before the pilot starts.
 
 ## 3. Preconditions (all must be true before phase 0)
 

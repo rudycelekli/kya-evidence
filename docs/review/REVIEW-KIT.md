@@ -4,9 +4,9 @@ This kit exists so that when the owner finds a willing reviewer, nothing has to 
 
 **There is no outside security review today.** Every review so far was done by the project team, mostly with AI assistance, on code that was also largely written with AI assistance. Nothing in this kit, in the changelog or in the requirement registry is evidence that an independent party looked at the code. The first reader outside the team is the first independent look. Do not describe this project as reviewed, audited or certified until a named outside party has said so in a document the owner can link.
 
-No contact for reports is published yet, see [SECURITY.md](../../SECURITY.md). Until the owner publishes one, send nothing to anyone on the project's behalf; the owner arranges the channel.
+No contact for reports is published and no monitored channel exists, see [SECURITY.md](../../SECURITY.md); the only interim route is the one written there. Send nothing to anyone on the project's behalf; the owner arranges the channel.
 
-Frozen commit to review: `5ab469e`. That is the commit this kit was written and measured against. A file cannot name the commit that contains it, so at handover the owner writes the full 40 character id of the exact commit to review into the review request, runs `node scripts/review-kit-check.mjs` at that commit and sends the output. If the owner's handover commit differs from the one named here, the request wins and the numbers below must be re-measured (the checker prints them with `--print`).
+Handover commit: none set. The numbers in this kit were measured at the parent of the commit that merges this text; a document cannot name its own merge commit, so no commit id is quoted here. Re-run `node scripts/review-kit-check.mjs --print` at your checkout and trust that over any quoted number. At handover the owner replaces this line with `Handover commit: ` followed by the full 40 character id of the exact commit to review, in backticks; `node scripts/review-kit-check.mjs` then fails if that id is not an ancestor of HEAD.
 
 ## 1. What is being reviewed
 
@@ -111,23 +111,23 @@ Needs Node.js 22 or later (measured here with v22.19.0), Git and no network. Not
 ```sh
 git clone https://github.com/rudycelekli/kya-evidence.git kya-review
 cd kya-review
-git checkout 5ab469e
+git checkout "$HANDOVER_COMMIT"
 node --version
 ```
 
-Replace the commit with the handover commit. Then run the cheap checks first. Each line shows the command and the output measured when the kit was written.
+Set `HANDOVER_COMMIT` to the full 40 character handover commit id. Then run the cheap checks first. Each line shows the command and the output measured when the kit was written.
 
 | Step | Command | Expected result |
 | :--- | :--- | :--- |
-| 1 | `node scripts/requirements.mjs --check` | exit 0; one JSON line starting `{"requirements":284,"areas":` and ending with `"traceable":true,"registryDigest":"c92b9ca4a09b1c97068cfef208be9ad6749d7dd0c9dd0cd0d36aa07958d6adf7"}` |
+| 1 | `node scripts/requirements.mjs --check` | exit 0; one JSON line starting `{"requirements":292,"areas":` and ending with `"traceable":true,"registryDigest":"d24cbdbdd1dfcfa584918f3c7d5f829e0c0b1e67a2888ad91c8c4493f59d9dca"}` |
 | 2 | `node scripts/assessment-vectors.mjs --check` | exit 0; the line `Assessment vectors match` |
 | 3 | `node scripts/mutation-check.mjs --preflight` | exit 0; `{"preflight":"ok","controls":87,"anchorsPresent":true,"allMutantsParse":true}` |
 | 4 | `node scripts/check.mjs` | exit 0; one JSON line with `"syntax":"passed"`, `"schemas":"matched"`, `"requirementTraceability":"passed"`, `"statusLedger":"passed"` (the `files` figure depends on the directory scanned and is not quoted) |
 | 5 | `node scripts/privacy-scan.mjs examples test/fixtures profiles policies suites` | exit 0; `"clean": true` and `"findings": 0` |
 | 6 | `node scripts/profile-registry.mjs --check` | exit 0; `Profile registry matches` |
-| 7 | `node scripts/run-vectors.mjs --impl "node interop/impl-contract/js-reference.mjs"` | exit 0 after about ten seconds; summary with `"vectors":{"total":799,"pass":799,...,"fail":0,"unsupported":0}` and `"requirements"` with `"pass":60`, `"notRun":224`, `"total":284` |
+| 7 | `node scripts/run-vectors.mjs --impl "node interop/impl-contract/js-reference.mjs"` | exit 0 after about ten seconds; summary with `"vectors":{"total":799,"pass":799,...,"fail":0,"unsupported":0}` and `"requirements"` with `"pass":60`, `"notRun":232`, `"total":292` |
 | 8 | `node scripts/run-vectors.mjs --impl "node interop/second-impl/adapter.mjs"` | exit 0 after about thirty seconds; the same vector and requirement counts. This is the same team's second implementation. |
-| 8b | `node scripts/adr-index.mjs` | exit 0; `{"records":34,"danglingRefs":0,"storage":"evidence/adr-index.json"}`. It rewrites that file; `git status` must stay clean afterwards. |
+| 8b | `node scripts/adr-index.mjs` | exit 0; `{"records":35,"danglingRefs":0,"storage":"evidence/adr-index.json"}`. It rewrites that file; `git status` must stay clean afterwards. |
 | 9 | `node scripts/review-kit-check.mjs --deep` | exit 0; `"ok": true`. Confirms every number in the table below, including the harness rows. |
 
 The expensive steps. They were not run when this kit was written; the numbers they print are not quoted here because they were not measured for this kit:
@@ -150,8 +150,8 @@ Every row is recomputed by `node scripts/review-kit-check.mjs` from the reposito
 
 | Key | Value | How it is measured |
 | :--- | :--- | :--- |
-| `requirements` | `284` | `node scripts/requirements.mjs`, field `requirements` |
-| `requirementsRegistryDigest` | `c92b9ca4a09b1c97068cfef208be9ad6749d7dd0c9dd0cd0d36aa07958d6adf7` | same command, field `registryDigest` |
+| `requirements` | `292` | `node scripts/requirements.mjs`, field `requirements` |
+| `requirementsRegistryDigest` | `d24cbdbdd1dfcfa584918f3c7d5f829e0c0b1e67a2888ad91c8c4493f59d9dca` | same command, field `registryDigest` |
 | `vectorsTotal` | `799` | length of `vectors` in `evidence/assessment-vectors.json` |
 | `vectors.assess` | `212` | vectors whose `operation` is `assess` |
 | `vectors.currency` | `60` | operation `currency` |
@@ -163,8 +163,8 @@ Every row is recomputed by `node scripts/review-kit-check.mjs` from the reposito
 | `vectors.verify-score-card` | `72` | operation `verify-score-card` |
 | `vectors.compare-score-cards` | `19` | operation `compare-score-cards` |
 | `mutationControls` | `87` | `node scripts/mutation-check.mjs --preflight`, field `controls` |
-| `testFiles` | `83` | files matching `test/*.test.mjs` |
-| `testDeclarations` | `983` | lines that begin with `test(` in those files. The four `test/property-*.test.mjs` files declare 38 seeded properties through a helper and contribute no such line. |
+| `testFiles` | `84` | files matching `test/*.test.mjs` |
+| `testDeclarations` | `1006` | lines that begin with `test(` in those files. The four `test/property-*.test.mjs` files declare 38 seeded properties through a helper and contribute no such line. |
 | `adrs` | `35` | files `docs/adr/NNNN-*.md` (20 marked Implemented and 15 Proposed in their status lines when counted) |
 | `coreProfileChecks` | `18` | length of `checks` in `profiles/core-v1.json` |
 | `srcFiles` | `88` | `.mjs` files under `src/` |
@@ -173,9 +173,9 @@ Every row is recomputed by `node scripts/review-kit-check.mjs` from the reposito
 | `harness.vectorsPass` | `799` | `node scripts/run-vectors.mjs --impl "node interop/impl-contract/js-reference.mjs"`, field `vectors.pass` |
 | `harness.vectorsFail` | `0` | same command, field `vectors.fail` |
 | `harness.requirementsPass` | `60` | same command, field `requirements.pass`: requirements for which a vector passed |
-| `harness.requirementsNotRun` | `224` | same command, field `requirements.notRun` |
+| `harness.requirementsNotRun` | `232` | same command, field `requirements.notRun` |
 
-Read the harness rows carefully: 60 of 284 requirements are exercised by a vector. The other 224 are covered, if at all, by in process tests. That is a statement about where the evidence lives, not about defects.
+Read the harness rows carefully: 60 of 292 requirements are exercised by a vector. The other 232 are covered, if at all, by in process tests. That is a statement about where the evidence lives, not about defects.
 
 ## 7. Known limitations
 
