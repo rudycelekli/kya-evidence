@@ -7,8 +7,8 @@ Status: partly implemented, partly a plan. This document says which is which. No
 | Control | State | Evidence |
 | :--- | :--- | :--- |
 | Zero runtime dependencies | Implemented. `package.json` declares no `dependencies`, `devDependencies`, `peerDependencies` or `optionalDependencies`, and requires Node 22 or later | `scripts/sbom.mjs` refuses a package that declares any |
-| Deterministic release archive | Implemented. `scripts/pack.mjs` builds a ustar plus gzip archive from committed Git blobs with fixed uid, gid and mtime, refuses a dirty tree, refuses private paths and secret markers in packaged text | `scripts/pack.mjs`, `test/release.test.mjs` (KYA-REL-001) |
-| Reproducibility check | Implemented in CI. The workflow packs twice and compares `archiveSha256` | `.github/workflows/ci.yml` |
+| Deterministic release archive | Implemented. `scripts/pack.mjs` builds a ustar plus gzip archive from committed Git blobs with fixed uid, gid and mtime, compresses with the repository deterministic GZIP encoder instead of the platform zlib (the same commit gives the same archive bytes on any machine running the same code; cross-platform equality beyond CI is not claimed), refuses a dirty tree, refuses private paths and secret markers in packaged text | `scripts/pack.mjs`, `test/release.test.mjs` (KYA-REL-001), `test/pack-determinism.test.mjs` |
+| Reproducibility check | Implemented in CI. The workflow packs twice on one runner and compares `archiveSha256`; it does not compare two machines | `.github/workflows/ci.yml` |
 | Release receipt | Implemented but unsigned. `dist/release-receipt.json` has status `prepared-local-unpublished` and states "no publisher authorization or artifact signature" | `scripts/pack.mjs`, `scripts/verify-release.mjs` |
 | Receipt verifier | Implemented. Frozen regular-file subset, rejects duplicate paths, traversal, checksum and padding changes | `scripts/lib/ustar.mjs`, KYA-REL-001 |
 | SBOM | Implemented: `scripts/sbom.mjs` | `test/sbom.test.mjs` |

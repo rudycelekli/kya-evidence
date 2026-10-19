@@ -1,9 +1,9 @@
 import { mkdir, writeFile } from 'node:fs/promises';
 import { join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { gzipSync } from 'node:zlib';
 import { spawnSync } from 'node:child_process';
 import { hashBytes, digest } from '../src/index.mjs';
+import { gzipDeterministic } from '../src/shared/gzip-deterministic.mjs';
 import { isForbiddenPath, isTextLike, textMarker } from './lib/package-guard.mjs';
 
 const root=fileURLToPath(new URL('../',import.meta.url));
@@ -30,7 +30,10 @@ for(const file of files){const path=file.path,bytes=git(['cat-file','blob',file.
   if(isTextLike(name)&&textMarker(bytes.toString('utf8')))throw Error('Private path/secret marker in package text: '+name);
   entries.push(record(path,bytes));inventory.push({path:name,bytes:bytes.length,sha256:hashBytes(bytes)});
 }
-const archive=gzipSync(Buffer.concat([...entries,Buffer.alloc(1024)]),{level:9});
+// The repository encoder, not the platform zlib: its output differs between builds and hardware, so the archive bytes and
+// the receipt hash bound to them would differ by machine. Larger than zlib level 9 (about 1.6 MB against 1.3 MB for
+// the real package) and any gzip decoder reads it.
+const archive=gzipDeterministic(Buffer.concat([...entries,Buffer.alloc(1024)]));
 const out=join(root,'dist');await mkdir(out,{recursive:true});const name=`${pkg.name}-${pkg.version}.tgz`;
-const receipt={schema:'kya.release-receipt/v1',package:pkg.name,version:pkg.version,sourceCommit:commit,archive:name,archiveSha256:hashBytes(archive),inventoryDigest:digest(inventory),inventory,build:{format:'deterministic ustar+gzip from immutable Git blobs',uid:0,gid:0,mtime:0,node:process.version},status:'prepared-local-unpublished',assurance:'Unsigned reproducible build receipt; no publisher authorization or artifact signature'};
+const receipt={schema:'kya.release-receipt/v1',package:pkg.name,version:pkg.version,sourceCommit:commit,archive:name,archiveSha256:hashBytes(archive),inventoryDigest:digest(inventory),inventory,build:{format:'deterministic ustar+gzip (repository encoder) from immutable Git blobs',uid:0,gid:0,mtime:0,node:process.version},status:'prepared-local-unpublished',assurance:'Unsigned reproducible build receipt; no publisher authorization or artifact signature'};
 await writeFile(join(out,name),archive);await writeFile(join(out,'release-receipt.json'),JSON.stringify(receipt,null,2)+'\n');console.log(JSON.stringify({archive:join(out,name),sha256:receipt.archiveSha256,files:inventory.length,status:receipt.status}));

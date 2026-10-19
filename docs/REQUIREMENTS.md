@@ -281,5 +281,6 @@ Each requirement is traced to at least one test that must exist exactly once; th
 | KYA-DET-001 | MUST | The encoded status list that the reference exports MUST be a pure function of the bitstring, with a fixed GZIP header and no dependence on the platform, so that an exported credential is byte-reproducible. | `gzip-deterministic.test.mjs` |
 | KYA-DET-002 | MUST | The deterministic GZIP output MUST decode to the original bytes with a standard decoder and carry a correct CRC32 and size trailer. | `gzip-deterministic.test.mjs` |
 | KYA-DET-003 | MUST | A drift between the generated and the committed vectors file MUST be reported with the first differing vector id, the JSON path and bounded escaped context. | `assessment-vectors.test.mjs` |
+| KYA-DET-004 | SHOULD | The release archive SHOULD be a pure function of the committed blobs, with a fixed GZIP encoder, so that the same commit gives the same archive bytes on any machine. | `pack-determinism.test.mjs` |
 
-Registry digest: `96d1f350ed2ac04518d88d6756d2525ef5aa241538e08ccea29a6afac36cac2e`
+Registry digest: `5b8e62d0438d985b411566174139c25648b12758510e5a495d173e5a34d4f50c`
