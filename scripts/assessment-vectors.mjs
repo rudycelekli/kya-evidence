@@ -7,6 +7,7 @@ import { isMain } from "./lib/is-main.mjs";
 import { V2_OPERATIONS } from '../interop/impl-contract/js-operations.mjs';
 import { defineCredentialVectors, credentialKeys } from './lib/vectors-credential.mjs';
 import { defineScoreVectors } from './lib/vectors-score.mjs';
+import { describeDrift } from './lib/vector-drift.mjs';
 
 // Golden ASSESSMENT vectors (kya.assessment-vectors/v1). The JS reference is called only through its public
 // API (src/index.mjs). Every vector also carries a hand-written claim below; the generator refuses to write
@@ -823,7 +824,7 @@ if (isMain(import.meta.url)) {
   if (process.argv.includes('--print')) process.stdout.write(text);
   else if (process.argv.includes('--check')) {
     const current = await readFile(OUT, 'utf8').catch(() => '');
-    if (current !== text) { console.error('Assessment vector drift; run node scripts/assessment-vectors.mjs'); process.exit(1); }
+    if (current !== text) { console.error(describeDrift(current, text)); console.error('Run node scripts/assessment-vectors.mjs to regenerate'); process.exit(1); }
     console.log('Assessment vectors match');
   } else { await mkdir(fileURLToPath(new URL('../evidence/', import.meta.url)), { recursive: true }); await writeFile(OUT, text); console.log(`Assessment vectors written: ${JSON.parse(text).vectors.length} vectors`); }
 }

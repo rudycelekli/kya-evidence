@@ -8,6 +8,7 @@ import { fileURLToPath } from 'node:url';
 import { BLOCKER_CODES, CURRENCY_CODES } from '../src/index.mjs';
 import { validateReport } from '../src/conformance-report/index.mjs';
 import { generate } from '../scripts/assessment-vectors.mjs';
+import { describeDrift } from '../scripts/lib/vector-drift.mjs';
 import { runVectors, firstDifference, splitCommand, LIMITS } from '../scripts/run-vectors.mjs';
 
 const ROOT = fileURLToPath(new URL('../', import.meta.url));
@@ -27,8 +28,23 @@ async function subsetFile(dir, ids, mutate = v => v) {
 async function script(dir, name, body) { const p = join(dir, name); await writeFile(p, body); return `${q(process.execPath)} ${q(p)}`; }
 
 test('assessment vector generator reproduces the committed file byte for byte', async () => {
-  assert.equal(await generate(), await readFile(VECTORS, 'utf8'));
+  const generated = await generate(), committed = await readFile(VECTORS, 'utf8');
+  assert.ok(generated === committed, describeDrift(committed, generated));
   assert.equal(FILE.schema, 'kya.assessment-vectors/v2');
+});
+
+test('drift description names the first differing vector id, the JSON path and bounded escaped context', () => {
+  const doc = JSON.stringify({ schema: 'x', vectors: [{ id: 'one', expected: { n: 1 } }, { id: 'two', expected: { text: 'a'.repeat(500) + 'LINE\nBREAK' } }] }, null, 2) + '\n';
+  assert.equal(describeDrift(doc, doc), null);
+  const changed = doc.replace('LINE', 'LIN3');
+  const msg = describeDrift(doc, changed);
+  assert.match(msg, /first differing vector id two;/);
+  assert.match(msg, /JSON path \$\.vectors\[1\]\.expected\.text;/);
+  assert.match(msg, /committed context "[^"]*LINE/);
+  assert.ok(msg.length < 1200, String(msg.length));
+  assert.ok(!msg.includes('\n'), 'context must be escaped, never raw newlines');
+  assert.match(describeDrift(doc, doc.replace('"schema": "x"', '"schema": "y"')), /vector id none/);
+  assert.match(describeDrift(doc, '{not json'), /JSON path unavailable/);
 });
 
 test('assessment vector generator check mode succeeds on the committed file', () => {
