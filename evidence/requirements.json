@@ -5244,6 +5244,314 @@
           "title": "pack source does not call node zlib gzip so the archive bytes do not depend on the build of zlib"
         }
       ]
+    },
+    {
+      "id": "KYA-RDN-001",
+      "level": "MUST",
+      "area": "assessment",
+      "section": "Trust and eligibility",
+      "statement": "Evidence signed by a revoked key, a capture-issuer key or an untrusted key MUST NOT count toward qualification, and a mandatory minimum MUST NOT soften a revoked or expired subject.",
+      "tests": [
+        {
+          "file": "test/mutation-redundancy-assessment.test.mjs",
+          "title": "cli refuses evidence signed by a revoked key and withholds qualification"
+        },
+        {
+          "file": "test/mutation-redundancy-assessment.test.mjs",
+          "title": "cli blocks an independent pass minimum met only by a self issued receipt"
+        },
+        {
+          "file": "test/mutation-redundancy-assessment.test.mjs",
+          "title": "cli keeps revoked and expired subjects on their own decision despite an unmet minimum"
+        },
+        {
+          "file": "test/mutation-redundancy-assessment.test.mjs",
+          "title": "a minimum naming a check outside the profile is refused even for a revoked or expired subject"
+        },
+        {
+          "file": "test/mutation-redundancy-assessment.test.mjs",
+          "title": "duplicate mandatory minimums are refused by the policy validator, assessment and cli"
+        },
+        {
+          "file": "test/mutation-redundancy-assessment.test.mjs",
+          "title": "cli never qualifies when the only trusted signer holds the capture issuer role"
+        },
+        {
+          "file": "test/mutation-redundancy-assessment.test.mjs",
+          "title": "one capture issuer receipt among trusted receipts leaves its check unscored"
+        },
+        {
+          "file": "test/mutation-redundancy-assessment.test.mjs",
+          "title": "capture issuer policy check inspects every issuer anchor for evidence signer and evaluator clashes"
+        }
+      ]
+    },
+    {
+      "id": "KYA-RDN-002",
+      "level": "MUST",
+      "area": "reports",
+      "section": "Reports and viewers",
+      "statement": "A report whose blocker codes contradict its checks MUST be refused, and a conformance mapping MUST NOT report pass when the process outcome disagrees with clean TAP output.",
+      "tests": [
+        {
+          "file": "test/mutation-redundancy-assessment.test.mjs",
+          "title": "cli refuses a resealed blocker code swap that hides a critical failure"
+        },
+        {
+          "file": "test/mutation-redundancy-assessment.test.mjs",
+          "title": "verifyAssessment refuses a critical blocker code that no failed critical check backs"
+        },
+        {
+          "file": "test/mutation-redundancy-assessment.test.mjs",
+          "title": "conformance mapping withholds pass when the process outcome disagrees with clean tap output"
+        }
+      ]
+    },
+    {
+      "id": "KYA-RDN-003",
+      "level": "MUST",
+      "area": "monitoring",
+      "section": "Run selection and qualification",
+      "statement": "Incident handling MUST fail closed: only an independent trusted key can resolve a report, never its own report, never with a future-dated record, and the result MUST NOT depend on duplicate delivery or on the clock passing a future-dated duplicate.",
+      "tests": [
+        {
+          "file": "test/mutation-redundancy-currency.test.mjs",
+          "title": "cli keeps an incident open when a trusted self role key tries to resolve it"
+        },
+        {
+          "file": "test/mutation-redundancy-currency.test.mjs",
+          "title": "an appeal from a key outside the trust anchors is ignored and never recorded as an appeal"
+        },
+        {
+          "file": "test/mutation-redundancy-currency.test.mjs",
+          "title": "a report from a key outside the trust anchors is neither observed nor open"
+        },
+        {
+          "file": "test/mutation-redundancy-currency.test.mjs",
+          "title": "cli refuses a reporter that resolves its own independent report"
+        },
+        {
+          "file": "test/mutation-redundancy-currency.test.mjs",
+          "title": "cli does not honour a resolution dated after the check time"
+        },
+        {
+          "file": "test/mutation-redundancy-currency.test.mjs",
+          "title": "a report delivered twice does not make its own resolution ambiguous"
+        },
+        {
+          "file": "test/mutation-redundancy-currency.test.mjs",
+          "title": "cli result is stable as the clock passes a future dated duplicate report ID"
+        },
+        {
+          "file": "test/mutation-redundancy-currency.test.mjs",
+          "title": "cli refuses a resealed assessment whose validity is malformed or precedes its assessment"
+        }
+      ]
+    },
+    {
+      "id": "KYA-RDN-004",
+      "level": "MUST",
+      "area": "campaign",
+      "section": "Records and bindings",
+      "statement": "A campaign ledger MUST commit each entry to its predecessor, MUST accept only legal attempt transitions, MUST require a capture-issuer signer, MUST treat run IDs case-insensitively and MUST NOT let an errored entry reuse an evidence bundle; a runner MUST refuse a plan whose adapter provenance differs, an open or repository-bound private directory, and an existing bundle file.",
+      "tests": [
+        {
+          "file": "test/mutation-redundancy-campaign.test.mjs",
+          "title": "cli verify refuses a re-signed edit of history because the next entry no longer commits to it"
+        },
+        {
+          "file": "test/mutation-redundancy-campaign.test.mjs",
+          "title": "cli verify refuses completion without a start and a second start of one attempt"
+        },
+        {
+          "file": "test/mutation-redundancy-campaign.test.mjs",
+          "title": "cli verify under a policy refuses a signer whose anchor is not a capture issuer"
+        },
+        {
+          "file": "test/mutation-redundancy-campaign.test.mjs",
+          "title": "cli verify refuses a retry of an attempt that did not error"
+        },
+        {
+          "file": "test/mutation-redundancy-campaign.test.mjs",
+          "title": "cli verify treats run IDs as case insensitive across completions"
+        },
+        {
+          "file": "test/mutation-redundancy-campaign.test.mjs",
+          "title": "cli verify refuses an errored entry that reuses an evidence bundle digest"
+        },
+        {
+          "file": "test/mutation-redundancy-campaign.test.mjs",
+          "title": "campaign runner refuses a plan whose declared adapter source differs from the real adapter"
+        },
+        {
+          "file": "test/mutation-redundancy-campaign.test.mjs",
+          "title": "campaign runner refuses a plan whose declared adapter mode differs from the real adapter"
+        },
+        {
+          "file": "test/mutation-redundancy-campaign.test.mjs",
+          "title": "cli refuses a private directory open to group or others and accepts an owner only one"
+        },
+        {
+          "file": "test/mutation-redundancy-campaign.test.mjs",
+          "title": "cli never overwrites an existing evidence bundle and records the write failure"
+        },
+        {
+          "file": "test/mutation-redundancy-campaign.test.mjs",
+          "title": "cli refuses a private directory that a nested symlink resolves into the repository"
+        }
+      ]
+    },
+    {
+      "id": "KYA-RDN-005",
+      "level": "MUST",
+      "area": "gate",
+      "section": "Reports and viewers",
+      "statement": "The check gate MUST withhold reliability for fixture evidence unless fixtures are explicitly allowed, and for an unpinned stored assessment unless the pin or an explicit opt-out is given, in the exit code, the annotations and the job outputs.",
+      "tests": [
+        {
+          "file": "test/mutation-redundancy-check.test.mjs",
+          "title": "fixture evidence is annotated and withheld in job outputs unless fixtures are explicitly allowed"
+        },
+        {
+          "file": "test/mutation-redundancy-check.test.mjs",
+          "title": "fixture evidence in a stored assessment is withheld by the not qualified fail mode too"
+        },
+        {
+          "file": "test/mutation-redundancy-check.test.mjs",
+          "title": "an unpinned stored assessment is withheld with an annotation and a pin makes it reliable"
+        },
+        {
+          "file": "test/mutation-redundancy-check.test.mjs",
+          "title": "a wrong assessment pin is a usage error and never reads as reliable"
+        }
+      ]
+    },
+    {
+      "id": "KYA-RDN-006",
+      "level": "MUST",
+      "area": "assessor",
+      "section": "Trust and eligibility",
+      "statement": "Assessor standing MUST ignore a disclosure whose signer, key fingerprint or domain does not match, a declaration from the assessor or an untrusted or revoked key, and a withdrawal by a key that did not sign its target, and MUST apply its time boundaries to the millisecond.",
+      "tests": [
+        {
+          "file": "test/mutation-redundancy-assessor.test.mjs",
+          "title": "the disclosure domain constant is pinned and the library signature verifies independently over it"
+        },
+        {
+          "file": "test/mutation-redundancy-assessor.test.mjs",
+          "title": "a disclosure signed by one key but relabelled with another key id never verifies or grants standing"
+        },
+        {
+          "file": "test/mutation-redundancy-assessor.test.mjs",
+          "title": "a stranger declaration is ignored whatever relationship it names"
+        },
+        {
+          "file": "test/mutation-redundancy-assessor.test.mjs",
+          "title": "an assessor listed only as a declarer still cannot declare a conflict against itself"
+        },
+        {
+          "file": "test/mutation-redundancy-assessor.test.mjs",
+          "title": "a revoked declarer is ignored while a second trusted declarer still counts"
+        },
+        {
+          "file": "test/mutation-redundancy-assessor.test.mjs",
+          "title": "a declarer cannot withdraw the assessor own disclosure"
+        },
+        {
+          "file": "test/mutation-redundancy-assessor.test.mjs",
+          "title": "a second declarer cannot withdraw the declaration of the first"
+        },
+        {
+          "file": "test/mutation-redundancy-assessor.test.mjs",
+          "title": "cross signed disclosures give neither of two assessors standing"
+        },
+        {
+          "file": "test/mutation-redundancy-assessor.test.mjs",
+          "title": "a disclosure stops counting at its exact millisecond expiry"
+        },
+        {
+          "file": "test/mutation-redundancy-assessor.test.mjs",
+          "title": "a disclosure starts counting at its exact millisecond issue time"
+        },
+        {
+          "file": "test/mutation-redundancy-assessor.test.mjs",
+          "title": "a conflict declaration is counted from its issue time and dropped at its millisecond expiry"
+        },
+        {
+          "file": "test/mutation-redundancy-assessor.test.mjs",
+          "title": "cooling off lasts until its exact millisecond boundary for a fractional start"
+        }
+      ]
+    },
+    {
+      "id": "KYA-RDN-007",
+      "level": "MUST",
+      "area": "interoperability",
+      "section": "Interoperability and versioning",
+      "statement": "A bridge export MUST NOT state qualified when currency was not checked, and profile metadata MUST be refused when its digest does not match the profile, when a sign-off record is malformed, or when a draft profile carries a sign-off.",
+      "tests": [
+        {
+          "file": "test/mutation-redundancy-profiles-bridges.test.mjs",
+          "title": "every bridge export reports not qualified when currency was not checked"
+        },
+        {
+          "file": "test/mutation-redundancy-profiles-bridges.test.mjs",
+          "title": "kya-bridge export without currency inputs never prints qualified true"
+        },
+        {
+          "file": "test/mutation-redundancy-profiles-bridges.test.mjs",
+          "title": "a profile whose only change is its title no longer matches the recorded digest"
+        },
+        {
+          "file": "test/mutation-redundancy-profiles-bridges.test.mjs",
+          "title": "the registry validator refuses a malformed sign-off evidence digest"
+        },
+        {
+          "file": "test/mutation-redundancy-profiles-bridges.test.mjs",
+          "title": "the registry validator refuses a sign-off record with a missing or unexpected member"
+        },
+        {
+          "file": "test/mutation-redundancy-profiles-bridges.test.mjs",
+          "title": "the registry validator refuses a sign-off on a draft third party profile"
+        }
+      ]
+    },
+    {
+      "id": "KYA-RDN-008",
+      "level": "MUST",
+      "area": "privacy",
+      "section": "Interoperability and versioning",
+      "statement": "The privacy scan MUST NOT print a matched value, a malformed structural value, a narrative value or a sensitive object key, and its shape mask MUST replace letters and numerals with class markers.",
+      "tests": [
+        {
+          "file": "test/mutation-redundancy-privacy.test.mjs",
+          "title": "exact shape masks replace letters and digits with class markers for several rules"
+        },
+        {
+          "file": "test/mutation-redundancy-privacy.test.mjs",
+          "title": "long matches are truncated in the mask and carry only the numeral class marker"
+        },
+        {
+          "file": "test/mutation-redundancy-privacy.test.mjs",
+          "title": "digest fields in line oriented files never echo a malformed value in json or text output"
+        },
+        {
+          "file": "test/mutation-redundancy-privacy.test.mjs",
+          "title": "non ascii and spaced object keys never appear in finding paths"
+        },
+        {
+          "file": "test/mutation-redundancy-privacy.test.mjs",
+          "title": "object keys that look like personal data are replaced by a position marker"
+        },
+        {
+          "file": "test/mutation-redundancy-privacy.test.mjs",
+          "title": "narrative text in evidence and receipt records is withheld from every output form"
+        },
+        {
+          "file": "test/mutation-redundancy-privacy.test.mjs",
+          "title": "malformed coded identifiers are masked in line oriented output"
+        }
+      ]
     }
   ]
 }
