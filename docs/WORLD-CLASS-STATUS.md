@@ -27,7 +27,7 @@ Totals: 34 items; 12 planned, 12 in progress, 7 implemented, 3 verified. Items t
 
 | Item | Status | Verifier | Evidence | Needs outsiders |
 | :--- | :--- | :--- | :--- | :--- |
-| WS3-01 Golden assessment vectors for assessment semantics (485 public vectors across six operations; expected values come from the JavaScript reference; not verified by anyone outside the project) | implemented |  | `evidence/assessment-vectors.json`, `test/assessment-vectors.test.mjs` |  |
+| WS3-01 Golden assessment vectors for assessment semantics (799 public vectors across nine operations; expected values come from the JavaScript reference; not verified by anyone outside the project) | implemented |  | `evidence/assessment-vectors.json`, `test/assessment-vectors.test.mjs` |  |
 | WS3-02 Byte-level canonical and signature vectors, JavaScript and Python (team-built Python checker, restricted subset) | VERIFIED | CI | `KYA-INT-003`, `KYA-INT-004` |  |
 | WS3-03 Implementer's guide and language-neutral harness (run only by the project team; no outside implementer has used it) | implemented |  | `docs/IMPLEMENTERS-GUIDE.md`, `scripts/run-vectors.mjs`, `interop/impl-contract/README.md` |  |
 | WS3-04 Two outside implementations pass all normative vectors | planned |  |  | yes |

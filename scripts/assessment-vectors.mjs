@@ -5,6 +5,8 @@ import { parseJson } from '../src/shared/canonical.mjs';
 import { assess, checkCurrency, signEvidence, signIncident, digest, hashBytes, keyId, canonical, BLOCKER_CODES, CURRENCY_CODES } from '../src/index.mjs';
 import { isMain } from "./lib/is-main.mjs";
 import { V2_OPERATIONS } from '../interop/impl-contract/js-operations.mjs';
+import { defineCredentialVectors, credentialKeys } from './lib/vectors-credential.mjs';
+import { defineScoreVectors } from './lib/vectors-score.mjs';
 
 // Golden ASSESSMENT vectors (kya.assessment-vectors/v1). The JS reference is called only through its public
 // API (src/index.mjs). Every vector also carries a hand-written claim below; the generator refuses to write
@@ -471,6 +473,8 @@ C('currency.assessment-without-blocker-codes-is-accepted', ['KYA-REF-002', 'KYA-
 // operations in interop/impl-contract/js-operations.mjs; the generator refuses to write when it disagrees with a claim.
 const OPS = [];
 const O = (id, operation, requirements, description, rationale, inputs, claim) => OPS.push({ id, operation, requirements, description, rationale, inputs, claim });
+// A vector whose stdin text is edited after the envelope is written (duplicate members, prototype names, trailing text): it carries rawInput and no inputs.
+const OR = (id, operation, requirements, description, rationale, inputs, raw, claim = { refused: true }) => OPS.push({ id, operation, requirements, description, rationale, inputs, raw, claim });
 const must = (cond, msg) => cond ? null : msg;
 const shortJson = v => { const t = JSON.stringify(v); return t.length > 72 ? t.slice(0, 69) + '...' : t; };
 const sha = s => sha256(Buffer.from(s, 'utf8'));
@@ -724,6 +728,10 @@ CMPR('left-is-not-an-object', BNDR, 'The left report is a string.', 'KYA-BND-003
 O('compare.refuse-missing-right', 'compare', BNDR, 'The inputs carry no right report.', 'KYA-BND-003: a missing member is refused.', () => ({ left: clone(R_ALL) }), REFUSE);
 O('compare.refuse-extra-input-member', 'compare', BNDR, 'The inputs carry a member besides left and right.', 'KYA-BND-003: operation inputs have exactly the listed members.', () => ({ left: clone(R_ALL), right: clone(R_ALL), force: true }), REFUSE);
 
+// ---- later additions to contract version 2: verify-credential, verify-score-card, compare-score-cards (ADR-0035) ----
+const CRED = defineCredentialVectors({ O, OR, clone, REFUSE, world, assess, hashBytes, digest, keyId, PO0 });
+defineScoreVectors({ O, OR, clone, REFUSE, hashBytes, digest });
+
 // ---- build ----
 function subset(claim, got, path = '') {
   if (claim === null || typeof claim !== 'object') { if (!Object.is(claim, got)) return `${path}: claimed ${JSON.stringify(claim)}, reference ${JSON.stringify(got)}`; return null; }
@@ -773,12 +781,18 @@ export function buildVectors(registry) {
     if (seen.has(d.id)) throw Error('Duplicate vector ID ' + d.id); seen.add(d.id);
     for (const r of d.requirements) if (!known.has(r)) throw Error(`Vector ${d.id} cites unknown requirement ${r}`);
     const inputs = clone(typeof d.inputs === 'function' ? d.inputs() : d.inputs);
-    let got;
-    const err = refuses(() => { got = V2_OPERATIONS[d.operation](clone(inputs)); });
+    let got, rawInput;
+    if (d.raw) {
+      // The exact stdin text is edited after the envelope is written; the reference sees it through the strict parser like any adapter does.
+      rawInput = d.raw(JSON.stringify({ schema: 'kya.impl-input/v1', operation: d.operation, inputs }));
+      if (rawInput === JSON.stringify({ schema: 'kya.impl-input/v1', operation: d.operation, inputs })) throw Error(`Vector ${d.id}: the raw edit changed nothing`);
+    }
+    const run = d.raw ? (refuses(() => parseJson(rawInput)) ? null : parseJson(rawInput).inputs) : inputs;
+    const err = run === null ? Error('raw input is not strict JSON') : refuses(() => { got = V2_OPERATIONS[d.operation](clone(run)); });
     const expected = err ? REFUSE : got;
     const miss = typeof d.claim === 'function' ? (err ? 'the reference refused' : d.claim(expected)) : subset(d.claim, expected);
     if (miss) throw Error(`Vector ${d.id}: reference disagrees with the written claim at ${miss}`);
-    vectors.push({ id: d.id, description: d.description, requirements: [...d.requirements].sort(), rationale: d.rationale, operation: d.operation, inputs, expected });
+    vectors.push({ id: d.id, description: d.description, requirements: [...d.requirements].sort(), rationale: d.rationale, operation: d.operation, ...(rawInput === undefined ? { inputs } : { rawInput }), expected });
   }
   const blockerCoverage = Object.fromEntries(BLOCKER_CODES.map(c => [c, vectors.filter(v => v.expected.blockerCodes?.includes(c)).map(v => v.id)]));
   const currencyCoverage = Object.fromEntries(Object.values(CURRENCY_CODES).map(c => [c, vectors.filter(v => v.expected.triggers?.some(t => t.code === c)).map(v => v.id)]));
@@ -788,10 +802,10 @@ export function buildVectors(registry) {
   for (const [c, ids] of Object.entries(blockerCoverage)) if (!ids.length && !unreachable.some(u => u.code === c)) throw Error('No vector exercises blocker code ' + c);
   for (const [c, ids] of Object.entries(currencyCoverage)) if (!ids.length) throw Error('No vector exercises currency code ' + c);
   const keys = Object.fromEntries(Object.values(KEYS).map(k => [k.name, { role: k.role ?? 'not-a-trust-anchor', seedDerivation: 'SHA-256 of the UTF-8 string "kya.assessment-vectors/v1 public synthetic key seed: ' + k.name + '"', seedHex: k.seedHex, keyId: k.id, publicKey: k.pem }]));
-  return { schema: SCHEMA, contract: { version: 2, operations: ['assess', 'currency', 'canonicalize', 'digest', 'verify-envelope', 'compare'] }, warning: 'PUBLIC SYNTHETIC keys, receipts and times for conformance testing only; never use these keys, seeds or trust anchors in a real assessment. Expected values were produced by the JavaScript reference and checked against hand-written claims in the generator; they are not independently derived.',
+  return { schema: SCHEMA, contract: { version: 2, operations: ['assess', 'currency', 'canonicalize', 'digest', 'verify-envelope', 'compare', 'verify-credential', 'verify-score-card', 'compare-score-cards'] }, warning: 'PUBLIC SYNTHETIC keys, receipts and times for conformance testing only; never use these keys, seeds or trust anchors in a real assessment. Expected values were produced by the JavaScript reference and checked against hand-written claims in the generator; they are not independently derived.',
     runAtDefault: '2026-10-14T12:00:00.000Z', evaluatorDigestDerivation: 'SHA-256 of the UTF-8 string "kya.assessment-vectors/v1 synthetic evaluator"',
     comparison: 'Result must equal expected key for key. reasonContains is a lowercase keyword that must appear, case-insensitively, in the implementation reason. When digestReproducible is false the reportDigest or resultDigest is not compared, because the report includes implementation specific error text. {"refused":true} means the implementation must exit non-zero.',
-    keys, unreachableBlockerCodes: unreachable, coverage: { blockerCodes: blockerCoverage, currencyCodes: currencyCoverage }, vectors };
+    keys, credentialKeys: Object.fromEntries(Object.values(CRED.keys).map(k => [k.name, { seedDerivation: 'SHA-256 of the UTF-8 string "kya.assessment-vectors/v2 public synthetic credential key seed: ' + k.name + '"', seedHex: k.seedHex, did: k.did, publicKey: k.pem }])), unreachableBlockerCodes: unreachable, coverage: { blockerCodes: blockerCoverage, currencyCodes: currencyCoverage }, vectors };
 }
 
 async function generate() {

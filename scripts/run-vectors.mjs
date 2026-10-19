@@ -14,9 +14,9 @@ import { isMain } from "./lib/is-main.mjs";
 const usage = 'usage: run-vectors.mjs --impl "<command and args>" [--vectors FILE] [--now ISO] [--out FILE] [--name NAME] [--impl-version V] [--language L] [--timeout-ms N] [--jobs N] [--semantic-only]';
 export const LIMITS = Object.freeze({ outputBytes: 1_048_576, inputBytes: 4_194_304, timeoutMs: 15_000, failuresShown: 25 });
 const DIGEST_FIELDS = ['reportDigest', 'resultDigest'];
-// Contract version 1 operations, then the version 2 additions (interop/impl-contract/README.md).
+// Contract version 1 operations, then the version 2 additions (the last three were added later without changing any schema string) (interop/impl-contract/README.md).
 export const V1_OPERATIONS = Object.freeze(['assess', 'currency']);
-export const OPERATIONS = Object.freeze([...V1_OPERATIONS, 'canonicalize', 'digest', 'verify-envelope', 'compare']);
+export const OPERATIONS = Object.freeze([...V1_OPERATIONS, 'canonicalize', 'digest', 'verify-envelope', 'compare', 'verify-credential', 'verify-score-card', 'compare-score-cards']);
 const VECTOR_SCHEMAS = ['kya.assessment-vectors/v1', 'kya.assessment-vectors/v2'];
 
 function parseArgs(argv) {
