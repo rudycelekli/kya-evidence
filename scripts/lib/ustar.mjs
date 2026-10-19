@@ -8,6 +8,8 @@ export function verifyReleaseReceipt(receipt,archive,opts={}){
   receipt=JSON.parse(canonical(receipt));
   exactKeys(receipt,['schema','package','version','sourceCommit','archive','archiveSha256','inventoryDigest','inventory','build','status','assurance'],'Release receipt');
   insist(receipt.schema==='kya.release-receipt/v1','Unsupported release receipt');
+  // The commit is echoed to the terminal and compared with the workflow commit, so it must be a Git object name and nothing else.
+  insist(typeof receipt.sourceCommit==='string'&&/^(?:[a-f0-9]{40}|[a-f0-9]{64})$/.test(receipt.sourceCommit),'Receipt source commit is not a Git object name');
   insist(typeof receipt.archive==='string'&&/^[A-Za-z0-9][A-Za-z0-9._-]{0,127}\.tgz$/.test(receipt.archive),'Unsafe archive filename');
   insist(Array.isArray(receipt.inventory)&&receipt.inventory.length>0&&receipt.inventory.length<=1000,'Invalid release inventory');
   for(const f of receipt.inventory){exactKeys(f,['path','bytes','sha256'],'Inventory entry');insist(typeof f.path==='string'&&f.path.length<=92&&f.path.split('/').every(s=>s!=='.'&&s!=='..'&&/^[A-Za-z0-9._-]+$/.test(s)),'Unsafe inventory path');insist(Number.isSafeInteger(f.bytes)&&f.bytes>=0&&/^[a-f0-9]{64}$/.test(f.sha256),'Invalid inventory entry');}
@@ -20,7 +22,7 @@ export function verifyReleaseReceipt(receipt,archive,opts={}){
     const h=tar.subarray(pos,pos+512);
     if(zeros(h)){insist(pos+1024<=tar.length&&zeros(tar.subarray(pos)),'Invalid tar terminator/trailing bytes');terminated=true;break;}
     const name=field(h,0,100);
-    insist(name.startsWith('package/')&&name.slice(8).length>0&&name.slice(8).split('/').every(s=>s!=='.'&&s!=='..'&&/^[A-Za-z0-9._-]+$/.test(s))&&!names.has(name),'Unsafe or duplicate tar path');names.add(name);
+    insist(name.startsWith('package/')&&name.slice(8).length>0&&name.slice(8).split('/').every(s=>s!=='.'&&s!=='..'&&/^[A-Za-z0-9._-]+$/.test(s))&&!names.has(name.toLowerCase()),'Unsafe or duplicate tar path');names.add(name.toLowerCase());
     insist(h[156]===48&&zeros(h.subarray(157,257))&&h.subarray(257,265).equals(Buffer.from('ustar\0'+'00'))&&zeros(h.subarray(265)),'Unsupported tar type, link, prefix or metadata');
     const check=h.subarray(148,156).toString('ascii');insist(/^[0-7]{6}\x00 $/.test(check),'Invalid tar checksum field');
     const expected=parseInt(check,8),sum=h.reduce((s,n,i)=>s+(i>=148&&i<156?32:n),0);insist(expected===sum,'Tar header checksum differs');

@@ -66,18 +66,36 @@ export function firstDifference(expected, actual, path = '$') {
   return null;
 }
 
+// The implementation under test is foreign code: it gets a minimal environment (never the caller's tokens or NODE_OPTIONS) and its own
+// process group, so a timeout or an output flood kills it together with any child it spawned. A child that keeps the pipes open
+// cannot hold the harness: the result is settled on the event, not on the pipes closing.
+const GRACE_MS = 500;
+function implEnvironment() {
+  const env = { PATH: process.env.PATH ?? '', LANG: 'C', LC_ALL: 'C' };
+  if (process.platform === 'win32') for (const k of ['SystemRoot', 'WINDIR', 'PATHEXT', 'TEMP', 'TMP']) if (process.env[k]) env[k] = process.env[k];
+  return env;
+}
 function runOne(cmd, args, input, timeoutMs) {
   return new Promise(res => {
-    let done = false, out = Buffer.alloc(0), err = '', timedOut = false, oversize = false;
-    const finish = r => { if (!done) { done = true; clearTimeout(timer); res(r); } };
-    let child;
-    try { child = spawn(cmd, args, { stdio: ['pipe', 'pipe', 'pipe'], env: process.env }); } catch (e) { return finish({ kind: 'spawn-error', message: e.message }); }
-    const timer = setTimeout(() => { timedOut = true; child.kill('SIGKILL'); }, timeoutMs);
+    let done = false, out = Buffer.alloc(0), err = '', code = null, signal = null, timer = null, grace = null, child = null;
+    const killTree = () => {
+      try { if (process.platform !== 'win32') process.kill(-child.pid, 'SIGKILL'); else child.kill('SIGKILL'); } catch { try { child.kill('SIGKILL'); } catch { /* already gone */ } }
+    };
+    const finish = r => {
+      if (done) return;
+      done = true; clearTimeout(timer); clearTimeout(grace);
+      if (child) { killTree(); child.stdout?.destroy(); child.stderr?.destroy(); }
+      res(r);
+    };
+    const exited = () => finish({ kind: 'exit', code, signal, stdout: out, stderr: err });
+    try { child = spawn(cmd, args, { stdio: ['pipe', 'pipe', 'pipe'], env: implEnvironment(), detached: process.platform !== 'win32' }); } catch (e) { return finish({ kind: 'spawn-error', message: e.message }); }
+    timer = setTimeout(() => finish({ kind: 'timeout' }), timeoutMs);
     child.on('error', e => finish({ kind: 'spawn-error', message: e.code ?? e.message }));
-    child.stdout.on('data', d => { if (oversize) return; out = Buffer.concat([out, d]); if (out.length > LIMITS.outputBytes) { oversize = true; child.kill('SIGKILL'); } });
+    child.stdout.on('data', d => { if (done) return; out = Buffer.concat([out, d]); if (out.length > LIMITS.outputBytes) finish({ kind: 'oversize' }); });
     child.stderr.on('data', d => { if (err.length < 2000) err += d.toString('utf8').slice(0, 2000 - err.length); });
     child.stdin.on('error', () => {});
-    child.on('close', (code, signal) => finish({ kind: timedOut ? 'timeout' : oversize ? 'oversize' : 'exit', code, signal, stdout: out, stderr: err }));
+    child.on('exit', (c, s) => { code = c; signal = s; grace = setTimeout(exited, GRACE_MS); });
+    child.on('close', exited);
     child.stdin.end(input);
   });
 }

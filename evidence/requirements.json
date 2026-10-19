@@ -5776,6 +5776,129 @@
           "hostConditional": true
         }
       ]
+    },
+    {
+      "id": "KYA-VCB-020",
+      "level": "MUST",
+      "area": "vcb",
+      "section": "Interoperability and versioning",
+      "statement": "A status list `encodedList` MUST be exactly one GZIP member with a correct CRC-32 and size trailer, clear reserved flags and no bytes after it; a second member or trailing bytes is `STATUS_LIST_INVALID`.",
+      "tests": [
+        {
+          "file": "test/redteam3-adversarial.test.mjs",
+          "title": "redteam3 status list decoder refuses a second gzip member and bytes after the member"
+        },
+        {
+          "file": "test/redteam3-adversarial.test.mjs",
+          "title": "redteam3 status list decoder accepts one member from other encoders and agrees with the second implementation"
+        },
+        {
+          "file": "test/redteam3-adversarial.test.mjs",
+          "title": "redteam3 status list decoder refuses damaged members and reserved header flags"
+        },
+        {
+          "file": "test/redteam3-adversarial.test.mjs",
+          "title": "redteam3 status list decoder bounds deflate bombs including across members"
+        }
+      ]
+    },
+    {
+      "id": "KYA-VCB-021",
+      "level": "MUST",
+      "area": "vcb",
+      "section": "Interoperability and versioning",
+      "statement": "A status check MUST NOT match an entry to a list when either the entry list URL or the list id is missing.",
+      "tests": [
+        {
+          "file": "test/redteam3-adversarial.test.mjs",
+          "title": "redteam3 status check refuses a list without an id when the entry names no list"
+        }
+      ]
+    },
+    {
+      "id": "KYA-VEC-015",
+      "level": "MUST",
+      "area": "vectors",
+      "section": "Interoperability and versioning",
+      "statement": "The vector harness MUST settle each vector within its timeout even when the implementation leaves children holding its pipes, MUST stop those children, MUST give the implementation no inherited secrets, and MUST report an implementation that cannot start as a failure.",
+      "tests": [
+        {
+          "file": "test/redteam3-adversarial.test.mjs",
+          "title": "redteam3 harness settles on timeout when the implementation leaves a child holding its pipes"
+        },
+        {
+          "file": "test/redteam3-adversarial.test.mjs",
+          "title": "redteam3 harness does not wait for a background child after the implementation exits"
+        },
+        {
+          "file": "test/redteam3-adversarial.test.mjs",
+          "title": "redteam3 harness gives the implementation a minimal environment"
+        },
+        {
+          "file": "test/redteam3-adversarial.test.mjs",
+          "title": "redteam3 harness reports an implementation that cannot start instead of crashing"
+        },
+        {
+          "file": "test/redteam3-adversarial.test.mjs",
+          "title": "redteam3 harness fails every hostile output shape instead of passing or crashing"
+        }
+      ]
+    },
+    {
+      "id": "KYA-REL-013",
+      "level": "MUST",
+      "area": "release",
+      "section": "Interoperability and versioning",
+      "statement": "The package guard MUST match private path segments without regard to case and MUST flag the secret shapes and home path styles listed in the tests.",
+      "tests": [
+        {
+          "file": "test/redteam3-adversarial.test.mjs",
+          "title": "redteam3 package guard matches private paths regardless of case and for more credential files"
+        },
+        {
+          "file": "test/redteam3-adversarial.test.mjs",
+          "title": "redteam3 package guard flags more secret shapes and home paths written in other styles"
+        }
+      ]
+    },
+    {
+      "id": "KYA-REL-014",
+      "level": "MUST",
+      "area": "release",
+      "section": "Interoperability and versioning",
+      "statement": "Release verification MUST refuse entries that differ only in letter case, MUST require the receipt commit to be a Git object name, and MUST NOT block on a receipt that is not a regular file.",
+      "tests": [
+        {
+          "file": "test/redteam3-adversarial.test.mjs",
+          "title": "redteam3 release verification refuses entries that differ only in letter case"
+        },
+        {
+          "file": "test/redteam3-adversarial.test.mjs",
+          "title": "redteam3 release verification refuses a receipt commit that is not a Git object name"
+        },
+        {
+          "file": "test/redteam3-adversarial.test.mjs",
+          "title": "redteam3 verify-release script refuses a receipt that is not a regular file instead of waiting on it",
+          "hostConditional": true
+        }
+      ]
+    },
+    {
+      "id": "KYA-RVK-009",
+      "level": "MUST",
+      "area": "docs",
+      "section": "Interoperability and versioning",
+      "statement": "The review kit checker MUST finish in bounded time on a kit with a long run of blank lines and MUST NOT count a path outside the checkout as present.",
+      "tests": [
+        {
+          "file": "test/redteam3-adversarial.test.mjs",
+          "title": "redteam3 review kit checker stays fast on a kit with a very long run of blank lines"
+        },
+        {
+          "file": "test/redteam3-adversarial.test.mjs",
+          "title": "redteam3 review kit checker does not count a path outside the checkout as present"
+        }
+      ]
     }
   ]
 }
