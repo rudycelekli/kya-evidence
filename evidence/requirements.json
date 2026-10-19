@@ -4930,6 +4930,138 @@
           "title": "the reference adapter answers the four operations and still refuses malformed input"
         }
       ]
+    },
+    {
+      "id": "KYA-RVK-001",
+      "level": "MUST",
+      "area": "docs",
+      "section": "Governance documents",
+      "statement": "Every number the external review kit quotes MUST equal the value recomputed from the repository, and a drifted number MUST make the review kit check fail.",
+      "tests": [
+        {
+          "file": "test/review-kit.test.mjs",
+          "title": "a drifted requirement count fails the review kit check"
+        },
+        {
+          "file": "test/review-kit.test.mjs",
+          "title": "a drifted vector count fails the review kit check"
+        },
+        {
+          "file": "test/review-kit.test.mjs",
+          "title": "a drifted mutation control count fails the review kit check"
+        },
+        {
+          "file": "test/review-kit.test.mjs",
+          "title": "a quoted number the checker cannot recompute fails the review kit check"
+        }
+      ]
+    },
+    {
+      "id": "KYA-RVK-002",
+      "level": "MUST",
+      "area": "docs",
+      "section": "Governance documents",
+      "statement": "The evaluator digest the review kit quotes MUST equal the digest pinned in `evidence/evaluator-identity.json`, and the pinned digest MUST equal the digest computed from source.",
+      "tests": [
+        {
+          "file": "test/review-kit.test.mjs",
+          "title": "a drifted evaluator digest in the kit fails the review kit check"
+        },
+        {
+          "file": "test/review-kit.test.mjs",
+          "title": "a pinned evaluator digest that differs from the computed digest fails the check"
+        }
+      ]
+    },
+    {
+      "id": "KYA-RVK-003",
+      "level": "MUST",
+      "area": "docs",
+      "section": "Governance documents",
+      "statement": "Every script, npm script, `kya` subcommand and repository path that the review kit, the pilot kit or the implementer invitation names MUST exist.",
+      "tests": [
+        {
+          "file": "test/review-kit.test.mjs",
+          "title": "a reference to a file that does not exist fails the review kit check"
+        },
+        {
+          "file": "test/review-kit.test.mjs",
+          "title": "a command that names a missing script or npm script fails the pilot kit check"
+        },
+        {
+          "file": "test/review-kit.test.mjs",
+          "title": "a command that names an unknown kya subcommand fails the invitation check"
+        }
+      ]
+    },
+    {
+      "id": "KYA-RVK-004",
+      "level": "MUST",
+      "area": "docs",
+      "section": "Governance documents",
+      "statement": "The review kit MUST state that no outside security review exists, and the check MUST fail if that statement is removed.",
+      "tests": [
+        {
+          "file": "test/review-kit.test.mjs",
+          "title": "removing the statement that no outside review exists fails the check"
+        }
+      ]
+    },
+    {
+      "id": "KYA-RVK-005",
+      "level": "MUST",
+      "area": "docs",
+      "section": "Governance documents",
+      "statement": "The review kit MUST name the frozen commit to review, and the check MUST fail when that commit is not in the history.",
+      "tests": [
+        {
+          "file": "test/review-kit.test.mjs",
+          "title": "a frozen commit that is not in this history fails the check"
+        }
+      ]
+    },
+    {
+      "id": "KYA-RVK-006",
+      "level": "MUST",
+      "area": "docs",
+      "section": "Governance documents",
+      "statement": "The three kit documents MUST be plain ASCII and MUST carry no owner placeholder.",
+      "tests": [
+        {
+          "file": "test/review-kit.test.mjs",
+          "title": "an unmodified override passes and a non ASCII byte fails the check"
+        }
+      ]
+    },
+    {
+      "id": "KYA-PLT-001",
+      "level": "MUST NOT",
+      "area": "docs",
+      "section": "Governance documents",
+      "statement": "The pilot kit MUST NOT allow publication of a pilot result without the written approval of the pilot owner, and the check MUST fail if that rule is removed.",
+      "tests": [
+        {
+          "file": "test/review-kit.test.mjs",
+          "title": "removing the owner approval rule from the pilot kit fails the check"
+        }
+      ]
+    },
+    {
+      "id": "KYA-RVK-007",
+      "level": "MUST",
+      "area": "docs",
+      "section": "Governance documents",
+      "statement": "The review kit check MUST pass on the repository as committed, and it MUST say what it does not check.",
+      "tests": [
+        {
+          "file": "test/review-kit.test.mjs",
+          "title": "the review kit checker passes on this checkout"
+        },
+        {
+          "file": "test/review-kit.test.mjs",
+          "title": "the quoted number table has a row for every number the checker recomputes for the review"
+        }
+      ]
     }
   ]
 }

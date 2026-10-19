@@ -264,5 +264,13 @@ Each requirement is traced to at least one test that must exist exactly once; th
 | KYA-BND-004 | MUST | Comparison MUST refuse a report that fails its checksum, blocker code rules or shape checks, MUST name the first failing comparability rule, and MUST NOT compare an incomplete population. | `contract-operations.test.mjs` |
 | KYA-VEC-012 | MUST | Contract version 2 MUST leave the vectors of earlier operations byte for byte unchanged, MUST score an operation an implementation does not claim as not-run and not fail, and at least a third of the vectors of the new operations MUST be refusals. | `contract-operations.test.mjs` |
 | KYA-VEC-013 | MUST | The reference adapter and the second implementation MUST refuse stdin above 1048576 bytes and accept an input just inside the bound, and the reference adapter MUST answer the four operations. | `contract-operations.test.mjs` |
+| KYA-RVK-001 | MUST | Every number the external review kit quotes MUST equal the value recomputed from the repository, and a drifted number MUST make the review kit check fail. | `review-kit.test.mjs` |
+| KYA-RVK-002 | MUST | The evaluator digest the review kit quotes MUST equal the digest pinned in `evidence/evaluator-identity.json`, and the pinned digest MUST equal the digest computed from source. | `review-kit.test.mjs` |
+| KYA-RVK-003 | MUST | Every script, npm script, `kya` subcommand and repository path that the review kit, the pilot kit or the implementer invitation names MUST exist. | `review-kit.test.mjs` |
+| KYA-RVK-004 | MUST | The review kit MUST state that no outside security review exists, and the check MUST fail if that statement is removed. | `review-kit.test.mjs` |
+| KYA-RVK-005 | MUST | The review kit MUST name the frozen commit to review, and the check MUST fail when that commit is not in the history. | `review-kit.test.mjs` |
+| KYA-RVK-006 | MUST | The three kit documents MUST be plain ASCII and MUST carry no owner placeholder. | `review-kit.test.mjs` |
+| KYA-PLT-001 | MUST NOT | The pilot kit MUST NOT allow publication of a pilot result without the written approval of the pilot owner, and the check MUST fail if that rule is removed. | `review-kit.test.mjs` |
+| KYA-RVK-007 | MUST | The review kit check MUST pass on the repository as committed, and it MUST say what it does not check. | `review-kit.test.mjs` |
 
-Registry digest: `186e14cd9c8b91a61c498a44cf0f476f4e1a0df0cc446057a2fa10651f1f62b7`
+Registry digest: `456293123e32eed9d02ada1ccab3f239674ae1e070bba0ef1fdfd24b93fe86d1`
