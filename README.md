@@ -1,6 +1,6 @@
 <img src="assets/kya-hero.svg" alt="KYA Evidence. Know your agent. Show your work." width="1200" />
 
-# KYA Evidence:
+# KYA Evidence.
 
 **A passport says what an agent is. Evidence shows what an exact agent system did, under an exact scope.**
 
