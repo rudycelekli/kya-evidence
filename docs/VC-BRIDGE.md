@@ -1,5 +1,7 @@
 # W3C Verifiable Credentials 2.0 export bridge
 
+When the native API receives an original report for comparison, it captures that report's canonical descriptor-backed JSON once before checking its checksum and rebuilding the credential. Live GET views and later descriptor changes cannot replace the checked report data. Reflection traps may still execute during capture; this is not a JavaScript sandbox. Ordinary parsed JSON compatibility and issuer/status checks remain unchanged. See ADR-0045.
+
 Implements [ADR-0022](adr/0022-vc-export-bridge.md). Code: `src/vc-bridge/`. CLI: `scripts/kya-vc.mjs`. Zero dependencies, no network access, every time-dependent command takes an explicit `--now`.
 
 ## What the credential says

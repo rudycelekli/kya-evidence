@@ -136,7 +136,7 @@ export function verifyAssessmentCredential(token, { now = new Date().toISOString
   for (const [code, message] of checkClaims(credential)) errors.push({ code, message });
   let reportChecked = false, reportMismatch = [];
   if (report !== undefined) {
-    try { verifyAssessment(report); } catch (e) { errors.push({ code: 'REPORT_INVALID', message: e.message }); report = undefined; }
+    try { report = JSON.parse(canonical(report)); verifyAssessment(report); } catch (e) { errors.push({ code: 'REPORT_INVALID', message: e.message }); report = undefined; }
     if (report !== undefined) {
       let diffs = [];
       // A report that passes its checksum but lacks a member the rebuild reads cannot be rebuilt from: that is an invalid report, not a crash.
