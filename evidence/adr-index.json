@@ -497,8 +497,30 @@
         "ADR-0002",
         "ADR-0012"
       ]
+    },
+    {
+      "id": "ADR-0040",
+      "title": "Import security scheme names only from maps and expose truncation",
+      "status": "Implemented locally; pending owner and independent review",
+      "file": "docs/adr/0040-declared-security-scheme-map-import.md",
+      "contentDigest": "546f88522487860b0d3b9066edf0c87acfe1134fbe14213d44f46792f2105517",
+      "related": [
+        "ADR-0002",
+        "ADR-0012",
+        "ADR-0039"
+      ]
+    },
+    {
+      "id": "ADR-0041",
+      "title": "Capture bridge export data before verification reads",
+      "status": "Implemented locally; pending owner and independent review",
+      "file": "docs/adr/0041-bridge-export-snapshot.md",
+      "contentDigest": "4bb8189f5fbb64addd01c472e245eb31baf9fd28dde51ac8694098e239f2cc02",
+      "related": [
+        "ADR-0012"
+      ]
     }
   ],
-  "digest": "507d6b9ab532da802939e142b70ab597ca898876285ca9a8c99f1e44cab95be0",
+  "digest": "f90d1faeb25f30b5ec43ca86d565256d634efd67f8df9116f147f6eaff1a5c5c",
   "store": "portable local file; not a claim of AgentDB graph persistence"
 }
