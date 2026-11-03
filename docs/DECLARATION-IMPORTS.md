@@ -38,3 +38,18 @@ node scripts/declaration-schemes-mutations.mjs
 ```
 
 Four frozen synthetic tests and three weakened implementations exercise this mapping boundary. [ADR-0040](adr/0040-declared-security-scheme-map-import.md) records the decision. This correction does not establish full A2A schema conformance or external interoperability acceptance.
+
+## List projections and visible loss
+
+The Open-KYA `permittedDomains`, `permittedRegions` and `forbiddenRegions` projections retain string members at most 256 UTF-16 code units long, in their existing order including duplicates, then retain at most 128 members. Empty strings preserve the existing behavior. A present field remains in `unsupportedFields` if it has a non-array shape, contains an unrepresentable member or has more than 128 input members. Absent optional fields preserve empty arrays without an unsupported marker; empty arrays remain representable.
+
+The A2A `skills` projection retains nonempty string IDs at most 128 UTF-16 code units long, including duplicates, then retains at most 128 IDs. Missing, empty, nonstring or overlong IDs, and lists with more than 128 input members, leave `skills` in `unsupportedFields`. Skill descriptions and other metadata are deliberately outside the ID projection; ignoring that metadata alone does not make the field unsupported. The importer still requires `skills` to be an array.
+
+These markers expose loss while preserving all existing projected values and bounds. No rejected values or skill metadata are emitted. The complete original input still determines `sourceDigest`; every unverified flag and limitation remains. A retained list is not proof of effective permission, restrictions or runtime enforcement, and a partial declaration import is not full external schema validation.
+
+```sh
+node --test test/declaration-lists.test.mjs test/imports.test.mjs
+node scripts/declaration-list-mutations.mjs
+```
+
+Six frozen synthetic tests and four weakened implementations exercise the list-loss boundary. [ADR-0043](adr/0043-declaration-list-loss-reporting.md) records the compatibility decision. The projection bounds and the unsupported-field markers describe this implementation, not independent or external acceptance.

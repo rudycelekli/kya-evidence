@@ -6,6 +6,7 @@ export function importDeclarations(format, value) {
   insist(input && typeof input==='object' && !Array.isArray(input),'Declaration must be an object');
   const pickString=(v,max=512)=>typeof v==='string' && v.length<=max ? v : null;
   const pickStrings=v=>Array.isArray(v) ? v.filter(x=>typeof x==='string' && x.length<=256).slice(0,128) : [];
+  const completeStrings=v=>Array.isArray(v) && v.every(x=>typeof x==='string' && x.length<=256);
   let identity,declared,recognized;
   if(format==='open-kya-alpha') {
     const required=['@context','id','type','kyaVersion','agentId','verificationMethod','authentication','assertionMethod','capabilityInvocation','proof'];
@@ -18,15 +19,22 @@ export function importDeclarations(format, value) {
     identity={externalAgentId:pickString(input.agentId),displayName:pickString(input.name??input.label),controllerRef};
     declared={version:pickString(input.kyaVersion),permissionMode:pickString(input.permissionMode),domains:pickStrings(input.permittedDomains),permittedRegions:pickStrings(input.permittedRegions),forbiddenRegions:pickStrings(input.forbiddenRegions),maxTransactionValue:Number.isSafeInteger(input.maxTransactionValue)?input.maxTransactionValue:null,currency:pickString(input.currency),operatingLimitsDigest:input.operatingLimits?digest(input.operatingLimits):null};
     recognized=new Set([...required,'name','label','permissionMode','permittedDomains','permittedRegions','forbiddenRegions','maxTransactionValue','currency','operatingLimits']);
+    for(const field of ['permittedDomains','permittedRegions','forbiddenRegions']) {
+      if(Object.hasOwn(input,field) && !completeStrings(input[field])) recognized.delete(field);
+      if(Array.isArray(input[field]) && input[field].length>128) recognized.delete(field);
+    }
     if(controllerRef!==null) recognized.add('governingAuthority');
   } else if(format==='a2a-1') {
     insist(typeof input.name==='string' && Array.isArray(input.skills),'Not a recognized A2A declaration shape');
     const schemes=input.securitySchemes;
     const schemeMap=schemes!==null && typeof schemes==='object' && !Array.isArray(schemes);
     const schemeNames=schemeMap?Object.keys(schemes):[];
+    const mappedSkillIds=input.skills.map(x=>pickString(x?.id,128)).filter(Boolean);
     identity={externalAgentId:null,displayName:pickString(input.name),controllerRef:null};
-    declared={version:pickString(input.version),skillIds:input.skills.map(x=>pickString(x?.id,128)).filter(Boolean).slice(0,128),capabilitiesDigest:input.capabilities?digest(input.capabilities):null,securitySchemeNames:schemeNames.slice(0,128)};
+    declared={version:pickString(input.version),skillIds:mappedSkillIds.slice(0,128),capabilitiesDigest:input.capabilities?digest(input.capabilities):null,securitySchemeNames:schemeNames.slice(0,128)};
     recognized=new Set(['name','version','skills','capabilities']);
+    if(mappedSkillIds.length!==input.skills.length) recognized.delete('skills');
+    if(input.skills.length>128) recognized.delete('skills');
     if(schemeMap && schemeNames.length<=128) recognized.add('securitySchemes');
   } else throw new Error('Unsupported declaration format; use open-kya-alpha or a2a-1');
   return {schema:'kya.declaration-import/v1',format,sourceDigest:digest(input),identity,declared,unsupportedFields:Object.keys(input).filter(k=>!recognized.has(k)).sort(),unverified:['external identity','controller consent and legal authority','cryptographic proofs and credentials','hardware attestation','runtime enforcement','behavior and quality'],limitations:['Partial declaration mapping only; no standards conformance asserted','No score or permission grant is produced','Transaction units are retained without currency conversion','No source scripts, URLs or credentials are executed or resolved']};
