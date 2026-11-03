@@ -519,8 +519,20 @@
       "related": [
         "ADR-0012"
       ]
+    },
+    {
+      "id": "ADR-0042",
+      "title": "Bind report-only currency invariants to the report decision",
+      "status": "Implemented locally; pending owner and independent review",
+      "file": "docs/adr/0042-bridge-currency-consistency.md",
+      "contentDigest": "29d487fa6fc630ad18163a598469021c4ed9e02dc3b97225b32cb8a7d4eedfe3",
+      "related": [
+        "ADR-0013",
+        "ADR-0027",
+        "ADR-0041"
+      ]
     }
   ],
-  "digest": "f90d1faeb25f30b5ec43ca86d565256d634efd67f8df9116f147f6eaff1a5c5c",
+  "digest": "6e0420a8454eab93829ce8e997cc6abb2dcc170e8b83eb2f98fe7330590302ce",
   "store": "portable local file; not a claim of AgentDB graph persistence"
 }
