@@ -4,6 +4,7 @@ import { tmpdir } from 'node:os';
 import { fileURLToPath } from 'node:url';
 import { spawnSync } from 'node:child_process';
 import { hashBytes } from '../src/index.mjs';
+import { admitMutationBaseline, admitMutationCandidate } from './lib/mutation-result.mjs';
 
 const root=fileURLToPath(new URL('../',import.meta.url)),source='src/assessment/application/assess.mjs';
 const original=await readFile(join(root,source),'utf8');
@@ -99,8 +100,7 @@ const mutants=[
 ];
 const results=[];
 function failedNames(output){return [...output.matchAll(/^not ok \d+ - (.+)$/gm)].map(m=>m[1]).slice(0,5);}
-function counts(output){const get=name=>Number(new RegExp(`^# ${name} (\\d+)$`,'m').exec(output)?.[1]??NaN);return{tests:get('tests'),pass:get('pass'),fail:get('fail'),cancelled:get('cancelled'),skipped:get('skipped')};}
-function runTests(dir){const p=spawnSync(process.execPath,['--test','--test-reporter=tap','test/assessment.test.mjs','test/incidents.test.mjs','test/refusal-codes.test.mjs','test/mandatory-minimums.test.mjs','test/conformance-report.test.mjs','test/campaign-ledger.test.mjs','test/campaign-runner.test.mjs','test/capture-issuer-scoring.test.mjs','test/vc-bridge.test.mjs','test/kya-check.test.mjs','test/assessor.test.mjs','test/interop-bridges.test.mjs','test/profiles.test.mjs','test/privacy.test.mjs','test/security-gates.test.mjs','test/mutation-redundancy-currency.test.mjs','test/mutation-redundancy-assessment.test.mjs','test/mutation-redundancy-campaign.test.mjs','test/mutation-redundancy-check.test.mjs','test/mutation-redundancy-assessor.test.mjs','test/mutation-redundancy-profiles-bridges.test.mjs','test/mutation-redundancy-privacy.test.mjs'],{cwd:dir,encoding:'utf8',timeout:300000,maxBuffer:16000000});if(p.error||p.signal)throw Error('Mutation test execution failed');return{process:p,counts:counts(p.stdout)};}
+function runTests(dir){return spawnSync(process.execPath,['--test','--test-reporter=tap','test/assessment.test.mjs','test/incidents.test.mjs','test/refusal-codes.test.mjs','test/mandatory-minimums.test.mjs','test/conformance-report.test.mjs','test/campaign-ledger.test.mjs','test/campaign-runner.test.mjs','test/capture-issuer-scoring.test.mjs','test/vc-bridge.test.mjs','test/kya-check.test.mjs','test/assessor.test.mjs','test/interop-bridges.test.mjs','test/profiles.test.mjs','test/privacy.test.mjs','test/security-gates.test.mjs','test/mutation-redundancy-currency.test.mjs','test/mutation-redundancy-assessment.test.mjs','test/mutation-redundancy-campaign.test.mjs','test/mutation-redundancy-check.test.mjs','test/mutation-redundancy-assessor.test.mjs','test/mutation-redundancy-profiles-bridges.test.mjs','test/mutation-redundancy-privacy.test.mjs'],{cwd:dir,encoding:'utf8',timeout:300000,maxBuffer:16000000});}
 // Fail fast: report every drifted anchor before spending minutes on test runs.
 {const drift=[];for(const [name,from,,target=source]of mutants){const text=target===source?original:await readFile(join(root,target),'utf8');if(!text.includes(from))drift.push(name+' ('+target+')');}if(drift.length)throw Error('Mutation anchor drift in '+drift.length+' control(s): '+drift.join('; '));
   // A mutant must stay syntactically valid; otherwise the test file crashes at import and nothing is measured.
@@ -112,10 +112,9 @@ for(const [name,from,to,target=source]of mutants){
   if(!base.includes(from))throw Error('Mutation anchor drift: '+name);
   const dir=await mkdtemp(join(tmpdir(),'kya-mutant-'));
   try{await cp(join(root,'src'),join(dir,'src'),{recursive:true});await cp(join(root,'test'),join(dir,'test'),{recursive:true});await cp(join(root,'package.json'),join(dir,'package.json'));await cp(join(root,'profiles'),join(dir,'profiles'),{recursive:true});for(const extra of ['dashboard','docs','schemas','scripts','evidence','examples','suites','policies','action'])await cp(join(root,extra),join(dir,extra),{recursive:true});
-    const baseline=runTests(dir);if(baseline.process.status!==0||!Number.isSafeInteger(baseline.counts.tests)||baseline.counts.tests<1||baseline.counts.fail!==0||baseline.counts.cancelled!==0||baseline.counts.skipped!==0)throw Error('Mutation baseline did not run cleanly: '+name);
+    const baseline=admitMutationBaseline(runTests(dir));
     const mutated=base.replace(from,to);await writeFile(join(dir,target),mutated);const candidate=runTests(dir);
-    if(candidate.counts.tests!==baseline.counts.tests||candidate.counts.cancelled!==0||candidate.counts.skipped!==0)throw Error('Mutant did not exercise identical complete test population: '+name);
-    const killed=candidate.process.status!==0&&candidate.counts.fail>0;results.push({name,killed,killedBy:failedNames(candidate.process.stdout),baselineTests:baseline.counts.tests,mutantTests:candidate.counts.tests,failedAssertions:candidate.counts.fail,mutantSourceDigest:hashBytes(mutated),exitCode:candidate.process.status});
+    const {counts,killed}=admitMutationCandidate(candidate,baseline);results.push({name,killed,killedBy:failedNames(candidate.stdout),baselineTests:baseline.tests,mutantTests:counts.tests,failedAssertions:counts.fail,mutantSourceDigest:hashBytes(mutated),exitCode:candidate.status});
     if(!killed)throw Error('SURVIVING evaluator mutant: '+name);
   }finally{await rm(dir,{recursive:true,force:true});}
 }
