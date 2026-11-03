@@ -177,7 +177,7 @@ test('conformance CLI builds unsigned reports from traced tests and verifies the
     const built = run(['--root', root, '--now', NOW, '--out', out]);
     assert.equal(built.status, 0, built.stderr);
     const summary = JSON.parse(built.stdout);
-    assert.deepEqual([summary.pass, summary.fail, summary.notRun, summary.total], [1, 1, 0, 2]);
+    assert.deepEqual([summary.pass, summary.fail, summary.notRun, summary.total], [0, 1, 1, 2]);
     const ver = run(['--root', root, '--verify', out]);
     assert.equal(ver.status, 0, ver.stderr);
     assert.equal(JSON.parse(ver.stdout).authenticated, false);

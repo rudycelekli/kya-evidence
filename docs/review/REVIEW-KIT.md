@@ -119,7 +119,7 @@ Set `HANDOVER_COMMIT` to the full 40 character handover commit id. Then run the 
 
 | Step | Command | Expected result |
 | :--- | :--- | :--- |
-| 1 | `node scripts/requirements.mjs --check` | exit 0; one JSON line starting `{"requirements":301,"areas":` and ending with `"traceable":true,"registryDigest":"b37ee711b3e2571ee69bce2ee7bbb65c21b7a70aaf4d0bdf23824924ff0be7a3"}` |
+| 1 | `node scripts/requirements.mjs --check` | exit 0; one JSON line starting `{"requirements":301,"areas":` and ending with `"traceable":true,"registryDigest":"fa43a083849edfa3c93c98af8c4c6abe2cd6c9c8619a8c0594feb8bab48d073b"}` |
 | 2 | `node scripts/assessment-vectors.mjs --check` | exit 0; the line `Assessment vectors match` |
 | 3 | `node scripts/mutation-check.mjs --preflight` | exit 0; `{"preflight":"ok","controls":87,"anchorsPresent":true,"allMutantsParse":true}` |
 | 4 | `node scripts/check.mjs` | exit 0; one JSON line with `"syntax":"passed"`, `"schemas":"matched"`, `"requirementTraceability":"passed"`, `"statusLedger":"passed"` (the `files` figure depends on the directory scanned and is not quoted) |
@@ -128,7 +128,8 @@ Set `HANDOVER_COMMIT` to the full 40 character handover commit id. Then run the 
 | 7 | `node scripts/run-vectors.mjs --impl "node interop/impl-contract/js-reference.mjs"` | exit 0 after about ten seconds; summary with `"vectors":{"total":799,"pass":799,...,"fail":0,"unsupported":0}` and `"requirements"` with `"pass":60`, `"notRun":241`, `"total":301` |
 | 8 | `node scripts/run-vectors.mjs --impl "node interop/second-impl/adapter.mjs"` | exit 0 after about thirty seconds; the same vector and requirement counts. This is the same team's second implementation. |
 | 8a | `node scripts/vector-runner-mutations.mjs` | exit 0; five baseline gate tests pass and all four targeted runner mutations are detected. Same-team local controls. |
-| 8b | `node scripts/adr-index.mjs` | exit 0; `{"records":36,"danglingRefs":0,"storage":"evidence/adr-index.json"}`. It rewrites that file; `git status` must stay clean afterwards. |
+| 8a2 | `node scripts/conformance-execution-mutations.mjs` | exit 0; five baseline tests pass and four weakened mappers are detected, including restoration of the failed-sibling exception. |
+| 8b | `node scripts/adr-index.mjs` | exit 0; `{"records":37,"danglingRefs":0,"storage":"evidence/adr-index.json"}`. It rewrites that file; `git status` must stay clean afterwards. |
 | 9 | `node scripts/review-kit-check.mjs --deep` | exit 0; `"ok": true`. Confirms every number in the table below, including the harness rows. |
 
 The expensive steps. They were not run when this kit was written; the numbers they print are not quoted here because they were not measured for this kit:
@@ -152,7 +153,7 @@ Every row is recomputed by `node scripts/review-kit-check.mjs` from the reposito
 | Key | Value | How it is measured |
 | :--- | :--- | :--- |
 | `requirements` | `301` | `node scripts/requirements.mjs`, field `requirements` |
-| `requirementsRegistryDigest` | `b37ee711b3e2571ee69bce2ee7bbb65c21b7a70aaf4d0bdf23824924ff0be7a3` | same command, field `registryDigest` |
+| `requirementsRegistryDigest` | `fa43a083849edfa3c93c98af8c4c6abe2cd6c9c8619a8c0594feb8bab48d073b` | same command, field `registryDigest` |
 | `vectorsTotal` | `799` | length of `vectors` in `evidence/assessment-vectors.json` |
 | `vectors.assess` | `212` | vectors whose `operation` is `assess` |
 | `vectors.currency` | `60` | operation `currency` |
@@ -164,12 +165,12 @@ Every row is recomputed by `node scripts/review-kit-check.mjs` from the reposito
 | `vectors.verify-score-card` | `72` | operation `verify-score-card` |
 | `vectors.compare-score-cards` | `19` | operation `compare-score-cards` |
 | `mutationControls` | `87` | `node scripts/mutation-check.mjs --preflight`, field `controls` |
-| `testFiles` | `86` | files matching `test/*.test.mjs` |
-| `testDeclarations` | `1041` | lines that begin with `test(` in those files. The four `test/property-*.test.mjs` files declare 38 seeded properties through a helper and contribute no such line. |
-| `adrs` | `36` | files `docs/adr/NNNN-*.md`; statuses retain local implementation and external-review boundaries |
+| `testFiles` | `87` | files matching `test/*.test.mjs` |
+| `testDeclarations` | `1046` | lines that begin with `test(` in those files. The four `test/property-*.test.mjs` files declare 38 seeded properties through a helper and contribute no such line. |
+| `adrs` | `37` | files `docs/adr/NNNN-*.md`; statuses retain local implementation and external-review boundaries |
 | `coreProfileChecks` | `18` | length of `checks` in `profiles/core-v1.json` |
 | `srcFiles` | `89` | `.mjs` files under `src/` |
-| `srcLines` | `5434` | newline characters in those files. The code is dense: long lines, so line count understates size. |
+| `srcLines` | `5433` | newline characters in those files. The code is dense: long lines, so line count understates size. |
 | `evaluatorDigestPinned` | `d0bc7f7840e5ddf1a71eb3b9ac92e5c4d0be5d156eea2c6f4f909f7066b5e31b` | `evidence/evaluator-identity.json`; the checker also requires it to equal the digest computed from source |
 | `harness.vectorsPass` | `799` | `node scripts/run-vectors.mjs --impl "node interop/impl-contract/js-reference.mjs"`, field `vectors.pass` |
 | `harness.vectorsFail` | `0` | same command, field `vectors.fail` |

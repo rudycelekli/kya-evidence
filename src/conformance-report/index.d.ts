@@ -18,4 +18,4 @@ export function signReport(report: unknown, privateKey: import('node:crypto').Ke
 export function verifyReport(envelope: unknown, options?: { registry?: RequirementRegistry }): { payload: ConformanceReport; keyId: string; envelopeDigest: string; authenticated: false; truthfulnessVerified: false };
 export function summarize(results: ReadonlyArray<ConformanceEntry>): ConformanceSummary;
 export function parseTap(output: string): Array<{ title: string; status: 'pass' | 'fail' | 'skip' }>;
-export function mapTapToRequirements(registry: RequirementRegistry, runs: Record<string, { exitCode: number | null; tests: Array<{ title: string; status: 'pass' | 'fail' | 'skip' }> }>): Record<string, Omit<ConformanceEntry, 'id'>>;
+export function mapTapToRequirements(registry: RequirementRegistry, runs: Record<string, { exitCode: number | null; signal?: string | null; error?: string; tests: Array<{ title: string; status: 'pass' | 'fail' | 'skip' }> }>): Record<string, Omit<ConformanceEntry, 'id'>>;

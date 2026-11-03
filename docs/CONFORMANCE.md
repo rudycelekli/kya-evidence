@@ -36,7 +36,7 @@ node scripts/conformance-report.mjs --now 2026-10-14T12:00:00.000Z --out report.
 node scripts/conformance-report.mjs --verify report.json
 ```
 
-`npm run conformance-report -- --now ...` is equivalent. A requirement passes only if all its traced tests pass and none is skipped; a host-conditional trace that was skipped yields `not-run`. Without `--out` the full report is printed to stdout.
+`npm run conformance-report -- --now ...` is equivalent. A requirement passes only if all its traced tests have exactly one `pass` verdict and every contributing process exits with numeric zero, without a signal or runner error; a host-conditional trace that was skipped yields `not-run`. A nonzero file exit withholds pass credit even if a sibling assertion failed: Node can hide a worker crash behind exit 1. Explicit failed traces remain `fail`; all affected passes, unknown statuses, missing verdicts and ambiguous matches become `not-run`. The CLI still exits zero when it successfully builds a report containing failures; that is artifact creation, not qualification. See [ADR-0037](adr/0037-conformance-process-completion.md). Without `--out` the full report is printed to stdout.
 
 Another implementation (for example the Python byte checker or a third party):
 

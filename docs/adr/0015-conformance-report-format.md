@@ -2,6 +2,7 @@
 
 **Status**: Implemented
 **Date**: 2026-10-14
+**Updated**: 2026-11-03
 **Depends-on**: ADR-0003, ADR-0008, ADR-0011, ADR-0014
 
 Review boundary: separate project lane; no external certification.
@@ -29,3 +30,7 @@ Any implementation can publish a comparable, digest-bound claim. The registry di
 ## Integration amendment
 
 The report code was first placed under `src/conformance/`, whose every `.mjs` file is bound into the evaluator digest. Adding it changed the evaluator identity (`d0bc7f78...` to a different value) and would have invalidated all previously issued evidence as wrong-evaluator. It now lives in `src/conformance-report/` and the evaluator digest is pinned by `evidence/evaluator-identity.json` and a test (KYA-EVL-001), so any future change under `src/conformance/` is deliberate and needs an ADR.
+
+## Process-completion amendment
+
+ADR-0037 strengthens executed-test admission: pass credit requires an exact pass verdict and a clean numeric exit zero with no signal or runner error. Nonzero exit with a visible failing sibling no longer preserves passes, because Node can hide a worker crash behind that same exit. Observed failures remain fail and all affected passes become not-run. The registry and report producer document this intentional partial-report behavior change; no core assessment vector changes.

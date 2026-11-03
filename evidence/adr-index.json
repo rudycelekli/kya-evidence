@@ -170,12 +170,13 @@
       "title": "Machine-readable conformance report with honest evidence classes",
       "status": "Implemented",
       "file": "docs/adr/0015-conformance-report-format.md",
-      "contentDigest": "371cdfe9d9a56eb3b727113b837a5eff993089cfd954332d9d206ac4b64e1b55",
+      "contentDigest": "11ce8d1e0939ecbfd005ad45e5eb4ca36781c3e6025d2b152456d92cf725c95b",
       "related": [
         "ADR-0003",
         "ADR-0008",
         "ADR-0011",
-        "ADR-0014"
+        "ADR-0014",
+        "ADR-0037"
       ]
     },
     {
@@ -462,8 +463,19 @@
         "ADR-0034",
         "ADR-0035"
       ]
+    },
+    {
+      "id": "ADR-0037",
+      "title": "Require successful process completion for conformance pass credit",
+      "status": "Implemented locally; pending owner and independent review",
+      "file": "docs/adr/0037-conformance-process-completion.md",
+      "contentDigest": "669aa355f0f1ee8c43cafb5cda7d0070bd89097f972162213dcb9bba7d7c5211",
+      "related": [
+        "ADR-0015",
+        "ADR-0036"
+      ]
     }
   ],
-  "digest": "ceb11db008d719ec53edc3cbabc74f53e193375651f372acc87c0825fbe23907",
+  "digest": "e0bedff3bcd44779f2b2422f960ef9966c182bb6c505afa88c6b468a261c6c07",
   "store": "portable local file; not a claim of AgentDB graph persistence"
 }

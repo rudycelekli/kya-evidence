@@ -36,7 +36,7 @@ const mutants=[
   ['blocker code validation removed',"if (!Object.hasOwn(report, 'blockerCodes')) return;","return;",'src/assessment/application/codes.mjs'],
   ['duplicate minimum accepted',"insist(!seen.has(e.checkId),'Duplicate mandatory minimum check'); ","",'src/identity/domain/services/validation.mjs'],
   ['currency trigger code removed',"code:CURRENCY_CODES[id],","",'src/assessment/application/currency.mjs'],
-  ['report exit-code check removed',"else if (found[0].status === 'skip' || run.error || (run.exitCode !== 0 && !run.tests.some(x => x.status === 'fail'))) unknown = true;","else if (found[0].status === 'skip') unknown = true;",'src/conformance-report/report.mjs'],
+  ['report exit-code check removed',"else if (found[0].status !== 'pass' || run.error || run.signal || run.exitCode !== 0) unknown = true;","else if (found[0].status === 'skip') unknown = true;",'src/conformance-report/report.mjs'],
   ['blocker-code critical count cross-check removed',"insist(c.filter(x => x === 'CRITICAL_CHECK_FAILED').length === failedCritical, 'Invalid blocker codes: critical failure count does not match the report checks');","",'src/assessment/application/codes.mjs'],
   ['unproven minimum named as failed',"else block('MANDATORY_MINIMUM_UNPROVEN',","else block('MANDATORY_MINIMUM_NOT_MET',",'src/assessment/application/assess.mjs'],
   ['ambiguity judged only over live reports',"if ((counts.get(e.refId)??0)>1) ignored.push","if (targets.length>1) ignored.push",'src/assessment/application/currency.mjs'],

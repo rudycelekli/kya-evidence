@@ -27,7 +27,7 @@ Open `dossier.html` for the offline, printable report or read `dossier.md`. This
 
 ## Challenge the evaluator
 
-Sixteen frozen controls include four complete behavioral reference modes and twelve signed-receipt admission challenges. Cases preserve expected outcomes, missing measurements and every failure. The reproducible check is `scripts/mutation-check.mjs`: 87 targeted gate mutations over the assessment and incident, campaign, assessor, bridge, profile-validation and privacy-scanner source, each of which the tests must catch (`--preflight` checks the anchors only). These checks establish local evaluator behavior; commercial agents need separate measured campaigns.
+Sixteen frozen controls include four complete behavioral reference modes and twelve signed-receipt admission challenges. Cases preserve expected outcomes, missing measurements and every failure. The reproducible check is `scripts/mutation-check.mjs`: 87 targeted gate mutations over the assessment and incident, campaign, assessor, bridge, profile-validation and privacy-scanner source, each of which the tests must catch (`--preflight` checks the anchors only). Two additional four-control mutation runners test vector-runner admission (`scripts/vector-runner-mutations.mjs`) and executed-test process completion (`scripts/conformance-execution-mutations.mjs`). These checks establish local evaluator behavior; commercial agents need separate measured campaigns.
 
 ```sh
 node bin/kya.mjs bench --out .kya/controls

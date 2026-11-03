@@ -10,6 +10,8 @@ Entries come from `git log` and the merged pull requests (#1 to #46, the highest
 
 ### Fixed
 
+- Executed-test conformance passes now require exact pass status and a clean exit zero without signal or runner error. Failed siblings cannot explain away an unsuccessful process; observed failures remain failures and affected passes become not-run (ADR-0037). Five frozen adversarial cases and four mapper mutation controls cover this stricter partial-report contract.
+
 - Signal-terminated implementations fail refusal vectors instead of earning conformance credit.
 - Unsupported replies require exactly three members and echo the requested operation on every vector.
 - Timeout and worker budgets are validated before execution; invalid CLI budgets exit 2.

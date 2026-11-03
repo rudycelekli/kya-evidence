@@ -751,7 +751,7 @@
       "level": "MUST",
       "area": "conformance",
       "section": "Interoperability and versioning",
-      "statement": "The reference report builder MUST mark a requirement pass only when every traced test passed and none was skipped, MUST mark a failing trace fail, and MUST treat skipped, absent or ambiguous traces as not-run; a pass MUST NOT be reported for a test file whose process exited non-zero without a visible failing test, timed out or errored.",
+      "statement": "The reference report builder MUST mark a requirement pass only when every traced test has exactly one pass verdict and its process exited with numeric zero without a signal or runner error, MUST preserve an observed failing trace as fail, and MUST treat skipped, absent, ambiguous or unknown statuses and passes from unsuccessful processes as not-run, even when a sibling test failed.",
       "tests": [
         {
           "file": "test/conformance-report.test.mjs",
@@ -768,6 +768,26 @@
         {
           "file": "test/conformance-report.test.mjs",
           "title": "tap mapping never reports pass for a file that exited non-zero, timed out or errored"
+        },
+        {
+          "file": "test/conformance-execution-gates.test.mjs",
+          "title": "a visible failing sibling cannot launder an invalid process outcome into pass"
+        },
+        {
+          "file": "test/conformance-execution-gates.test.mjs",
+          "title": "signal and runner errors withhold pass while preserving observed failures"
+        },
+        {
+          "file": "test/conformance-execution-gates.test.mjs",
+          "title": "only an exact pass status can support a conformance pass"
+        },
+        {
+          "file": "test/conformance-execution-gates.test.mjs",
+          "title": "normal mixed runs retain failures and require exit zero for sibling pass credit"
+        },
+        {
+          "file": "test/conformance-execution-gates.test.mjs",
+          "title": "conformance CLI withholds pass after a real signal termination with a visible failed test"
         }
       ]
     },
