@@ -87,7 +87,7 @@ export function verifyBridgeExport(kind, output, rawOptions = {}) {
   try { output = JSON.parse(canonical(output)); } catch (e) { errors.push({ code: 'MALFORMED', message: `Export is not plain canonical JSON data: ${e.message}` }); return finish(); }
   if (report === undefined) { errors.push({ code: 'REPORT_REQUIRED', message: 'The cross-check needs the source report' }); return finish(); }
   let r;
-  try { verifyAssessment(report); r = JSON.parse(canonical(report)); checkReportTimes(r); checkReportFields(r); } catch (e) { errors.push({ code: 'REPORT_INVALID', message: e.message }); return finish(); }
+  try { r = JSON.parse(canonical(report)); verifyAssessment(r); checkReportTimes(r); checkReportFields(r); } catch (e) { errors.push({ code: 'REPORT_INVALID', message: e.message }); return finish(); }
   let read;
   try { read = spec.read(output); if (read.url !== undefined) checkUrl(read.url, 'assessmentUrl'); } catch (e) { errors.push({ code: 'MALFORMED', message: `Export does not have the ${kind} shape: ${e.message}` }); return finish(); }
   if (assessmentUrl !== undefined) {

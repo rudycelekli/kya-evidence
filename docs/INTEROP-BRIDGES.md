@@ -17,6 +17,8 @@ These are **export bindings**. Each takes a `kya.assessment/v1` report and produ
 
 Native JavaScript exports are captured once from their canonical descriptor-backed JSON data before shape reads or comparison. A Proxy GET view cannot substitute different report-derived values after capture. This does not sandbox reflection traps during capture; ordinary parsed CLI JSON has no such live behavior. See ADR-0041.
 
+The supplied report is also captured once before its checksum is verified. Shape checks and export reconstruction use that same checked snapshot, so changing native descriptors cannot substitute a stale-digest report after validation. This binds consistency to the captured report bytes; it does not authenticate the report or sandbox reflection traps during capture. See ADR-0044.
+
 `verifyBridgeExport(kind, output, { report, manifest, policy, now, incidents })`, CLI `kya-bridge verify KIND --export F --assessment F`. It rebuilds the export from the source report with the exporter's own construction and compares the whole object in canonical form; any difference is `REPORT_MISMATCH` naming the member. It never throws on bad input. Limits of the check:
 
 - Without `manifest`, `policy` and `now`, the currency block is taken from the export itself (`currencyRechecked: false`), so a forged currency block is **not** detected. Pass the three to re-derive it; an override recorded in the output is honoured only if the recomputation also needed it.
