@@ -8,6 +8,14 @@ Entries come from `git log` and the merged pull requests (#1 to #46, the highest
 
 ## [Unreleased]
 
+### Fixed
+
+- Signal-terminated implementations fail refusal vectors instead of earning conformance credit.
+- Unsupported replies require exactly three members and echo the requested operation on every vector.
+- Timeout and worker budgets are validated before execution; invalid CLI budgets exit 2.
+- Five frozen adversarial gate tests and four isolated mutation controls test the runner itself.
+- See ADR-0036 for compatibility and remaining refusal ambiguity.
+
 ### Added
 
 - Conformance contract version 2 (ADR-0034, status Proposed): four pure operations `canonicalize`, `digest`, `verify-envelope` and `compare` beside `assess` and `currency`, in `interop/impl-contract/` (reference adapter, `js-operations.mjs`), the vector generator, the harness and `interop/second-impl/ops.mjs`. The envelope and result schema strings stay `kya.impl-input/v1` and `kya.impl-result/v1`; the vectors file becomes `kya.assessment-vectors/v2` with a `contract` member; the 272 earlier vectors are unchanged byte for byte. 213 vectors added (83 refusals), 485 in total; the reference and the same-team second implementation pass all 485. Registry effect measured with the harness: 39 of 252 requirements `pass` (was 37), 213 `not-run`. No outside implementation has run any vector.

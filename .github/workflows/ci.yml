@@ -26,6 +26,7 @@ jobs:
           node --test --test-reporter=tap test/*.test.mjs | tee "$RUNNER_TEMP/tap.txt"
           grep -qx '# skipped 0' "$RUNNER_TEMP/tap.txt"
           grep -qx '# todo 0' "$RUNNER_TEMP/tap.txt"
+      - run: node scripts/vector-runner-mutations.mjs
       - run: node scripts/mutation-check.mjs
       - run: node scripts/adr-index.mjs
       - run: node scripts/profile-registry.mjs --check

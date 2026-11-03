@@ -451,8 +451,19 @@
         "ADR-0022",
         "ADR-0033"
       ]
+    },
+    {
+      "id": "ADR-0036",
+      "title": "Separate conformance refusals from execution failures",
+      "status": "Implemented locally; pending owner and independent review",
+      "file": "docs/adr/0036-conformance-runner-execution-gates.md",
+      "contentDigest": "1d87c11d5dc44c417405088aa64896f77e22f0acbdbf63146f71b1cc1de79d17",
+      "related": [
+        "ADR-0034",
+        "ADR-0035"
+      ]
     }
   ],
-  "digest": "0f247298f123de7bed06669c487082e67812b1f826fd68859f652cc93c3873f1",
+  "digest": "ceb11db008d719ec53edc3cbabc74f53e193375651f372acc87c0825fbe23907",
   "store": "portable local file; not a claim of AgentDB graph persistence"
 }

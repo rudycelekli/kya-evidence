@@ -100,6 +100,12 @@ function runOne(cmd, args, input, timeoutMs) {
   });
 }
 
+function isUnsupportedReply(reply, operation) {
+  return reply !== null && typeof reply === 'object' && !Array.isArray(reply) &&
+    Object.keys(reply).length === 3 && reply.schema === 'kya.impl-result/v1' &&
+    reply.operation === operation && reply.unsupported === true;
+}
+
 // Returns {status: pass|fail|unsupported|semantic-pass, detail}
 async function evaluate(vector, impl, o) {
   // rawInput, when present, is the exact stdin text (used for input that JSON.parse of a vectors file cannot hold, such as duplicate members).
@@ -109,14 +115,15 @@ async function evaluate(vector, impl, o) {
   if (r.kind === 'spawn-error') return { status: 'fail', detail: `cannot start implementation: ${r.message}` };
   if (r.kind === 'timeout') return { status: 'fail', detail: `timeout after ${o.timeoutMs} ms` };
   if (r.kind === 'oversize') return { status: 'fail', detail: `output exceeds ${LIMITS.outputBytes} bytes` };
+  if (r.signal) return { status: 'fail', detail: `implementation terminated by signal ${r.signal}` };
   const refusedExpected = vector.expected?.refused === true;
   if (refusedExpected) {
-    if (r.code !== 0 || r.signal) return { status: o.semanticOnly ? 'semantic-pass' : 'pass', detail: 'refused as required' };
+    if (Number.isInteger(r.code) && r.code !== 0 && !r.signal) return { status: o.semanticOnly ? 'semantic-pass' : 'pass', detail: 'refused as required' };
     // An implementation that predates contract version 2 answers a new operation with exactly the unsupported reply: not-run, not fail.
     if (!V1_OPERATIONS.includes(vector.operation)) {
       let reply = null;
       try { reply = parseJson(r.stdout.toString('utf8')); } catch { /* not the unsupported reply */ }
-      if (reply && typeof reply === 'object' && !Array.isArray(reply) && Object.keys(reply).length === 3 && reply.schema === 'kya.impl-result/v1' && reply.operation === vector.operation && reply.unsupported === true) return { status: 'unsupported', detail: `operation ${vector.operation} declared unsupported` };
+      if (isUnsupportedReply(reply, vector.operation)) return { status: 'unsupported', detail: `operation ${vector.operation} declared unsupported` };
     }
     return { status: 'fail', detail: 'expected a refusal (non-zero exit), implementation exited 0' };
   }
@@ -124,7 +131,7 @@ async function evaluate(vector, impl, o) {
   let actual;
   try { actual = parseJson(r.stdout.toString('utf8')); } catch (e) { return { status: 'fail', detail: 'stdout is not one strict JSON value: ' + String(e.message).slice(0, 100) }; }
   if (actual === null || typeof actual !== 'object' || Array.isArray(actual)) return { status: 'fail', detail: 'stdout is not a JSON object' };
-  if (actual.unsupported === true && actual.schema === 'kya.impl-result/v1') return { status: 'unsupported', detail: `operation ${vector.operation} declared unsupported` };
+  if (isUnsupportedReply(actual, vector.operation)) return { status: 'unsupported', detail: `operation ${vector.operation} declared unsupported` };
   const expected = JSON.parse(JSON.stringify(vector.expected)), got = JSON.parse(JSON.stringify(actual));
   if (o.semanticOnly || vector.digestReproducible === false) for (const f of DIGEST_FIELDS) { delete expected[f]; delete got[f]; }
   const d = firstDifference(expected, got);
@@ -145,6 +152,8 @@ function validateVectors(file, registryIds) {
 }
 
 export async function runVectors({ impl, vectorsFile, now, name, implVersion, language, timeoutMs = LIMITS.timeoutMs, jobs = 4, semanticOnly = false, root }) {
+  if (!Number.isSafeInteger(timeoutMs) || timeoutMs < 1 || timeoutMs > 2_147_483_647) throw Error('timeoutMs must be an integer from 1 to 2147483647');
+  if (!Number.isSafeInteger(jobs) || jobs < 1 || jobs > 16) throw Error('jobs must be an integer from 1 to 16');
   const { reg } = await loadRequirements(root);
   const file = JSON.parse(await readFile(vectorsFile, 'utf8'));
   const registryIds = new Set(reg.requirements.map(r => r.id));
@@ -152,7 +161,7 @@ export async function runVectors({ impl, vectorsFile, now, name, implVersion, la
   const parts = splitCommand(impl), cmd = { cmd: parts[0], args: parts.slice(1) };
   const outcomes = new Array(file.vectors.length);
   let next = 0;
-  await Promise.all(Array.from({ length: Math.max(1, Math.min(jobs, 16)) }, async () => {
+  await Promise.all(Array.from({ length: jobs }, async () => {
     while (next < file.vectors.length) { const i = next++; outcomes[i] = await evaluate(file.vectors[i], cmd, { timeoutMs, semanticOnly }); }
   }));
   const byReq = new Map();
@@ -176,7 +185,7 @@ async function main() {
   const o = parseArgs(process.argv.slice(2)), root = resolve(o.root ?? fileURLToPath(new URL('../', import.meta.url)));
   if (!o.impl) throw Error('--impl is required. ' + usage);
   const now = o.now;
-  const { report, summary } = await runVectors({ impl: o.impl, vectorsFile: o.vectors ?? join(root, 'evidence/assessment-vectors.json'), now, name: o.name, implVersion: o.implVersion, language: o.language, timeoutMs: o.timeoutMs ? Number(o.timeoutMs) : LIMITS.timeoutMs, jobs: o.jobs ? Number(o.jobs) : 4, semanticOnly: !!o.semanticOnly, root });
+  const { report, summary } = await runVectors({ impl: o.impl, vectorsFile: o.vectors ?? join(root, 'evidence/assessment-vectors.json'), now, name: o.name, implVersion: o.implVersion, language: o.language, timeoutMs: o.timeoutMs !== undefined ? Number(o.timeoutMs) : LIMITS.timeoutMs, jobs: o.jobs !== undefined ? Number(o.jobs) : 4, semanticOnly: !!o.semanticOnly, root });
   validateReport(report);
   if (o.out) await writeFile(o.out, JSON.stringify(report, null, 2) + '\n');
   console.log(JSON.stringify(summary));
