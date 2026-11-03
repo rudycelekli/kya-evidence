@@ -21,8 +21,11 @@ Native JavaScript exports are captured once from their canonical descriptor-back
 
 - Without `manifest`, `policy` and `now`, the currency block is taken from the export itself (`currencyRechecked: false`), so a forged currency block is **not** detected. Pass the three to re-derive it; an override recorded in the output is honoured only if the recomputation also needed it.
 - When the currency block is taken from the export, its internal invariants are checked first and a contradictory block is `MALFORMED` (unchecked means no result, no digest, no trigger codes and the `allowNotCurrent` override; checked means `current` equals "no trigger codes", a 64-hex digest, an ISO checked time and known sorted trigger codes). This still does not detect a coherent but false block; only the recheck does.
+
 - `incidents` without `manifest`, `policy` and `now` is `CURRENCY_INPUTS_INCOMPLETE`. An optional `assessmentUrl` option is compared with the URL in an `a2a` or `mcp` export (`REPORT_MISMATCH`); for other kinds it is `OPTION_NOT_APPLICABLE`. The check also returns `MALFORMED` rather than throwing for NaN, bigint, cyclic or `__proto__` members.
 - It proves consistency with the supplied report, not that the report is truthful or authentic (`authenticated` is always `false`).
+
+Report-only checks also require checked reliability to equal `current && report.decision === 'qualified'`, and every nonqualified report to retain the `allowNonQualified` override in checked and unchecked modes. Contradictions are `MALFORMED`. An extra `allowNotCurrent` override does not by itself invalidate a coherent block. These consistency checks do not establish currency authenticity; coherent false currency still needs rechecking. See ADR-0042.
 
 ## 1. in-toto Statement v1
 

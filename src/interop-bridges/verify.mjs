@@ -101,7 +101,11 @@ export function verifyBridgeExport(kind, output, rawOptions = {}) {
     try { currency = gate(r, { manifest, policy, now, incidents, allowNonQualified: true, allowNotCurrent: true }).currency; }
     catch (e) { errors.push({ code: e.code === 'CURRENCY_INPUTS_INCOMPLETE' ? e.code : 'CURRENCY_RECHECK_FAILED', message: e.message }); return finish({ reportChecked: false }); }
   } else {
-    try { checkCurrencyBlock(currency); } catch (e) { errors.push({ code: 'MALFORMED', message: `Currency block is malformed: ${e.message}` }); return finish(); }
+    try {
+      checkCurrencyBlock(currency);
+      insist(!currency.checked || currency.reliable === (currency.current && r.decision === 'qualified'), 'Currency block reliable contradicts its current result or report decision');
+      insist(r.decision === 'qualified' || currency.overrides.includes('allowNonQualified'), 'A nonqualified report must record the allowNonQualified override');
+    } catch (e) { errors.push({ code: 'MALFORMED', message: `Currency block is malformed: ${e.message}` }); return finish(); }
   }
   let expected;
   try { expected = spec.build(r, currency, read); } catch (e) { errors.push({ code: 'MALFORMED', message: e.message }); return finish(); }
