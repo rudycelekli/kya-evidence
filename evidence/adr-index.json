@@ -543,8 +543,31 @@
         "ADR-0039",
         "ADR-0040"
       ]
+    },
+    {
+      "id": "ADR-0044",
+      "title": "Verify the report snapshot used by bridge comparison",
+      "status": "Implemented locally; pending owner and independent review",
+      "file": "docs/adr/0044-bridge-report-snapshot.md",
+      "contentDigest": "da1e7274c710925b1cb95ff7c55a7d7d53b55b8c50dd3edcaf468fdc3702302b",
+      "related": [
+        "ADR-0027",
+        "ADR-0041",
+        "ADR-0042"
+      ]
+    },
+    {
+      "id": "ADR-0045",
+      "title": "Compare credentials with the report snapshot whose checksum was checked",
+      "status": "Implemented locally; pending owner and independent review",
+      "file": "docs/adr/0045-vc-report-snapshot.md",
+      "contentDigest": "365c5fc1489bc6066c52784c1e7d6d72657fd63c4a72d8054c7ba62f9f36c613",
+      "related": [
+        "ADR-0022",
+        "ADR-0044"
+      ]
     }
   ],
-  "digest": "341f8aaec9bbc492c9b416c7276897c4f57690cdc830efe4eb82e4a5cc762842",
+  "digest": "09d003b854e5c417effbe2271294e964a60481118c28f0f8386e389cdfb55559",
   "store": "portable local file; not a claim of AgentDB graph persistence"
 }

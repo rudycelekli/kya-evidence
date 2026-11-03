@@ -34,6 +34,8 @@ jobs:
       - run: node scripts/declaration-list-mutations.mjs
       - run: node scripts/bridge-snapshot-mutations.mjs
       - run: node scripts/bridge-currency-mutations.mjs
+      - run: node scripts/bridge-report-mutations.mjs
+      - run: node scripts/vc-report-mutations.mjs
       - run: node scripts/mutation-check.mjs
       - run: node scripts/adr-index.mjs
       - run: node scripts/profile-registry.mjs --check
