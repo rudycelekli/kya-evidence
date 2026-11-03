@@ -100,6 +100,11 @@ function runOne(cmd, args, input, timeoutMs) {
   });
 }
 
+function parseImplementationOutput(bytes) {
+  // Fatal decoding rejects malformed bytes; preserve a BOM for the strict JSON parser to refuse.
+  return parseJson(new TextDecoder('utf-8', { fatal: true, ignoreBOM: true }).decode(bytes));
+}
+
 function isUnsupportedReply(reply, operation) {
   return reply !== null && typeof reply === 'object' && !Array.isArray(reply) &&
     Object.keys(reply).length === 3 && reply.schema === 'kya.impl-result/v1' &&
@@ -122,14 +127,14 @@ async function evaluate(vector, impl, o) {
     // An implementation that predates contract version 2 answers a new operation with exactly the unsupported reply: not-run, not fail.
     if (!V1_OPERATIONS.includes(vector.operation)) {
       let reply = null;
-      try { reply = parseJson(r.stdout.toString('utf8')); } catch { /* not the unsupported reply */ }
+      try { reply = parseImplementationOutput(r.stdout); } catch { /* not the unsupported reply */ }
       if (isUnsupportedReply(reply, vector.operation)) return { status: 'unsupported', detail: `operation ${vector.operation} declared unsupported` };
     }
     return { status: 'fail', detail: 'expected a refusal (non-zero exit), implementation exited 0' };
   }
   if (r.code !== 0) return { status: 'fail', detail: `exit ${r.code ?? r.signal}: refused or crashed${r.stderr ? ' (' + r.stderr.trim().split('\n')[0].slice(0, 120) + ')' : ''}` };
   let actual;
-  try { actual = parseJson(r.stdout.toString('utf8')); } catch (e) { return { status: 'fail', detail: 'stdout is not one strict JSON value: ' + String(e.message).slice(0, 100) }; }
+  try { actual = parseImplementationOutput(r.stdout); } catch (e) { return { status: 'fail', detail: 'stdout is not one strict JSON value: ' + String(e.message).slice(0, 100) }; }
   if (actual === null || typeof actual !== 'object' || Array.isArray(actual)) return { status: 'fail', detail: 'stdout is not a JSON object' };
   if (isUnsupportedReply(actual, vector.operation)) return { status: 'unsupported', detail: `operation ${vector.operation} declared unsupported` };
   const expected = JSON.parse(JSON.stringify(vector.expected)), got = JSON.parse(JSON.stringify(actual));
