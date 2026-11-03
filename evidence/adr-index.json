@@ -566,8 +566,19 @@
         "ADR-0022",
         "ADR-0044"
       ]
+    },
+    {
+      "id": "ADR-0046",
+      "title": "Refuse duplicate tool names before capture surface comparison",
+      "status": "Implemented locally; pending owner and independent review",
+      "file": "docs/adr/0046-capture-tool-name-uniqueness.md",
+      "contentDigest": "1a2964fb79e1d08b5972db8393aeb6bfaf116311019e43eb55597f846006d365",
+      "related": [
+        "ADR-0021",
+        "ADR-0032"
+      ]
     }
   ],
-  "digest": "09d003b854e5c417effbe2271294e964a60481118c28f0f8386e389cdfb55559",
+  "digest": "f52065e24b564e29981766b1dd066a907b8ea0cfb11c323fcc396d5881825b90",
   "store": "portable local file; not a claim of AgentDB graph persistence"
 }
