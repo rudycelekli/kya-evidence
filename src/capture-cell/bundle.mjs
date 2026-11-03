@@ -31,6 +31,8 @@ export function worldDiff(before, after) {
 }
 
 function surfaceDiff(exposed, declared) {
+  validateTools(exposed, 'Exposed tools', true);
+  validateTools(declared, 'Declared tools', false);
   const e = new Map(exposed.map(t => [t.name, t])), d = new Map(declared.map(t => [t.name, t]));
   return {
     missing: sorted([...d.keys()].filter(n => !e.has(n))),
@@ -97,6 +99,7 @@ function validateTools(list, label, withEffect) {
     insist(NAME.test(t.name) && typeof t.version === 'string' && t.version.length > 0 && t.version.length <= 32, `${label}: invalid tool`); hash(t.permissionsDigest, label);
     if (withEffect) insist(['read', 'write', 'outbound'].includes(t.effect), `${label}: invalid effect`);
   }
+  insist(new Set(list.map(t => t.name)).size === list.length, `${label}: duplicate tool name`);
 }
 
 /** Exact-key, size-limited validation of a kya.capture/v1 payload. Throws on any violation. */

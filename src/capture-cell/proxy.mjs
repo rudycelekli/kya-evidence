@@ -49,6 +49,7 @@ export function createCell({ runId, tools, forbidden = [], declaredTools, world,
     toolMap.set(t.name, Object.freeze({ ...t, permissions: [...t.permissions] }));
   }
   insist(Array.isArray(declaredTools), 'declaredTools is required');
+  insist(new Set(declaredTools.map(t => t.id)).size === declaredTools.length, 'Duplicate declared tool ID');
   insist(Array.isArray(unobserved) && unobserved.length > 0, 'The unobserved list is mandatory');
   insist(Array.isArray(permittedWritePrefixes) && permittedWritePrefixes.length <= 32 && permittedWritePrefixes.every(x => typeof x === 'string' && PATH_PREFIX.test(x)), 'permittedWritePrefixes must be valid path prefixes');
   insist(Array.isArray(forbidden) && forbidden.length <= 64 && forbidden.every(n => typeof n === 'string' && NAME.test(n)), 'forbidden must be a list of tool names');
