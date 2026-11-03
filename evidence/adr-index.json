@@ -531,8 +531,20 @@
         "ADR-0027",
         "ADR-0041"
       ]
+    },
+    {
+      "id": "ADR-0043",
+      "title": "Expose omitted and truncated declaration list members",
+      "status": "Implemented locally; pending owner and independent review",
+      "file": "docs/adr/0043-declaration-list-loss-reporting.md",
+      "contentDigest": "f1205a1ef7913083147d2f529cd8a541e40950221e9474f21e72f062f728e5db",
+      "related": [
+        "ADR-0012",
+        "ADR-0039",
+        "ADR-0040"
+      ]
     }
   ],
-  "digest": "6e0420a8454eab93829ce8e997cc6abb2dcc170e8b83eb2f98fe7330590302ce",
+  "digest": "341f8aaec9bbc492c9b416c7276897c4f57690cdc830efe4eb82e4a5cc762842",
   "store": "portable local file; not a claim of AgentDB graph persistence"
 }
