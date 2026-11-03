@@ -577,8 +577,41 @@
         "ADR-0021",
         "ADR-0032"
       ]
+    },
+    {
+      "id": "ADR-0047",
+      "title": "Capture the standing policy before evaluating disclosure records",
+      "status": "Implemented locally; pending owner and independent review",
+      "file": "docs/adr/0047-standing-policy-snapshot.md",
+      "contentDigest": "5ea27d1569683c8ae2695742582e53ccd43123df87df8fbb4be69bbfa1ba9828",
+      "related": [
+        "ADR-0006"
+      ]
+    },
+    {
+      "id": "ADR-0048",
+      "title": "Capture and validate VC issuer trust inputs",
+      "status": "Implemented locally; pending owner and independent review",
+      "file": "docs/adr/0048-vc-trust-inputs.md",
+      "contentDigest": "cf098ef438586c0dab673bfc16917b42a285770201ef21271dd8ba5ed909bd4e",
+      "related": [
+        "ADR-0022",
+        "ADR-0045"
+      ]
+    },
+    {
+      "id": "ADR-0049",
+      "title": "Capture issuer trust and expected bindings before verification decisions",
+      "status": "Implemented locally; pending owner and independent review",
+      "file": "docs/adr/0049-capture-verification-input-snapshots.md",
+      "contentDigest": "0ddb1649adabaad1450e984be227b913dd763b6dc00cc0e2c12667db5fbd0516",
+      "related": [
+        "ADR-0006",
+        "ADR-0032",
+        "ADR-0046"
+      ]
     }
   ],
-  "digest": "f52065e24b564e29981766b1dd066a907b8ea0cfb11c323fcc396d5881825b90",
+  "digest": "684fa6f21e6e973775d675b560366fc1bea4cdd4dccffd6cc514c71ddaabe2c6",
   "store": "portable local file; not a claim of AgentDB graph persistence"
 }
