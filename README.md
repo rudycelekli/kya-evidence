@@ -8,7 +8,7 @@ KYA Evidence is local-first open infrastructure for **Know Your Agent**: signed 
 
 Every person may eventually delegate to an agent. Every relying party will need a better answer than “trust the prompt.” Start with an exact question: **does this configuration meet this party's policy for this scope, on this evidence?** Keep the result portable, the decision explainable and the correction process open.
 
-[Specification](docs/SPECIFICATION.md) · [Scoring](docs/SCORING.md) · [Research universes](docs/UNIVERSES.md) · [Byte interoperability](docs/INTEROPERABILITY.md) · [Threat model](docs/THREAT-MODEL.md) · [Adapters](docs/ADAPTERS.md) · [Roadmap](docs/ROADMAP.md) · [What this is not](#what-this-is-not) · [Changelog](CHANGELOG.md) · [Release notes](docs/RELEASE-NOTES-ALPHA.md) · [Contribute](CONTRIBUTING.md)
+[Protocol overview](docs/PROTOCOL-OVERVIEW.md) · [Specification](docs/SPECIFICATION.md) · [Scoring](docs/SCORING.md) · [Research universes](docs/UNIVERSES.md) · [Byte interoperability](docs/INTEROPERABILITY.md) · [Threat model](docs/THREAT-MODEL.md) · [Adapters](docs/ADAPTERS.md) · [Roadmap](docs/ROADMAP.md) · [What this is not](#what-this-is-not) · [Changelog](CHANGELOG.md) · [Release notes](docs/RELEASE-NOTES-ALPHA.md) · [Contribute](CONTRIBUTING.md)
 
 ## Read the full agent dossier
 

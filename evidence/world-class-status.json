@@ -1,6 +1,6 @@
 {
   "schema": "kya.world-class-status/v1",
-  "updated": "2026-10-15",
+  "updated": "2026-11-03",
   "rule": "An item is verified only when linked evidence of the right kind exists: a requirement, test or file for CI verification, and a named outside party with an https link and a date for external review, independent implementation or real use. Work that needs an outside party cannot be marked verified on internal evidence.",
   "streams": [
     {
@@ -10,7 +10,7 @@
         {
           "id": "WS1-01",
           "title": "Problem statement and explicit non-goals",
-          "status": "in-progress",
+          "status": "implemented",
           "evidence": [
             {
               "type": "file",
@@ -19,9 +19,13 @@
             {
               "type": "file",
               "ref": "docs/SPECIFICATION.md"
+            },
+            {
+              "type": "file",
+              "ref": "docs/PROTOCOL-OVERVIEW.md"
             }
           ],
-          "notes": "README states what this is not; no standalone one-page statement yet"
+          "notes": "Standalone non-normative overview states the question, evidence flow, use and non-goals; outside-reader comprehension remains planned under WS1-03"
         },
         {
           "id": "WS1-02",
