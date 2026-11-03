@@ -127,7 +127,8 @@ Set `HANDOVER_COMMIT` to the full 40 character handover commit id. Then run the 
 | 6 | `node scripts/profile-registry.mjs --check` | exit 0; `Profile registry matches` |
 | 7 | `node scripts/run-vectors.mjs --impl "node interop/impl-contract/js-reference.mjs"` | exit 0 after about ten seconds; summary with `"vectors":{"total":799,"pass":799,...,"fail":0,"unsupported":0}` and `"requirements"` with `"pass":60`, `"notRun":241`, `"total":301` |
 | 8 | `node scripts/run-vectors.mjs --impl "node interop/second-impl/adapter.mjs"` | exit 0 after about thirty seconds; the same vector and requirement counts. This is the same team's second implementation. |
-| 8b | `node scripts/adr-index.mjs` | exit 0; `{"records":35,"danglingRefs":0,"storage":"evidence/adr-index.json"}`. It rewrites that file; `git status` must stay clean afterwards. |
+| 8a | `node scripts/vector-runner-mutations.mjs` | exit 0; five baseline gate tests pass and all four targeted runner mutations are detected. Same-team local controls. |
+| 8b | `node scripts/adr-index.mjs` | exit 0; `{"records":36,"danglingRefs":0,"storage":"evidence/adr-index.json"}`. It rewrites that file; `git status` must stay clean afterwards. |
 | 9 | `node scripts/review-kit-check.mjs --deep` | exit 0; `"ok": true`. Confirms every number in the table below, including the harness rows. |
 
 The expensive steps. They were not run when this kit was written; the numbers they print are not quoted here because they were not measured for this kit:
@@ -163,9 +164,9 @@ Every row is recomputed by `node scripts/review-kit-check.mjs` from the reposito
 | `vectors.verify-score-card` | `72` | operation `verify-score-card` |
 | `vectors.compare-score-cards` | `19` | operation `compare-score-cards` |
 | `mutationControls` | `87` | `node scripts/mutation-check.mjs --preflight`, field `controls` |
-| `testFiles` | `85` | files matching `test/*.test.mjs` |
-| `testDeclarations` | `1036` | lines that begin with `test(` in those files. The four `test/property-*.test.mjs` files declare 38 seeded properties through a helper and contribute no such line. |
-| `adrs` | `35` | files `docs/adr/NNNN-*.md` (20 marked Implemented and 15 Proposed in their status lines when counted) |
+| `testFiles` | `86` | files matching `test/*.test.mjs` |
+| `testDeclarations` | `1041` | lines that begin with `test(` in those files. The four `test/property-*.test.mjs` files declare 38 seeded properties through a helper and contribute no such line. |
+| `adrs` | `36` | files `docs/adr/NNNN-*.md`; statuses retain local implementation and external-review boundaries |
 | `coreProfileChecks` | `18` | length of `checks` in `profiles/core-v1.json` |
 | `srcFiles` | `89` | `.mjs` files under `src/` |
 | `srcLines` | `5434` | newline characters in those files. The code is dense: long lines, so line count understates size. |
