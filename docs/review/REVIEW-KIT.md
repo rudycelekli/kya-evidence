@@ -141,7 +141,7 @@ Set `HANDOVER_COMMIT` to the full 40 character handover commit id. Then run the 
 | 8a12 | `node scripts/standing-policy-mutations.mjs` | exit 0; four standing-policy tests pass and removal of policy capture is detected. |
 | 8a13 | `node scripts/vc-trust-mutations.mjs` | exit 0; six VC trust-input tests pass and all three membership/fingerprint/policy-capture mutations are detected. |
 | 8a14 | `node scripts/capture-binding-mutations.mjs` | exit 0; five capture binding/trust tests pass and both uncaptured-input mutations are detected. |
-| 8b | `node scripts/adr-index.mjs` | exit 0; `{"records":49,"danglingRefs":0,"storage":"evidence/adr-index.json"}`. It rewrites that file; `git status` must stay clean afterwards. |
+| 8b | `node scripts/adr-index.mjs` | exit 0; `{"records":50,"danglingRefs":0,"storage":"evidence/adr-index.json"}`. It rewrites that file; `git status` must stay clean afterwards. |
 | 9 | `node scripts/review-kit-check.mjs --deep` | exit 0; `"ok": true`. Confirms every number in the table below, including the harness rows. |
 
 The expensive steps. They were not run when this kit was written; the numbers they print are not quoted here because they were not measured for this kit:
@@ -179,7 +179,7 @@ Every row is recomputed by `node scripts/review-kit-check.mjs` from the reposito
 | `mutationControls` | `87` | `node scripts/mutation-check.mjs --preflight`, field `controls` |
 | `testFiles` | `99` | files matching `test/*.test.mjs` |
 | `testDeclarations` | `1095` | lines that begin with `test(` in those files. The four `test/property-*.test.mjs` files declare 38 seeded properties through a helper and contribute no such line. |
-| `adrs` | `49` | files `docs/adr/NNNN-*.md`; statuses retain local implementation and external-review boundaries |
+| `adrs` | `50` | files `docs/adr/NNNN-*.md`; statuses retain local implementation and external-review boundaries |
 | `coreProfileChecks` | `18` | length of `checks` in `profiles/core-v1.json` |
 | `srcFiles` | `89` | `.mjs` files under `src/` |
 | `srcLines` | `5507` | newline characters in those files. The code is dense: long lines, so line count understates size. |

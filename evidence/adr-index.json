@@ -610,8 +610,16 @@
         "ADR-0032",
         "ADR-0046"
       ]
+    },
+    {
+      "id": "ADR-0050",
+      "title": "Run the full CI matrix once per pull-request update",
+      "status": "Implemented locally; pending hosted event validation and owner review",
+      "file": "docs/adr/0050-ci-event-scheduling.md",
+      "contentDigest": "15aa0caf2dbd9cc8892351564eadba8db6d6cbd60aaf2a62b438dcd378788208",
+      "related": []
     }
   ],
-  "digest": "684fa6f21e6e973775d675b560366fc1bea4cdd4dccffd6cc514c71ddaabe2c6",
+  "digest": "4b7c126072cd2fadc6436469d84c1924a54315fbb66014505ef39569ad258b06",
   "store": "portable local file; not a claim of AgentDB graph persistence"
 }

@@ -1,6 +1,8 @@
 name: conformance-and-integrity
 on:
   push:
+    branches: [main]
+    tags: ['**']
   pull_request:
 permissions:
   contents: read
