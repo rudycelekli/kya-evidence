@@ -219,6 +219,25 @@ export function signCapture(payload, privateKey) {
   return { payload, proof: { algorithm: 'Ed25519', keyId: keyId(publicKey), publicKey, signature: sign(null, Buffer.from(CAPTURE_DOMAIN + canonical(payload)), key).toString('base64url') } };
 }
 
+// Undefined is an explicit binding diagnostic, so preserve it separately while
+// capturing the remaining plain JSON through the same boundary as payloads.
+function captureExpectedBindings(value) {
+  insist(value !== null && typeof value === 'object' && !Array.isArray(value), 'expected must be an object of bindings');
+  const proto = Object.getPrototypeOf(value);
+  insist(proto === Object.prototype || proto === null, 'expected must be a plain object of bindings');
+  const descriptors = Object.getOwnPropertyDescriptors(value), data = Object.create(null), undefinedKeys = [];
+  for (const key of Reflect.ownKeys(descriptors)) {
+    insist(typeof key === 'string', 'expected binding keys must be strings');
+    const d = descriptors[key];
+    insist('value' in d && d.enumerable, 'expected binding accessors or hidden members are forbidden');
+    data[key] = d.value === undefined ? null : d.value;
+    if (d.value === undefined) undefinedKeys.push(key);
+  }
+  const captured = JSON.parse(canonical(data));
+  for (const key of undefinedKeys) captured[key] = undefined;
+  return captured;
+}
+
 /**
  * Verify a capture envelope. Never throws on bad content: returns { valid, problems }. `payload` is returned
  * only when valid. Trust: supply `policy` (issuer must be an unrevoked capture-issuer anchor) or an explicit
@@ -226,9 +245,9 @@ export function signCapture(payload, privateKey) {
  */
 export function verifyCapture(envelope, { policy, trustedIssuerKeyIds, expected = {} } = {}) {
   const problems = [], add = (code, message) => problems.push({ code, message });
-  if (expected === null || typeof expected !== 'object' || Array.isArray(expected)) return { valid: false, problems: [{ code: 'schema', message: 'expected must be an object of bindings' }], payload: null };
   let payload = null, issuer = null;
   try {
+    expected = captureExpectedBindings(expected);
     envelope = JSON.parse(canonical(envelope));
     exactKeys(envelope, ['payload', 'proof'], 'Capture envelope');
     exactKeys(envelope.proof, ['algorithm', 'keyId', 'publicKey', 'signature'], 'Capture proof');
@@ -244,11 +263,11 @@ export function verifyCapture(envelope, { policy, trustedIssuerKeyIds, expected 
     issuer = p.keyId;
   } catch (e) { add('bad-signature', String(e.message)); }
   try {
-    let ids = trustedIssuerKeyIds;
+    let ids;
     if (policy) {
       const valid = validatePolicy(policy);
       ids = verifyCaptureIssuerPolicy({ policy: valid, evaluatorKeyId: payload.evaluatorKeyId, requireIssuer: true }).filter(id => !valid.revokedKeyIds.includes(id));
-    }
+    } else if (trustedIssuerKeyIds !== undefined) ids = JSON.parse(canonical(trustedIssuerKeyIds));
     insist(Array.isArray(ids) && ids.length > 0, 'No trusted capture issuer supplied');
     if (issuer !== null && !ids.includes(issuer)) add('untrusted-issuer', 'Signer is not a trusted, unrevoked capture-issuer anchor');
   } catch (e) { add('untrusted-issuer', String(e.message)); }

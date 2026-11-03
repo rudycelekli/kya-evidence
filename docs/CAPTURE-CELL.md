@@ -51,6 +51,10 @@ Verification requires a trusted issuer: either a policy in which the signer is a
 
 Expected binding: `runId, subjectDigest, scopeDigest, profileDigest, evaluatorKeyId`, plus the optional `probeSetDigest`. An unknown key is a `binding-unknown` problem and a key given as `undefined` is `binding-undefined` (it would otherwise silently check nothing). A valid result has `bound: true` only when all five bindings were supplied and matched; without them the capture can be `valid` but `bound` is false. A valid result is deep-frozen and registered in a module-level `WeakSet`; `captureToCandidates` accepts only such results.
 
+Verification captures active explicit issuer-list members as a plain canonical array before checking membership; sparse, extended or accessor-bearing lists cannot supply trust through executable methods. Expected bindings are captured once from own enumerable data descriptors and the resulting plain copy is used for validation, comparisons, `bound` and probe pinning. Binding getters are refused without execution; property GET views cannot substitute different values during later checks. Explicit undefined values retain the established `binding-undefined` diagnostic, while omitted fields remain omitted. The policy trust path retains its existing precedence. See [ADR-0049](adr/0049-capture-verification-input-snapshots.md).
+
+Reproduce this input boundary with `node --test test/capture-binding-inputs.test.mjs` and `node scripts/capture-binding-mutations.mjs`. Five frozen synthetic tests and two weakened implementations exercise issuer-list and expected-binding capture. This is local same-team evidence, not independent review or proof of truthful execution.
+
 Reproduce the tool-name boundary with `node --test test/capture-tool-uniqueness.test.mjs` and `node scripts/capture-tool-mutations.mjs`. Four frozen synthetic tests and three weakened implementations exercise this boundary. Passing these local controls does not establish independent review, truthful execution, real-agent safety or sandbox isolation.
 
 ## From capture to evidence, without changing the scorer
