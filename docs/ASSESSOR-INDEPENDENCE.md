@@ -1,5 +1,7 @@
 # Assessor independence criteria (Draft)
 
+The native standing API captures its canonical JSON policy once before checking disclosures. Later GET views or disclosure-triggered changes to the caller's policy cannot hide its revocations or replace its assessor population. Reflection traps may execute during capture; this is not a JavaScript sandbox. Unsupported JSON data such as explicit undefined members must be omitted or represented as supported JSON. See ADR-0047.
+
 Status: draft criteria, version 0.1. Not accreditation law, not legal advice, not adopted by any body. These criteria need review by legal counsel and by practising assessors before anyone relies on them. No accredited assessor exists.
 
 ## 1. What this is for

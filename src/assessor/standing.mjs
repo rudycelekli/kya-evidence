@@ -8,6 +8,7 @@ export const DEFAULT_BLOCKING = Object.freeze(['authorship', 'control', 'employm
 const DAY = 86_400_000, MAX_RECORDS = 1024;
 
 function checkPolicy(p) {
+  p = JSON.parse(canonical(p));
   insist(p && typeof p === 'object' && !Array.isArray(p), 'Standing policy must be an object');
   const allowed = ['operatorDigest', 'assessorKeyIds', 'declarerKeyIds', 'revokedKeyIds', 'coolingOffDays', 'blockingRelationships'];
   insist(Object.keys(p).every(k => allowed.includes(k)), 'Unknown standing policy field');
