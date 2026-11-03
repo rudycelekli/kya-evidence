@@ -2,6 +2,8 @@
 
 When the native API receives an original report for comparison, it captures that report's canonical descriptor-backed JSON once before checking its checksum and rebuilding the credential. Live GET views and later descriptor changes cannot replace the checked report data. Reflection traps may still execute during capture; this is not a JavaScript sandbox. Ordinary parsed JSON compatibility and issuer/status checks remain unchanged. See ADR-0045.
 
+Issuer trust inputs are bounded and captured before matching. `expectedIssuerKeys` must be a dense array of at most 256 DID strings, public KeyObjects, PEM strings or raw public-key byte arrays; omitted input and `[]` preserve unchecked mode, while malformed collection shapes return `ISSUER_KEYS_INVALID`. Policy anchoring accepts a full KYA policy or `{ trustedKeys, revokedKeyIds }` projection, captures those own data fields as canonical JSON and validates anchor fingerprints, roles, uniqueness and bounds plus the revocation list. Unrelated full-policy fields are not validated by this issuer check. Invalid projections return `POLICY_INVALID`; valid projections without a matching non-revoked issuer return `ISSUER_NOT_TRUSTED`. This makes matching consistent with supplied trust data, not proof of policy authority or issuer honesty. Status-list checks share expected-key handling and retain their existing status-error wrapping. See ADR-0048.
+
 Implements [ADR-0022](adr/0022-vc-export-bridge.md). Code: `src/vc-bridge/`. CLI: `scripts/kya-vc.mjs`. Zero dependencies, no network access, every time-dependent command takes an explicit `--now`.
 
 ## What the credential says

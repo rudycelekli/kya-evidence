@@ -150,10 +150,12 @@ export function verifyAssessmentCredential(token, { now = new Date().toISOString
     }
   }
   let issuerTrust = opened.issuerTrust, issuerRole = null;
-  if (policy) {
-    issuerRole = anchorRole(issuer, policy);
-    if (issuerRole === null) errors.push({ code: 'ISSUER_NOT_TRUSTED', message: 'Issuer key is not a non-revoked trust anchor of the supplied policy' });
-    else issuerTrust = 'anchored';
+  if (policy !== undefined) {
+    try {
+      issuerRole = anchorRole(issuer, policy);
+      if (issuerRole === null) errors.push({ code: 'ISSUER_NOT_TRUSTED', message: 'Issuer key is not a non-revoked trust anchor of the supplied policy' });
+      else issuerTrust = 'anchored';
+    } catch (e) { errors.push({ code: 'POLICY_INVALID', message: e.message }); }
   }
   const entries = [].concat(credential.credentialStatus ?? []);
   const status = { checked: false, entries: [] };
