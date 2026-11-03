@@ -474,8 +474,20 @@
         "ADR-0015",
         "ADR-0036"
       ]
+    },
+    {
+      "id": "ADR-0038",
+      "title": "Refuse malformed UTF-8 before comparing implementation output",
+      "status": "Implemented locally; pending owner and independent review",
+      "file": "docs/adr/0038-strict-implementation-output-encoding.md",
+      "contentDigest": "651b19a18260d6d6d3c850a0d331dcf5c85a537bb8f61f41db5ffc00ded04ac9",
+      "related": [
+        "ADR-0034",
+        "ADR-0036",
+        "ADR-0037"
+      ]
     }
   ],
-  "digest": "e0bedff3bcd44779f2b2422f960ef9966c182bb6c505afa88c6b468a261c6c07",
+  "digest": "e3969ff82dbf646ff64faf8c062abe66bd4fd1821008976e6f143389cb06aa55",
   "store": "portable local file; not a claim of AgentDB graph persistence"
 }

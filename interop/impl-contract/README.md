@@ -17,7 +17,7 @@ The command is split on whitespace (single or double quotes group an argument) a
 | Rule | Value |
 | :--- | :--- |
 | Input | Exactly one JSON object on **stdin**, then EOF. UTF-8 (ill-formed UTF-8 is a refusal). The harness sends at most 4 MiB, and the object is read by the strict parser of the specification ("Canonical form and strict parsing"), so its limits apply to the whole input: more than 1,048,576 bytes, nesting deeper than 32 or more than 100,000 values is a refusal. (An earlier text said "at most 4 MiB" and the reference already refused above 1 MiB; this states what was always so.) |
-| Output | Exactly one JSON object on **stdout**, then exit code **0**. At most 1 MiB (1,048,576 bytes). Anything else on stdout fails the vector. |
+| Output | Exactly one JSON object in well-formed UTF-8 without a leading BOM on **stdout**, then exit code **0**. At most 1 MiB (1,048,576 bytes). Anything else on stdout fails the vector. |
 | Strict JSON | Output must be a single strict JSON value: no duplicate object members, no trailing text. |
 | Refusal or crash | A normal **non-zero integer exit code** satisfies only an expected refusal; an ordinary uncaught exception cannot be distinguished from refusal. Signal termination always fails. Stdout is ignored on non-zero exit. Messages go to stderr (the first line is shown in failures). |
 | Timeout | 15 s per vector by default (`--timeout-ms`). A timeout is a failure. |

@@ -2385,7 +2385,7 @@
       "level": "MUST NOT",
       "area": "vectors",
       "section": "Interoperability and versioning",
-      "statement": "The harness MUST NOT record a pass for an implementation that produces oversize output, non-JSON output, a crash, a hang, a refusal where a result is expected or an answer where a refusal is expected, and an unsupported operation MUST be not-run.",
+      "statement": "The harness MUST NOT record a pass for an implementation that produces oversize output, non-JSON or malformed UTF-8 result output, a crash, a hang, a refusal where a result is expected or an answer where a refusal is expected, and an unsupported operation MUST be not-run.",
       "tests": [
         {
           "file": "test/assessment-vectors.test.mjs",
@@ -2402,6 +2402,18 @@
         {
           "file": "test/assessment-vectors.test.mjs",
           "title": "the JS reference adapter refuses malformed input with a non-zero exit and no output"
+        },
+        {
+          "file": "test/vector-output-encoding.test.mjs",
+          "title": "well formed UTF-8 replacement characters remain valid implementation output"
+        },
+        {
+          "file": "test/vector-output-encoding.test.mjs",
+          "title": "malformed UTF-8 cannot become a passing free-form rejection reason"
+        },
+        {
+          "file": "test/vector-output-encoding.test.mjs",
+          "title": "UTF-8 decoding preserves BOM refusal and exact unsupported reply behavior"
         }
       ]
     },

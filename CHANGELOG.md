@@ -10,6 +10,8 @@ Entries come from `git log` and the merged pull requests (#1 to #46, the highest
 
 ### Fixed
 
+- Result output is decoded as strict UTF-8 before vector comparison, so malformed bytes cannot become acceptable free-form rejection reasons. Valid replacement characters remain valid, leading BOMs remain refused, and a lossy-decoder mutation is detected (ADR-0038).
+
 - Executed-test conformance passes now require exact pass status and a clean exit zero without signal or runner error. Failed siblings cannot explain away an unsuccessful process; observed failures remain failures and affected passes become not-run (ADR-0037). Five frozen adversarial cases and four mapper mutation controls cover this stricter partial-report contract.
 
 - Signal-terminated implementations fail refusal vectors instead of earning conformance credit.
