@@ -21,9 +21,13 @@ export function importDeclarations(format, value) {
     if(controllerRef!==null) recognized.add('governingAuthority');
   } else if(format==='a2a-1') {
     insist(typeof input.name==='string' && Array.isArray(input.skills),'Not a recognized A2A declaration shape');
+    const schemes=input.securitySchemes;
+    const schemeMap=schemes!==null && typeof schemes==='object' && !Array.isArray(schemes);
+    const schemeNames=schemeMap?Object.keys(schemes):[];
     identity={externalAgentId:null,displayName:pickString(input.name),controllerRef:null};
-    declared={version:pickString(input.version),skillIds:input.skills.map(x=>pickString(x?.id,128)).filter(Boolean).slice(0,128),capabilitiesDigest:input.capabilities?digest(input.capabilities):null,securitySchemeNames:input.securitySchemes && typeof input.securitySchemes==='object'?Object.keys(input.securitySchemes).slice(0,128):[]};
-    recognized=new Set(['name','version','skills','capabilities','securitySchemes']);
+    declared={version:pickString(input.version),skillIds:input.skills.map(x=>pickString(x?.id,128)).filter(Boolean).slice(0,128),capabilitiesDigest:input.capabilities?digest(input.capabilities):null,securitySchemeNames:schemeNames.slice(0,128)};
+    recognized=new Set(['name','version','skills','capabilities']);
+    if(schemeMap && schemeNames.length<=128) recognized.add('securitySchemes');
   } else throw new Error('Unsupported declaration format; use open-kya-alpha or a2a-1');
   return {schema:'kya.declaration-import/v1',format,sourceDigest:digest(input),identity,declared,unsupportedFields:Object.keys(input).filter(k=>!recognized.has(k)).sort(),unverified:['external identity','controller consent and legal authority','cryptographic proofs and credentials','hardware attestation','runtime enforcement','behavior and quality'],limitations:['Partial declaration mapping only; no standards conformance asserted','No score or permission grant is produced','Transaction units are retained without currency conversion','No source scripts, URLs or credentials are executed or resolved']};
 }

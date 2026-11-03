@@ -25,3 +25,16 @@ node scripts/declaration-authority-mutations.mjs
 ```
 
 The cases use locally written synthetic declarations. The mutation control restores three incorrect behaviors and requires the same three frozen tests to detect them. [ADR-0039](adr/0039-declared-governing-authority-import.md) records the compatibility decision. Existing A2A declaration mapping is unchanged. External schema validation, key resolution and proof verification need separate tools and evidence; they are not performed by this API.
+
+## A2A security scheme names
+
+The A2A partial mapping retains names from a non-null object map in `securitySchemes`. It does not emit the map's definitions or credentials or validate those definitions. An empty map yields an empty name array and is representable. An absent field preserves that empty array without an unsupported-field marker.
+
+Arrays, null and other present non-map shapes yield no names and leave `securitySchemes` in `unsupportedFields`; array indices never become scheme names. Maps containing more than 128 names retain the first 128 in the existing canonical key order and also leave `securitySchemes` in `unsupportedFields` to expose truncation. The complete supplied input still determines `sourceDigest`. All unverified flags and limitations remain; imported scheme names establish no security enforcement or authorization.
+
+```sh
+node --test test/declaration-schemes.test.mjs test/imports.test.mjs
+node scripts/declaration-schemes-mutations.mjs
+```
+
+Four frozen synthetic tests and three weakened implementations exercise this mapping boundary. [ADR-0040](adr/0040-declared-security-scheme-map-import.md) records the decision. This correction does not establish full A2A schema conformance or external interoperability acceptance.
