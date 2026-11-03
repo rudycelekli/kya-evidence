@@ -29,6 +29,7 @@ jobs:
       - run: node scripts/vector-runner-mutations.mjs
       - run: node scripts/conformance-execution-mutations.mjs
       - run: node scripts/vector-output-mutations.mjs
+      - run: node scripts/declaration-authority-mutations.mjs
       - run: node scripts/mutation-check.mjs
       - run: node scripts/adr-index.mjs
       - run: node scripts/profile-registry.mjs --check

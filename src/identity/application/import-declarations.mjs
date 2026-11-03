@@ -13,9 +13,12 @@ export function importDeclarations(format, value) {
     const types=Array.isArray(input.type)?input.type:[input.type];
     const contexts=Array.isArray(input['@context'])?input['@context']:[input['@context']];
     insist(types.includes('VerifiablePresentation') && types.includes('KyaManifest') && contexts.includes('https://w3id.org/kya/v1'),'Not a recognized Open-KYA alpha declaration');
-    identity={externalAgentId:pickString(input.agentId),displayName:pickString(input.name??input.label),controllerRef:pickString(input.governingAuthority)};
+    const authority=input.governingAuthority;
+    const controllerRef=pickString(Array.isArray(authority) && authority.length===1 ? authority[0] : authority);
+    identity={externalAgentId:pickString(input.agentId),displayName:pickString(input.name??input.label),controllerRef};
     declared={version:pickString(input.kyaVersion),permissionMode:pickString(input.permissionMode),domains:pickStrings(input.permittedDomains),permittedRegions:pickStrings(input.permittedRegions),forbiddenRegions:pickStrings(input.forbiddenRegions),maxTransactionValue:Number.isSafeInteger(input.maxTransactionValue)?input.maxTransactionValue:null,currency:pickString(input.currency),operatingLimitsDigest:input.operatingLimits?digest(input.operatingLimits):null};
-    recognized=new Set([...required,'name','label','governingAuthority','permissionMode','permittedDomains','permittedRegions','forbiddenRegions','maxTransactionValue','currency','operatingLimits']);
+    recognized=new Set([...required,'name','label','permissionMode','permittedDomains','permittedRegions','forbiddenRegions','maxTransactionValue','currency','operatingLimits']);
+    if(controllerRef!==null) recognized.add('governingAuthority');
   } else if(format==='a2a-1') {
     insist(typeof input.name==='string' && Array.isArray(input.skills),'Not a recognized A2A declaration shape');
     identity={externalAgentId:null,displayName:pickString(input.name),controllerRef:null};

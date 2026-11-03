@@ -10,6 +10,8 @@ Entries come from `git log` and the merged pull requests (#1 to #46, the highest
 
 ### Fixed
 
+- Open-KYA singleton `governingAuthority` arrays retain their exact unverified controller reference. Plural, empty or unrepresentable forms are explicitly unsupported instead of being silently discarded; legacy scalar strings remain compatible (ADR-0039).
+
 - Result output is decoded as strict UTF-8 before vector comparison, so malformed bytes cannot become acceptable free-form rejection reasons. Valid replacement characters remain valid, leading BOMs remain refused, and a lossy-decoder mutation is detected (ADR-0038).
 
 - Executed-test conformance passes now require exact pass status and a clean exit zero without signal or runner error. Failed siblings cannot explain away an unsuccessful process; observed failures remain failures and affected passes become not-run (ADR-0037). Five frozen adversarial cases and four mapper mutation controls cover this stricter partial-report contract.

@@ -486,8 +486,19 @@
         "ADR-0036",
         "ADR-0037"
       ]
+    },
+    {
+      "id": "ADR-0039",
+      "title": "Preserve representable governing-authority declarations and expose loss",
+      "status": "Implemented locally; pending owner and independent review",
+      "file": "docs/adr/0039-declared-governing-authority-import.md",
+      "contentDigest": "f6329f2f1733cfd00ceb095947847b800524f678bfb40c84d452ca84a0723c55",
+      "related": [
+        "ADR-0002",
+        "ADR-0012"
+      ]
     }
   ],
-  "digest": "e3969ff82dbf646ff64faf8c062abe66bd4fd1821008976e6f143389cb06aa55",
+  "digest": "507d6b9ab532da802939e142b70ab597ca898876285ca9a8c99f1e44cab95be0",
   "store": "portable local file; not a claim of AgentDB graph persistence"
 }
