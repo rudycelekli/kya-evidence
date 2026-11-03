@@ -83,7 +83,8 @@ export function verifyBridgeExport(kind, output, rawOptions = {}) {
   const spec = typeof kind === 'string' && Object.hasOwn(KINDS, kind) ? KINDS[kind] : null;
   if (!spec) { errors.push({ code: 'UNKNOWN_KIND', message: `kind must be one of ${BRIDGE_KINDS.join(', ')}` }); return finish(); }
   if (!output || typeof output !== 'object' || Array.isArray(output)) { errors.push({ code: 'MALFORMED', message: 'Export must be an object' }); return finish(); }
-  try { canonical(output); } catch (e) { errors.push({ code: 'MALFORMED', message: `Export is not plain canonical JSON data: ${e.message}` }); return finish(); }
+  // Capture descriptor-backed JSON once; later reads must not observe a different Proxy GET view.
+  try { output = JSON.parse(canonical(output)); } catch (e) { errors.push({ code: 'MALFORMED', message: `Export is not plain canonical JSON data: ${e.message}` }); return finish(); }
   if (report === undefined) { errors.push({ code: 'REPORT_REQUIRED', message: 'The cross-check needs the source report' }); return finish(); }
   let r;
   try { verifyAssessment(report); r = JSON.parse(canonical(report)); checkReportTimes(r); checkReportFields(r); } catch (e) { errors.push({ code: 'REPORT_INVALID', message: e.message }); return finish(); }
