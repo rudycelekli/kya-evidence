@@ -1,7 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createUniverse,verifyUniverse } from '../src/index.mjs';
-import { inputs } from './helpers.mjs';
+import { readFileSync } from 'node:fs';
+const frozen=JSON.parse(readFileSync(new URL('./fixtures/universe-options-inputs.json',import.meta.url),'utf8'));
+const inputs=()=>structuredClone(frozen);
 const question='Frozen option capture';
 test('ordinary options retain replay and optional defaults',()=>{
  const u=createUniverse({inputs:inputs(),question});assert.equal(verifyUniverse(u).replayMatched,true);assert.equal(u.question,question);
