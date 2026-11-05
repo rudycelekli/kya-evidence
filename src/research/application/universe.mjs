@@ -21,7 +21,8 @@ function validateArtifacts(items){
   insist(Array.isArray(items)&&items.length<=128,'Invalid source artifact list');const ids=new Set();
   for(const a of items){exactKeys(a,['id','digest','kind','rights'],'Source artifact');identifier(a.id,'Source artifact ID');hash(a.digest,'Source artifact digest');insist(['original','derived','hypothesis'].includes(a.kind),'Unknown source kind');insist(['private','redistributable'].includes(a.rights),'Unknown artifact rights');insist(!ids.has(a.id),'Duplicate source artifact');ids.add(a.id);}
 }
-export function createUniverse({inputs,question,sourceArtifacts=[],parentDigest=null,hypothesis=null,invalidates=[]}){
+export function createUniverse(options){
+  let {inputs,question,sourceArtifacts=[],parentDigest=null,hypothesis=null,invalidates=[]}=snapshot(options);
   sourceArtifacts=snapshot(sourceArtifacts);invalidates=snapshot(invalidates);
   const frozen=snapshot(inputs);exactKeys(frozen,['manifest','profile','policy','evidence','evaluatorDigest','now'],'Frozen universe inputs');timestamp(frozen.now,'Frozen assessment time');text(question,'Research question',2048);validateArtifacts(sourceArtifacts);
   if(parentDigest!==null){hash(parentDigest,'Parent universe');text(hypothesis,'Fork hypothesis',2048);}else insist(hypothesis===null,'A root universe has no fork hypothesis');

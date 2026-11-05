@@ -629,8 +629,18 @@
         "ADR-0036",
         "ADR-0037"
       ]
+    },
+    {
+      "id": "ADR-0052",
+      "title": "Capture universe options before destructuring",
+      "status": "Implemented locally; same-team review pending",
+      "file": "docs/adr/0052-universe-option-capture.md",
+      "contentDigest": "2dc030f9c6d2edc6958a29882e2dde9b3a4d6c30d33322ef4090c4117f1b8eec",
+      "related": [
+        "ADR-0006"
+      ]
     }
   ],
-  "digest": "12fbaa642a490b86920bfa6b22393d8c2a9cc8bee6fcbd8777d9117f8ba8eae9",
+  "digest": "2decd98981e549f38118b24539fc00fe5ddc5e70003735f58e2ab59477d8ba7c",
   "store": "portable local file; not a claim of AgentDB graph persistence"
 }
