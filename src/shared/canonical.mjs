@@ -28,15 +28,9 @@ export function canonical(value) {
     ancestors.add(v);
     let result;
     if (Array.isArray(v)) {
-      insist(v.length <= 100_000, 'JSON array too large');
-      const keys = Reflect.ownKeys(v);
-      insist(keys.length === v.length + 1 && keys.includes('length'), 'Sparse or extended JSON array');
+      const items = captureArrayItems(v, 100_000);
       const parts = [];
-      for (let i = 0; i < v.length; i++) {
-        const d = Object.getOwnPropertyDescriptor(v, String(i));
-        insist(d && 'value' in d && d.enumerable, 'JSON accessors are forbidden');
-        parts.push(visit(d.value, depth + 1));
-      }
+      for (const item of items) parts.push(visit(item, depth + 1));
       result = '[' + parts.join(',') + ']';
     } else {
       insist(Object.getPrototypeOf(v) === Object.prototype || Object.getPrototypeOf(v) === null, 'Expected plain JSON object');
