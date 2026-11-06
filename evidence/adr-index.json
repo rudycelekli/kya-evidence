@@ -639,8 +639,31 @@
       "related": [
         "ADR-0006"
       ]
+    },
+    {
+      "id": "ADR-0053",
+      "title": "Freeze array membership before canonical traversal",
+      "status": "Implemented locally; same-team review pending",
+      "file": "docs/adr/0053-canonical-array-membership-capture.md",
+      "contentDigest": "935f46f50683c666cb03ddf1d20cd30e18b1a59f2cf62a02eda9b84c3b2abb64",
+      "related": [
+        "ADR-0006",
+        "ADR-0052"
+      ]
+    },
+    {
+      "id": "ADR-0054",
+      "title": "Preserve mutation admission failure observations",
+      "status": "Implemented locally; same-team review pending",
+      "file": "docs/adr/0054-mutation-failure-observations.md",
+      "contentDigest": "950689e591cc6f90f4c350e21f0af0ff7c1074c197d8c9d92f8cb58dc12dfa42",
+      "related": [
+        "ADR-0036",
+        "ADR-0051",
+        "ADR-0053"
+      ]
     }
   ],
-  "digest": "e438cf5a3db3a3e12623533d36688d2d329880486f05c03aa50bd12dff6dc711",
+  "digest": "095c5f05bb25bf5f1d6b0fd3f2649620060c1a992e5828d578c01a00ae7f644c",
   "store": "portable local file; not a claim of AgentDB graph persistence"
 }
