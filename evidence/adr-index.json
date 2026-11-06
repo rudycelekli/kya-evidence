@@ -650,8 +650,20 @@
         "ADR-0006",
         "ADR-0052"
       ]
+    },
+    {
+      "id": "ADR-0054",
+      "title": "Preserve mutation admission failure observations",
+      "status": "Implemented locally; same-team review pending",
+      "file": "docs/adr/0054-mutation-failure-observations.md",
+      "contentDigest": "950689e591cc6f90f4c350e21f0af0ff7c1074c197d8c9d92f8cb58dc12dfa42",
+      "related": [
+        "ADR-0036",
+        "ADR-0051",
+        "ADR-0053"
+      ]
     }
   ],
-  "digest": "d2b31eca841068678c9bea57155fc107db82e143c8936bf8514a757b005c6749",
+  "digest": "095c5f05bb25bf5f1d6b0fd3f2649620060c1a992e5828d578c01a00ae7f644c",
   "store": "portable local file; not a claim of AgentDB graph persistence"
 }
