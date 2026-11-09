@@ -48,7 +48,19 @@ function normaliseCases(cases) {
   for (const c of copies) { const d = caseDigest(c).toString('hex'); if (seen.has(d)) throw new TypeError('Duplicate holdout case'); seen.add(d); }
   return copies;
 }
-const validTime = t => typeof t === 'string' && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{1,3})?Z$/u.test(t) && !Number.isNaN(Date.parse(t));
+// Date.parse overflows impossible days (31 February becomes 3 March). A commitment
+// timestamp has to name the calendar instant it spells, not a normalised neighbour.
+function validTime(t) {
+  if (typeof t !== 'string') return false;
+  const m = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(\.\d{1,3})?Z$/u.exec(t);
+  if (!m) return false;
+  const year = Number(m[1]), month = Number(m[2]), day = Number(m[3]);
+  const hour = Number(m[4]), minute = Number(m[5]), second = Number(m[6]);
+  if (month < 1 || month > 12 || day < 1 || hour > 23 || minute > 59 || second > 59) return false;
+  const leap = year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0);
+  const days = [31, leap ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+  return day <= days[month - 1] && !Number.isNaN(Date.parse(t));
+}
 function checkTime(createdAt) {
   if (!validTime(createdAt)) throw new TypeError('createdAt must be supplied explicitly as a UTC ISO-8601 timestamp');
 }
