@@ -11,6 +11,16 @@ const VERIFIERS = ['CI', 'XREV', 'XIMP', 'XUSE'];
 const STREAMS = ['WS1', 'WS2', 'WS3', 'WS4', 'WS5', 'WS6', 'WS7', 'WS8', 'WS9', 'WS10'];
 const root = fileURLToPath(new URL('../', import.meta.url));
 const need = (c, m) => { if (!c) throw Error(m); };
+// Date.parse turns 31 February into 3 March, so a digit pattern alone is not a date.
+function calendarDate(value) {
+  const m = typeof value === 'string' ? /^(\d{4})-(\d{2})-(\d{2})$/.exec(value) : null;
+  if (!m) return false;
+  const year = Number(m[1]), month = Number(m[2]), day = Number(m[3]);
+  const leap = year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0);
+  const days = [31, leap ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+  if (month < 1 || month > 12 || day < 1 || day > days[month - 1]) return false;
+  return new Date(`${value}T00:00:00.000Z`).toISOString().slice(0, 10) === value;
+}
 const exact = (o, keys, what) => { need(o && typeof o === 'object' && !Array.isArray(o), `${what} must be an object`); const extra = Object.keys(o).filter(k => !keys.includes(k)); need(!extra.length, `${what}: unexpected members ${extra.join(', ')}`); };
 
 const withinDir = (parent, child) => { const r = relative(parent, child); return r === '' || (r !== '..' && !r.startsWith('..' + sep) && !isAbsolute(r)); };
@@ -26,7 +36,7 @@ function repoFile(rootDir, ref, what) {
 export function validateStatus(status, { registry, root: rootDir = root }) {
   exact(status, ['schema', 'updated', 'rule', 'streams'], 'Status');
   need(status.schema === 'kya.world-class-status/v1', 'Unsupported status schema');
-  need(/^\d{4}-\d{2}-\d{2}$/.test(status.updated), 'updated must be a YYYY-MM-DD date');
+  need(calendarDate(status.updated), 'updated must be a real YYYY-MM-DD date');
   need(typeof status.rule === 'string' && status.rule.length > 20, 'rule must state how verified is earned');
   need(Array.isArray(status.streams) && status.streams.length === STREAMS.length && STREAMS.every((id, i) => status.streams[i]?.id === id), `streams must be exactly ${STREAMS.join(', ')} in order (stream missing or reordered)`);
   const ids = new Set(), reqIds = new Set(registry.requirements.map(r => r.id));
@@ -52,7 +62,7 @@ export function validateStatus(status, { registry, root: rootDir = root }) {
           exact(e, ['type', 'party', 'url', 'date'], `${it.id} evidence`);
           need(typeof e.party === 'string' && e.party.trim(), `${it.id}: external evidence needs a named party`);
           need(typeof e.url === 'string' && /^https:\/\/[^\s]+$/.test(e.url), `${it.id}: external evidence needs an https link`);
-          need(typeof e.date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(e.date) && !Number.isNaN(Date.parse(e.date)), `${it.id}: external evidence needs an ISO date`);
+          need(calendarDate(e.date), `${it.id}: external evidence needs a real ISO date`);
         } else throw Error(`${it.id}: unknown evidence type ${e.type}`);
       }
       if (it.status === 'verified') {
