@@ -1,0 +1,94 @@
+{
+  "requestUtf8": "fixture request",
+  "proof": {
+    "grant": {
+      "payload": {
+        "agentKeyId": "11e62d81d9ec0e4ea376f646ef81b24a6fcc08bc7b1cf331fc70f0d2589af214",
+        "audience": "fixture:gateway",
+        "expiresAt": "2026-11-14T14:10:00.000Z",
+        "issuedAt": "2026-11-14T13:50:00.000Z",
+        "manifestDigest": "ab4020c6c79ebe1a2d64aae0ce685906c261b7ac462d1edd07b28839b1b022f0",
+        "permission": "read:pairing-fixture",
+        "principalId": "controller:synthetic",
+        "schema": "kya.pairing-grant/v1"
+      },
+      "publicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAsahly/n58Il4y+BgioLE0PqF4BrtHa88WBAY/Sl4DaM=\n-----END PUBLIC KEY-----\n",
+      "signature": "ZMoxlQCCdP51lKZ326o6svSRR32P5-BjmAsN_QahQGE-BbB6X6KfEE5ik3PyrUY2zpP4ixwOQyMmqaoBWFwaDg"
+    },
+    "action": {
+      "payload": {
+        "challenge": "abababababababababababababababababababababababababababababababab",
+        "grantDigest": "189c7d59d91e18a7eefd7228bb2e751ed8ea2dded28492291b4fd14508961870",
+        "requestDigest": "2fe784b0d2911744e76efa456fb28b13ee979cbf0e84cb44272c3cbcc1e8a823",
+        "schema": "kya.paired-action/v1"
+      },
+      "publicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAL+nv1JTXkf7k1RtwYqzwKPvg2fZTMDcuZeAgMK6VSEo=\n-----END PUBLIC KEY-----\n",
+      "signature": "nyYKlPm0RuA7WsSH2vAAJiEoLNu_TVhPTpxN2Z6bJaAuc1A8H3Kn0JpvAzEuUN9zuAyzU_t5m85KljbOPeDCCg"
+    }
+  },
+  "context": {
+    "manifest": {
+      "schema": "kya.manifest/v1",
+      "agent": {
+        "id": "fixture:careful",
+        "name": "Synthetic careful reference",
+        "version": "1.0.0"
+      },
+      "principal": {
+        "id": "controller:synthetic"
+      },
+      "system": {
+        "harness": "kya-reference-fixture",
+        "harnessVersion": "1.0.0",
+        "model": "deterministic-fixture-no-model",
+        "artifactDigest": "0000000000000000000000000000000000000000000000000000000000000000",
+        "configDigest": "1111111111111111111111111111111111111111111111111111111111111111",
+        "tools": [
+          {
+            "id": "read",
+            "version": "1",
+            "permissions": [
+              "read"
+            ]
+          }
+        ]
+      },
+      "scope": {
+        "id": "synthetic:core",
+        "purpose": "Public synthetic structured conformance demonstration",
+        "permissions": [
+          "read",
+          "external-message",
+          "read:pairing-fixture"
+        ],
+        "forbidden": [
+          "delete",
+          "external-write"
+        ],
+        "approvalRequired": [
+          "external-message"
+        ]
+      },
+      "issuedAt": "2026-11-14T13:00:00.000Z",
+      "expiresAt": "2026-11-14T15:00:00.000Z"
+    },
+    "principalId": "controller:synthetic",
+    "principalKeyId": "29d6ad77e238c054be5249e20c6ae44ba017a2626026c84d93d9fb802f931508",
+    "audience": "fixture:gateway",
+    "permission": "read:pairing-fixture",
+    "challenge": "abababababababababababababababababababababababababababababababab",
+    "requestDigest": "2fe784b0d2911744e76efa456fb28b13ee979cbf0e84cb44272c3cbcc1e8a823",
+    "now": "2026-11-14T14:00:00.000Z",
+    "revokedKeyIds": [],
+    "revokedGrantDigests": []
+  },
+  "expected": {
+    "principalId": "controller:synthetic",
+    "principalKeyId": "29d6ad77e238c054be5249e20c6ae44ba017a2626026c84d93d9fb802f931508",
+    "agentId": "fixture:careful",
+    "agentKeyId": "11e62d81d9ec0e4ea376f646ef81b24a6fcc08bc7b1cf331fc70f0d2589af214",
+    "manifestDigest": "ab4020c6c79ebe1a2d64aae0ce685906c261b7ac462d1edd07b28839b1b022f0",
+    "grantDigest": "189c7d59d91e18a7eefd7228bb2e751ed8ea2dded28492291b4fd14508961870",
+    "actionDigest": "c39676b8ecdb0919b0c9a8c220f749654a74b2b7bc2d83b484cbbf28c1f5681d"
+  }
+}

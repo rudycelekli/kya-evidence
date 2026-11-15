@@ -12,6 +12,8 @@ Every person may eventually delegate to an agent. Every relying party will need 
 
 The [engineering case study](https://rudycelekli.github.io/engineering/repositories/rudycelekli/kya-evidence.html) explains how exact manifests and relying-party policy scope the evidence.
 
+The experimental [principal–agent pairing profile](docs/PAIRING.md) binds a trusted principal, an agent key, the exact manifest and a signed request hash.
+
 ## Read the full agent dossier
 
 A headline score is the beginning of the report. KYA now explains which responses replay, which predicates failed, which passing claims lack originals, and where the evidence cannot reach. The dossier keeps scope, source, coverage, reported cost, evaluator controls and unresolved questions together.
