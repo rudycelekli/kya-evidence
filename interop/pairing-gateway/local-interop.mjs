@@ -1,0 +1,157 @@
+import assert from 'node:assert/strict';
+import { generateKeyPairSync, sign } from 'node:crypto';
+import { mkdtemp, readFile, rm } from 'node:fs/promises';
+import { createServer } from 'node:http';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import Provider from 'oidc-provider';
+import * as oidc from 'openid-client';
+import { Client } from '@modelcontextprotocol/sdk/client/index.js';
+import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js';
+import { digest, keyId } from '../../src/index.mjs';
+import { signPairedAction, signPairingGrant } from '../../src/pairing/index.mjs';
+import { mcpToolCallDigest, openPairingGateway } from '../../src/pairing/mcp-gateway.mjs';
+import { createOidcEnrollmentAuthenticator, oidcEnrollmentMessage, oidcEnrollmentNonce } from '../../src/pairing/oidc-enrollment.mjs';
+
+const directory = await mkdtemp(join(tmpdir(), 'kya-local-interop-'));
+const manifest = JSON.parse(await readFile(new URL('../../examples/manifest.json', import.meta.url)));
+const principalId = manifest.principal.id;
+const date = offset => new Date(Date.now() + offset).toISOString();
+manifest.issuedAt = date(-60_000);
+manifest.expiresAt = date(3_600_000);
+manifest.scope.permissions.push('read:fixture');
+manifest.system.tools.push({ id: 'read_fixture', version: '1', permissions: ['read:fixture'] });
+const call = { server: 'fixture:stdio', tool: 'read_fixture', arguments: { path: 'synthetic.txt' } };
+const route = { manifest, audience: 'fixture:gateway', permission: 'read:fixture', revision: 'ab'.repeat(32),
+  revokedKeyIds: [], revokedGrantDigests: [] };
+const clientId = 'kya-fixture';
+const providerKey = generateKeyPairSync('rsa', { modulusLength: 2048 }).privateKey.export({ format: 'jwk' });
+let provider;
+let providerCallback;
+const http = createServer((request, response) => {
+  if (!request.url.startsWith('/interaction/')) return providerCallback(request, response);
+  (async () => {
+    const { prompt, params, session } = await provider.interactionDetails(request, response);
+    if (prompt.name === 'login') {
+      return provider.interactionFinished(request, response, { login: { accountId: 'synthetic-user' } },
+        { mergeWithLastSubmission: false });
+    }
+    assert.equal(prompt.name, 'consent');
+    const grant = new provider.Grant({ accountId: session.accountId, clientId: params.client_id });
+    grant.addOIDCScope(prompt.details.missingOIDCScope.join(' '));
+    return provider.interactionFinished(request, response, { consent: { grantId: await grant.save() } });
+  })().catch(error => { console.error(error.message); response.writeHead(500).end(); });
+});
+await new Promise(resolve => http.listen(0, '127.0.0.1', resolve));
+const issuer = 'http://127.0.0.1:' + http.address().port;
+const redirectUri = issuer + '/callback';
+provider = new Provider(issuer, {
+  clients: [{ client_id: clientId, token_endpoint_auth_method: 'none', redirect_uris: [redirectUri],
+    grant_types: ['authorization_code'], response_types: ['code'] }],
+  jwks: { keys: [{ ...providerKey, kid: 'local-fixture', alg: 'RS256', use: 'sig' }] },
+  cookies: { keys: [generateKeyPairSync('ed25519').privateKey.export({ format: 'der', type: 'pkcs8' }).toString('hex')], short: { secure: false }, long: { secure: false } },
+  features: { devInteractions: { enabled: false } },
+  interactions: { url: (_ctx, interaction) => '/interaction/' + interaction.uid },
+  findAccount(_ctx, id) { return { accountId: id, claims: () => ({ sub: id }) }; },
+});
+providerCallback = provider.callback();
+const client = new Client({ name: 'kya-fixture', version: '1.0.0' });
+let gateway;
+try {
+  await client.connect(new StdioClientTransport({
+    command: process.execPath, args: [fileURLToPath(new URL('./mcp-fixture.mjs', import.meta.url))],
+  }));
+  const config = await oidc.discovery(new URL(issuer), clientId, undefined, oidc.None(), {
+    execute: [oidc.allowInsecureRequests, oidc.enableNonRepudiationChecks],
+  });
+  const checkedTokens = new Map();
+  gateway = openPairingGateway(join(directory, 'gateway.sqlite'), {
+    authenticateIdentity: createOidcEnrollmentAuthenticator({
+      issuer, audience: clientId,
+      verifyIdToken(idToken) {
+        const claims = checkedTokens.get(idToken);
+        assert.ok(claims, 'ID token must come from the verified code exchange');
+        return claims;
+      },
+      resolvePrincipal(iss, sub) {
+        assert.equal(iss, issuer);
+        assert.equal(sub, 'synthetic-user');
+        return principalId;
+      },
+      consumeNonce: challenge => gateway.consumeEnrollmentChallenge(challenge),
+    }),
+    resolveRoute: () => route,
+    forward(server, revision, request) {
+      assert.equal(server, call.server);
+      assert.equal(revision, route.revision);
+      return client.callTool(request.params);
+    },
+  });
+
+  async function login(key, previousKeyId) {
+    const intent = {
+      issuer, audience: clientId, challenge: gateway.issueEnrollmentChallenge(), previousKeyId,
+      publicKey: key.publicKey.export({ format: 'pem', type: 'spki' }),
+    };
+    const nonce = oidcEnrollmentNonce(intent);
+    const state = oidc.randomState();
+    const codeVerifier = oidc.randomPKCECodeVerifier();
+    let url = oidc.buildAuthorizationUrl(config, {
+      redirect_uri: redirectUri, scope: 'openid', nonce, state, max_age: '300', prompt: 'login',
+      code_challenge: await oidc.calculatePKCECodeChallenge(codeVerifier), code_challenge_method: 'S256',
+    });
+    const cookies = new Map();
+    for (let redirects = 0; !url.href.startsWith(redirectUri + '?'); redirects++) {
+      assert.ok(redirects < 12);
+      const response = await fetch(url, { redirect: 'manual', signal: AbortSignal.timeout(5000),
+        headers: { cookie: [...cookies.values()].join('; ') } });
+      for (const value of response.headers.getSetCookie()) {
+        const pair = value.split(';', 1)[0];
+        cookies.set(pair.split('=', 1)[0], pair);
+      }
+      assert.ok(response.headers.has('location'), 'Expected provider redirect, got HTTP ' + response.status);
+      url = new URL(response.headers.get('location'), url);
+      assert.equal(url.origin, issuer);
+      await response.body?.cancel();
+    }
+    const tokens = await oidc.authorizationCodeGrant(config, url, {
+      pkceCodeVerifier: codeVerifier, expectedNonce: nonce, expectedState: state, maxAge: 300, idTokenExpected: true,
+    });
+    checkedTokens.set(tokens.id_token, tokens.claims());
+    return { idToken: tokens.id_token, publicKey: intent.publicKey, challenge: intent.challenge,
+      signature: sign(null, oidcEnrollmentMessage(intent), key.privateKey).toString('base64url') };
+  }
+
+  const [old, current, agent] = Array.from({ length: 3 }, () => generateKeyPairSync('ed25519'));
+  const enrolled = await gateway.enrollIdentity(await login(old, null));
+  const stale = gateway.issueChallenge(call);
+  const rotated = await gateway.rotateIdentity(await login(current, enrolled.keyId), enrolled.keyId);
+  assert.equal(rotated.keyId, keyId(current.publicKey));
+
+  function proof(challenge, signer) {
+    const grant = signPairingGrant({ schema: 'kya.pairing-grant/v1', principalId,
+      agentKeyId: keyId(agent.publicKey), manifestDigest: digest(manifest),
+      audience: route.audience, permission: route.permission,
+      issuedAt: date(-10_000), expiresAt: date(300_000),
+    }, signer.privateKey);
+    return { grant, action: signPairedAction({ schema: 'kya.paired-action/v1',
+      grantDigest: digest(grant), challenge, requestDigest: mcpToolCallDigest(call),
+    }, agent.privateKey) };
+  }
+  await assert.rejects(gateway.invoke(call, proof(stale, old)), /challenge/i);
+  const challenge = gateway.issueChallenge(call);
+  const accepted = proof(challenge, current);
+  await assert.rejects(gateway.invoke({ ...call, arguments: { path: 'different.txt' } }, accepted), /challenge/i);
+  const { result, audit } = await gateway.invoke(call, accepted);
+  assert.deepEqual(JSON.parse(result.content[0].text), { name: call.tool, arguments: call.arguments });
+  assert.equal(audit.principalKeyId, rotated.keyId);
+  assert.deepEqual(gateway.readAudit(challenge), audit);
+  await assert.rejects(gateway.invoke(call, accepted), /challenge/i);
+  console.log('Passed: two signed Authorization Code + PKCE ceremonies, key rotation, stale key rejection, exact MCP stdio call, durable audit, replay refusal');
+} finally {
+  gateway?.close();
+  await client.close();
+  await new Promise(resolve => http.close(resolve));
+  await rm(directory, { recursive: true, force: true });
+}

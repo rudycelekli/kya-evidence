@@ -36,4 +36,6 @@ Use `kya-evidence/pairing/oidc-enrollment` with an OIDC client for the configure
 
 The OIDC token verifier and principal mapping are host dependencies. The local tests run a cryptographically signed fixture identity ceremony. Deployment with a real provider requires that provider's app registration, approved callbacks and a test identity. [OpenID Connect Core](https://openid.net/specs/openid-connect-core-1_0.html) · [MCP tool calls](https://modelcontextprotocol.io/specification/2025-11-25/server/tools)
 
+Run the [loopback interoperability fixture](../interop/pairing-gateway/README.md) for two signed code flows, real MCP SDK stdio, key rotation and replay refusal.
+
 See [ADR-0054](adr/0054-durable-pairing-mcp-enrollment.md) for the transaction and wire boundaries.
