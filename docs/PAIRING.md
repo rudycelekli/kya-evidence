@@ -23,9 +23,15 @@ The gateway supplies the trust binding between the principal ID and the key. Thi
 
 See [ADR-0053](adr/0053-principal-agent-pairing.md) for the interoperable wire rules.
 
+## HTTP integration example
+
+The [Node HTTP adapter](../examples/pairing-http.mjs) shows one wire binding for an opaque request action. Send a single `kya-pairing-proof` header containing unpadded base64url of UTF-8 proof JSON. The signed request digest is the KYA digest of `{method, target, bodyDigest}`. In the example, the method is `POST`, the target is exactly `/action`, and `bodyDigest` hashes the received body bytes. The handler limits the header to 8,192 characters and the body to 65,536 bytes. The application owns TLS, authentication of enrollment and all action semantics.
+
+The [loopback test](../test/pairing.test.mjs) exercises altered bytes, route substitution, body limits, challenge expiry, concurrent delivery and replay. An example operation runs only after `consumeChallenge` succeeds. The callback must atomically require an outstanding unexpired challenge in the correct context and mark it consumed. The test's in-memory store is for a single process. For an action with external effects, use a durable consume-and-enqueue transaction or an equivalent idempotency design.
+
 ## Interoperability milestones
 
-1. Define a single request framing profile at an HTTP or MCP gateway and demonstrate acceptance of an enrolled pair, rejection of a modified request and consume-once behavior under concurrent delivery.
+1. Validate the example HTTP framing and consume-once behavior with a durable store in a deployed gateway. Define a separate MCP framing profile that binds the exact server, tool and arguments.
 2. Profile identity enrollment and key rotation against a real identity provider. Consider OAuth token exchange for delegated credentials, DPoP for OAuth token sender constraint, and SPIFFE for workload identity. Specify which trust claims each integration brings into KYA and how those claims expire or are revoked. [RFC 8693](https://www.rfc-editor.org/rfc/rfc8693), [RFC 9449](https://www.rfc-editor.org/rfc/rfc9449), [SPIFFE concepts](https://spiffe.io/docs/latest/spiffe-about/spiffe-concepts/).
 3. Have an independent implementer validate the wire format from the specification and run both acceptance and rejection vectors. Record disagreements before stabilizing the protocol version.
 4. Run a relying-party pilot with a measurable enrollment, action verification, key rotation and incident response path. Advance the standards proposal after external security review and governance participation.

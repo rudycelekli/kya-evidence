@@ -147,3 +147,50 @@ test('replays the frozen wire vector against the packaged entry point', async ()
   assert.equal(hashBytes(requestUtf8), context.requestDigest);
   assert.deepEqual(sdk.verifyPairedAction(proof, context), expected);
 });
+
+test('loopback gateway rejects changed bytes and consumes a challenge once across concurrent requests', async t => {
+  const { createServer } = await import('node:http');
+  const { actionRequestDigest, createPairingHandler } = await import('../examples/pairing-http.mjs');
+  const { proof, context, action } = fixture();
+  const body = 'fixture request';
+  proof.action = pairing.signPairedAction({
+    ...action,
+    requestDigest: actionRequestDigest('POST', '/action', body),
+  }, agent.privateKey);
+  const header = Buffer.from(JSON.stringify(proof)).toString('base64url');
+  const pending = new Map([[context.challenge, Date.parse(context.now)]]);
+  const observed = [];
+  const server = createServer(createPairingHandler({
+    getContext(challenge) {
+      if (challenge !== context.challenge) throw new Error('Unknown challenge');
+      return context;
+    },
+    async consumeChallenge({ challenge }) {
+      // Yield so concurrent verifications can reach the same consume-once boundary.
+      await new Promise(resolve => setImmediate(resolve));
+      const expires = pending.get(challenge);
+      return expires > Date.parse(context.now) && pending.delete(challenge);
+    },
+    onAction(bytes, audit) {
+      observed.push({ body: bytes.toString('utf8'), actionDigest: audit.actionDigest });
+    },
+  }));
+  await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
+  t.after(() => new Promise(resolve => server.close(resolve)));
+  const url = 'http://127.0.0.1:' + server.address().port;
+  const send = (target, bytes) => fetch(url + target, {
+    method: 'POST',
+    headers: { 'kya-pairing-proof': header },
+    body: bytes,
+  }).then(response => response.status);
+
+  assert.equal(await send('/action?alternate=true', body), 404);
+  assert.equal(await send('/action', 'changed request'), 403);
+  assert.equal(await send('/action', 'x'.repeat(65_537)), 413);
+  assert.equal(await send('/action', body), 403, 'an expired challenge cannot trigger the action');
+  pending.set(context.challenge, Date.parse(context.now) + 60_000);
+  const responses = await Promise.all([send('/action', body), send('/action', body)]);
+  assert.deepEqual(responses.sort(), [204, 403]);
+  assert.equal(await send('/action', body), 403);
+  assert.deepEqual(observed, [{ body, actionDigest: digest(proof.action) }]);
+});
