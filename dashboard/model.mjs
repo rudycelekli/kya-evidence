@@ -29,7 +29,7 @@ export function validateReport(r){
  insist(['fixture','runtime','mixed','none'].includes(r.evidenceMode),'Invalid evidence mode');
  for(const k of ['subjectDigest','profileDigest','evaluatorDigest','policyDigest','evidenceBundleDigest','reportDigest'])insist(typeof r[k]==='string'&&/^[a-f0-9]{64}$/.test(r[k]),`Invalid ${k}`);
  for(const k of ['scopeId','agentId','agentName','assessedAt','validUntil'])str(r[k],k);
- for(const k of ['assessedAt','validUntil'])insist(Number.isFinite(Date.parse(r[k])),`Invalid ${k}`);
+ for(const k of ['assessedAt','validUntil'])insist(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/.test(r[k])&&!Number.isNaN(Date.parse(r[k]))&&new Date(r[k]).toISOString()===r[k],`Invalid ${k}`);
  insist(r.score&&typeof r.score==='object','Missing score');for(const k of ['earned','possible','upperBound'])score(r.score[k],`score.${k}`);
  insist(r.score.possible===1000&&r.score.earned<=r.score.upperBound,'Inconsistent score range');
  ratio(r.coverage,'coverage');ratio(r.independentCoverage,'independent coverage');
