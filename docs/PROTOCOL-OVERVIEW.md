@@ -37,3 +37,5 @@ This tests protocol behavior on synthetic public inputs, without a provider acco
 Independent implementation and review; real relying-party pilots; protected evaluation and calibration; independently measured capture; and governance accepted by parties beyond this project. A digest is not a data-rights determination, and a signed assertion is not proof of truthful execution, identity, authority, general safety or legal compliance. Adoption should be measured by reproducible use and contested evidence, not badges.
 
 Read the [specification](SPECIFICATION.md), [conformance report contract](CONFORMANCE.md), [implementer guide](IMPLEMENTERS-GUIDE.md), [scoring rules](SCORING.md), [threat model](THREAT-MODEL.md) and [partial declaration imports](DECLARATION-IMPORTS.md) for the precise contracts and limits.
+
+The experimental [principal–agent pairing profile](PAIRING.md) binds a trusted principal key to an exact manifest and an agent key. An agent can then sign the request digest and a relying-party challenge. This is a separate verification path with its own trust inputs and scope checks.
