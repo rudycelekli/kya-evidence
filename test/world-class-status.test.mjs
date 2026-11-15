@@ -11,6 +11,23 @@ const status = () => structuredClone(current);
 const ok = s => validateStatus(s, { registry, root });
 const item = (s, id) => s.streams.flatMap(x => x.items).find(x => x.id === id);
 
+test('status dates must be real calendar days, not overflowed digit patterns', () => {
+  const badUpdated = status();
+  for (const updated of ['2026-02-31', '2026-13-01', '2023-02-29', '1900-02-29', '2026-11-31']) {
+    badUpdated.updated = updated;
+    assert.throws(() => ok(badUpdated), /updated/, updated);
+  }
+  const leap = status();
+  leap.updated = '2024-02-29';
+  assert.doesNotThrow(() => ok(leap));
+  const external = status(), target = external.streams[2].items[0];
+  target.status = 'verified'; target.verifiedBy = 'XREV';
+  target.evidence = [{ type: 'external', party: 'Example Reviewer', url: 'https://example.org/report', date: '2026-04-31' }];
+  assert.throws(() => ok(external), /date/);
+  target.evidence[0].date = '2024-02-29';
+  assert.doesNotThrow(() => ok(external));
+});
+
 test('the committed status ledger is valid, complete and renders to the committed document', async () => {
   const s = status();
   ok(s);
