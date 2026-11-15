@@ -10,6 +10,8 @@ Every person may eventually delegate to an agent. Every relying party will need 
 
 [Protocol overview](docs/PROTOCOL-OVERVIEW.md) · [Specification](docs/SPECIFICATION.md) · [Scoring](docs/SCORING.md) · [Research universes](docs/UNIVERSES.md) · [Byte interoperability](docs/INTEROPERABILITY.md) · [Threat model](docs/THREAT-MODEL.md) · [Adapters](docs/ADAPTERS.md) · [Roadmap](docs/ROADMAP.md) · [What this is not](#what-this-is-not) · [Changelog](CHANGELOG.md) · [Release notes](docs/RELEASE-NOTES-ALPHA.md) · [Contribute](CONTRIBUTING.md)
 
+The [engineering case study](https://rudycelekli.github.io/engineering/repositories/rudycelekli/kya-evidence.html) explains how exact manifests and relying-party policy scope the evidence.
+
 ## Read the full agent dossier
 
 A headline score is the beginning of the report. KYA now explains which responses replay, which predicates failed, which passing claims lack originals, and where the evidence cannot reach. The dossier keeps scope, source, coverage, reported cost, evaluator controls and unresolved questions together.
