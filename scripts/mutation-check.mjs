@@ -1,10 +1,11 @@
-import { mkdtemp,cp,readFile,writeFile,rm } from 'node:fs/promises';
+import { mkdtemp,cp,readFile,writeFile,rm,readdir } from 'node:fs/promises';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { fileURLToPath } from 'node:url';
 import { spawnSync } from 'node:child_process';
-import { hashBytes } from '../src/index.mjs';
-import { admitMutationBaseline, admitMutationCandidate } from './lib/mutation-result.mjs';
+import { hashBytes, ASSESSOR_SOURCE_DIGEST } from '../src/index.mjs';
+import { EVALUATOR_DIGEST } from '../src/conformance/index.mjs';
+import { checkedMutationRun } from './lib/mutation-failure.mjs';
 
 const root=fileURLToPath(new URL('../',import.meta.url)),source='src/assessment/application/assess.mjs';
 const original=await readFile(join(root,source),'utf8');
@@ -107,14 +108,32 @@ function runTests(dir){return spawnSync(process.execPath,['--test','--test-repor
   const broken=[];for(const [name,from,to,target=source]of mutants){const text=target===source?original:await readFile(join(root,target),'utf8');const probe=join(tmpdir(),'kya-mutant-syntax-'+process.pid+'.mjs');await writeFile(probe,text.replace(from,to));const c=spawnSync(process.execPath,['--check',probe],{encoding:'utf8'});if(c.status!==0)broken.push(name);await rm(probe,{force:true});}
   if(broken.length)throw Error('Invalid mutant (syntax error) in '+broken.length+' control(s): '+broken.join('; '));}
 if(process.argv.includes('--preflight')){console.log(JSON.stringify({preflight:'ok',controls:mutants.length,anchorsPresent:true,allMutantsParse:true}));process.exit(0);}
+async function testInventory(dir,prefix=''){
+  const out=[];
+  for(const entry of (await readdir(dir,{withFileTypes:true})).sort((a,b)=>a.name<b.name?-1:a.name>b.name?1:0)){
+    if(entry.isSymbolicLink())throw Error('Mutation test inventory refuses symlinks');
+    const path=prefix+entry.name;
+    if(entry.isDirectory())out.push(...await testInventory(join(dir,entry.name),path+'/'));
+    else if(entry.isFile())out.push({path,sha256:hashBytes(await readFile(join(dir,entry.name)))});
+  }
+  return out;
+}
+const testTreeDigest=hashBytes(JSON.stringify(await testInventory(join(root,'test'))));
 for(const [name,from,to,target=source]of mutants){
   const base=target===source?original:await readFile(join(root,target),'utf8');
   if(!base.includes(from))throw Error('Mutation anchor drift: '+name);
   const dir=await mkdtemp(join(tmpdir(),'kya-mutant-'));
   try{await cp(join(root,'src'),join(dir,'src'),{recursive:true});await cp(join(root,'test'),join(dir,'test'),{recursive:true});await cp(join(root,'package.json'),join(dir,'package.json'));await cp(join(root,'profiles'),join(dir,'profiles'),{recursive:true});for(const extra of ['dashboard','docs','schemas','scripts','evidence','examples','suites','policies','action'])await cp(join(root,extra),join(dir,extra),{recursive:true});
-    const baseline=admitMutationBaseline(runTests(dir));
+    const bindings={parentAssessorSourceDigest:ASSESSOR_SOURCE_DIGEST,evaluatorDigest:EVALUATOR_DIGEST,
+      packageJsonSha256:hashBytes(await readFile(join(root,'package.json'))),
+      runnerSha256:hashBytes(await readFile(fileURLToPath(import.meta.url))),
+      graderSha256:hashBytes(await readFile(join(root,'scripts/lib/mutation-result.mjs'))),
+      observerSha256:hashBytes(await readFile(join(root,'scripts/lib/mutation-failure.mjs'))),
+      testTreeDigest,originalTargetSha256:hashBytes(base),target};
+    const emit=record=>console.error('KYA_MUTATION_FAILURE '+JSON.stringify(record));
+    const baseline=checkedMutationRun({phase:'baseline',control:name,bindings,result:runTests(dir),emit});
     const mutated=base.replace(from,to);await writeFile(join(dir,target),mutated);const candidate=runTests(dir);
-    const {counts,killed}=admitMutationCandidate(candidate,baseline);results.push({name,killed,killedBy:failedNames(candidate.stdout),baselineTests:baseline.tests,mutantTests:counts.tests,failedAssertions:counts.fail,mutantSourceDigest:hashBytes(mutated),exitCode:candidate.status});
+    const {counts,killed}=checkedMutationRun({phase:'candidate',control:name,bindings:{...bindings,mutantTargetSha256:hashBytes(mutated)},result:candidate,baseline,emit});results.push({name,killed,killedBy:failedNames(candidate.stdout),baselineTests:baseline.tests,mutantTests:counts.tests,failedAssertions:counts.fail,mutantSourceDigest:hashBytes(mutated),exitCode:candidate.status});
     if(!killed)throw Error('SURVIVING evaluator mutant: '+name);
   }finally{await rm(dir,{recursive:true,force:true});}
 }
