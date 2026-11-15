@@ -19,7 +19,9 @@ test('commitment has the documented shape and takes createdAt only from the call
   assert.match(commitment.saltCommitment, /^[a-f0-9]{64}$/);
   assert.equal(opening.cases.length, 5);
   assert.throws(() => commitHoldout(mk(2), { salt: SALT, suiteId: 'holdout-demo' }), TypeError);
-  for (const bad of ['yesterday', '2026-10-14', 1760400000, null, '2026-13-45T00:00:00Z']) assert.throws(() => commit(mk(2), { createdAt: bad }), TypeError, String(bad));
+  for (const bad of ['yesterday', '2026-10-14', 1760400000, null, '2026-13-45T00:00:00Z', '2026-02-31T00:00:00Z', '2026-02-31T00:00:00.000Z', '2023-02-29T00:00:00Z', '1900-02-29T00:00:00Z', '2026-04-31T00:00:00Z', '2026-01-01T24:00:00Z', '2026-01-01T00:00:60Z']) assert.throws(() => commit(mk(2), { createdAt: bad }), TypeError, String(bad));
+  assert.equal(commit(mk(2), { createdAt: '2024-02-29T00:00:00Z' }).commitment.createdAt, '2024-02-29T00:00:00Z');
+  assert.equal(commit(mk(2), { createdAt: '2026-01-01T00:00:00.5Z' }).commitment.createdAt, '2026-01-01T00:00:00.5Z');
 });
 
 test('commitment is deterministic, salt sensitive and independent of createdAt', () => {
