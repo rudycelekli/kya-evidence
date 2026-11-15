@@ -27,7 +27,8 @@ function validateAction(payload) {
 }
 
 function signedBytes(payload) {
-  return Buffer.from(payload.schema + '\n' + canonical(payload), 'utf8');
+  const prefix = payload.schema === GRANT ? 'kya.pairing-grant/v1\n' : 'kya.paired-action/v1\n';
+  return Buffer.from(prefix + canonical(payload), 'utf8');
 }
 
 function signEnvelope(input, privateKey, validate) {
