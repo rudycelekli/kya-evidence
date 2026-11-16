@@ -39,3 +39,21 @@ The OIDC token verifier and principal mapping are host dependencies. The local t
 Run the [loopback interoperability fixture](../interop/pairing-gateway/README.md) for two signed code flows, real MCP SDK stdio, key rotation and replay refusal.
 
 See [ADR-0054](adr/0054-durable-pairing-mcp-enrollment.md) for the transaction and wire boundaries.
+
+## Require the active Passport
+
+Configure the authoritative registry history reader when opening the gateway. Every route must then include its trusted `passportId`. Pin IDs with the route policy so the request cannot select its own passport.
+
+```js
+const gateway = openPairingGateway(databasePath, {
+  authenticateIdentity,
+  resolveRoute,
+  forward,
+  passports: {
+    registry: registryOrigin,
+    readHistory: id => registry.read(id)?.history ?? null,
+  },
+});
+```
+
+Invocation verifies the signed history and matches the active key, agent, principal and exact manifest. A changed key or manifest and a terminal revocation block forwarding even when the pairing proof still verifies. The audit records the Passport head observed at acceptance. Use the authoritative store for readback. A valid older signed prefix can prove history, while freshness from remote replicas requires independent verification. See the [pilot and readiness plan](PASSPORT-ROADMAP.md).

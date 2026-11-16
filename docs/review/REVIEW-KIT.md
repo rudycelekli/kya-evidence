@@ -142,7 +142,7 @@ Set `HANDOVER_COMMIT` to the full 40 character handover commit id. Then run the 
 | 8a13 | `node scripts/vc-trust-mutations.mjs` | exit 0; six VC trust-input tests pass and all three membership/fingerprint/policy-capture mutations are detected. |
 | 8a14 | `node scripts/capture-binding-mutations.mjs` | exit 0; five capture binding/trust tests pass and both uncaptured-input mutations are detected. |
 | 8a15 | `node scripts/mutation-result-mutations.mjs` | exit 0; nine mutation-result admission tests pass and all three TODO/status/population grader mutations are detected. |
-| 8b | `node scripts/adr-index.mjs` | exit 0; `{"records":55,"danglingRefs":0,"storage":"evidence/adr-index.json"}`. It rewrites that file; `git status` must stay clean afterwards. |
+| 8b | `node scripts/adr-index.mjs` | exit 0; `{"records":56,"danglingRefs":0,"storage":"evidence/adr-index.json"}`. It rewrites that file; `git status` must stay clean afterwards. |
 | 9 | `node scripts/review-kit-check.mjs --deep` | exit 0; `"ok": true`. Confirms every number in the table below, including the harness rows. |
 
 The expensive steps. They were not run when this kit was written; the numbers they print are not quoted here because they were not measured for this kit:
@@ -179,11 +179,11 @@ Every row is recomputed by `node scripts/review-kit-check.mjs` from the reposito
 | `vectors.compare-score-cards` | `19` | operation `compare-score-cards` |
 | `mutationControls` | `87` | `node scripts/mutation-check.mjs --preflight`, field `controls` |
 | `testFiles` | `105` | files matching `test/*.test.mjs` |
-| `testDeclarations` | `1130` | lines that begin with `test(` in those files. The four `test/property-*.test.mjs` files declare 38 seeded properties through a helper and contribute no such line. |
-| `adrs` | `55` | files `docs/adr/NNNN-*.md`; statuses retain local implementation and external-review boundaries |
+| `testDeclarations` | `1132` | lines that begin with `test(` in those files. The four `test/property-*.test.mjs` files declare 38 seeded properties through a helper and contribute no such line. |
+| `adrs` | `56` | files `docs/adr/NNNN-*.md`; statuses retain local implementation and external-review boundaries |
 | `coreProfileChecks` | `18` | length of `checks` in `profiles/core-v1.json` |
 | `srcFiles` | `94` | `.mjs` files under `src/` |
-| `srcLines` | `6045` | newline characters in those files. The code is dense: long lines, so line count understates size. |
+| `srcLines` | `6068` | newline characters in those files. The code is dense: long lines, so line count understates size. |
 | `evaluatorDigestPinned` | `d0bc7f7840e5ddf1a71eb3b9ac92e5c4d0be5d156eea2c6f4f909f7066b5e31b` | `evidence/evaluator-identity.json`; the checker also requires it to equal the digest computed from source |
 | `harness.vectorsPass` | `799` | `node scripts/run-vectors.mjs --impl "node interop/impl-contract/js-reference.mjs"`, field `vectors.pass` |
 | `harness.vectorsFail` | `0` | same command, field `vectors.fail` |

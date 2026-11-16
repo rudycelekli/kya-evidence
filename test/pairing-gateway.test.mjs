@@ -5,7 +5,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { test } from 'node:test';
 import { digest, keyId } from '../src/index.mjs';
-import { signPairingGrant, signPairedAction } from '../src/pairing/index.mjs';
+import { signPairingGrant, signPairedAction, verifyPairedAction } from '../src/pairing/index.mjs';
 import { mcpToolCallDigest, openPairingGateway } from 'kya-evidence/pairing/mcp-gateway';
 
 const keys = Array.from({ length: 3 }, () => generateKeyPairSync('ed25519'));
@@ -44,16 +44,16 @@ function fixture(t) {
   };
   const filename = join(dir, 'gateway.sqlite');
   const open = () => openPairingGateway(filename, dependencies);
-  const makeProof = (challenge, key = principal, requested = call) => {
+  const makeProof = (challenge, key = principal, requested = call, agentKeys = agent) => {
     const grant = signPairingGrant({
-      schema: 'kya.pairing-grant/v1', principalId, agentKeyId: keyId(agent.publicKey),
+      schema: 'kya.pairing-grant/v1', principalId, agentKeyId: keyId(agentKeys.publicKey),
       manifestDigest: digest(manifest), audience: route.audience, permission: route.permission,
       issuedAt: '2026-11-14T13:55:00.000Z', expiresAt: '2026-11-14T14:10:00.000Z',
     }, key.privateKey);
     const action = signPairedAction({
       schema: 'kya.paired-action/v1', grantDigest: digest(grant),
       challenge, requestDigest: mcpToolCallDigest(requested),
-    }, agent.privateKey);
+    }, agentKeys.privateKey);
     return { grant, action };
   };
   return { route, forwarded, dependencies, open, makeProof, setTime: value => { time = value; }, filename };
@@ -240,4 +240,96 @@ test('separate processes contend on the same durable challenge and only one forw
   } finally {
     gateway.close();
   }
+});
+
+test('requires the currently registered passport key and manifest before consuming or forwarding', async t => {
+  const { passportId, signPassportEvent } = await import('kya-evidence/passport');
+  const { openPassportRegistry } = await import('kya-evidence/passport/registry');
+  const f = fixture(t);
+  const registry = 'https://registry.example';
+  const store = openPassportRegistry(f.filename + '.passports', registry);
+  t.after(() => store.close());
+  const event = {
+    schema: 'kya.passport-event/v1', registry, operation: 'register', previous: null,
+    principalId, agentId: manifest.agent.id, manifestDigest: digest(manifest),
+    controllerPublicKey: pem(principal), agentPublicKey: pem(agent),
+  };
+  event.passportId = passportId(event);
+  f.route.passportId = event.passportId;
+  const seal = (payload, keys = agent) => ({
+    event: payload, controllerSignature: signPassportEvent(payload, principal.privateKey),
+    agentSignature: keys === null ? null : signPassportEvent(payload, keys.privateKey),
+  });
+  let state = store.append(seal(event));
+  f.dependencies.passports = { registry, readHistory: id => store.read(id)?.history ?? null };
+  const gateway = f.open();
+  t.after(() => gateway.close());
+  await gateway.enrollIdentity('fixture-login');
+
+  const first = gateway.issueChallenge(call);
+  const admitted = await gateway.invoke(call, f.makeProof(first));
+  assert.equal(admitted.audit.passportHead, state.head);
+  assert.equal(gateway.readAudit(first).passportId, state.passportId);
+
+  const assertRefused = async (challenge, proof) => {
+    verifyPairedAction(proof, {
+      manifest, principalId, principalKeyId: keyId(principal.publicKey),
+      audience: f.route.audience, permission: f.route.permission,
+      challenge, now: initialTime, requestDigest: mcpToolCallDigest(call),
+      revokedKeyIds: [], revokedGrantDigests: [],
+    });
+    const before = f.forwarded.length;
+    await assert.rejects(gateway.invoke(call, proof), /passport authorization refused/i);
+    assert.equal(f.forwarded.length, before);
+    assert.equal(gateway.readAudit(challenge), null);
+  };
+  const challenge = gateway.issueChallenge(call);
+  const originalProof = f.makeProof(challenge);
+  state = store.append(seal({ ...event, operation: 'rotate', previous: state.head, agentPublicKey: pem(next) }, next));
+  await assertRefused(challenge, originalProof);
+  const replacementProof = f.makeProof(challenge, principal, call, next);
+  assert.equal((await gateway.invoke(call, replacementProof)).audit.passportHead, state.head);
+
+  const forOldManifest = gateway.issueChallenge(call);
+  state = store.append(seal({
+    ...event, operation: 'revise', previous: state.head, agentPublicKey: pem(next),
+    manifestDigest: digest({ revision: 'different manifest' }),
+  }, next));
+  await assertRefused(forOldManifest, f.makeProof(forOldManifest, principal, call, next));
+
+  const afterRevocation = gateway.issueChallenge(call);
+  store.append(seal({
+    ...event, operation: 'revoke', previous: state.head, manifestDigest: state.current.manifestDigest,
+    agentPublicKey: null,
+  }, null));
+  await assertRefused(afterRevocation, f.makeProof(afterRevocation, principal, call, next));
+});
+
+test('passport enforcement refuses omitted policy, missing history, and a substituted passport ID', async t => {
+  const { passportId, signPassportEvent } = await import('kya-evidence/passport');
+  const f = fixture(t);
+  const registry = 'https://registry.example';
+  let history = null;
+  f.dependencies.passports = { registry, readHistory: () => history };
+  const gateway = f.open();
+  t.after(() => gateway.close());
+  await gateway.enrollIdentity('fixture-login');
+  assert.throws(() => gateway.issueChallenge(call), /fields/i);
+  f.route.passportId = digest('different passport');
+  const challenge = gateway.issueChallenge(call);
+  const proof = f.makeProof(challenge);
+  await assert.rejects(gateway.invoke(call, proof), /history/i);
+  const event = {
+    schema: 'kya.passport-event/v1', registry, operation: 'register', previous: null,
+    principalId, agentId: manifest.agent.id, manifestDigest: digest(manifest),
+    controllerPublicKey: pem(principal), agentPublicKey: pem(agent),
+  };
+  event.passportId = passportId(event);
+  history = [{
+    event, controllerSignature: signPassportEvent(event, principal.privateKey),
+    agentSignature: signPassportEvent(event, agent.privateKey),
+  }];
+  await assert.rejects(gateway.invoke(call, proof), /passport identity mismatch/i);
+  assert.equal(gateway.readAudit(challenge), null);
+  assert.equal(f.forwarded.length, 0);
 });

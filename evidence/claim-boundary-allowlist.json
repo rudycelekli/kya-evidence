@@ -113,6 +113,8 @@
     "Pairing grant is outside its validity window",
     "Pairing key or grant revoked",
     "Passed assertions lack structured-response support",
+    "Passport authorization refused",
+    "Passport identity mismatch",
     "Plan adapter mode",
     "Plan creation time",
     "Policy requires a declared accountable party; manifest declares none",

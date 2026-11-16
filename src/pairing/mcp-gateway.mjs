@@ -3,6 +3,7 @@ import { DatabaseSync } from 'node:sqlite';
 import { canonical, digest, exactKeys, insist } from '../shared/canonical.mjs';
 import { hash, identifier, keyId, text, timestamp, validateManifest, validatePublicPem } from '../identity/domain/services/validation.mjs';
 import { verifyPairedAction } from './index.mjs';
+import { verifyPassport } from '../passport/index.mjs';
 
 function snapshot(value) {
   return JSON.parse(canonical(value));
@@ -26,9 +27,15 @@ export function mcpToolCallDigest(call) {
 }
 
 export function openPairingGateway(filename, dependencies) {
-  const { authenticateIdentity, resolveRoute, forward, clock = () => new Date().toISOString() } = dependencies;
+  const { authenticateIdentity, resolveRoute, forward, passports, clock = () => new Date().toISOString() } = dependencies;
   insist(typeof filename === 'string' && filename.length > 0 && filename !== ':memory:'
     && !filename.startsWith('file:'), 'Expected SQLite path');
+  const passportRegistry = passports?.registry;
+  const readPassportHistory = passports?.readHistory;
+  if (passports !== undefined) {
+    text(passportRegistry, 'Passport registry');
+    insist(typeof readPassportHistory === 'function', 'Passport reader required');
+  }
   const db = new DatabaseSync(filename);
   db.exec(`
     PRAGMA busy_timeout=5000;
@@ -103,7 +110,12 @@ export function openPairingGateway(filename, dependencies) {
     // A synchronous registry callback returns a single snapshot used for both
     // verification and forwarding. Its revision must change when the route changes.
     const route = snapshot(resolveRoute(call.server, call.tool));
-    exactKeys(route, ['manifest', 'audience', 'permission', 'revision', 'revokedKeyIds', 'revokedGrantDigests'], 'MCP route');
+    const fields = ['manifest', 'audience', 'permission', 'revision', 'revokedKeyIds', 'revokedGrantDigests'];
+    if (passports !== undefined) {
+      fields.push('passportId');
+    }
+    exactKeys(route, fields, 'MCP route');
+    if (passports !== undefined) hash(route.passportId, 'Passport ID');
     route.manifest = validateManifest(route.manifest);
     hash(route.revision, 'Route revision');
     identifier(route.audience, 'Audience');
@@ -117,6 +129,7 @@ export function openPairingGateway(filename, dependencies) {
     return digest({
       requestDigest: callDigest(call), manifestDigest: digest(route.manifest),
       audience: route.audience, permission: route.permission, revision: route.revision, principalKeyId,
+      ...(route.passportId === undefined ? {} : { passportId: route.passportId }),
     });
   }
 
@@ -172,8 +185,18 @@ export function openPairingGateway(filename, dependencies) {
           requestDigest, revokedKeyIds: route.revokedKeyIds,
           revokedGrantDigests: route.revokedGrantDigests,
         });
+        let passportBinding;
+        if (route.passportId !== undefined) {
+          const history = readPassportHistory(route.passportId);
+          const passport = verifyPassport(history, passportRegistry);
+          insist(passport.passportId === route.passportId && passport.agentId === verified.agentId
+            && passport.principalId === verified.principalId, 'Passport identity mismatch');
+          insist(passport.status === 'active' && passport.current.fingerprint === verified.agentKeyId
+            && passport.current.manifestDigest === verified.manifestDigest, 'Passport authorization refused');
+          passportBinding = { passportId: passport.passportId, passportHead: passport.head };
+        }
         const audit = {
-          ...verified, challenge, requestDigest, routeRevision: route.revision,
+          ...verified, ...passportBinding, challenge, requestDigest, routeRevision: route.revision,
           server: call.server, tool: call.tool, acceptedAt: now,
         };
         insist(consume.run(time, canonical(audit), challenge, time, time).changes === 1, 'Challenge unavailable');
