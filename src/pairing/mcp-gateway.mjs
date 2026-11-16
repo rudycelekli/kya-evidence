@@ -3,6 +3,7 @@ import { DatabaseSync } from 'node:sqlite';
 import { canonical, digest, exactKeys, insist } from '../shared/canonical.mjs';
 import { hash, identifier, keyId, text, timestamp, validateManifest, validatePublicPem } from '../identity/domain/services/validation.mjs';
 import { verifyPairedAction } from './index.mjs';
+import { verifyPassport } from '../passport/index.mjs';
 
 function snapshot(value) {
   return JSON.parse(canonical(value));
@@ -26,9 +27,15 @@ export function mcpToolCallDigest(call) {
 }
 
 export function openPairingGateway(filename, dependencies) {
-  const { authenticateIdentity, resolveRoute, forward, clock = () => new Date().toISOString() } = dependencies;
+  const { authenticateIdentity, resolveRoute, forward, passports, clock = () => new Date().toISOString() } = dependencies;
   insist(typeof filename === 'string' && filename.length > 0 && filename !== ':memory:'
     && !filename.startsWith('file:'), 'Expected SQLite path');
+  const passportRegistry = passports?.registry;
+  const readPassportHistory = passports?.readHistory;
+  if (passports !== undefined) {
+    text(passportRegistry, 'Passport registry');
+    insist(typeof readPassportHistory === 'function', 'Passport reader required');
+  }
   const db = new DatabaseSync(filename);
   db.exec(`
     PRAGMA busy_timeout=5000;
@@ -43,6 +50,9 @@ export function openPairingGateway(filename, dependencies) {
     ) STRICT;
     CREATE TABLE IF NOT EXISTS enrollment_challenge (
       nonce TEXT PRIMARY KEY, issued INTEGER NOT NULL, expires INTEGER NOT NULL
+    ) STRICT;
+    CREATE TABLE IF NOT EXISTS passport_head (
+      passport TEXT PRIMARY KEY, sequence INTEGER NOT NULL, head TEXT NOT NULL
     ) STRICT;
     CREATE TABLE IF NOT EXISTS challenge (
       nonce TEXT PRIMARY KEY, binding TEXT NOT NULL, issued INTEGER NOT NULL, expires INTEGER NOT NULL,
@@ -60,6 +70,8 @@ export function openPairingGateway(filename, dependencies) {
   const pending = db.prepare('SELECT * FROM challenge WHERE nonce = ?');
   const consume = db.prepare('UPDATE challenge SET accepted_at = ?, audit = ? WHERE nonce = ? AND accepted_at IS NULL AND issued <= ? AND expires > ?');
 
+  const knownHead = db.prepare('SELECT sequence, head FROM passport_head WHERE passport = ?');
+  const pinHead = db.prepare('INSERT INTO passport_head VALUES (?, ?, ?) ON CONFLICT (passport) DO UPDATE SET sequence = excluded.sequence, head = excluded.head WHERE excluded.sequence > passport_head.sequence');
   const recordResponse = db.prepare('UPDATE challenge SET audit = ? WHERE nonce = ? AND audit = ?');
 
   function write(operation) {
@@ -103,7 +115,12 @@ export function openPairingGateway(filename, dependencies) {
     // A synchronous registry callback returns a single snapshot used for both
     // verification and forwarding. Its revision must change when the route changes.
     const route = snapshot(resolveRoute(call.server, call.tool));
-    exactKeys(route, ['manifest', 'audience', 'permission', 'revision', 'revokedKeyIds', 'revokedGrantDigests'], 'MCP route');
+    const fields = ['manifest', 'audience', 'permission', 'revision', 'revokedKeyIds', 'revokedGrantDigests'];
+    if (passports !== undefined) {
+      fields.push('passportId');
+    }
+    exactKeys(route, fields, 'MCP route');
+    if (passports !== undefined) hash(route.passportId, 'Passport ID');
     route.manifest = validateManifest(route.manifest);
     hash(route.revision, 'Route revision');
     identifier(route.audience, 'Audience');
@@ -117,6 +134,7 @@ export function openPairingGateway(filename, dependencies) {
     return digest({
       requestDigest: callDigest(call), manifestDigest: digest(route.manifest),
       audience: route.audience, permission: route.permission, revision: route.revision, principalKeyId,
+      ...(route.passportId === undefined ? {} : { passportId: route.passportId }),
     });
   }
 
@@ -156,7 +174,7 @@ export function openPairingGateway(filename, dependencies) {
       const proof = snapshot(inputProof);
       const challenge = proof?.action?.payload?.challenge;
       hash(challenge, 'Challenge');
-      const { route, audit } = write(() => {
+      const acceptance = write(() => {
         const route = routeFor(call);
         const principalId = route.manifest.principal.id;
         const principal = identity.get(principalId);
@@ -172,13 +190,30 @@ export function openPairingGateway(filename, dependencies) {
           requestDigest, revokedKeyIds: route.revokedKeyIds,
           revokedGrantDigests: route.revokedGrantDigests,
         });
+        let passportBinding;
+        if (route.passportId !== undefined) {
+          const history = snapshot(readPassportHistory(route.passportId));
+          const passport = verifyPassport(history, passportRegistry);
+          insist(passport.passportId === route.passportId && passport.agentId === verified.agentId
+            && passport.principalId === verified.principalId, 'Passport identity mismatch');
+          const pinned = knownHead.get(passport.passportId);
+          insist(!pinned || (history.length >= pinned.sequence
+            && digest(history[pinned.sequence - 1]) === pinned.head), 'Passport history rolled back or forked');
+          pinHead.run(passport.passportId, history.length, passport.head);
+          // Keep the authenticated head even when it disables this request.
+          if (passport.status !== 'active' || passport.current.fingerprint !== verified.agentKeyId
+            || passport.current.manifestDigest !== verified.manifestDigest) return null;
+          passportBinding = { passportId: passport.passportId, passportHead: passport.head };
+        }
         const audit = {
-          ...verified, challenge, requestDigest, routeRevision: route.revision,
+          ...verified, ...passportBinding, challenge, requestDigest, routeRevision: route.revision,
           server: call.server, tool: call.tool, acceptedAt: now,
         };
         insist(consume.run(time, canonical(audit), challenge, time, time).changes === 1, 'Challenge unavailable');
         return { route, audit };
       });
+      insist(acceptance, 'Passport authorization refused');
+      const { route, audit } = acceptance;
       const result = await forward(call.server, route.revision, {
         method: 'tools/call', params: { name: call.tool, arguments: call.arguments },
       });

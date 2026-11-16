@@ -14,6 +14,9 @@ import { signPairedAction, signPairingGrant } from '../../src/pairing/index.mjs'
 import { mcpToolCallDigest, openPairingGateway } from '../../src/pairing/mcp-gateway.mjs';
 import { createOidcEnrollmentAuthenticator, oidcEnrollmentMessage, oidcEnrollmentNonce } from '../../src/pairing/oidc-enrollment.mjs';
 
+import { passportId, signPassportEvent } from '../../src/passport/index.mjs';
+import { openPassportRegistry } from '../../src/passport/registry.mjs';
+
 const directory = await mkdtemp(join(tmpdir(), 'kya-local-interop-'));
 const manifest = JSON.parse(await readFile(new URL('../../examples/manifest.json', import.meta.url)));
 const principalId = manifest.principal.id;
@@ -58,6 +61,7 @@ provider = new Provider(issuer, {
 providerCallback = provider.callback();
 const client = new Client({ name: 'kya-fixture', version: '1.0.0' });
 let gateway;
+let passports;
 try {
   await client.connect(new StdioClientTransport({
     command: process.execPath, args: [fileURLToPath(new URL('./mcp-fixture.mjs', import.meta.url))],
@@ -66,6 +70,7 @@ try {
     execute: [oidc.allowInsecureRequests, oidc.enableNonRepudiationChecks],
   });
   const checkedTokens = new Map();
+  passports = openPassportRegistry(join(directory, 'passports.sqlite'), issuer);
   gateway = openPairingGateway(join(directory, 'gateway.sqlite'), {
     authenticateIdentity: createOidcEnrollmentAuthenticator({
       issuer, audience: clientId,
@@ -82,6 +87,7 @@ try {
       consumeNonce: challenge => gateway.consumeEnrollmentChallenge(challenge),
     }),
     resolveRoute: () => route,
+    passports: { registry: issuer, readHistory: id => passports.read(id)?.history ?? null },
     forward(server, revision, request) {
       assert.equal(server, call.server);
       assert.equal(revision, route.revision);
@@ -123,21 +129,34 @@ try {
       signature: sign(null, oidcEnrollmentMessage(intent), key.privateKey).toString('base64url') };
   }
 
-  const [old, current, agent] = Array.from({ length: 3 }, () => generateKeyPairSync('ed25519'));
+  const [old, current, agent, replacement] = Array.from({ length: 4 }, () => generateKeyPairSync('ed25519'));
+  const pem = key => key.publicKey.export({ format: 'pem', type: 'spki' });
+  const event = {
+    schema: 'kya.passport-event/v1', registry: issuer, operation: 'register', previous: null,
+    principalId, agentId: manifest.agent.id, manifestDigest: digest(manifest),
+    controllerPublicKey: pem(current), agentPublicKey: pem(agent),
+  };
+  event.passportId = passportId(event);
+  route.passportId = event.passportId;
+  const register = (payload, key) => passports.append({
+    event: payload, controllerSignature: signPassportEvent(payload, current.privateKey),
+    agentSignature: key ? signPassportEvent(payload, key.privateKey) : null,
+  });
+  const initial = register(event, agent);
   const enrolled = await gateway.enrollIdentity(await login(old, null));
   const stale = gateway.issueChallenge(call);
   const rotated = await gateway.rotateIdentity(await login(current, enrolled.keyId), enrolled.keyId);
   assert.equal(rotated.keyId, keyId(current.publicKey));
 
-  function proof(challenge, signer) {
+  function proof(challenge, signer, agentKey = agent) {
     const grant = signPairingGrant({ schema: 'kya.pairing-grant/v1', principalId,
-      agentKeyId: keyId(agent.publicKey), manifestDigest: digest(manifest),
+      agentKeyId: keyId(agentKey.publicKey), manifestDigest: digest(manifest),
       audience: route.audience, permission: route.permission,
       issuedAt: date(-10_000), expiresAt: date(300_000),
     }, signer.privateKey);
     return { grant, action: signPairedAction({ schema: 'kya.paired-action/v1',
       grantDigest: digest(grant), challenge, requestDigest: mcpToolCallDigest(call),
-    }, agent.privateKey) };
+    }, agentKey.privateKey) };
   }
   await assert.rejects(gateway.invoke(call, proof(stale, old)), /challenge/i);
   const challenge = gateway.issueChallenge(call);
@@ -148,9 +167,20 @@ try {
   assert.equal(audit.principalKeyId, rotated.keyId);
   assert.deepEqual(gateway.readAudit(challenge), audit);
   await assert.rejects(gateway.invoke(call, accepted), /challenge/i);
-  console.log('Passed: two signed Authorization Code + PKCE ceremonies, key rotation, stale key rejection, exact MCP stdio call, durable audit, replay refusal');
+  assert.equal(audit.passportHead, initial.head);
+  const update = gateway.issueChallenge(call);
+  const nextPassport = register({
+    ...event, operation: 'rotate', previous: initial.head, agentPublicKey: pem(replacement),
+  }, replacement);
+  await assert.rejects(gateway.invoke(call, proof(update, current)), /passport authorization refused/i);
+  assert.equal((await gateway.invoke(call, proof(update, current, replacement))).audit.passportHead, nextPassport.head);
+  const revoked = gateway.issueChallenge(call);
+  register({ ...event, operation: 'revoke', previous: nextPassport.head, agentPublicKey: null }, null);
+  await assert.rejects(gateway.invoke(call, proof(revoked, current, replacement)), /passport authorization refused/i);
+  console.log('Passed: signed OIDC PKCE, principal rotation, active Passport enforcement, agent rotation, revocation, exact MCP stdio and replay refusal');
 } finally {
   gateway?.close();
+  passports?.close();
   await client.close();
   await new Promise(resolve => http.close(resolve));
   await rm(directory, { recursive: true, force: true });

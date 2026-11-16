@@ -1,3 +1,4 @@
+import type { PassportRecord } from '../passport/index.mjs';
 import type { Manifest } from '../index.js';
 import type { PairedActionProof, VerifiedPairing } from './index.js';
 
@@ -14,6 +15,7 @@ export interface McpRoute {
   revision: string;
   revokedKeyIds: string[];
   revokedGrantDigests: string[];
+  passportId?: string;
 }
 
 export interface EnrollmentAssertion {
@@ -31,6 +33,8 @@ export interface McpAudit extends VerifiedPairing {
   tool: string;
   acceptedAt: string;
   downstreamResponseObserved?: true;
+  passportId?: string;
+  passportHead?: string;
 }
 
 export interface GatewayDependencies<Session, Result> {
@@ -40,6 +44,10 @@ export interface GatewayDependencies<Session, Result> {
     method: 'tools/call';
     params: { name: string; arguments: Record<string, unknown> };
   }): Result | Promise<Result>;
+  passports?: {
+    registry: string;
+    readHistory(passportId: string): PassportRecord[] | null;
+  };
   clock?(): string;
 }
 
