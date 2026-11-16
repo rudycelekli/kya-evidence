@@ -657,8 +657,18 @@
       "related": [
         "ADR-0053"
       ]
+    },
+    {
+      "id": "ADR-0055",
+      "title": "Signed passport registry and historical fingerprint lookup",
+      "status": "Implemented locally; review pending",
+      "file": "docs/adr/0055-passport-registry.md",
+      "contentDigest": "e12e45fff5979fe42c54b494b4621c7792288aa8e871914f02908924231f1842",
+      "related": [
+        "ADR-0053"
+      ]
     }
   ],
-  "digest": "81dbbcc4e3c76807d33785cbd54e04678f2570e8c5c97eb6ac0ff7091ccc6082",
+  "digest": "fb906a34593787138bbd21abbef4e3ffb31aefae896de1c67a4e30ddc4fac0bc",
   "store": "portable local file; not a claim of AgentDB graph persistence"
 }

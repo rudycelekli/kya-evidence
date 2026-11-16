@@ -14,6 +14,8 @@ The [engineering case study](https://rudycelekli.github.io/engineering/repositor
 
 The experimental [principal–agent pairing profile](docs/PAIRING.md) binds a trusted principal, an agent key, the exact manifest and a signed request hash.
 
+The [KYA Passport MVP](docs/PASSPORT.md) adds a signed agent registry, stable passport links, and lookup after key rotation or revocation.
+
 ## Read the full agent dossier
 
 A headline score is the beginning of the report. KYA now explains which responses replay, which predicates failed, which passing claims lack originals, and where the evidence cannot reach. The dossier keeps scope, source, coverage, reported cost, evaluator controls and unresolved questions together.
