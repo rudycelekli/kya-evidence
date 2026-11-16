@@ -1,0 +1,1760 @@
+{
+  "schema": "kya.passport-vectors/v1",
+  "vectors": [
+    {
+      "id": "pair-valid",
+      "operation": "paired-action",
+      "inputs": {
+        "proof": {
+          "grant": {
+            "payload": {
+              "agentKeyId": "d2d993a35ed4229015f35b31366d4ce8b97d0725642e343a4b6d9cab09bc57e4",
+              "audience": "gateway:fixture",
+              "expiresAt": "2026-11-16T12:10:00.000Z",
+              "issuedAt": "2026-11-16T12:00:00.000Z",
+              "manifestDigest": "533ef06075d5cfe08521fcde50e32a9d906bcf4823f38d8856ea83e43085a6ac",
+              "permission": "read",
+              "principalId": "controller:synthetic",
+              "schema": "kya.pairing-grant/v1"
+            },
+            "publicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAQwRr/kCSs+lJlOraFdzCDYqqB7ZY/TlU644O+4vcpd4=\n-----END PUBLIC KEY-----\n",
+            "signature": "GO714566IUvLgVk1HPfguz_7KR5-9ux1GaXXgX6IyEnySScz-Cd8Z7KKexpxrDwq13elZE7DpXFp7f4V2hzACg"
+          },
+          "action": {
+            "payload": {
+              "challenge": "abababababababababababababababababababababababababababababababab",
+              "grantDigest": "7fc5416fb89338e9392fe7c52d0597e85fe7f1d0abae3cf88f34a85d92c28532",
+              "requestDigest": "2121212121212121212121212121212121212121212121212121212121212121",
+              "schema": "kya.paired-action/v1"
+            },
+            "publicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEATtMvY7818O7vyyXyii4fvchzrig1ZxsMlGD18S5FVqg=\n-----END PUBLIC KEY-----\n",
+            "signature": "vhL0Bq6pPJA40pFQ0jy0wW9OfvfUiD1CdyQxIuBAhBIYTEaF2WSkIkP4HdZSYDSq94xUtKXJVl3kWy8mhCkqDA"
+          }
+        },
+        "context": {
+          "manifest": {
+            "schema": "kya.manifest/v1",
+            "agent": {
+              "id": "fixture:careful",
+              "name": "Synthetic careful reference",
+              "version": "1.0.0"
+            },
+            "principal": {
+              "id": "controller:synthetic"
+            },
+            "system": {
+              "harness": "kya-reference-fixture",
+              "harnessVersion": "1.0.0",
+              "model": "deterministic-fixture-no-model",
+              "artifactDigest": "0000000000000000000000000000000000000000000000000000000000000000",
+              "configDigest": "1111111111111111111111111111111111111111111111111111111111111111",
+              "tools": [
+                {
+                  "id": "read",
+                  "version": "1",
+                  "permissions": [
+                    "read"
+                  ]
+                }
+              ]
+            },
+            "scope": {
+              "id": "synthetic:core",
+              "purpose": "Public synthetic structured conformance demonstration",
+              "permissions": [
+                "read",
+                "external-message"
+              ],
+              "forbidden": [
+                "delete",
+                "external-write"
+              ],
+              "approvalRequired": [
+                "external-message"
+              ]
+            },
+            "issuedAt": "2026-11-16T11:00:00.000Z",
+            "expiresAt": "2026-11-16T13:00:00.000Z"
+          },
+          "principalId": "controller:synthetic",
+          "principalKeyId": "235f0c4208ac567d21f81c3291276bb6cc68a6ba4ba46f73d5470b08ee0c9f6c",
+          "audience": "gateway:fixture",
+          "permission": "read",
+          "challenge": "abababababababababababababababababababababababababababababababab",
+          "requestDigest": "2121212121212121212121212121212121212121212121212121212121212121",
+          "now": "2026-11-16T12:01:00.000Z",
+          "revokedKeyIds": [],
+          "revokedGrantDigests": []
+        }
+      },
+      "expected": {
+        "status": "accept",
+        "value": {
+          "principalId": "controller:synthetic",
+          "principalKeyId": "235f0c4208ac567d21f81c3291276bb6cc68a6ba4ba46f73d5470b08ee0c9f6c",
+          "agentId": "fixture:careful",
+          "agentKeyId": "d2d993a35ed4229015f35b31366d4ce8b97d0725642e343a4b6d9cab09bc57e4",
+          "manifestDigest": "533ef06075d5cfe08521fcde50e32a9d906bcf4823f38d8856ea83e43085a6ac",
+          "grantDigest": "7fc5416fb89338e9392fe7c52d0597e85fe7f1d0abae3cf88f34a85d92c28532",
+          "actionDigest": "6b63a33301aa1d534c6468cde0555c638432c4f1746e1adde4b7c1a911bf4993"
+        }
+      }
+    },
+    {
+      "id": "pair-wrong-audience",
+      "operation": "paired-action",
+      "inputs": {
+        "proof": {
+          "grant": {
+            "payload": {
+              "agentKeyId": "d2d993a35ed4229015f35b31366d4ce8b97d0725642e343a4b6d9cab09bc57e4",
+              "audience": "gateway:other",
+              "expiresAt": "2026-11-16T12:10:00.000Z",
+              "issuedAt": "2026-11-16T12:00:00.000Z",
+              "manifestDigest": "533ef06075d5cfe08521fcde50e32a9d906bcf4823f38d8856ea83e43085a6ac",
+              "permission": "read",
+              "principalId": "controller:synthetic",
+              "schema": "kya.pairing-grant/v1"
+            },
+            "publicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAQwRr/kCSs+lJlOraFdzCDYqqB7ZY/TlU644O+4vcpd4=\n-----END PUBLIC KEY-----\n",
+            "signature": "R0vVcPJWWoDwdxHFWc1ria4WTOmK5fQEjfA-s2vbJVAMQ701Rm73lmmLmOlC-R2iDAmF0qVvVZaLBrDvRhqJDw"
+          },
+          "action": {
+            "payload": {
+              "challenge": "abababababababababababababababababababababababababababababababab",
+              "grantDigest": "0a55d57e25292e8bcb90b41eb8348fed259fa3484ab0f3903c0948cf65c9c048",
+              "requestDigest": "2121212121212121212121212121212121212121212121212121212121212121",
+              "schema": "kya.paired-action/v1"
+            },
+            "publicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEATtMvY7818O7vyyXyii4fvchzrig1ZxsMlGD18S5FVqg=\n-----END PUBLIC KEY-----\n",
+            "signature": "csg28PE1O_UV7wIovEqLgKYoQ1NGsR6q-HE6B3gNWLPrQ_RMx2CKmKt3kpo-RLhBUjxu6Wd01e03r41VX_HoCA"
+          }
+        },
+        "context": {
+          "manifest": {
+            "schema": "kya.manifest/v1",
+            "agent": {
+              "id": "fixture:careful",
+              "name": "Synthetic careful reference",
+              "version": "1.0.0"
+            },
+            "principal": {
+              "id": "controller:synthetic"
+            },
+            "system": {
+              "harness": "kya-reference-fixture",
+              "harnessVersion": "1.0.0",
+              "model": "deterministic-fixture-no-model",
+              "artifactDigest": "0000000000000000000000000000000000000000000000000000000000000000",
+              "configDigest": "1111111111111111111111111111111111111111111111111111111111111111",
+              "tools": [
+                {
+                  "id": "read",
+                  "version": "1",
+                  "permissions": [
+                    "read"
+                  ]
+                }
+              ]
+            },
+            "scope": {
+              "id": "synthetic:core",
+              "purpose": "Public synthetic structured conformance demonstration",
+              "permissions": [
+                "read",
+                "external-message"
+              ],
+              "forbidden": [
+                "delete",
+                "external-write"
+              ],
+              "approvalRequired": [
+                "external-message"
+              ]
+            },
+            "issuedAt": "2026-11-16T11:00:00.000Z",
+            "expiresAt": "2026-11-16T13:00:00.000Z"
+          },
+          "principalId": "controller:synthetic",
+          "principalKeyId": "235f0c4208ac567d21f81c3291276bb6cc68a6ba4ba46f73d5470b08ee0c9f6c",
+          "audience": "gateway:fixture",
+          "permission": "read",
+          "challenge": "abababababababababababababababababababababababababababababababab",
+          "requestDigest": "2121212121212121212121212121212121212121212121212121212121212121",
+          "now": "2026-11-16T12:01:00.000Z",
+          "revokedKeyIds": [],
+          "revokedGrantDigests": []
+        }
+      },
+      "expected": {
+        "status": "reject"
+      }
+    },
+    {
+      "id": "pair-wrong-agent-key",
+      "operation": "paired-action",
+      "inputs": {
+        "proof": {
+          "grant": {
+            "payload": {
+              "agentKeyId": "d2d993a35ed4229015f35b31366d4ce8b97d0725642e343a4b6d9cab09bc57e4",
+              "audience": "gateway:fixture",
+              "expiresAt": "2026-11-16T12:10:00.000Z",
+              "issuedAt": "2026-11-16T12:00:00.000Z",
+              "manifestDigest": "533ef06075d5cfe08521fcde50e32a9d906bcf4823f38d8856ea83e43085a6ac",
+              "permission": "read",
+              "principalId": "controller:synthetic",
+              "schema": "kya.pairing-grant/v1"
+            },
+            "publicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAQwRr/kCSs+lJlOraFdzCDYqqB7ZY/TlU644O+4vcpd4=\n-----END PUBLIC KEY-----\n",
+            "signature": "GO714566IUvLgVk1HPfguz_7KR5-9ux1GaXXgX6IyEnySScz-Cd8Z7KKexpxrDwq13elZE7DpXFp7f4V2hzACg"
+          },
+          "action": {
+            "payload": {
+              "challenge": "abababababababababababababababababababababababababababababababab",
+              "grantDigest": "7fc5416fb89338e9392fe7c52d0597e85fe7f1d0abae3cf88f34a85d92c28532",
+              "requestDigest": "2121212121212121212121212121212121212121212121212121212121212121",
+              "schema": "kya.paired-action/v1"
+            },
+            "publicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAiEuIV/TqoWE8YVBNs01L6vNGUXoOMd483dTZtCAdnQs=\n-----END PUBLIC KEY-----\n",
+            "signature": "HLNPK6ul0-IDg-755oxbSeNEwn3rZEyDUphSXNZQUtRvIQ_4Yh7dmOGsm7o2eI3wtlw3WMZU9W7ESwT5SqaCCA"
+          }
+        },
+        "context": {
+          "manifest": {
+            "schema": "kya.manifest/v1",
+            "agent": {
+              "id": "fixture:careful",
+              "name": "Synthetic careful reference",
+              "version": "1.0.0"
+            },
+            "principal": {
+              "id": "controller:synthetic"
+            },
+            "system": {
+              "harness": "kya-reference-fixture",
+              "harnessVersion": "1.0.0",
+              "model": "deterministic-fixture-no-model",
+              "artifactDigest": "0000000000000000000000000000000000000000000000000000000000000000",
+              "configDigest": "1111111111111111111111111111111111111111111111111111111111111111",
+              "tools": [
+                {
+                  "id": "read",
+                  "version": "1",
+                  "permissions": [
+                    "read"
+                  ]
+                }
+              ]
+            },
+            "scope": {
+              "id": "synthetic:core",
+              "purpose": "Public synthetic structured conformance demonstration",
+              "permissions": [
+                "read",
+                "external-message"
+              ],
+              "forbidden": [
+                "delete",
+                "external-write"
+              ],
+              "approvalRequired": [
+                "external-message"
+              ]
+            },
+            "issuedAt": "2026-11-16T11:00:00.000Z",
+            "expiresAt": "2026-11-16T13:00:00.000Z"
+          },
+          "principalId": "controller:synthetic",
+          "principalKeyId": "235f0c4208ac567d21f81c3291276bb6cc68a6ba4ba46f73d5470b08ee0c9f6c",
+          "audience": "gateway:fixture",
+          "permission": "read",
+          "challenge": "abababababababababababababababababababababababababababababababab",
+          "requestDigest": "2121212121212121212121212121212121212121212121212121212121212121",
+          "now": "2026-11-16T12:01:00.000Z",
+          "revokedKeyIds": [],
+          "revokedGrantDigests": []
+        }
+      },
+      "expected": {
+        "status": "reject"
+      }
+    },
+    {
+      "id": "pair-untrusted-principal",
+      "operation": "paired-action",
+      "inputs": {
+        "proof": {
+          "grant": {
+            "payload": {
+              "agentKeyId": "d2d993a35ed4229015f35b31366d4ce8b97d0725642e343a4b6d9cab09bc57e4",
+              "audience": "gateway:fixture",
+              "expiresAt": "2026-11-16T12:10:00.000Z",
+              "issuedAt": "2026-11-16T12:00:00.000Z",
+              "manifestDigest": "533ef06075d5cfe08521fcde50e32a9d906bcf4823f38d8856ea83e43085a6ac",
+              "permission": "read",
+              "principalId": "controller:synthetic",
+              "schema": "kya.pairing-grant/v1"
+            },
+            "publicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAQwRr/kCSs+lJlOraFdzCDYqqB7ZY/TlU644O+4vcpd4=\n-----END PUBLIC KEY-----\n",
+            "signature": "GO714566IUvLgVk1HPfguz_7KR5-9ux1GaXXgX6IyEnySScz-Cd8Z7KKexpxrDwq13elZE7DpXFp7f4V2hzACg"
+          },
+          "action": {
+            "payload": {
+              "challenge": "abababababababababababababababababababababababababababababababab",
+              "grantDigest": "7fc5416fb89338e9392fe7c52d0597e85fe7f1d0abae3cf88f34a85d92c28532",
+              "requestDigest": "2121212121212121212121212121212121212121212121212121212121212121",
+              "schema": "kya.paired-action/v1"
+            },
+            "publicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEATtMvY7818O7vyyXyii4fvchzrig1ZxsMlGD18S5FVqg=\n-----END PUBLIC KEY-----\n",
+            "signature": "vhL0Bq6pPJA40pFQ0jy0wW9OfvfUiD1CdyQxIuBAhBIYTEaF2WSkIkP4HdZSYDSq94xUtKXJVl3kWy8mhCkqDA"
+          }
+        },
+        "context": {
+          "manifest": {
+            "schema": "kya.manifest/v1",
+            "agent": {
+              "id": "fixture:careful",
+              "name": "Synthetic careful reference",
+              "version": "1.0.0"
+            },
+            "principal": {
+              "id": "controller:synthetic"
+            },
+            "system": {
+              "harness": "kya-reference-fixture",
+              "harnessVersion": "1.0.0",
+              "model": "deterministic-fixture-no-model",
+              "artifactDigest": "0000000000000000000000000000000000000000000000000000000000000000",
+              "configDigest": "1111111111111111111111111111111111111111111111111111111111111111",
+              "tools": [
+                {
+                  "id": "read",
+                  "version": "1",
+                  "permissions": [
+                    "read"
+                  ]
+                }
+              ]
+            },
+            "scope": {
+              "id": "synthetic:core",
+              "purpose": "Public synthetic structured conformance demonstration",
+              "permissions": [
+                "read",
+                "external-message"
+              ],
+              "forbidden": [
+                "delete",
+                "external-write"
+              ],
+              "approvalRequired": [
+                "external-message"
+              ]
+            },
+            "issuedAt": "2026-11-16T11:00:00.000Z",
+            "expiresAt": "2026-11-16T13:00:00.000Z"
+          },
+          "principalId": "controller:synthetic",
+          "principalKeyId": "aae257fc4d984235acb8289097669ef4391af74323316633d65ab02d1ef2eb25",
+          "audience": "gateway:fixture",
+          "permission": "read",
+          "challenge": "abababababababababababababababababababababababababababababababab",
+          "requestDigest": "2121212121212121212121212121212121212121212121212121212121212121",
+          "now": "2026-11-16T12:01:00.000Z",
+          "revokedKeyIds": [],
+          "revokedGrantDigests": []
+        }
+      },
+      "expected": {
+        "status": "reject"
+      }
+    },
+    {
+      "id": "pair-swapped-grant",
+      "operation": "paired-action",
+      "inputs": {
+        "proof": {
+          "grant": {
+            "payload": {
+              "agentKeyId": "d2d993a35ed4229015f35b31366d4ce8b97d0725642e343a4b6d9cab09bc57e4",
+              "audience": "gateway:fixture",
+              "expiresAt": "2026-11-16T12:10:00.000Z",
+              "issuedAt": "2026-11-16T12:00:00.000Z",
+              "manifestDigest": "533ef06075d5cfe08521fcde50e32a9d906bcf4823f38d8856ea83e43085a6ac",
+              "permission": "read",
+              "principalId": "controller:synthetic",
+              "schema": "kya.pairing-grant/v1"
+            },
+            "publicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAQwRr/kCSs+lJlOraFdzCDYqqB7ZY/TlU644O+4vcpd4=\n-----END PUBLIC KEY-----\n",
+            "signature": "GO714566IUvLgVk1HPfguz_7KR5-9ux1GaXXgX6IyEnySScz-Cd8Z7KKexpxrDwq13elZE7DpXFp7f4V2hzACg"
+          },
+          "action": {
+            "payload": {
+              "challenge": "abababababababababababababababababababababababababababababababab",
+              "grantDigest": "5555555555555555555555555555555555555555555555555555555555555555",
+              "requestDigest": "2121212121212121212121212121212121212121212121212121212121212121",
+              "schema": "kya.paired-action/v1"
+            },
+            "publicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEATtMvY7818O7vyyXyii4fvchzrig1ZxsMlGD18S5FVqg=\n-----END PUBLIC KEY-----\n",
+            "signature": "QRvCGCQqEDpwvWwDHit5iUvLgovrRQcg7qTueNecD0UiiclaB3Ef8t6Q8czMaZ2NqMxTI1qLaj7O_NJqPHRPBw"
+          }
+        },
+        "context": {
+          "manifest": {
+            "schema": "kya.manifest/v1",
+            "agent": {
+              "id": "fixture:careful",
+              "name": "Synthetic careful reference",
+              "version": "1.0.0"
+            },
+            "principal": {
+              "id": "controller:synthetic"
+            },
+            "system": {
+              "harness": "kya-reference-fixture",
+              "harnessVersion": "1.0.0",
+              "model": "deterministic-fixture-no-model",
+              "artifactDigest": "0000000000000000000000000000000000000000000000000000000000000000",
+              "configDigest": "1111111111111111111111111111111111111111111111111111111111111111",
+              "tools": [
+                {
+                  "id": "read",
+                  "version": "1",
+                  "permissions": [
+                    "read"
+                  ]
+                }
+              ]
+            },
+            "scope": {
+              "id": "synthetic:core",
+              "purpose": "Public synthetic structured conformance demonstration",
+              "permissions": [
+                "read",
+                "external-message"
+              ],
+              "forbidden": [
+                "delete",
+                "external-write"
+              ],
+              "approvalRequired": [
+                "external-message"
+              ]
+            },
+            "issuedAt": "2026-11-16T11:00:00.000Z",
+            "expiresAt": "2026-11-16T13:00:00.000Z"
+          },
+          "principalId": "controller:synthetic",
+          "principalKeyId": "235f0c4208ac567d21f81c3291276bb6cc68a6ba4ba46f73d5470b08ee0c9f6c",
+          "audience": "gateway:fixture",
+          "permission": "read",
+          "challenge": "abababababababababababababababababababababababababababababababab",
+          "requestDigest": "2121212121212121212121212121212121212121212121212121212121212121",
+          "now": "2026-11-16T12:01:00.000Z",
+          "revokedKeyIds": [],
+          "revokedGrantDigests": []
+        }
+      },
+      "expected": {
+        "status": "reject"
+      }
+    },
+    {
+      "id": "pair-modified-request",
+      "operation": "paired-action",
+      "inputs": {
+        "proof": {
+          "grant": {
+            "payload": {
+              "agentKeyId": "d2d993a35ed4229015f35b31366d4ce8b97d0725642e343a4b6d9cab09bc57e4",
+              "audience": "gateway:fixture",
+              "expiresAt": "2026-11-16T12:10:00.000Z",
+              "issuedAt": "2026-11-16T12:00:00.000Z",
+              "manifestDigest": "533ef06075d5cfe08521fcde50e32a9d906bcf4823f38d8856ea83e43085a6ac",
+              "permission": "read",
+              "principalId": "controller:synthetic",
+              "schema": "kya.pairing-grant/v1"
+            },
+            "publicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAQwRr/kCSs+lJlOraFdzCDYqqB7ZY/TlU644O+4vcpd4=\n-----END PUBLIC KEY-----\n",
+            "signature": "GO714566IUvLgVk1HPfguz_7KR5-9ux1GaXXgX6IyEnySScz-Cd8Z7KKexpxrDwq13elZE7DpXFp7f4V2hzACg"
+          },
+          "action": {
+            "payload": {
+              "challenge": "abababababababababababababababababababababababababababababababab",
+              "grantDigest": "7fc5416fb89338e9392fe7c52d0597e85fe7f1d0abae3cf88f34a85d92c28532",
+              "requestDigest": "2222222222222222222222222222222222222222222222222222222222222222",
+              "schema": "kya.paired-action/v1"
+            },
+            "publicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEATtMvY7818O7vyyXyii4fvchzrig1ZxsMlGD18S5FVqg=\n-----END PUBLIC KEY-----\n",
+            "signature": "HDQgYiQL6CxruP-goSBnRwv_KYvlKzDKItY47QDLZ4yw0EEbmn_-o1h48Yk07omWgzQFvECqIeOmBN4OB5J8Bw"
+          }
+        },
+        "context": {
+          "manifest": {
+            "schema": "kya.manifest/v1",
+            "agent": {
+              "id": "fixture:careful",
+              "name": "Synthetic careful reference",
+              "version": "1.0.0"
+            },
+            "principal": {
+              "id": "controller:synthetic"
+            },
+            "system": {
+              "harness": "kya-reference-fixture",
+              "harnessVersion": "1.0.0",
+              "model": "deterministic-fixture-no-model",
+              "artifactDigest": "0000000000000000000000000000000000000000000000000000000000000000",
+              "configDigest": "1111111111111111111111111111111111111111111111111111111111111111",
+              "tools": [
+                {
+                  "id": "read",
+                  "version": "1",
+                  "permissions": [
+                    "read"
+                  ]
+                }
+              ]
+            },
+            "scope": {
+              "id": "synthetic:core",
+              "purpose": "Public synthetic structured conformance demonstration",
+              "permissions": [
+                "read",
+                "external-message"
+              ],
+              "forbidden": [
+                "delete",
+                "external-write"
+              ],
+              "approvalRequired": [
+                "external-message"
+              ]
+            },
+            "issuedAt": "2026-11-16T11:00:00.000Z",
+            "expiresAt": "2026-11-16T13:00:00.000Z"
+          },
+          "principalId": "controller:synthetic",
+          "principalKeyId": "235f0c4208ac567d21f81c3291276bb6cc68a6ba4ba46f73d5470b08ee0c9f6c",
+          "audience": "gateway:fixture",
+          "permission": "read",
+          "challenge": "abababababababababababababababababababababababababababababababab",
+          "requestDigest": "2121212121212121212121212121212121212121212121212121212121212121",
+          "now": "2026-11-16T12:01:00.000Z",
+          "revokedKeyIds": [],
+          "revokedGrantDigests": []
+        }
+      },
+      "expected": {
+        "status": "reject"
+      }
+    },
+    {
+      "id": "pair-different-challenge",
+      "operation": "paired-action",
+      "inputs": {
+        "proof": {
+          "grant": {
+            "payload": {
+              "agentKeyId": "d2d993a35ed4229015f35b31366d4ce8b97d0725642e343a4b6d9cab09bc57e4",
+              "audience": "gateway:fixture",
+              "expiresAt": "2026-11-16T12:10:00.000Z",
+              "issuedAt": "2026-11-16T12:00:00.000Z",
+              "manifestDigest": "533ef06075d5cfe08521fcde50e32a9d906bcf4823f38d8856ea83e43085a6ac",
+              "permission": "read",
+              "principalId": "controller:synthetic",
+              "schema": "kya.pairing-grant/v1"
+            },
+            "publicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAQwRr/kCSs+lJlOraFdzCDYqqB7ZY/TlU644O+4vcpd4=\n-----END PUBLIC KEY-----\n",
+            "signature": "GO714566IUvLgVk1HPfguz_7KR5-9ux1GaXXgX6IyEnySScz-Cd8Z7KKexpxrDwq13elZE7DpXFp7f4V2hzACg"
+          },
+          "action": {
+            "payload": {
+              "challenge": "abababababababababababababababababababababababababababababababab",
+              "grantDigest": "7fc5416fb89338e9392fe7c52d0597e85fe7f1d0abae3cf88f34a85d92c28532",
+              "requestDigest": "2121212121212121212121212121212121212121212121212121212121212121",
+              "schema": "kya.paired-action/v1"
+            },
+            "publicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEATtMvY7818O7vyyXyii4fvchzrig1ZxsMlGD18S5FVqg=\n-----END PUBLIC KEY-----\n",
+            "signature": "vhL0Bq6pPJA40pFQ0jy0wW9OfvfUiD1CdyQxIuBAhBIYTEaF2WSkIkP4HdZSYDSq94xUtKXJVl3kWy8mhCkqDA"
+          }
+        },
+        "context": {
+          "manifest": {
+            "schema": "kya.manifest/v1",
+            "agent": {
+              "id": "fixture:careful",
+              "name": "Synthetic careful reference",
+              "version": "1.0.0"
+            },
+            "principal": {
+              "id": "controller:synthetic"
+            },
+            "system": {
+              "harness": "kya-reference-fixture",
+              "harnessVersion": "1.0.0",
+              "model": "deterministic-fixture-no-model",
+              "artifactDigest": "0000000000000000000000000000000000000000000000000000000000000000",
+              "configDigest": "1111111111111111111111111111111111111111111111111111111111111111",
+              "tools": [
+                {
+                  "id": "read",
+                  "version": "1",
+                  "permissions": [
+                    "read"
+                  ]
+                }
+              ]
+            },
+            "scope": {
+              "id": "synthetic:core",
+              "purpose": "Public synthetic structured conformance demonstration",
+              "permissions": [
+                "read",
+                "external-message"
+              ],
+              "forbidden": [
+                "delete",
+                "external-write"
+              ],
+              "approvalRequired": [
+                "external-message"
+              ]
+            },
+            "issuedAt": "2026-11-16T11:00:00.000Z",
+            "expiresAt": "2026-11-16T13:00:00.000Z"
+          },
+          "principalId": "controller:synthetic",
+          "principalKeyId": "235f0c4208ac567d21f81c3291276bb6cc68a6ba4ba46f73d5470b08ee0c9f6c",
+          "audience": "gateway:fixture",
+          "permission": "read",
+          "challenge": "2323232323232323232323232323232323232323232323232323232323232323",
+          "requestDigest": "2121212121212121212121212121212121212121212121212121212121212121",
+          "now": "2026-11-16T12:01:00.000Z",
+          "revokedKeyIds": [],
+          "revokedGrantDigests": []
+        }
+      },
+      "expected": {
+        "status": "reject"
+      }
+    },
+    {
+      "id": "pair-revoked-grant",
+      "operation": "paired-action",
+      "inputs": {
+        "proof": {
+          "grant": {
+            "payload": {
+              "agentKeyId": "d2d993a35ed4229015f35b31366d4ce8b97d0725642e343a4b6d9cab09bc57e4",
+              "audience": "gateway:fixture",
+              "expiresAt": "2026-11-16T12:10:00.000Z",
+              "issuedAt": "2026-11-16T12:00:00.000Z",
+              "manifestDigest": "533ef06075d5cfe08521fcde50e32a9d906bcf4823f38d8856ea83e43085a6ac",
+              "permission": "read",
+              "principalId": "controller:synthetic",
+              "schema": "kya.pairing-grant/v1"
+            },
+            "publicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAQwRr/kCSs+lJlOraFdzCDYqqB7ZY/TlU644O+4vcpd4=\n-----END PUBLIC KEY-----\n",
+            "signature": "GO714566IUvLgVk1HPfguz_7KR5-9ux1GaXXgX6IyEnySScz-Cd8Z7KKexpxrDwq13elZE7DpXFp7f4V2hzACg"
+          },
+          "action": {
+            "payload": {
+              "challenge": "abababababababababababababababababababababababababababababababab",
+              "grantDigest": "7fc5416fb89338e9392fe7c52d0597e85fe7f1d0abae3cf88f34a85d92c28532",
+              "requestDigest": "2121212121212121212121212121212121212121212121212121212121212121",
+              "schema": "kya.paired-action/v1"
+            },
+            "publicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEATtMvY7818O7vyyXyii4fvchzrig1ZxsMlGD18S5FVqg=\n-----END PUBLIC KEY-----\n",
+            "signature": "vhL0Bq6pPJA40pFQ0jy0wW9OfvfUiD1CdyQxIuBAhBIYTEaF2WSkIkP4HdZSYDSq94xUtKXJVl3kWy8mhCkqDA"
+          }
+        },
+        "context": {
+          "manifest": {
+            "schema": "kya.manifest/v1",
+            "agent": {
+              "id": "fixture:careful",
+              "name": "Synthetic careful reference",
+              "version": "1.0.0"
+            },
+            "principal": {
+              "id": "controller:synthetic"
+            },
+            "system": {
+              "harness": "kya-reference-fixture",
+              "harnessVersion": "1.0.0",
+              "model": "deterministic-fixture-no-model",
+              "artifactDigest": "0000000000000000000000000000000000000000000000000000000000000000",
+              "configDigest": "1111111111111111111111111111111111111111111111111111111111111111",
+              "tools": [
+                {
+                  "id": "read",
+                  "version": "1",
+                  "permissions": [
+                    "read"
+                  ]
+                }
+              ]
+            },
+            "scope": {
+              "id": "synthetic:core",
+              "purpose": "Public synthetic structured conformance demonstration",
+              "permissions": [
+                "read",
+                "external-message"
+              ],
+              "forbidden": [
+                "delete",
+                "external-write"
+              ],
+              "approvalRequired": [
+                "external-message"
+              ]
+            },
+            "issuedAt": "2026-11-16T11:00:00.000Z",
+            "expiresAt": "2026-11-16T13:00:00.000Z"
+          },
+          "principalId": "controller:synthetic",
+          "principalKeyId": "235f0c4208ac567d21f81c3291276bb6cc68a6ba4ba46f73d5470b08ee0c9f6c",
+          "audience": "gateway:fixture",
+          "permission": "read",
+          "challenge": "abababababababababababababababababababababababababababababababab",
+          "requestDigest": "2121212121212121212121212121212121212121212121212121212121212121",
+          "now": "2026-11-16T12:01:00.000Z",
+          "revokedKeyIds": [],
+          "revokedGrantDigests": [
+            "7fc5416fb89338e9392fe7c52d0597e85fe7f1d0abae3cf88f34a85d92c28532"
+          ]
+        }
+      },
+      "expected": {
+        "status": "reject"
+      }
+    },
+    {
+      "id": "pair-revoked-agent-key",
+      "operation": "paired-action",
+      "inputs": {
+        "proof": {
+          "grant": {
+            "payload": {
+              "agentKeyId": "d2d993a35ed4229015f35b31366d4ce8b97d0725642e343a4b6d9cab09bc57e4",
+              "audience": "gateway:fixture",
+              "expiresAt": "2026-11-16T12:10:00.000Z",
+              "issuedAt": "2026-11-16T12:00:00.000Z",
+              "manifestDigest": "533ef06075d5cfe08521fcde50e32a9d906bcf4823f38d8856ea83e43085a6ac",
+              "permission": "read",
+              "principalId": "controller:synthetic",
+              "schema": "kya.pairing-grant/v1"
+            },
+            "publicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAQwRr/kCSs+lJlOraFdzCDYqqB7ZY/TlU644O+4vcpd4=\n-----END PUBLIC KEY-----\n",
+            "signature": "GO714566IUvLgVk1HPfguz_7KR5-9ux1GaXXgX6IyEnySScz-Cd8Z7KKexpxrDwq13elZE7DpXFp7f4V2hzACg"
+          },
+          "action": {
+            "payload": {
+              "challenge": "abababababababababababababababababababababababababababababababab",
+              "grantDigest": "7fc5416fb89338e9392fe7c52d0597e85fe7f1d0abae3cf88f34a85d92c28532",
+              "requestDigest": "2121212121212121212121212121212121212121212121212121212121212121",
+              "schema": "kya.paired-action/v1"
+            },
+            "publicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEATtMvY7818O7vyyXyii4fvchzrig1ZxsMlGD18S5FVqg=\n-----END PUBLIC KEY-----\n",
+            "signature": "vhL0Bq6pPJA40pFQ0jy0wW9OfvfUiD1CdyQxIuBAhBIYTEaF2WSkIkP4HdZSYDSq94xUtKXJVl3kWy8mhCkqDA"
+          }
+        },
+        "context": {
+          "manifest": {
+            "schema": "kya.manifest/v1",
+            "agent": {
+              "id": "fixture:careful",
+              "name": "Synthetic careful reference",
+              "version": "1.0.0"
+            },
+            "principal": {
+              "id": "controller:synthetic"
+            },
+            "system": {
+              "harness": "kya-reference-fixture",
+              "harnessVersion": "1.0.0",
+              "model": "deterministic-fixture-no-model",
+              "artifactDigest": "0000000000000000000000000000000000000000000000000000000000000000",
+              "configDigest": "1111111111111111111111111111111111111111111111111111111111111111",
+              "tools": [
+                {
+                  "id": "read",
+                  "version": "1",
+                  "permissions": [
+                    "read"
+                  ]
+                }
+              ]
+            },
+            "scope": {
+              "id": "synthetic:core",
+              "purpose": "Public synthetic structured conformance demonstration",
+              "permissions": [
+                "read",
+                "external-message"
+              ],
+              "forbidden": [
+                "delete",
+                "external-write"
+              ],
+              "approvalRequired": [
+                "external-message"
+              ]
+            },
+            "issuedAt": "2026-11-16T11:00:00.000Z",
+            "expiresAt": "2026-11-16T13:00:00.000Z"
+          },
+          "principalId": "controller:synthetic",
+          "principalKeyId": "235f0c4208ac567d21f81c3291276bb6cc68a6ba4ba46f73d5470b08ee0c9f6c",
+          "audience": "gateway:fixture",
+          "permission": "read",
+          "challenge": "abababababababababababababababababababababababababababababababab",
+          "requestDigest": "2121212121212121212121212121212121212121212121212121212121212121",
+          "now": "2026-11-16T12:01:00.000Z",
+          "revokedKeyIds": [
+            "d2d993a35ed4229015f35b31366d4ce8b97d0725642e343a4b6d9cab09bc57e4"
+          ],
+          "revokedGrantDigests": []
+        }
+      },
+      "expected": {
+        "status": "reject"
+      }
+    },
+    {
+      "id": "pair-expiry-is-exclusive",
+      "operation": "paired-action",
+      "inputs": {
+        "proof": {
+          "grant": {
+            "payload": {
+              "agentKeyId": "d2d993a35ed4229015f35b31366d4ce8b97d0725642e343a4b6d9cab09bc57e4",
+              "audience": "gateway:fixture",
+              "expiresAt": "2026-11-16T12:10:00.000Z",
+              "issuedAt": "2026-11-16T12:00:00.000Z",
+              "manifestDigest": "533ef06075d5cfe08521fcde50e32a9d906bcf4823f38d8856ea83e43085a6ac",
+              "permission": "read",
+              "principalId": "controller:synthetic",
+              "schema": "kya.pairing-grant/v1"
+            },
+            "publicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAQwRr/kCSs+lJlOraFdzCDYqqB7ZY/TlU644O+4vcpd4=\n-----END PUBLIC KEY-----\n",
+            "signature": "GO714566IUvLgVk1HPfguz_7KR5-9ux1GaXXgX6IyEnySScz-Cd8Z7KKexpxrDwq13elZE7DpXFp7f4V2hzACg"
+          },
+          "action": {
+            "payload": {
+              "challenge": "abababababababababababababababababababababababababababababababab",
+              "grantDigest": "7fc5416fb89338e9392fe7c52d0597e85fe7f1d0abae3cf88f34a85d92c28532",
+              "requestDigest": "2121212121212121212121212121212121212121212121212121212121212121",
+              "schema": "kya.paired-action/v1"
+            },
+            "publicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEATtMvY7818O7vyyXyii4fvchzrig1ZxsMlGD18S5FVqg=\n-----END PUBLIC KEY-----\n",
+            "signature": "vhL0Bq6pPJA40pFQ0jy0wW9OfvfUiD1CdyQxIuBAhBIYTEaF2WSkIkP4HdZSYDSq94xUtKXJVl3kWy8mhCkqDA"
+          }
+        },
+        "context": {
+          "manifest": {
+            "schema": "kya.manifest/v1",
+            "agent": {
+              "id": "fixture:careful",
+              "name": "Synthetic careful reference",
+              "version": "1.0.0"
+            },
+            "principal": {
+              "id": "controller:synthetic"
+            },
+            "system": {
+              "harness": "kya-reference-fixture",
+              "harnessVersion": "1.0.0",
+              "model": "deterministic-fixture-no-model",
+              "artifactDigest": "0000000000000000000000000000000000000000000000000000000000000000",
+              "configDigest": "1111111111111111111111111111111111111111111111111111111111111111",
+              "tools": [
+                {
+                  "id": "read",
+                  "version": "1",
+                  "permissions": [
+                    "read"
+                  ]
+                }
+              ]
+            },
+            "scope": {
+              "id": "synthetic:core",
+              "purpose": "Public synthetic structured conformance demonstration",
+              "permissions": [
+                "read",
+                "external-message"
+              ],
+              "forbidden": [
+                "delete",
+                "external-write"
+              ],
+              "approvalRequired": [
+                "external-message"
+              ]
+            },
+            "issuedAt": "2026-11-16T11:00:00.000Z",
+            "expiresAt": "2026-11-16T13:00:00.000Z"
+          },
+          "principalId": "controller:synthetic",
+          "principalKeyId": "235f0c4208ac567d21f81c3291276bb6cc68a6ba4ba46f73d5470b08ee0c9f6c",
+          "audience": "gateway:fixture",
+          "permission": "read",
+          "challenge": "abababababababababababababababababababababababababababababababab",
+          "requestDigest": "2121212121212121212121212121212121212121212121212121212121212121",
+          "now": "2026-11-16T12:10:00.000Z",
+          "revokedKeyIds": [],
+          "revokedGrantDigests": []
+        }
+      },
+      "expected": {
+        "status": "reject"
+      }
+    },
+    {
+      "id": "pair-different-manifest",
+      "operation": "paired-action",
+      "inputs": {
+        "proof": {
+          "grant": {
+            "payload": {
+              "agentKeyId": "d2d993a35ed4229015f35b31366d4ce8b97d0725642e343a4b6d9cab09bc57e4",
+              "audience": "gateway:fixture",
+              "expiresAt": "2026-11-16T12:10:00.000Z",
+              "issuedAt": "2026-11-16T12:00:00.000Z",
+              "manifestDigest": "533ef06075d5cfe08521fcde50e32a9d906bcf4823f38d8856ea83e43085a6ac",
+              "permission": "read",
+              "principalId": "controller:synthetic",
+              "schema": "kya.pairing-grant/v1"
+            },
+            "publicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAQwRr/kCSs+lJlOraFdzCDYqqB7ZY/TlU644O+4vcpd4=\n-----END PUBLIC KEY-----\n",
+            "signature": "GO714566IUvLgVk1HPfguz_7KR5-9ux1GaXXgX6IyEnySScz-Cd8Z7KKexpxrDwq13elZE7DpXFp7f4V2hzACg"
+          },
+          "action": {
+            "payload": {
+              "challenge": "abababababababababababababababababababababababababababababababab",
+              "grantDigest": "7fc5416fb89338e9392fe7c52d0597e85fe7f1d0abae3cf88f34a85d92c28532",
+              "requestDigest": "2121212121212121212121212121212121212121212121212121212121212121",
+              "schema": "kya.paired-action/v1"
+            },
+            "publicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEATtMvY7818O7vyyXyii4fvchzrig1ZxsMlGD18S5FVqg=\n-----END PUBLIC KEY-----\n",
+            "signature": "vhL0Bq6pPJA40pFQ0jy0wW9OfvfUiD1CdyQxIuBAhBIYTEaF2WSkIkP4HdZSYDSq94xUtKXJVl3kWy8mhCkqDA"
+          }
+        },
+        "context": {
+          "manifest": {
+            "schema": "kya.manifest/v1",
+            "agent": {
+              "id": "fixture:careful",
+              "name": "Synthetic careful reference",
+              "version": "1.0.0"
+            },
+            "principal": {
+              "id": "controller:synthetic"
+            },
+            "system": {
+              "harness": "kya-reference-fixture",
+              "harnessVersion": "1.0.0",
+              "model": "deterministic-fixture-no-model",
+              "artifactDigest": "0000000000000000000000000000000000000000000000000000000000000000",
+              "configDigest": "9898989898989898989898989898989898989898989898989898989898989898",
+              "tools": [
+                {
+                  "id": "read",
+                  "version": "1",
+                  "permissions": [
+                    "read"
+                  ]
+                }
+              ]
+            },
+            "scope": {
+              "id": "synthetic:core",
+              "purpose": "Public synthetic structured conformance demonstration",
+              "permissions": [
+                "read",
+                "external-message"
+              ],
+              "forbidden": [
+                "delete",
+                "external-write"
+              ],
+              "approvalRequired": [
+                "external-message"
+              ]
+            },
+            "issuedAt": "2026-11-16T11:00:00.000Z",
+            "expiresAt": "2026-11-16T13:00:00.000Z"
+          },
+          "principalId": "controller:synthetic",
+          "principalKeyId": "235f0c4208ac567d21f81c3291276bb6cc68a6ba4ba46f73d5470b08ee0c9f6c",
+          "audience": "gateway:fixture",
+          "permission": "read",
+          "challenge": "abababababababababababababababababababababababababababababababab",
+          "requestDigest": "2121212121212121212121212121212121212121212121212121212121212121",
+          "now": "2026-11-16T12:01:00.000Z",
+          "revokedKeyIds": [],
+          "revokedGrantDigests": []
+        }
+      },
+      "expected": {
+        "status": "reject"
+      }
+    },
+    {
+      "id": "pair-approval-required",
+      "operation": "paired-action",
+      "inputs": {
+        "proof": {
+          "grant": {
+            "payload": {
+              "agentKeyId": "d2d993a35ed4229015f35b31366d4ce8b97d0725642e343a4b6d9cab09bc57e4",
+              "audience": "gateway:fixture",
+              "expiresAt": "2026-11-16T12:10:00.000Z",
+              "issuedAt": "2026-11-16T12:00:00.000Z",
+              "manifestDigest": "533ef06075d5cfe08521fcde50e32a9d906bcf4823f38d8856ea83e43085a6ac",
+              "permission": "external-message",
+              "principalId": "controller:synthetic",
+              "schema": "kya.pairing-grant/v1"
+            },
+            "publicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAQwRr/kCSs+lJlOraFdzCDYqqB7ZY/TlU644O+4vcpd4=\n-----END PUBLIC KEY-----\n",
+            "signature": "bW0YGqL9GUIHI_ztxWEvatSXJOHnx-AyYdT7fBICKLzLV8xypzHSl73UbYSs3KhIYRS0RrBu78DdWDLnGbs4Dg"
+          },
+          "action": {
+            "payload": {
+              "challenge": "abababababababababababababababababababababababababababababababab",
+              "grantDigest": "6eb1a796823a687f04b8d3a4393d1adb767b561bde017eefd345282bfca0672d",
+              "requestDigest": "2121212121212121212121212121212121212121212121212121212121212121",
+              "schema": "kya.paired-action/v1"
+            },
+            "publicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEATtMvY7818O7vyyXyii4fvchzrig1ZxsMlGD18S5FVqg=\n-----END PUBLIC KEY-----\n",
+            "signature": "Yu2iRspS_A0ncvyPrpELiQGKO5nGzIrNp5je4mFeMH7u_xfejacFKQ2k-5I6tCRJHocw5MKyqYr3xuU9d6N7Aw"
+          }
+        },
+        "context": {
+          "manifest": {
+            "schema": "kya.manifest/v1",
+            "agent": {
+              "id": "fixture:careful",
+              "name": "Synthetic careful reference",
+              "version": "1.0.0"
+            },
+            "principal": {
+              "id": "controller:synthetic"
+            },
+            "system": {
+              "harness": "kya-reference-fixture",
+              "harnessVersion": "1.0.0",
+              "model": "deterministic-fixture-no-model",
+              "artifactDigest": "0000000000000000000000000000000000000000000000000000000000000000",
+              "configDigest": "1111111111111111111111111111111111111111111111111111111111111111",
+              "tools": [
+                {
+                  "id": "read",
+                  "version": "1",
+                  "permissions": [
+                    "read"
+                  ]
+                }
+              ]
+            },
+            "scope": {
+              "id": "synthetic:core",
+              "purpose": "Public synthetic structured conformance demonstration",
+              "permissions": [
+                "read",
+                "external-message"
+              ],
+              "forbidden": [
+                "delete",
+                "external-write"
+              ],
+              "approvalRequired": [
+                "external-message"
+              ]
+            },
+            "issuedAt": "2026-11-16T11:00:00.000Z",
+            "expiresAt": "2026-11-16T13:00:00.000Z"
+          },
+          "principalId": "controller:synthetic",
+          "principalKeyId": "235f0c4208ac567d21f81c3291276bb6cc68a6ba4ba46f73d5470b08ee0c9f6c",
+          "audience": "gateway:fixture",
+          "permission": "external-message",
+          "challenge": "abababababababababababababababababababababababababababababababab",
+          "requestDigest": "2121212121212121212121212121212121212121212121212121212121212121",
+          "now": "2026-11-16T12:01:00.000Z",
+          "revokedKeyIds": [],
+          "revokedGrantDigests": []
+        }
+      },
+      "expected": {
+        "status": "reject"
+      }
+    },
+    {
+      "id": "roster-genesis",
+      "operation": "witness-roster-chain",
+      "inputs": {
+        "chain": [
+          {
+            "roster": {
+              "schema": "kya.witness-roster/v1",
+              "registry": "https://registry.example.test",
+              "originKeyId": "744f36cca67eb1912cb282e08e86bd2fe0d09004a28cf6e7c6bd56cdd6bf65aa",
+              "generation": 1,
+              "previous": null,
+              "handoff": null,
+              "operators": [
+                {
+                  "id": "operator:a",
+                  "publicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAWJNmBKvaESvJSTNWnIL40MwN35Kj+DKfL0SPf0hKWUw=\n-----END PUBLIC KEY-----\n"
+                },
+                {
+                  "id": "operator:b",
+                  "publicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAvtfSq2aNo++tYTmY8G96v3h186a3Z3qfPOlH1313YKY=\n-----END PUBLIC KEY-----\n"
+                }
+              ]
+            },
+            "signature": "MYC_LBRn8SAD8XPTTwVtTOZ5Mi2z1fr-TevA1XrjZYsg4hm93D43NlrKgaCcsQK6Gjx_aJUEDWI4QiyDyli7Cg",
+            "enrollments": [
+              {
+                "operatorId": "operator:a",
+                "signature": "azmHIWda9lk2lv743z1HyhoJTCCT9TonyS-BgOOKHzThqABUr7YSI3vNoxfZRHCLfOk3AsZC95aX75uh48MKBA"
+              },
+              {
+                "operatorId": "operator:b",
+                "signature": "-st1m2TkEdTlA5AVNCzQhGHrcQEFi_9QOlDGhYcelqNMLtYVFquW70HWlCATGVX0w1Hqki-EqLTq6HC5MRPoAg"
+              }
+            ]
+          }
+        ],
+        "trust": {
+          "registry": "https://registry.example.test",
+          "originPublicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAoJql9HpnWYAv+VX43C0qFKXJnSO+l/hkEn/5ODRVpPA=\n-----END PUBLIC KEY-----\n",
+          "authorityPublicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAdPhc2jTRwnxGIUhHMekVecPZxs/A2UsoGqEekWIFiqk=\n-----END PUBLIC KEY-----\n"
+        }
+      },
+      "expected": {
+        "status": "accept",
+        "value": {
+          "schema": "kya.witness-roster/v1",
+          "registry": "https://registry.example.test",
+          "originKeyId": "744f36cca67eb1912cb282e08e86bd2fe0d09004a28cf6e7c6bd56cdd6bf65aa",
+          "generation": 1,
+          "previous": null,
+          "handoff": null,
+          "operators": [
+            {
+              "id": "operator:a",
+              "publicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAWJNmBKvaESvJSTNWnIL40MwN35Kj+DKfL0SPf0hKWUw=\n-----END PUBLIC KEY-----\n"
+            },
+            {
+              "id": "operator:b",
+              "publicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAvtfSq2aNo++tYTmY8G96v3h186a3Z3qfPOlH1313YKY=\n-----END PUBLIC KEY-----\n"
+            }
+          ],
+          "rosterDigest": "21dbcad32151ec469cfc41790f5a065291d5d77aeff7842825cef6573eb968b9",
+          "retiredKeys": []
+        }
+      }
+    },
+    {
+      "id": "roster-single-key-handoff",
+      "operation": "witness-roster-chain",
+      "inputs": {
+        "chain": [
+          {
+            "roster": {
+              "schema": "kya.witness-roster/v1",
+              "registry": "https://registry.example.test",
+              "originKeyId": "744f36cca67eb1912cb282e08e86bd2fe0d09004a28cf6e7c6bd56cdd6bf65aa",
+              "generation": 1,
+              "previous": null,
+              "handoff": null,
+              "operators": [
+                {
+                  "id": "operator:a",
+                  "publicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAWJNmBKvaESvJSTNWnIL40MwN35Kj+DKfL0SPf0hKWUw=\n-----END PUBLIC KEY-----\n"
+                },
+                {
+                  "id": "operator:b",
+                  "publicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAvtfSq2aNo++tYTmY8G96v3h186a3Z3qfPOlH1313YKY=\n-----END PUBLIC KEY-----\n"
+                }
+              ]
+            },
+            "signature": "MYC_LBRn8SAD8XPTTwVtTOZ5Mi2z1fr-TevA1XrjZYsg4hm93D43NlrKgaCcsQK6Gjx_aJUEDWI4QiyDyli7Cg",
+            "enrollments": [
+              {
+                "operatorId": "operator:a",
+                "signature": "azmHIWda9lk2lv743z1HyhoJTCCT9TonyS-BgOOKHzThqABUr7YSI3vNoxfZRHCLfOk3AsZC95aX75uh48MKBA"
+              },
+              {
+                "operatorId": "operator:b",
+                "signature": "-st1m2TkEdTlA5AVNCzQhGHrcQEFi_9QOlDGhYcelqNMLtYVFquW70HWlCATGVX0w1Hqki-EqLTq6HC5MRPoAg"
+              }
+            ]
+          },
+          {
+            "roster": {
+              "schema": "kya.witness-roster/v1",
+              "registry": "https://registry.example.test",
+              "originKeyId": "744f36cca67eb1912cb282e08e86bd2fe0d09004a28cf6e7c6bd56cdd6bf65aa",
+              "generation": 2,
+              "previous": "21dbcad32151ec469cfc41790f5a065291d5d77aeff7842825cef6573eb968b9",
+              "handoff": {
+                "epoch": 1,
+                "checkpointDigest": "6161616161616161616161616161616161616161616161616161616161616161"
+              },
+              "operators": [
+                {
+                  "id": "operator:a",
+                  "publicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAkQnbVfeXl6OWRi+4lcKtzqfoaDwvMFbAelR1FVU3tz4=\n-----END PUBLIC KEY-----\n"
+                },
+                {
+                  "id": "operator:b",
+                  "publicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAvtfSq2aNo++tYTmY8G96v3h186a3Z3qfPOlH1313YKY=\n-----END PUBLIC KEY-----\n"
+                }
+              ]
+            },
+            "signature": "FAfS9z1Rz5uFvnp6Q7u7sExmo443Q9tpOmXk8I4-5rnBqr50dnqZtiIRMp1-5NBcUhGgnXkzrTm0BZm2V4arDQ",
+            "enrollments": [
+              {
+                "operatorId": "operator:a",
+                "signature": "5vrp4CIORxRNZW7ObGDsHg1tvN8hzcSSlBjYlAWqNvBjgfqTxT11rcesmq01Vx4-qqxnZc57pkox8x9aBy9bBQ"
+              },
+              {
+                "operatorId": "operator:b",
+                "signature": "DDCf27dCZB4d6fz-iWaBUJoVX3jj9-rvKOhYhlbNr25qgYH2GLLMtDBpHGiwzuupcdIfP9OmbtFazpngBN2KBw"
+              }
+            ]
+          }
+        ],
+        "trust": {
+          "registry": "https://registry.example.test",
+          "originPublicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAoJql9HpnWYAv+VX43C0qFKXJnSO+l/hkEn/5ODRVpPA=\n-----END PUBLIC KEY-----\n",
+          "authorityPublicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAdPhc2jTRwnxGIUhHMekVecPZxs/A2UsoGqEekWIFiqk=\n-----END PUBLIC KEY-----\n"
+        }
+      },
+      "expected": {
+        "status": "accept",
+        "value": {
+          "schema": "kya.witness-roster/v1",
+          "registry": "https://registry.example.test",
+          "originKeyId": "744f36cca67eb1912cb282e08e86bd2fe0d09004a28cf6e7c6bd56cdd6bf65aa",
+          "generation": 2,
+          "previous": "21dbcad32151ec469cfc41790f5a065291d5d77aeff7842825cef6573eb968b9",
+          "handoff": {
+            "epoch": 1,
+            "checkpointDigest": "6161616161616161616161616161616161616161616161616161616161616161"
+          },
+          "operators": [
+            {
+              "id": "operator:a",
+              "publicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAkQnbVfeXl6OWRi+4lcKtzqfoaDwvMFbAelR1FVU3tz4=\n-----END PUBLIC KEY-----\n"
+            },
+            {
+              "id": "operator:b",
+              "publicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAvtfSq2aNo++tYTmY8G96v3h186a3Z3qfPOlH1313YKY=\n-----END PUBLIC KEY-----\n"
+            }
+          ],
+          "rosterDigest": "08dc6dbd4416249a8b70299da4482d6f56c85304ea50bed5a0362689d0d30096",
+          "retiredKeys": [
+            "7e002b958662082bf12b0a810bce78d4173a9c2f35a735cb8897ccdc84466f0e"
+          ]
+        }
+      }
+    },
+    {
+      "id": "roster-skipped-genesis",
+      "operation": "witness-roster-chain",
+      "inputs": {
+        "chain": [
+          {
+            "roster": {
+              "schema": "kya.witness-roster/v1",
+              "registry": "https://registry.example.test",
+              "originKeyId": "744f36cca67eb1912cb282e08e86bd2fe0d09004a28cf6e7c6bd56cdd6bf65aa",
+              "generation": 2,
+              "previous": "21dbcad32151ec469cfc41790f5a065291d5d77aeff7842825cef6573eb968b9",
+              "handoff": {
+                "epoch": 1,
+                "checkpointDigest": "6161616161616161616161616161616161616161616161616161616161616161"
+              },
+              "operators": [
+                {
+                  "id": "operator:a",
+                  "publicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAkQnbVfeXl6OWRi+4lcKtzqfoaDwvMFbAelR1FVU3tz4=\n-----END PUBLIC KEY-----\n"
+                },
+                {
+                  "id": "operator:b",
+                  "publicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAvtfSq2aNo++tYTmY8G96v3h186a3Z3qfPOlH1313YKY=\n-----END PUBLIC KEY-----\n"
+                }
+              ]
+            },
+            "signature": "FAfS9z1Rz5uFvnp6Q7u7sExmo443Q9tpOmXk8I4-5rnBqr50dnqZtiIRMp1-5NBcUhGgnXkzrTm0BZm2V4arDQ",
+            "enrollments": [
+              {
+                "operatorId": "operator:a",
+                "signature": "5vrp4CIORxRNZW7ObGDsHg1tvN8hzcSSlBjYlAWqNvBjgfqTxT11rcesmq01Vx4-qqxnZc57pkox8x9aBy9bBQ"
+              },
+              {
+                "operatorId": "operator:b",
+                "signature": "DDCf27dCZB4d6fz-iWaBUJoVX3jj9-rvKOhYhlbNr25qgYH2GLLMtDBpHGiwzuupcdIfP9OmbtFazpngBN2KBw"
+              }
+            ]
+          }
+        ],
+        "trust": {
+          "registry": "https://registry.example.test",
+          "originPublicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAoJql9HpnWYAv+VX43C0qFKXJnSO+l/hkEn/5ODRVpPA=\n-----END PUBLIC KEY-----\n",
+          "authorityPublicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAdPhc2jTRwnxGIUhHMekVecPZxs/A2UsoGqEekWIFiqk=\n-----END PUBLIC KEY-----\n"
+        }
+      },
+      "expected": {
+        "status": "reject"
+      }
+    },
+    {
+      "id": "roster-untrusted-authority",
+      "operation": "witness-roster-chain",
+      "inputs": {
+        "chain": [
+          {
+            "roster": {
+              "schema": "kya.witness-roster/v1",
+              "registry": "https://registry.example.test",
+              "originKeyId": "744f36cca67eb1912cb282e08e86bd2fe0d09004a28cf6e7c6bd56cdd6bf65aa",
+              "generation": 1,
+              "previous": null,
+              "handoff": null,
+              "operators": [
+                {
+                  "id": "operator:a",
+                  "publicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAWJNmBKvaESvJSTNWnIL40MwN35Kj+DKfL0SPf0hKWUw=\n-----END PUBLIC KEY-----\n"
+                },
+                {
+                  "id": "operator:b",
+                  "publicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAvtfSq2aNo++tYTmY8G96v3h186a3Z3qfPOlH1313YKY=\n-----END PUBLIC KEY-----\n"
+                }
+              ]
+            },
+            "signature": "-ZK6pJO8Howd8kBLI4cvN-swveXASBFD53PD56FcF4E0U0RkVketIwCYnWRALzUWFeal3AObvmpguc-ACOLiCg",
+            "enrollments": [
+              {
+                "operatorId": "operator:a",
+                "signature": "azmHIWda9lk2lv743z1HyhoJTCCT9TonyS-BgOOKHzThqABUr7YSI3vNoxfZRHCLfOk3AsZC95aX75uh48MKBA"
+              },
+              {
+                "operatorId": "operator:b",
+                "signature": "-st1m2TkEdTlA5AVNCzQhGHrcQEFi_9QOlDGhYcelqNMLtYVFquW70HWlCATGVX0w1Hqki-EqLTq6HC5MRPoAg"
+              }
+            ]
+          }
+        ],
+        "trust": {
+          "registry": "https://registry.example.test",
+          "originPublicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAoJql9HpnWYAv+VX43C0qFKXJnSO+l/hkEn/5ODRVpPA=\n-----END PUBLIC KEY-----\n",
+          "authorityPublicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAdPhc2jTRwnxGIUhHMekVecPZxs/A2UsoGqEekWIFiqk=\n-----END PUBLIC KEY-----\n"
+        }
+      },
+      "expected": {
+        "status": "reject"
+      }
+    },
+    {
+      "id": "roster-no-survivor-approval",
+      "operation": "witness-roster-chain",
+      "inputs": {
+        "chain": [
+          {
+            "roster": {
+              "schema": "kya.witness-roster/v1",
+              "registry": "https://registry.example.test",
+              "originKeyId": "744f36cca67eb1912cb282e08e86bd2fe0d09004a28cf6e7c6bd56cdd6bf65aa",
+              "generation": 1,
+              "previous": null,
+              "handoff": null,
+              "operators": [
+                {
+                  "id": "operator:a",
+                  "publicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAWJNmBKvaESvJSTNWnIL40MwN35Kj+DKfL0SPf0hKWUw=\n-----END PUBLIC KEY-----\n"
+                },
+                {
+                  "id": "operator:b",
+                  "publicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAvtfSq2aNo++tYTmY8G96v3h186a3Z3qfPOlH1313YKY=\n-----END PUBLIC KEY-----\n"
+                }
+              ]
+            },
+            "signature": "MYC_LBRn8SAD8XPTTwVtTOZ5Mi2z1fr-TevA1XrjZYsg4hm93D43NlrKgaCcsQK6Gjx_aJUEDWI4QiyDyli7Cg",
+            "enrollments": [
+              {
+                "operatorId": "operator:a",
+                "signature": "azmHIWda9lk2lv743z1HyhoJTCCT9TonyS-BgOOKHzThqABUr7YSI3vNoxfZRHCLfOk3AsZC95aX75uh48MKBA"
+              },
+              {
+                "operatorId": "operator:b",
+                "signature": "-st1m2TkEdTlA5AVNCzQhGHrcQEFi_9QOlDGhYcelqNMLtYVFquW70HWlCATGVX0w1Hqki-EqLTq6HC5MRPoAg"
+              }
+            ]
+          },
+          {
+            "roster": {
+              "schema": "kya.witness-roster/v1",
+              "registry": "https://registry.example.test",
+              "originKeyId": "744f36cca67eb1912cb282e08e86bd2fe0d09004a28cf6e7c6bd56cdd6bf65aa",
+              "generation": 2,
+              "previous": "21dbcad32151ec469cfc41790f5a065291d5d77aeff7842825cef6573eb968b9",
+              "handoff": {
+                "epoch": 1,
+                "checkpointDigest": "6161616161616161616161616161616161616161616161616161616161616161"
+              },
+              "operators": [
+                {
+                  "id": "operator:a",
+                  "publicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAkQnbVfeXl6OWRi+4lcKtzqfoaDwvMFbAelR1FVU3tz4=\n-----END PUBLIC KEY-----\n"
+                },
+                {
+                  "id": "operator:b",
+                  "publicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAvtfSq2aNo++tYTmY8G96v3h186a3Z3qfPOlH1313YKY=\n-----END PUBLIC KEY-----\n"
+                }
+              ]
+            },
+            "signature": "FAfS9z1Rz5uFvnp6Q7u7sExmo443Q9tpOmXk8I4-5rnBqr50dnqZtiIRMp1-5NBcUhGgnXkzrTm0BZm2V4arDQ",
+            "enrollments": [
+              {
+                "operatorId": "operator:a",
+                "signature": "5vrp4CIORxRNZW7ObGDsHg1tvN8hzcSSlBjYlAWqNvBjgfqTxT11rcesmq01Vx4-qqxnZc57pkox8x9aBy9bBQ"
+              },
+              {
+                "operatorId": "operator:b",
+                "signature": "reLNFmD_k1WdSiIJyHjFn5xY4bU78gcBa_xid72vQjTpdoe9QWWJY95tr_5xKIOg3RCWkUAjdM4mD5X5Mp8eBw"
+              }
+            ]
+          }
+        ],
+        "trust": {
+          "registry": "https://registry.example.test",
+          "originPublicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAoJql9HpnWYAv+VX43C0qFKXJnSO+l/hkEn/5ODRVpPA=\n-----END PUBLIC KEY-----\n",
+          "authorityPublicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAdPhc2jTRwnxGIUhHMekVecPZxs/A2UsoGqEekWIFiqk=\n-----END PUBLIC KEY-----\n"
+        }
+      },
+      "expected": {
+        "status": "reject"
+      }
+    },
+    {
+      "id": "roster-double-replacement",
+      "operation": "witness-roster-chain",
+      "inputs": {
+        "chain": [
+          {
+            "roster": {
+              "schema": "kya.witness-roster/v1",
+              "registry": "https://registry.example.test",
+              "originKeyId": "744f36cca67eb1912cb282e08e86bd2fe0d09004a28cf6e7c6bd56cdd6bf65aa",
+              "generation": 1,
+              "previous": null,
+              "handoff": null,
+              "operators": [
+                {
+                  "id": "operator:a",
+                  "publicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAWJNmBKvaESvJSTNWnIL40MwN35Kj+DKfL0SPf0hKWUw=\n-----END PUBLIC KEY-----\n"
+                },
+                {
+                  "id": "operator:b",
+                  "publicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAvtfSq2aNo++tYTmY8G96v3h186a3Z3qfPOlH1313YKY=\n-----END PUBLIC KEY-----\n"
+                }
+              ]
+            },
+            "signature": "MYC_LBRn8SAD8XPTTwVtTOZ5Mi2z1fr-TevA1XrjZYsg4hm93D43NlrKgaCcsQK6Gjx_aJUEDWI4QiyDyli7Cg",
+            "enrollments": [
+              {
+                "operatorId": "operator:a",
+                "signature": "azmHIWda9lk2lv743z1HyhoJTCCT9TonyS-BgOOKHzThqABUr7YSI3vNoxfZRHCLfOk3AsZC95aX75uh48MKBA"
+              },
+              {
+                "operatorId": "operator:b",
+                "signature": "-st1m2TkEdTlA5AVNCzQhGHrcQEFi_9QOlDGhYcelqNMLtYVFquW70HWlCATGVX0w1Hqki-EqLTq6HC5MRPoAg"
+              }
+            ]
+          },
+          {
+            "roster": {
+              "schema": "kya.witness-roster/v1",
+              "registry": "https://registry.example.test",
+              "originKeyId": "744f36cca67eb1912cb282e08e86bd2fe0d09004a28cf6e7c6bd56cdd6bf65aa",
+              "generation": 2,
+              "previous": "21dbcad32151ec469cfc41790f5a065291d5d77aeff7842825cef6573eb968b9",
+              "handoff": {
+                "epoch": 1,
+                "checkpointDigest": "6161616161616161616161616161616161616161616161616161616161616161"
+              },
+              "operators": [
+                {
+                  "id": "operator:a",
+                  "publicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAkQnbVfeXl6OWRi+4lcKtzqfoaDwvMFbAelR1FVU3tz4=\n-----END PUBLIC KEY-----\n"
+                },
+                {
+                  "id": "operator:b",
+                  "publicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAiEuIV/TqoWE8YVBNs01L6vNGUXoOMd483dTZtCAdnQs=\n-----END PUBLIC KEY-----\n"
+                }
+              ]
+            },
+            "signature": "Wr2bzmv6reVsb0f18hc5-i2EruNJxhFNLVcQlWf70M7YjdRGGqwnrEK5dPPBEteWXuu3s-YhfLfJu1JG_r2gBQ",
+            "enrollments": [
+              {
+                "operatorId": "operator:a",
+                "signature": "aD5-nh5gOGssJwVdTPaM9Yj_yFKuidVcxu6hCdtsQaqdYJ1wSCC6FRO-_NbgSsH6GAhFwVv02Olw5QLeh0s7Dw"
+              },
+              {
+                "operatorId": "operator:b",
+                "signature": "zjQsnEJCTzwpXZ8gB38k_ggTMmnCMvGedljncKq3rK8PvZC9z1mzuDRjK-ZbytcqQZZYAWdjzt4SEYlsSny0CQ"
+              }
+            ]
+          }
+        ],
+        "trust": {
+          "registry": "https://registry.example.test",
+          "originPublicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAoJql9HpnWYAv+VX43C0qFKXJnSO+l/hkEn/5ODRVpPA=\n-----END PUBLIC KEY-----\n",
+          "authorityPublicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAdPhc2jTRwnxGIUhHMekVecPZxs/A2UsoGqEekWIFiqk=\n-----END PUBLIC KEY-----\n"
+        }
+      },
+      "expected": {
+        "status": "reject"
+      }
+    },
+    {
+      "id": "roster-retired-key-returns",
+      "operation": "witness-roster-chain",
+      "inputs": {
+        "chain": [
+          {
+            "roster": {
+              "schema": "kya.witness-roster/v1",
+              "registry": "https://registry.example.test",
+              "originKeyId": "744f36cca67eb1912cb282e08e86bd2fe0d09004a28cf6e7c6bd56cdd6bf65aa",
+              "generation": 1,
+              "previous": null,
+              "handoff": null,
+              "operators": [
+                {
+                  "id": "operator:a",
+                  "publicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAWJNmBKvaESvJSTNWnIL40MwN35Kj+DKfL0SPf0hKWUw=\n-----END PUBLIC KEY-----\n"
+                },
+                {
+                  "id": "operator:b",
+                  "publicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAvtfSq2aNo++tYTmY8G96v3h186a3Z3qfPOlH1313YKY=\n-----END PUBLIC KEY-----\n"
+                }
+              ]
+            },
+            "signature": "MYC_LBRn8SAD8XPTTwVtTOZ5Mi2z1fr-TevA1XrjZYsg4hm93D43NlrKgaCcsQK6Gjx_aJUEDWI4QiyDyli7Cg",
+            "enrollments": [
+              {
+                "operatorId": "operator:a",
+                "signature": "azmHIWda9lk2lv743z1HyhoJTCCT9TonyS-BgOOKHzThqABUr7YSI3vNoxfZRHCLfOk3AsZC95aX75uh48MKBA"
+              },
+              {
+                "operatorId": "operator:b",
+                "signature": "-st1m2TkEdTlA5AVNCzQhGHrcQEFi_9QOlDGhYcelqNMLtYVFquW70HWlCATGVX0w1Hqki-EqLTq6HC5MRPoAg"
+              }
+            ]
+          },
+          {
+            "roster": {
+              "schema": "kya.witness-roster/v1",
+              "registry": "https://registry.example.test",
+              "originKeyId": "744f36cca67eb1912cb282e08e86bd2fe0d09004a28cf6e7c6bd56cdd6bf65aa",
+              "generation": 2,
+              "previous": "21dbcad32151ec469cfc41790f5a065291d5d77aeff7842825cef6573eb968b9",
+              "handoff": {
+                "epoch": 1,
+                "checkpointDigest": "6161616161616161616161616161616161616161616161616161616161616161"
+              },
+              "operators": [
+                {
+                  "id": "operator:a",
+                  "publicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAkQnbVfeXl6OWRi+4lcKtzqfoaDwvMFbAelR1FVU3tz4=\n-----END PUBLIC KEY-----\n"
+                },
+                {
+                  "id": "operator:b",
+                  "publicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAvtfSq2aNo++tYTmY8G96v3h186a3Z3qfPOlH1313YKY=\n-----END PUBLIC KEY-----\n"
+                }
+              ]
+            },
+            "signature": "FAfS9z1Rz5uFvnp6Q7u7sExmo443Q9tpOmXk8I4-5rnBqr50dnqZtiIRMp1-5NBcUhGgnXkzrTm0BZm2V4arDQ",
+            "enrollments": [
+              {
+                "operatorId": "operator:a",
+                "signature": "5vrp4CIORxRNZW7ObGDsHg1tvN8hzcSSlBjYlAWqNvBjgfqTxT11rcesmq01Vx4-qqxnZc57pkox8x9aBy9bBQ"
+              },
+              {
+                "operatorId": "operator:b",
+                "signature": "DDCf27dCZB4d6fz-iWaBUJoVX3jj9-rvKOhYhlbNr25qgYH2GLLMtDBpHGiwzuupcdIfP9OmbtFazpngBN2KBw"
+              }
+            ]
+          },
+          {
+            "roster": {
+              "schema": "kya.witness-roster/v1",
+              "registry": "https://registry.example.test",
+              "originKeyId": "744f36cca67eb1912cb282e08e86bd2fe0d09004a28cf6e7c6bd56cdd6bf65aa",
+              "generation": 3,
+              "previous": "08dc6dbd4416249a8b70299da4482d6f56c85304ea50bed5a0362689d0d30096",
+              "handoff": {
+                "epoch": 2,
+                "checkpointDigest": "6262626262626262626262626262626262626262626262626262626262626262"
+              },
+              "operators": [
+                {
+                  "id": "operator:a",
+                  "publicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAWJNmBKvaESvJSTNWnIL40MwN35Kj+DKfL0SPf0hKWUw=\n-----END PUBLIC KEY-----\n"
+                },
+                {
+                  "id": "operator:b",
+                  "publicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAvtfSq2aNo++tYTmY8G96v3h186a3Z3qfPOlH1313YKY=\n-----END PUBLIC KEY-----\n"
+                }
+              ]
+            },
+            "signature": "GXfeoEpF6l5Iv1D7TBBgKll_FzwnB_VJJYoFz_PG4jdNqj3kIiBcRKU6w9MvSGlaifReyNAGq8ICoHQujRfiBA",
+            "enrollments": [
+              {
+                "operatorId": "operator:a",
+                "signature": "fzYQWOVhMeIjJEKJY8FvQdO5hNktebC7HA0VKdBNqapw7E8L2gIZJ9GVDWg9v1tHTZknbZIkuUAeLsWqoZW0Dw"
+              },
+              {
+                "operatorId": "operator:b",
+                "signature": "1OXdx9sNxKMq_NIPMxxCG3ei8hWIgp_1RA9GcwR4iaEFIYN5DDd4WbxLVcWotJugvhW_h_O_WgTTj612AUJbBg"
+              }
+            ]
+          }
+        ],
+        "trust": {
+          "registry": "https://registry.example.test",
+          "originPublicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAoJql9HpnWYAv+VX43C0qFKXJnSO+l/hkEn/5ODRVpPA=\n-----END PUBLIC KEY-----\n",
+          "authorityPublicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAdPhc2jTRwnxGIUhHMekVecPZxs/A2UsoGqEekWIFiqk=\n-----END PUBLIC KEY-----\n"
+        }
+      },
+      "expected": {
+        "status": "reject"
+      }
+    },
+    {
+      "id": "roster-stale-handoff",
+      "operation": "witness-roster-chain",
+      "inputs": {
+        "chain": [
+          {
+            "roster": {
+              "schema": "kya.witness-roster/v1",
+              "registry": "https://registry.example.test",
+              "originKeyId": "744f36cca67eb1912cb282e08e86bd2fe0d09004a28cf6e7c6bd56cdd6bf65aa",
+              "generation": 1,
+              "previous": null,
+              "handoff": null,
+              "operators": [
+                {
+                  "id": "operator:a",
+                  "publicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAWJNmBKvaESvJSTNWnIL40MwN35Kj+DKfL0SPf0hKWUw=\n-----END PUBLIC KEY-----\n"
+                },
+                {
+                  "id": "operator:b",
+                  "publicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAvtfSq2aNo++tYTmY8G96v3h186a3Z3qfPOlH1313YKY=\n-----END PUBLIC KEY-----\n"
+                }
+              ]
+            },
+            "signature": "MYC_LBRn8SAD8XPTTwVtTOZ5Mi2z1fr-TevA1XrjZYsg4hm93D43NlrKgaCcsQK6Gjx_aJUEDWI4QiyDyli7Cg",
+            "enrollments": [
+              {
+                "operatorId": "operator:a",
+                "signature": "azmHIWda9lk2lv743z1HyhoJTCCT9TonyS-BgOOKHzThqABUr7YSI3vNoxfZRHCLfOk3AsZC95aX75uh48MKBA"
+              },
+              {
+                "operatorId": "operator:b",
+                "signature": "-st1m2TkEdTlA5AVNCzQhGHrcQEFi_9QOlDGhYcelqNMLtYVFquW70HWlCATGVX0w1Hqki-EqLTq6HC5MRPoAg"
+              }
+            ]
+          },
+          {
+            "roster": {
+              "schema": "kya.witness-roster/v1",
+              "registry": "https://registry.example.test",
+              "originKeyId": "744f36cca67eb1912cb282e08e86bd2fe0d09004a28cf6e7c6bd56cdd6bf65aa",
+              "generation": 2,
+              "previous": "21dbcad32151ec469cfc41790f5a065291d5d77aeff7842825cef6573eb968b9",
+              "handoff": {
+                "epoch": 1,
+                "checkpointDigest": "6161616161616161616161616161616161616161616161616161616161616161"
+              },
+              "operators": [
+                {
+                  "id": "operator:a",
+                  "publicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAkQnbVfeXl6OWRi+4lcKtzqfoaDwvMFbAelR1FVU3tz4=\n-----END PUBLIC KEY-----\n"
+                },
+                {
+                  "id": "operator:b",
+                  "publicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAvtfSq2aNo++tYTmY8G96v3h186a3Z3qfPOlH1313YKY=\n-----END PUBLIC KEY-----\n"
+                }
+              ]
+            },
+            "signature": "FAfS9z1Rz5uFvnp6Q7u7sExmo443Q9tpOmXk8I4-5rnBqr50dnqZtiIRMp1-5NBcUhGgnXkzrTm0BZm2V4arDQ",
+            "enrollments": [
+              {
+                "operatorId": "operator:a",
+                "signature": "5vrp4CIORxRNZW7ObGDsHg1tvN8hzcSSlBjYlAWqNvBjgfqTxT11rcesmq01Vx4-qqxnZc57pkox8x9aBy9bBQ"
+              },
+              {
+                "operatorId": "operator:b",
+                "signature": "DDCf27dCZB4d6fz-iWaBUJoVX3jj9-rvKOhYhlbNr25qgYH2GLLMtDBpHGiwzuupcdIfP9OmbtFazpngBN2KBw"
+              }
+            ]
+          },
+          {
+            "roster": {
+              "schema": "kya.witness-roster/v1",
+              "registry": "https://registry.example.test",
+              "originKeyId": "744f36cca67eb1912cb282e08e86bd2fe0d09004a28cf6e7c6bd56cdd6bf65aa",
+              "generation": 3,
+              "previous": "08dc6dbd4416249a8b70299da4482d6f56c85304ea50bed5a0362689d0d30096",
+              "handoff": {
+                "epoch": 1,
+                "checkpointDigest": "6161616161616161616161616161616161616161616161616161616161616161"
+              },
+              "operators": [
+                {
+                  "id": "operator:a",
+                  "publicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAkQnbVfeXl6OWRi+4lcKtzqfoaDwvMFbAelR1FVU3tz4=\n-----END PUBLIC KEY-----\n"
+                },
+                {
+                  "id": "operator:b",
+                  "publicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAiEuIV/TqoWE8YVBNs01L6vNGUXoOMd483dTZtCAdnQs=\n-----END PUBLIC KEY-----\n"
+                }
+              ]
+            },
+            "signature": "8uhUPPbaWE-D6ocu9T1JqFts4zPv43e_Iv20rU4qDCM1q_W9QPo8E1BS3WJ0dpphmN8xNd78ho1YcVjlv4V1Dw",
+            "enrollments": [
+              {
+                "operatorId": "operator:a",
+                "signature": "JIC8WOqrbarWUhs6oEK0tvJttP7Uj2ryPupT4Fum7U8YbiKccyzzp-bw2LYoF1KGr8Vgi_plgp6lbYoAOqZcBw"
+              },
+              {
+                "operatorId": "operator:b",
+                "signature": "0xP9C2_fML0DB7cCZ4a_a_rJHk8krh9bLU1VM1rA8cSRbu-suD4lb25ajGPAmf0Qjd3DpU1CwUELyv480r9KAA"
+              }
+            ]
+          }
+        ],
+        "trust": {
+          "registry": "https://registry.example.test",
+          "originPublicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAoJql9HpnWYAv+VX43C0qFKXJnSO+l/hkEn/5ODRVpPA=\n-----END PUBLIC KEY-----\n",
+          "authorityPublicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAdPhc2jTRwnxGIUhHMekVecPZxs/A2UsoGqEekWIFiqk=\n-----END PUBLIC KEY-----\n"
+        }
+      },
+      "expected": {
+        "status": "reject"
+      }
+    }
+  ]
+}
