@@ -728,8 +728,16 @@
       "related": [
         "ADR-0060"
       ]
+    },
+    {
+      "id": "ADR-0062",
+      "title": "Hosted browser callback and scoped MCP pilot adapter",
+      "status": "Implemented locally; review pending",
+      "file": "docs/adr/0062-hosted-oidc-callback-and-mcp-adapter.md",
+      "contentDigest": "7ca6e036c4f051f25457ac18f3bb7b8f7430059141bdff579bd4e6139bde0914",
+      "related": []
     }
   ],
-  "digest": "8f652c76978dd5d376020c3b1aa83057c8e3535d23fb590fb329b8c6e724d260",
+  "digest": "67760dc2fc2bbeecdcaa7a8e6257b979bd94d4d825c6fbe13679a9252dd8b008",
   "store": "portable local file; not a claim of AgentDB graph persistence"
 }

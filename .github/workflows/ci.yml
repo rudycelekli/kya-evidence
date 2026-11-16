@@ -21,6 +21,11 @@ jobs:
       - run: node scripts/check.mjs
       - run: npm run privacy:scan
       - run: npm run privacy:scan:vectors
+      - name: Rehearse hosted OIDC callback and MCP HTTP adapter on loopback
+        if: matrix.node == 24 && matrix.os == 'ubuntu-latest'
+        run: |
+          npm --prefix interop/pairing-gateway ci --ignore-scripts --no-audit --no-fund
+          npm --prefix interop/pairing-gateway test
       - name: Run tests (no test may be skipped on CI)
         shell: bash
         run: |
