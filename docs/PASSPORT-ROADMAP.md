@@ -4,7 +4,7 @@
 
 ## Baseline and execution order
 
-The Passport registry stores signed lifecycle events and keeps historical fingerprint lookups. The MCP gateway verifies an exact call, avoids replay on one SQLite host, and can require the active Passport. Each gateway retains a local head pin across restarts. Independent witnesses and first-use freshness remain future work. Loopback OIDC and MCP tests use a synthetic identity and tool. This plan treats independent review, external integration and calibration as acceptance evidence to collect.
+The Passport registry stores signed lifecycle events and keeps historical fingerprint lookups. Recoverable passports commit an offline recovery key at registration. The gateway now journals delivery and reconciles operator-verified terminal receipts. Per-passport signed checkpoints and durable mirrors provide bounded freshness and local rollback protection. The MCP gateway verifies an exact call, avoids replay on one SQLite host, and can require the active Passport. Each gateway retains a local head pin across restarts. Independent witnesses and first-use freshness remain future work. Loopback OIDC and MCP tests use a synthetic identity and tool. This plan treats independent review, external integration and calibration as acceptance evidence to collect.
 
 ### 1. Prove the trust chain in an approved pilot
 
@@ -16,7 +16,7 @@ The Passport registry stores signed lifecycle events and keeps historical finger
 
 ### 2. Make delivery recoverable
 
-Define a stable operation ID from the signed action and scope. Commit the acceptance receipt and a delivery record in one transaction. Keep states for queued, dispatched, response observed and outcome unknown. For a downstream system that implements idempotency, forward the operation ID and reconcile via an authenticated receipt or status endpoint. A route without those capabilities leaves uncertain outcomes for operator review. Define a bounded retry budget and enforce side-effect scope independently of retries.
+The gateway commits an operation ID and delivery record with acceptance. Extend the journal to supported downstream retry protocols. Keep states for queued, dispatched, response observed and outcome unknown. For a downstream system that implements idempotency, forward the operation ID and reconcile via an authenticated receipt or status endpoint. A route without those capabilities leaves uncertain outcomes for operator review. Define a bounded retry budget and enforce side-effect scope independently of retries.
 
 Prove behavior at each crash boundary before and after acceptance, dispatch and receipt recording. Inject timeouts, upstream duplicates, process death and storage restore. Assert a single downstream effect for supported routes and an explicit unresolved outcome for other routes. Publish latency, error rates and audit completeness against the same baseline workload.
 

@@ -50,6 +50,20 @@ Use opaque identifiers in shared passports. The service publishes those identifi
 
 ## What remains for distribution
 
-The MVP has a fixed controller key, terminal revocation, and one logical SQLite registry. Controller recovery, durable checkpoints, mirrors and rollback detection across new clients need a separate protocol. A verifier that trusts a single registry for freshness relies on it to show the latest signed head. A hosted rollout also needs operator identity enrollment, retention rules, backups, and incident response. Connect live pairing by requiring that the verified action's agent key and exact manifest match the active passport state.
+The MVP supports terminal revocation and one logical SQLite registry. Optional offline recovery applies to version-two registrations. Per-passport checkpoints support authenticated mirror readback. Registry-wide consistency proofs and independent witnesses remain future work. A verifier that trusts a single registry for freshness relies on it to show the latest signed head. A hosted rollout also needs operator identity enrollment, retention rules, backups, and incident response. Connect live pairing by requiring that the verified action's agent key and exact manifest match the active passport state.
 
 See [ADR-0055](adr/0055-passport-registry.md) for event and signature rules.
+
+## Register a recoverable Passport
+
+To opt into version-two recovery, append an offline recovery private key path to the registration command. Use a separate Ed25519 key and sign registration on a machine where the recovery key can be used safely. Keep it offline after the ceremony. The service receives public keys and signatures.
+
+If an active Passport loses its controller key, generate a replacement controller and agent key. The offline recovery key and both replacement keys sign the same event against the current head.
+
+```sh
+node examples/passport-client.mjs recover http://127.0.0.1:7337 <passport-id> <new-controller-key> <new-agent-key> <offline-recovery-key>
+```
+
+The existing URL and former fingerprint lookup continue working. The new agent key and controller replace the old ones. A previously registered v1 Passport has no recovery authority. Terminal revocation remains final.
+
+For authenticated distribution to another operator's store, see [Passport checkpoints and mirrors](PASSPORT-CHECKPOINTS.md).

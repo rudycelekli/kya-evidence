@@ -171,3 +171,53 @@ test('verifies signed expiring checkpoints and a durable mirror refuses rollback
   now = '2026-11-15T12:04:00.000Z';
   assert.throws(() => mirror.read(genesis.passportId), /freshness/i);
 });
+
+test('recovers a controller with an offline recovery key and retires prior keys under the same Passport ID', t => {
+  const [recovery, nextController, rogueRecovery] = Array.from({ length: 3 },
+    () => generateKeyPairSync('ed25519').privateKey);
+  const first = {
+    ...genesis, schema: 'kya.passport-event/v2', recoveryPublicKey: passportPublicKey(recovery),
+  };
+  first.passportId = passportId(first);
+  assert.notEqual(first.passportId, genesis.passportId);
+  const firstRecord = { ...seal(first), recoverySignature: signPassportEvent(first, recovery) };
+  const update = {
+    ...first, operation: 'recover', previous: digest(firstRecord),
+    controllerPublicKey: passportPublicKey(nextController), agentPublicKey: passportPublicKey(replacement),
+  };
+  const recovered = { ...seal(update, nextController, replacement), recoverySignature: signPassportEvent(update, recovery) };
+  const forged = { ...recovered, recoverySignature: signPassportEvent(update, rogueRecovery) };
+  assert.throws(() => verifyPassport([firstRecord, forged], registry), /signature/i);
+  assert.throws(() => verifyPassport([{ ...firstRecord, recoverySignature: null }], registry), /signature/i);
+  const rotate = {
+    ...first, operation: 'rotate', previous: digest(recovered), agentPublicKey: passportPublicKey(impostor),
+  };
+  const signedByRetiredController = { ...seal(rotate, controller, impostor), recoverySignature: null };
+  assert.throws(() => verifyPassport([firstRecord, recovered, signedByRetiredController], registry), /controller key mismatch/i);
+  const reuse = { ...update, previous: digest(recovered), agentPublicKey: passportPublicKey(agent) };
+  assert.throws(() => verifyPassport([firstRecord, recovered, {
+    ...seal(reuse, nextController, agent), recoverySignature: signPassportEvent(reuse, recovery),
+  }], registry), /controller key already used/i);
+
+  const tmp = mkdtempSync(join(tmpdir(), 'kya-passport-recovery-'));
+  const store = openPassportRegistry(join(tmp, 'registry.sqlite'), registry);
+  t.after(() => {
+    store.close();
+    rmSync(tmp, { recursive: true, force: true });
+  });
+  store.append(firstRecord);
+  assert.throws(() => store.append(forged), /signature/i);
+  const current = store.append(recovered);
+  assert.equal(current.passportId, first.passportId);
+  assert.equal(current.controllerFingerprint, keyId(passportPublicKey(nextController)));
+  assert.equal(current.current.fingerprint, keyId(passportPublicKey(replacement)));
+  assert.deepEqual(store.lookup(keyId(passportPublicKey(agent))), [first.passportId]);
+
+  const revoke = { ...update, operation: 'revoke', previous: current.head, agentPublicKey: null };
+  const revoked = store.append({ ...seal(revoke, nextController, null), recoverySignature: null });
+  assert.equal(revoked.status, 'revoked');
+  const afterRevoke = { ...update, previous: revoked.head };
+  assert.throws(() => store.append({
+    ...seal(afterRevoke, nextController, replacement), recoverySignature: signPassportEvent(afterRevoke, recovery),
+  }), /transition/i);
+});

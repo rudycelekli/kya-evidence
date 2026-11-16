@@ -129,18 +129,20 @@ try {
       signature: sign(null, oidcEnrollmentMessage(intent), key.privateKey).toString('base64url') };
   }
 
-  const [old, current, agent, replacement] = Array.from({ length: 4 }, () => generateKeyPairSync('ed25519'));
+  const [old, current, agent, replacement, recovery, newController, newAgent] = Array.from({ length: 7 }, () => generateKeyPairSync('ed25519'));
   const pem = key => key.publicKey.export({ format: 'pem', type: 'spki' });
   const event = {
-    schema: 'kya.passport-event/v1', registry: issuer, operation: 'register', previous: null,
+    schema: 'kya.passport-event/v2', recoveryPublicKey: pem(recovery), registry: issuer, operation: 'register', previous: null,
     principalId, agentId: manifest.agent.id, manifestDigest: digest(manifest),
     controllerPublicKey: pem(current), agentPublicKey: pem(agent),
   };
   event.passportId = passportId(event);
   route.passportId = event.passportId;
-  const register = (payload, key) => passports.append({
-    event: payload, controllerSignature: signPassportEvent(payload, current.privateKey),
+  const register = (payload, key, controller = current) => passports.append({
+    event: payload, controllerSignature: signPassportEvent(payload, controller.privateKey),
     agentSignature: key ? signPassportEvent(payload, key.privateKey) : null,
+    recoverySignature: ['register', 'recover'].includes(payload.operation)
+      ? signPassportEvent(payload, recovery.privateKey) : null,
   });
   const initial = register(event, agent);
   const enrolled = await gateway.enrollIdentity(await login(old, null));
@@ -174,10 +176,18 @@ try {
   }, replacement);
   await assert.rejects(gateway.invoke(call, proof(update, current)), /passport authorization refused/i);
   assert.equal((await gateway.invoke(call, proof(update, current, replacement))).audit.passportHead, nextPassport.head);
+  const afterRecovery = gateway.issueChallenge(call);
+  const recovered = register({
+    ...event, operation: 'recover', previous: nextPassport.head,
+    controllerPublicKey: pem(newController), agentPublicKey: pem(newAgent),
+  }, newAgent, newController);
+  await assert.rejects(gateway.invoke(call, proof(afterRecovery, current, replacement)), /passport authorization refused/i);
+  assert.equal((await gateway.invoke(call, proof(afterRecovery, current, newAgent))).audit.passportHead, recovered.head);
   const revoked = gateway.issueChallenge(call);
-  register({ ...event, operation: 'revoke', previous: nextPassport.head, agentPublicKey: null }, null);
-  await assert.rejects(gateway.invoke(call, proof(revoked, current, replacement)), /passport authorization refused/i);
-  console.log('Passed: signed OIDC PKCE, principal rotation, active Passport enforcement, agent rotation, revocation, exact MCP stdio and replay refusal');
+  register({ ...event, operation: 'revoke', previous: recovered.head,
+    controllerPublicKey: pem(newController), agentPublicKey: null }, null, newController);
+  await assert.rejects(gateway.invoke(call, proof(revoked, current, newAgent)), /passport authorization refused/i);
+  console.log('Passed: OIDC PKCE, principal rotation, Passport recovery and revocation, exact MCP stdio and replay refusal');
 } finally {
   gateway?.close();
   passports?.close();
