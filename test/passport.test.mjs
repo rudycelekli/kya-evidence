@@ -129,3 +129,45 @@ test('competing processes cannot publish two rotations from the same head', asyn
   const rejected = candidates.find(key => key !== current.current.fingerprint);
   assert.deepEqual(store.lookup(rejected), []);
 });
+
+test('verifies signed expiring checkpoints and a durable mirror refuses rollback', async t => {
+  const { sign } = await import('node:crypto');
+  const { passportCheckpointBytes, verifyPassportCheckpoint } = await import('kya-evidence/passport/checkpoint');
+  const { openPassportMirror } = await import('kya-evidence/passport/mirror');
+  const tmp = mkdtempSync(join(tmpdir(), 'kya-passport-mirror-'));
+  t.after(() => rmSync(tmp, { recursive: true, force: true }));
+  const filename = join(tmp, 'mirror.sqlite');
+  const signer = generateKeyPairSync('ed25519').privateKey;
+  const trust = { registry, publicKey: passportPublicKey(signer) };
+  let now = '2026-11-15T12:01:00.000Z';
+  const make = (history, issuedAt, signingKey = signer, overrides = {}) => {
+    const checkpoint = {
+      schema: 'kya.passport-checkpoint/v1', registry, passportId: genesis.passportId,
+      head: digest(history.at(-1)), sequence: history.length, issuedAt,
+      expiresAt: '2026-11-15T12:04:00.000Z', ...overrides,
+    };
+    return { checkpoint, history, signature: sign(null, passportCheckpointBytes(checkpoint), signingKey).toString('base64url') };
+  };
+  const initial = make([registration], '2026-11-15T12:00:00.000Z');
+  const updated = make([registration, rotation], '2026-11-15T12:00:30.000Z');
+  assert.throws(() => verifyPassportCheckpoint(make([registration], initial.checkpoint.issuedAt, controller), trust, now), /signature/i);
+  assert.throws(() => verifyPassportCheckpoint({ ...updated, history: [registration] }, trust, now), /history/i);
+  assert.throws(() => verifyPassportCheckpoint(make([registration], initial.checkpoint.issuedAt, signer, {
+    expiresAt: '2026-11-15T12:05:00.001Z',
+  }), trust, now), /freshness/i);
+  let mirror = openPassportMirror(filename, { ...trust, clock: () => now });
+  try {
+    assert.equal(mirror.importCheckpoint(initial).head, initial.checkpoint.head);
+    assert.equal(mirror.importCheckpoint(updated).head, updated.checkpoint.head);
+  } finally {
+    mirror.close();
+  }
+  mirror = openPassportMirror(filename, { ...trust, clock: () => now });
+  t.after(() => mirror.close());
+  const signedRollback = make([registration], '2026-11-15T12:01:00.000Z');
+  assert.throws(() => mirror.importCheckpoint(signedRollback), /rolled back/i);
+  assert.equal(mirror.read(genesis.passportId).passport.current.fingerprint, keyId(passportPublicKey(replacement)));
+  assert.throws(() => openPassportMirror(filename, { ...trust, publicKey: passportPublicKey(controller) }), /trust mismatch/i);
+  now = '2026-11-15T12:04:00.000Z';
+  assert.throws(() => mirror.read(genesis.passportId), /freshness/i);
+});
