@@ -12,10 +12,11 @@ import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js'
 import { digest, keyId } from '../../src/index.mjs';
 import { signPairedAction, signPairingGrant } from '../../src/pairing/index.mjs';
 import { mcpToolCallDigest, openPairingGateway } from '../../src/pairing/mcp-gateway.mjs';
-import { createOidcEnrollmentAuthenticator, oidcEnrollmentMessage, oidcEnrollmentNonce } from '../../src/pairing/oidc-enrollment.mjs';
+import { createOidcEnrollmentAuthenticator, oidcEnrollmentMessage } from '../../src/pairing/oidc-enrollment.mjs';
 
 import { passportId, signPassportEvent } from '../../src/passport/index.mjs';
 import { openPassportRegistry } from '../../src/passport/registry.mjs';
+import { receivePilotLogin } from './hosted-adapters.mjs';
 
 const directory = await mkdtemp(join(tmpdir(), 'kya-local-interop-'));
 const manifest = JSON.parse(await readFile(new URL('../../examples/manifest.json', import.meta.url)));
@@ -100,32 +101,35 @@ try {
       issuer, audience: clientId, challenge: gateway.issueEnrollmentChallenge(), previousKeyId,
       publicKey: key.publicKey.export({ format: 'pem', type: 'spki' }),
     };
-    const nonce = oidcEnrollmentNonce(intent);
-    const state = oidc.randomState();
-    const codeVerifier = oidc.randomPKCECodeVerifier();
-    let url = oidc.buildAuthorizationUrl(config, {
-      redirect_uri: redirectUri, scope: 'openid', nonce, state, max_age: '300', prompt: 'login',
-      code_challenge: await oidc.calculatePKCECodeChallenge(codeVerifier), code_challenge_method: 'S256',
+    const verified = await receivePilotLogin(config, {
+      callback: redirectUri, port: 0, intent, timeoutMs: 10_000,
+      async onAuthorizationUrl(authorization, port) {
+        const localCallback = 'http://127.0.0.1:' + port + '/callback';
+        const invalid = await fetch(localCallback + '?state=wrong&code=forged');
+        assert.equal(invalid.status, 400);
+        let url = new URL(authorization);
+        const cookies = new Map();
+        for (let redirects = 0; !url.href.startsWith(redirectUri + '?'); redirects++) {
+          assert.ok(redirects < 12);
+          const response = await fetch(url, { redirect: 'manual', signal: AbortSignal.timeout(5000),
+            headers: { cookie: [...cookies.values()].join('; ') } });
+          for (const value of response.headers.getSetCookie()) {
+            const pair = value.split(';', 1)[0];
+            cookies.set(pair.split('=', 1)[0], pair);
+          }
+          assert.ok(response.headers.has('location'), 'Expected provider redirect, got HTTP ' + response.status);
+          url = new URL(response.headers.get('location'), url);
+          assert.equal(url.origin, issuer);
+          await response.body?.cancel();
+        }
+        const callback = await fetch(localCallback + url.search, {
+          headers: { 'x-forwarded-host': 'other.example', 'x-forwarded-proto': 'https' },
+        });
+        assert.equal(callback.status, 200);
+      },
     });
-    const cookies = new Map();
-    for (let redirects = 0; !url.href.startsWith(redirectUri + '?'); redirects++) {
-      assert.ok(redirects < 12);
-      const response = await fetch(url, { redirect: 'manual', signal: AbortSignal.timeout(5000),
-        headers: { cookie: [...cookies.values()].join('; ') } });
-      for (const value of response.headers.getSetCookie()) {
-        const pair = value.split(';', 1)[0];
-        cookies.set(pair.split('=', 1)[0], pair);
-      }
-      assert.ok(response.headers.has('location'), 'Expected provider redirect, got HTTP ' + response.status);
-      url = new URL(response.headers.get('location'), url);
-      assert.equal(url.origin, issuer);
-      await response.body?.cancel();
-    }
-    const tokens = await oidc.authorizationCodeGrant(config, url, {
-      pkceCodeVerifier: codeVerifier, expectedNonce: nonce, expectedState: state, maxAge: 300, idTokenExpected: true,
-    });
-    checkedTokens.set(tokens.id_token, tokens.claims());
-    return { idToken: tokens.id_token, publicKey: intent.publicKey, challenge: intent.challenge,
+    checkedTokens.set(verified.idToken, verified.claims);
+    return { idToken: verified.idToken, publicKey: intent.publicKey, challenge: intent.challenge,
       signature: sign(null, oidcEnrollmentMessage(intent), key.privateKey).toString('base64url') };
   }
 

@@ -142,7 +142,7 @@ Set `HANDOVER_COMMIT` to the full 40 character handover commit id. Then run the 
 | 8a13 | `node scripts/vc-trust-mutations.mjs` | exit 0; six VC trust-input tests pass and all three membership/fingerprint/policy-capture mutations are detected. |
 | 8a14 | `node scripts/capture-binding-mutations.mjs` | exit 0; five capture binding/trust tests pass and both uncaptured-input mutations are detected. |
 | 8a15 | `node scripts/mutation-result-mutations.mjs` | exit 0; nine mutation-result admission tests pass and all three TODO/status/population grader mutations are detected. |
-| 8b | `node scripts/adr-index.mjs` | exit 0; `{"records":61,"danglingRefs":0,"storage":"evidence/adr-index.json"}`. It rewrites that file; `git status` must stay clean afterwards. |
+| 8b | `node scripts/adr-index.mjs` | exit 0; `{"records":62,"danglingRefs":0,"storage":"evidence/adr-index.json"}`. It rewrites that file; `git status` must stay clean afterwards. |
 | 9 | `node scripts/review-kit-check.mjs --deep` | exit 0; `"ok": true`. Confirms every number in the table below, including the harness rows. |
 
 The expensive steps. They were not run when this kit was written; the numbers they print are not quoted here because they were not measured for this kit:
@@ -180,7 +180,7 @@ Every row is recomputed by `node scripts/review-kit-check.mjs` from the reposito
 | `mutationControls` | `87` | `node scripts/mutation-check.mjs --preflight`, field `controls` |
 | `testFiles` | `106` | files matching `test/*.test.mjs` |
 | `testDeclarations` | `1139` | lines that begin with `test(` in those files. The four `test/property-*.test.mjs` files declare 38 seeded properties through a helper and contribute no such line. |
-| `adrs` | `61` | files `docs/adr/NNNN-*.md`; statuses retain local implementation and external-review boundaries |
+| `adrs` | `62` | files `docs/adr/NNNN-*.md`; statuses retain local implementation and external-review boundaries |
 | `coreProfileChecks` | `18` | length of `checks` in `profiles/core-v1.json` |
 | `srcFiles` | `100` | `.mjs` files under `src/` |
 | `srcLines` | `6684` | newline characters in those files. The code is dense: long lines, so line count understates size. |
