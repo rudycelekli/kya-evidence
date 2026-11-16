@@ -27,7 +27,7 @@ export function mcpToolCallDigest(call) {
 }
 
 export function openPairingGateway(filename, dependencies) {
-  const { authenticateIdentity, resolveRoute, forward, passports, clock = () => new Date().toISOString() } = dependencies;
+  const { authenticateIdentity, resolveRoute, forward, observeDelivery, passports, clock = () => new Date().toISOString() } = dependencies;
   insist(typeof filename === 'string' && filename.length > 0 && filename !== ':memory:'
     && !filename.startsWith('file:'), 'Expected SQLite path');
   const passportRegistry = passports?.registry;
@@ -39,6 +39,7 @@ export function openPairingGateway(filename, dependencies) {
   const db = new DatabaseSync(filename);
   db.exec(`
     PRAGMA busy_timeout=5000;
+    PRAGMA foreign_keys=ON;
     PRAGMA journal_mode=WAL;
     PRAGMA synchronous=FULL;
     CREATE TABLE IF NOT EXISTS identity (
@@ -58,6 +59,13 @@ export function openPairingGateway(filename, dependencies) {
       nonce TEXT PRIMARY KEY, binding TEXT NOT NULL, issued INTEGER NOT NULL, expires INTEGER NOT NULL,
       accepted_at INTEGER, audit TEXT
     ) STRICT;
+    CREATE TABLE IF NOT EXISTS mcp_delivery (
+      operation_id TEXT PRIMARY KEY, challenge TEXT NOT NULL UNIQUE REFERENCES challenge(nonce),
+      state TEXT NOT NULL CHECK (state IN ('accepted', 'dispatching', 'unknown',
+        'response-observed', 'confirmed-applied', 'confirmed-not-applied')),
+      receipt_digest TEXT
+    ) STRICT;
+    CREATE INDEX IF NOT EXISTS mcp_delivery_state ON mcp_delivery(state, operation_id);
   `);
   const issueEnrollment = db.prepare('INSERT INTO enrollment_challenge VALUES (?, ?, ?)');
   const consumeEnrollment = db.prepare('DELETE FROM enrollment_challenge WHERE nonce = ? AND issued <= ? AND expires > ?');
@@ -73,6 +81,23 @@ export function openPairingGateway(filename, dependencies) {
   const knownHead = db.prepare('SELECT sequence, head FROM passport_head WHERE passport = ?');
   const pinHead = db.prepare('INSERT INTO passport_head VALUES (?, ?, ?) ON CONFLICT (passport) DO UPDATE SET sequence = excluded.sequence, head = excluded.head WHERE excluded.sequence > passport_head.sequence');
   const recordResponse = db.prepare('UPDATE challenge SET audit = ? WHERE nonce = ? AND audit = ?');
+
+  const addDelivery = db.prepare("INSERT INTO mcp_delivery VALUES (?, ?, 'accepted', NULL)");
+  const getDelivery = db.prepare('SELECT * FROM mcp_delivery WHERE operation_id = ?');
+  const transitions = db.prepare('UPDATE mcp_delivery SET state = ?, receipt_digest = ? WHERE operation_id = ? AND state = ?');
+  const unresolved = db.prepare("SELECT operation_id FROM mcp_delivery WHERE state IN ('accepted', 'dispatching', 'unknown') AND operation_id > ? ORDER BY operation_id LIMIT ?");
+
+  function readDelivery(operationId) {
+    hash(operationId, 'Operation ID');
+    const row = getDelivery.get(operationId);
+    if (!row) return null;
+    const audit = JSON.parse(pending.get(row.challenge).audit);
+    return {
+      operationId, state: row.state, receiptDigest: row.receipt_digest,
+      challenge: row.challenge, server: audit.server, tool: audit.tool,
+      routeRevision: audit.routeRevision, requestDigest: audit.requestDigest,
+    };
+  }
 
   function write(operation) {
     db.exec('BEGIN IMMEDIATE');
@@ -205,22 +230,66 @@ export function openPairingGateway(filename, dependencies) {
             || passport.current.manifestDigest !== verified.manifestDigest) return null;
           passportBinding = { passportId: passport.passportId, passportHead: passport.head };
         }
+        const operationId = digest({
+          schema: 'kya.mcp-delivery/v1', actionDigest: verified.actionDigest, routeRevision: route.revision,
+        });
         const audit = {
-          ...verified, ...passportBinding, challenge, requestDigest, routeRevision: route.revision,
+          ...verified, ...passportBinding, challenge, requestDigest, operationId, routeRevision: route.revision,
           server: call.server, tool: call.tool, acceptedAt: now,
         };
         insist(consume.run(time, canonical(audit), challenge, time, time).changes === 1, 'Challenge unavailable');
+        addDelivery.run(operationId, challenge);
         return { route, audit };
       });
       insist(acceptance, 'Passport authorization refused');
       const { route, audit } = acceptance;
-      const result = await forward(call.server, route.revision, {
-        method: 'tools/call', params: { name: call.tool, arguments: call.arguments },
-      });
+      const { operationId } = audit;
+      insist(transitions.run('dispatching', null, operationId, 'accepted').changes === 1, 'Delivery claim failed');
+      let result;
+      try {
+        result = await forward(call.server, route.revision, {
+          method: 'tools/call', params: { name: call.tool, arguments: call.arguments },
+        }, { operationId });
+      } catch (error) {
+        transitions.run('unknown', null, operationId, 'dispatching');
+        throw error;
+      }
       const completedAudit = { ...audit, downstreamResponseObserved: true };
-      insist(recordResponse.run(canonical(completedAudit), challenge, canonical(audit)).changes === 1,
-        'Audit update failed');
+      write(() => {
+        insist(recordResponse.run(canonical(completedAudit), challenge, canonical(audit)).changes === 1,
+          'Audit update failed');
+        transitions.run('response-observed', null, operationId, 'dispatching');
+      });
       return { audit: completedAudit, result };
+    },
+    readDelivery,
+    listUnresolvedDeliveries({ after = '', limit = 100 } = {}) {
+      if (after !== '') hash(after, 'Operation ID');
+      insist(Number.isInteger(limit) && limit > 0 && limit <= 100, 'Invalid delivery limit');
+      return unresolved.all(after, limit).map(row => readDelivery(row.operation_id));
+    },
+    async reconcileDelivery(operationId) {
+      const delivery = readDelivery(operationId);
+      insist(delivery, 'Unknown delivery');
+      if (delivery.state !== 'unknown' && delivery.state !== 'dispatching') return delivery;
+      insist(typeof observeDelivery === 'function', 'Delivery observer required');
+      const observation = snapshot(await observeDelivery(delivery));
+      exactKeys(observation, ['operationId', 'outcome', 'receiptDigest'], 'Delivery observation');
+      insist(observation.operationId === operationId, 'Delivery observation mismatch');
+      if (observation.outcome === 'unknown') {
+        insist(observation.receiptDigest === null, 'Unexpected delivery receipt');
+        return readDelivery(operationId);
+      }
+      insist(observation.outcome === 'confirmed-applied' || observation.outcome === 'confirmed-not-applied',
+        'Invalid delivery outcome');
+      hash(observation.receiptDigest, 'Receipt digest');
+      return write(() => {
+        const current = readDelivery(operationId);
+        if (current.state === 'unknown' || current.state === 'dispatching') {
+          transitions.run(observation.outcome, observation.receiptDigest, operationId, current.state);
+        }
+        return readDelivery(operationId);
+      });
     },
     readAudit(challenge) {
       hash(challenge, 'Challenge');
