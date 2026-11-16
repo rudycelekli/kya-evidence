@@ -1,4 +1,4 @@
-"""Project-authored Python implementation of the three Passport conformance operations."""
+"""Project-authored Python implementation of the Passport conformance operations."""
 import hashlib
 import json
 from pathlib import Path
@@ -7,6 +7,8 @@ import sys
 from datetime import datetime
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "python"))
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "python-impl"))
+from adapter import valid_manifest
 from kya_portability import canonical_public_pem, digest, identifier, parse_json, proof_bytes, read_bounded, require, timestamp
 
 
@@ -197,6 +199,104 @@ def downstream_receipt(inputs):
     return {"operationId": receipt["operationId"], "outcome": receipt["outcome"], "receiptDigest": digest(envelope)}
 
 
+def pairing_envelope(envelope, schema, names):
+    fields(envelope, "payload publicKey signature")
+    payload = envelope["payload"]
+    fields(payload, "schema " + names)
+    require(payload["schema"] == schema, "Wrong pairing schema")
+    signature(payload, envelope["signature"], envelope["publicKey"], schema)
+    return payload, key_id(envelope["publicKey"])
+
+
+def paired_action(inputs):
+    proof, context = inputs["proof"], inputs["context"]
+    fields(proof, "grant action")
+    fields(context, "manifest principalId principalKeyId audience permission challenge requestDigest now revokedKeyIds revokedGrantDigests")
+    manifest = context["manifest"]
+    require(valid_manifest(manifest), "Invalid manifest")
+    grant, action = proof["grant"], proof["action"]
+    gp, principal = pairing_envelope(grant, "kya.pairing-grant/v1",
+        "principalId agentKeyId manifestDigest audience permission issuedAt expiresAt")
+    ap, agent = pairing_envelope(action, "kya.paired-action/v1", "grantDigest challenge requestDigest")
+    for field in ("principalId", "audience", "permission"):
+        identifier(gp[field], field)
+    require(gp["principalId"] == context["principalId"] == manifest["principal"]["id"]
+            and principal == context["principalKeyId"], "Principal mismatch")
+    require(agent == gp["agentKeyId"] and agent != principal, "Agent key mismatch")
+    manifest_digest, grant_digest = digest(manifest), digest(grant)
+    require(gp["manifestDigest"] == manifest_digest and gp["audience"] == context["audience"], "Wrong scope")
+    require(gp["permission"] == context["permission"] and gp["permission"] in manifest["scope"]["permissions"]
+            and gp["permission"] not in manifest["scope"]["approvalRequired"], "Permission refused")
+    require(ap["grantDigest"] == grant_digest and hex_digest(ap["challenge"]) == context["challenge"]
+            and hex_digest(ap["requestDigest"]) == context["requestDigest"], "Action mismatch")
+    for field in ("revokedKeyIds", "revokedGrantDigests"):
+        values = context[field]
+        require(type(values) is list and len(values) <= 4096, "Invalid revocations")
+        require(len({hex_digest(value) for value in values}) == len(values), "Duplicate revocations")
+    require(principal not in context["revokedKeyIds"] and agent not in context["revokedKeyIds"]
+            and grant_digest not in context["revokedGrantDigests"], "Revoked authorization")
+    start, end, now = gp["issuedAt"], gp["expiresAt"], context["now"]
+    for value in (start, end, now):
+        timestamp(value, "pairing time")
+    require(manifest["issuedAt"] <= start <= now < end <= manifest["expiresAt"], "Expired pairing")
+    require((datetime.fromisoformat(end[:-1]) - datetime.fromisoformat(start[:-1])).total_seconds() <= 3600, "Grant too long")
+    return {"principalId": gp["principalId"], "principalKeyId": principal, "agentId": manifest["agent"]["id"],
+            "agentKeyId": agent, "manifestDigest": manifest_digest, "grantDigest": grant_digest, "actionDigest": digest(action)}
+
+
+def witness_roster_chain(inputs):
+    chain, trust = inputs["chain"], inputs["trust"]
+    require(type(chain) is list and 0 < len(chain) <= 128, "Invalid roster chain")
+    registry, origin, authority = (trust[field] for field in ("registry", "originPublicKey", "authorityPublicKey"))
+    require(isinstance(registry, str) and 0 < len(registry.encode("utf-16-le", "surrogatepass")) <= 1024
+            and all(ord(c) >= 32 and ord(c) != 127 for c in registry), "Invalid registry")
+    origin_id, authority_id = key_id(origin), key_id(authority)
+    require(origin_id != authority_id, "Shared authority key")
+    prior = None
+    retired = []
+    for index, signed in enumerate(chain, start=1):
+        fields(signed, "roster signature enrollments")
+        roster = signed["roster"]
+        fields(roster, "schema registry originKeyId generation previous operators handoff")
+        require(roster["schema"] == "kya.witness-roster/v1" and roster["registry"] == registry
+                and roster["originKeyId"] == origin_id, "Wrong roster scope")
+        require(type(roster["generation"]) is int and roster["generation"] == index
+                and roster["previous"] == (digest(prior) if prior else None), "Wrong roster predecessor")
+        signature(roster, signed["signature"], authority, "kya.witness-roster/v1")
+        operators, enrollments = roster["operators"], signed["enrollments"]
+        require(type(operators) is list and type(enrollments) is list and len(operators) == len(enrollments) == 2,
+                "Incomplete enrollment")
+        operator_ids = []
+        keys = {origin_id, authority_id}
+        for operator, enrollment in zip(operators, enrollments):
+            fields(operator, "id publicKey")
+            fields(enrollment, "operatorId signature")
+            identifier(operator["id"], "operator")
+            fingerprint = key_id(operator["publicKey"])
+            require(fingerprint not in keys and enrollment["operatorId"] == operator["id"]
+                    and (not operator_ids or operator["id"] > operator_ids[-1]), "Invalid witness identity")
+            operator_ids.append(operator["id"])
+            keys.add(fingerprint)
+            signature({"rosterDigest": digest(roster), "operatorId": operator["id"]},
+                      enrollment["signature"], operator["publicKey"], "kya.witness-enrollment/v1")
+        handoff = roster["handoff"]
+        if prior is None:
+            require(handoff is None, "Unexpected handoff")
+        else:
+            fields(handoff, "epoch checkpointDigest")
+            hex_digest(handoff["checkpointDigest"])
+            require(type(handoff["epoch"]) is int and (prior["handoff"] or {"epoch": 0})["epoch"] < handoff["epoch"] <= 9007199254740991,
+                    "Invalid handoff")
+            require(operator_ids == [operator["id"] for operator in prior["operators"]], "Operator changed")
+            changed = [(old, new) for old, new in zip(prior["operators"], operators) if old["publicKey"] != new["publicKey"]]
+            require(len(changed) == 1, "Only one key may change")
+            old, new = changed[0]
+            require(key_id(new["publicKey"]) not in retired, "Retired key")
+            retired.append(key_id(old["publicKey"]))
+        prior = roster
+    return {**prior, "rosterDigest": digest(prior), "retiredKeys": retired}
+
+
 def main():
     # A missing backend is infrastructure failure, never evidence of valid rejections.
     import cryptography  # noqa: F401
@@ -204,7 +304,8 @@ def main():
     fields(request, "schema operation inputs")
     require(request["schema"] == "kya.passport-conformance-input/v1", "Wrong input schema")
     operation = request["operation"]
-    operations = {"passport-history": passport_history, "witnessed-lookup": witnessed_lookup, "downstream-receipt": downstream_receipt}
+    operations = {"passport-history": passport_history, "witnessed-lookup": witnessed_lookup, "downstream-receipt": downstream_receipt,
+                  "paired-action": paired_action, "witness-roster-chain": witness_roster_chain}
     response = {"schema": "kya.passport-conformance-result/v1", "operation": operation, "status": "unsupported"}
     if operation in operations:
         try:

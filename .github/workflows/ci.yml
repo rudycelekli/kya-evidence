@@ -31,11 +31,15 @@ jobs:
         run: |
           node interop/passport-conformance/generate.mjs > "$RUNNER_TEMP/passport-vectors.json"
           cmp interop/passport-conformance/vectors.json "$RUNNER_TEMP/passport-vectors.json"
+          node interop/passport-conformance/authority-vectors.mjs > "$RUNNER_TEMP/passport-authority.json"
+          cmp interop/passport-conformance/authority.json "$RUNNER_TEMP/passport-authority.json"
           python3 interop/passport-conformance/test_runner.py
-          python3 interop/passport-conformance/run.py -- node interop/passport-conformance/reference.mjs
           python3 -m venv "$RUNNER_TEMP/kya-passport-python"
           "$RUNNER_TEMP/kya-passport-python/bin/pip" install --disable-pip-version-check cryptography==50.0.2
-          python3 interop/passport-conformance/run.py -- "$RUNNER_TEMP/kya-passport-python/bin/python" interop/passport-conformance/python_candidate.py
+          for corpus in vectors authority; do
+            python3 interop/passport-conformance/run.py --vectors "interop/passport-conformance/$corpus.json" -- node interop/passport-conformance/reference.mjs
+            python3 interop/passport-conformance/run.py --vectors "interop/passport-conformance/$corpus.json" -- "$RUNNER_TEMP/kya-passport-python/bin/python" interop/passport-conformance/python_candidate.py
+          done
       - name: Run tests (no test may be skipped on CI)
         shell: bash
         run: |
