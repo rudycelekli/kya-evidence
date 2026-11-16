@@ -688,8 +688,18 @@
       "related": [
         "ADR-0054"
       ]
+    },
+    {
+      "id": "ADR-0058",
+      "title": "Signed Passport checkpoints and durable mirror readback",
+      "status": "Implemented locally; review pending",
+      "file": "docs/adr/0058-passport-checkpoints-and-mirrors.md",
+      "contentDigest": "2687afac614bdc415b38f644e8bb8cb4855feb0d151e8824f15e157ca790c11c",
+      "related": [
+        "ADR-0056"
+      ]
     }
   ],
-  "digest": "68a5a6833463491f5775c35b661385887b2844441e22f0157b0a6b269d701913",
+  "digest": "749a7fe9de0c314409f202a96327010cf270c53e7ff59ae17e93d0b4438681a3",
   "store": "portable local file; not a claim of AgentDB graph persistence"
 }
