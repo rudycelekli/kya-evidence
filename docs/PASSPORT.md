@@ -67,3 +67,5 @@ node examples/passport-client.mjs recover http://127.0.0.1:7337 <passport-id> <n
 The existing URL and former fingerprint lookup continue working. The new agent key and controller replace the old ones. A previously registered v1 Passport has no recovery authority. Terminal revocation remains final.
 
 For authenticated distribution to another operator's store, see [Passport checkpoints and mirrors](PASSPORT-CHECKPOINTS.md).
+
+For authenticated registry-wide discovery, see [registry witnesses and verifiable lookup](PASSPORT-WITNESSES.md).

@@ -29,6 +29,7 @@ export function openPassportRegistry(filename, registry) {
     throw new Error('Registry mismatch');
   }
   const events = db.prepare('SELECT record FROM passport_event WHERE passport = ? ORDER BY sequence');
+  const snapshot = db.prepare('SELECT passport, record FROM passport_event ORDER BY passport, sequence');
   const append = db.prepare('INSERT INTO passport_event VALUES (?, ?, ?)');
   const index = db.prepare('INSERT OR IGNORE INTO passport_fingerprint VALUES (?, ?)');
   const lookup = db.prepare('SELECT passport FROM passport_fingerprint WHERE fingerprint = ? ORDER BY passport');
@@ -67,6 +68,14 @@ export function openPassportRegistry(filename, registry) {
       }
     },
     read,
+    snapshotHistories() {
+      const histories = new Map();
+      for (const row of snapshot.iterate()) {
+        if (!histories.has(row.passport)) histories.set(row.passport, []);
+        histories.get(row.passport).push(JSON.parse(row.record));
+      }
+      return [...histories.values()];
+    },
     lookup(fingerprint) {
       hash(fingerprint, 'Fingerprint');
       return lookup.all(fingerprint).map(row => row.passport);

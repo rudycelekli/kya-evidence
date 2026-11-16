@@ -708,8 +708,18 @@
       "related": [
         "ADR-0055"
       ]
+    },
+    {
+      "id": "ADR-0060",
+      "title": "Independent registry witnesses and authenticated lookup",
+      "status": "Implemented locally; review pending",
+      "file": "docs/adr/0060-witnessed-registry-lookup.md",
+      "contentDigest": "f8f4131aa8ea5283d8e200d3d433a3e517f2b50ce3509454aa3c79d4364c467b",
+      "related": [
+        "ADR-0058"
+      ]
     }
   ],
-  "digest": "c179c37ff7775a956d90732659a40f7f4830ee145276127b78b9ff070286eadb",
+  "digest": "3263fe822e4dfed1fdc2e93158b379893926a527b609c9bbd1b693da39bda285",
   "store": "portable local file; not a claim of AgentDB graph persistence"
 }
