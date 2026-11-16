@@ -21,3 +21,5 @@ A valid proof returns a sorted array of matching Passport IDs, a Passport head a
 ## Scope
 
 The reference implementation verifies signatures, reconstruction, persistence, freshness and exact lookup results. It is a full snapshot protocol with a derived Merkle lookup index. Succinct global consistency proofs, independent hosted operators, recovery from lost witness state, and witness-key rotations need further work. See [ADR-0060](adr/0060-witnessed-registry-lookup.md) and the [RFC 9162 transparency log design](https://www.rfc-editor.org/rfc/rfc9162).
+
+For signed operator enrollment, lost-key replacement, and independently pinned archive restores, see [two-operator setup and recovery](WITNESS-OPERATORS.md).

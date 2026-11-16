@@ -5,6 +5,8 @@ import type { RegistryEndorsement, RegistryOriginTrust, SignedRegistryCheckpoint
 export interface PassportWitness {
   witnessId: string;
   endorse(signed: SignedRegistryCheckpoint, histories: PassportRecord[][]): RegistryEndorsement;
+  restore(signed: SignedRegistryCheckpoint, histories: PassportRecord[][], endorsements: RegistryEndorsement[],
+    witnessPublicKeys: string[], anchor: { epoch: number; checkpointDigest: string }): { epoch: number; checkpointDigest: string };
   close(): void;
 }
 

@@ -30,6 +30,7 @@ export interface RegistryOriginTrust {
 
 export interface RegistryLookupTrust extends RegistryOriginTrust {
   witnessPublicKeys: string[];
+  minimumEpoch?: number;
   checkpointPin?: { epoch: number; checkpointDigest: string };
 }
 
@@ -38,6 +39,9 @@ export function registryWitnessBytes(checkpoint: RegistryCheckpoint): Buffer;
 export function signRegistryStatement(bytes: Uint8Array, privateKey: KeyObject | Buffer | string): string;
 export function verifyRegistryCheckpoint(input: SignedRegistryCheckpoint, trust: RegistryOriginTrust, now: string):
   { checkpoint: RegistryCheckpoint; checkpointDigest: string };
+export function verifyRegistrySignature(bytes: Uint8Array, signature: string, publicKey: string): void;
+export function verifyRegistryEndorsements(signed: SignedRegistryCheckpoint, endorsements: RegistryEndorsement[],
+  trust: RegistryLookupTrust, now: string): { checkpoint: RegistryCheckpoint; checkpointDigest: string };
 export function verifyWitnessedLookup(query: RegistryQuery, proof: RegistryLookupProof, signed: SignedRegistryCheckpoint,
   endorsements: RegistryEndorsement[], trust: RegistryLookupTrust, now: string):
   { checkpointDigest: string; epoch: number; value: RegistryMatch | null };

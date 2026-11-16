@@ -21,6 +21,8 @@ KYA-native records sign `DOMAIN + canonical(payload)`, where `DOMAIN` is a fixed
 | `kya.passport-checkpoint/v1\n` | Registry checkpoint statement | `src/passport/checkpoint.mjs` |
 | `kya.registry-checkpoint/v1\n` | Origin registry-wide checkpoint | `src/passport/registry-checkpoint.mjs` |
 | `kya.registry-witness/v1\n` | Independent registry checkpoint endorsement | `src/passport/registry-checkpoint.mjs` |
+| `kya.witness-roster/v1\n` | Offline authority approval of the witness roster | `src/passport/witness-roster.mjs` |
+| `kya.witness-enrollment/v1\n` | Witness key possession and roster approval | `src/passport/witness-roster.mjs` |
 | `kya.oidc-enrollment/v1\n` | OIDC-bound new-key possession statement | `src/pairing/oidc-enrollment.mjs` |
 | `kya.assessor-disclosure/v1\n` | Assessor disclosure, conflict declaration, withdrawal payload (`kya.assessor-disclosure/v1`) | `src/assessor/disclosure.mjs` |
 | `kya.campaign-plan/v1\n` | Campaign plan payload (`kya.campaign-plan/v1`) | `src/campaign/domain/records.mjs` (`PLAN_DOMAIN`) |

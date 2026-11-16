@@ -1,9 +1,9 @@
 import { DatabaseSync } from 'node:sqlite';
-import { digest, insist } from '../shared/canonical.mjs';
-import { keyId, text, validatePublicPem } from '../identity/domain/services/validation.mjs';
+import { canonical, digest, exactKeys, insist } from '../shared/canonical.mjs';
+import { hash, keyId, text, timestamp, validatePublicPem } from '../identity/domain/services/validation.mjs';
 import { passportPublicKey } from './index.mjs';
 import { buildPassportRegistryIndex } from './registry-proof.mjs';
-import { registryWitnessBytes, signRegistryStatement, verifyRegistryCheckpoint } from './registry-checkpoint.mjs';
+import { registryWitnessBytes, signRegistryStatement, verifyRegistryCheckpoint, verifyRegistryEndorsements } from './registry-checkpoint.mjs';
 
 export function openPassportWitness(filename, { registry, originPublicKey, witnessPrivateKey, clock = () => new Date().toISOString() }) {
   insist(typeof filename === 'string' && filename.length > 0 && filename !== ':memory:'
@@ -46,6 +46,33 @@ export function openPassportWitness(filename, { registry, originPublicKey, witne
 
   return {
     witnessId,
+    restore(signedInput, histories, endorsements, witnessPublicKeys, anchor) {
+      exactKeys(anchor, ['epoch', 'checkpointDigest'], 'Trusted recovery anchor');
+      hash(anchor.checkpointDigest, 'Recovery checkpoint digest');
+      const signed = JSON.parse(canonical(signedInput));
+      const now = clock();
+      const issuedAt = signed?.checkpoint?.issuedAt;
+      insist(timestamp(issuedAt) <= timestamp(now), 'Recovery checkpoint is from the future');
+      // An independently pinned archival checkpoint can seed state after expiry.
+      // Ordinary lookup and endorsement still use the live clock.
+      const { checkpoint, checkpointDigest } = verifyRegistryEndorsements(signed, endorsements,
+        { registry, originPublicKey, witnessPublicKeys }, issuedAt);
+      insist(checkpoint.epoch === anchor.epoch && checkpointDigest === anchor.checkpointDigest,
+        'Recovery checkpoint mismatch');
+      const index = buildPassportRegistryIndex(histories, registry);
+      insist(index.root === checkpoint.root && index.count === checkpoint.count, 'Witness snapshot mismatch');
+      db.exec('BEGIN IMMEDIATE');
+      try {
+        insist(!last.get(), 'Witness database already initialized');
+        for (const passport of index.passports.values()) storePassport.run(passport.id, passport.sequence, passport.head);
+        storeHead.run(checkpoint.epoch, checkpointDigest, checkpoint.issuedAt);
+        db.exec('COMMIT');
+        return { epoch: checkpoint.epoch, checkpointDigest };
+      } catch (error) {
+        db.exec('ROLLBACK');
+        throw error;
+      }
+    },
     endorse(signed, histories) {
       const { checkpoint, checkpointDigest } = verifyRegistryCheckpoint(signed, { registry, originPublicKey }, clock());
       const index = buildPassportRegistryIndex(histories, registry);
