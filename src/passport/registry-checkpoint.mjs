@@ -19,7 +19,7 @@ export function signRegistryStatement(bytes, privateKey) {
   return sign(null, bytes, key).toString('base64url');
 }
 
-function authenticate(bytes, signature, pem) {
+export function verifyRegistrySignature(bytes, signature, pem) {
   validatePublicPem(pem);
   insist(typeof signature === 'string' && /^[A-Za-z0-9_-]{86}$/.test(signature), 'Invalid registry signature');
   const raw = Buffer.from(signature, 'base64url');
@@ -43,13 +43,15 @@ export function verifyRegistryCheckpoint(input, { registry, originPublicKey }, n
   const end = timestamp(checkpoint.expiresAt);
   const time = timestamp(now);
   insist(start <= time && time < end && end - start <= 300_000, 'Checkpoint outside freshness window');
-  authenticate(registryCheckpointBytes(checkpoint), signature, originPublicKey);
+  verifyRegistrySignature(registryCheckpointBytes(checkpoint), signature, originPublicKey);
   return { checkpoint, checkpointDigest: digest(checkpoint) };
 }
 
-export function verifyWitnessedLookup(query, proof, signed, endorsements, trust, now) {
+export function verifyRegistryEndorsements(signed, endorsements, trust, now) {
   const { checkpoint, checkpointDigest } = verifyRegistryCheckpoint(signed, trust, now);
-  const { witnessPublicKeys, checkpointPin } = trust;
+  const { witnessPublicKeys, checkpointPin, minimumEpoch = 1 } = trust;
+  insist(Number.isSafeInteger(minimumEpoch) && minimumEpoch >= 1 && checkpoint.epoch >= minimumEpoch,
+    'Checkpoint predates witness roster');
   if (checkpointPin !== undefined) {
     exactKeys(checkpointPin, ['epoch', 'checkpointDigest'], 'Registry checkpoint pin');
     hash(checkpointPin.checkpointDigest, 'Pinned checkpoint digest');
@@ -73,9 +75,14 @@ export function verifyWitnessedLookup(query, proof, signed, endorsements, trust,
     exactKeys(proof, ['witnessId', 'checkpointDigest', 'signature'], 'Registry endorsement');
     const key = pinned.get(proof.witnessId);
     insist(key && proof.checkpointDigest === checkpointDigest, 'Registry endorsement mismatch');
-    authenticate(witnessBytes, proof.signature, key);
+    verifyRegistrySignature(witnessBytes, proof.signature, key);
     pinned.delete(proof.witnessId);
   }
+  return { checkpoint, checkpointDigest };
+}
+
+export function verifyWitnessedLookup(query, proof, signed, endorsements, trust, now) {
+  const { checkpoint, checkpointDigest } = verifyRegistryEndorsements(signed, endorsements, trust, now);
   return { checkpointDigest, epoch: checkpoint.epoch,
     value: verifyPassportRegistryLookup(query, proof, checkpoint.root, checkpoint.count) };
 }

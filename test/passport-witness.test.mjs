@@ -134,3 +134,84 @@ test('empty proof and odd-level padding are checked', () => {
   proof.member.siblings[0] = digest('false padding');
   assert.throws(() => verifyPassportRegistryLookup(passport, proof, index.root, index.count), /padding/i);
 });
+
+test('onboards both operators and replaces one lost key from an explicitly pinned endorsed checkpoint', async t => {
+  const { witnessRosterBytes, witnessEnrollmentBytes, verifyWitnessRoster, witnessLookupTrust } =
+    await import('kya-evidence/passport/witness-roster');
+  const authority = key();
+  const replacementWitness = key();
+  const rosterTrust = { ...trust, authorityPublicKey: passportPublicKey(authority) };
+  function approve(roster, signers) {
+    return {
+      roster, signature: signRegistryStatement(witnessRosterBytes(roster), authority),
+      enrollments: roster.operators.map((operator, i) => ({
+        operatorId: operator.id,
+        signature: signRegistryStatement(witnessEnrollmentBytes(roster, operator.id), signers[i]),
+      })),
+    };
+  }
+  const initial = {
+    schema: 'kya.witness-roster/v1', registry, originKeyId: keyId(trust.originPublicKey), generation: 1,
+    previous: null, handoff: null,
+    operators: [{ id: 'operator:a', publicKey: passportPublicKey(firstWitness) },
+      { id: 'operator:b', publicKey: passportPublicKey(secondWitness) }],
+  };
+  assert.throws(() => verifyWitnessRoster(approve(initial, [replacementWitness, secondWitness]), rosterTrust), /signature/i);
+  const prior = verifyWitnessRoster(approve(initial, [firstWitness, secondWitness]), rosterTrust);
+  const dir = mkdtempSync(join(tmpdir(), 'kya-witness-rotation-'));
+  let clock = now;
+  const open = (name, witnessPrivateKey) =>
+    openPassportWitness(join(dir, name), { ...trust, witnessPrivateKey, clock: () => clock });
+  const first = open('first.sqlite', firstWitness);
+  const survivor = open('survivor.sqlite', secondWitness);
+  const replacement = open('replacement.sqlite', replacementWitness);
+  const restored = open('restored.sqlite', firstWitness);
+  t.after(() => {
+    for (const witness of [first, survivor, replacement, restored]) witness.close();
+    rmSync(dir, { recursive: true, force: true });
+  });
+
+  const histories = [[registration('agent:first')]];
+  const original = signedIndex(histories, 1, null, '2026-11-16T12:00:00.000Z');
+  const originalEndorsements = [first, survivor].map(witness => witness.endorse(original.signed, histories));
+  const anchor = { epoch: 1, checkpointDigest: digest(original.signed.checkpoint) };
+  const successor = {
+    ...initial, generation: 2, previous: prior.rosterDigest, handoff: anchor,
+    operators: [{ ...initial.operators[0], publicKey: passportPublicKey(replacementWitness) }, initial.operators[1]],
+  };
+  const approved = approve(successor, [replacementWitness, secondWitness]);
+  assert.throws(() => verifyWitnessRoster(approved, rosterTrust), /predecessor/i);
+  assert.throws(() => verifyWitnessRoster(approve(successor, [replacementWitness, firstWitness]), rosterTrust, prior), /signature/i);
+  const current = verifyWitnessRoster(approved, rosterTrust, prior);
+  assert.deepEqual(current.retiredKeys, [keyId(passportPublicKey(firstWitness))]);
+
+  clock = '2026-11-16T12:05:00.000Z';
+  const oldKeys = witnessLookupTrust(prior, trust.originPublicKey).witnessPublicKeys;
+  assert.throws(() => replacement.restore(original.signed, histories, originalEndorsements, oldKeys,
+    { ...anchor, checkpointDigest: digest('wrong head') }), /recovery checkpoint mismatch/i);
+  assert.throws(() => replacement.restore(original.signed, histories, originalEndorsements.slice(1), oldKeys,
+    anchor), /witness set incomplete/i);
+  assert.deepEqual(replacement.restore(original.signed, histories, originalEndorsements, oldKeys, current.handoff), anchor);
+  assert.deepEqual(restored.restore(original.signed, histories, originalEndorsements, oldKeys, anchor), anchor);
+  assert.throws(() => replacement.restore(original.signed, histories, originalEndorsements, oldKeys, anchor), /already initialized/i);
+
+  const query = { kind: 'fingerprint', digest: manifestDigest };
+  const nextTrust = witnessLookupTrust(current, trust.originPublicKey, current.handoff);
+  assert.throws(() => verifyWitnessedLookup(query, original.index.prove(query), original.signed,
+    originalEndorsements, nextTrust, now), /predates witness roster/i);
+  const index = original.index;
+  const checkpoint = { ...original.signed.checkpoint, epoch: 2, previous: anchor.checkpointDigest,
+    issuedAt: clock, expiresAt: '2026-11-16T12:09:00.000Z' };
+  const signed = { checkpoint, signature: signRegistryStatement(registryCheckpointBytes(checkpoint), origin) };
+  const retained = restored.endorse(signed, histories);
+  const survivorProof = survivor.endorse(signed, histories);
+  assert.throws(() => verifyWitnessedLookup(query, index.prove(query), signed, [retained, survivorProof],
+    nextTrust, clock), /endorsement mismatch/i);
+  const endorsements = [replacement.endorse(signed, histories), survivorProof];
+  assert.equal(verifyWitnessedLookup(query, index.prove(query), signed, endorsements, nextTrust, clock).epoch, 2);
+  const reusingRetired = {
+    ...successor, generation: 3, previous: current.rosterDigest,
+    handoff: { epoch: 2, checkpointDigest: digest(checkpoint) }, operators: initial.operators,
+  };
+  assert.throws(() => verifyWitnessRoster(approve(reusingRetired, [firstWitness, secondWitness]), rosterTrust, current), /retired/i);
+});

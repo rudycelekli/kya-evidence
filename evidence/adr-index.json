@@ -718,8 +718,18 @@
       "related": [
         "ADR-0058"
       ]
+    },
+    {
+      "id": "ADR-0061",
+      "title": "Onboard independent witness operators and restore witness state",
+      "status": "Implemented locally; review pending",
+      "file": "docs/adr/0061-witness-operator-roster-and-recovery.md",
+      "contentDigest": "008188a15877198ac17ce447ed752017d2651e4e334164c9dbb7bebdf051edb4",
+      "related": [
+        "ADR-0060"
+      ]
     }
   ],
-  "digest": "3263fe822e4dfed1fdc2e93158b379893926a527b609c9bbd1b693da39bda285",
+  "digest": "8f652c76978dd5d376020c3b1aa83057c8e3535d23fb590fb329b8c6e724d260",
   "store": "portable local file; not a claim of AgentDB graph persistence"
 }
