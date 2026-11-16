@@ -746,8 +746,16 @@
       "related": [
         "ADR-0057"
       ]
+    },
+    {
+      "id": "ADR-0064",
+      "title": "Portable Passport conformance corpus and candidate runner",
+      "status": "Implemented locally; review pending",
+      "file": "docs/adr/0064-passport-conformance-kit.md",
+      "contentDigest": "899c5c7c7fe8f2900149a153c4f925b0c0cc253e1f406a47718986552dd6dd68",
+      "related": []
     }
   ],
-  "digest": "315cc9a5560f046febecaf3dce71c0a8919eb3182488ac94178cfc7417577dd8",
+  "digest": "97be33e98abbb0831fc16708b3af708582d046b50a3b1e5795abfd18050371ea",
   "store": "portable local file; not a claim of AgentDB graph persistence"
 }

@@ -1,0 +1,1393 @@
+{
+  "schema": "kya.passport-vectors/v1",
+  "vectors": [
+    {
+      "id": "history-register-v1",
+      "operation": "passport-history",
+      "inputs": {
+        "history": [
+          {
+            "event": {
+              "schema": "kya.passport-event/v1",
+              "operation": "register",
+              "registry": "https://registry.example.test",
+              "previous": null,
+              "agentId": "agent:first",
+              "principalId": "controller:fixture",
+              "controllerPublicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAiojj3XQJ8ZX9UtstPLpdcspnCb8dlBIb83SIAbQPb1w=\n-----END PUBLIC KEY-----\n",
+              "agentPublicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAgTl3Dqh9F19Wo1Rmw0x+zMuNipG07jeiXfYPW4/Js5Q=\n-----END PUBLIC KEY-----\n",
+              "manifestDigest": "cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd",
+              "passportId": "ec53286e6d2778958f7d935814b86438bc44f6272d669709f99ff9f17a4132f5"
+            },
+            "controllerSignature": "B3sFUznl-8clEpjKJC-gEGsOj6aJ5sGdXyKzmAA6aSPm_BEr-aifLr5Lq7HxqpdZOpXQM8Il16F1wKyyEP4UCw",
+            "agentSignature": "gtSrdKmpBnSgL3w1Fe5d1JDQ6vVMjN_ShhXYKm8_cP9zNuEqOQfAc7UGErubXo67ehclFbn4YBJNCAaU9PG-CQ"
+          }
+        ],
+        "registry": "https://registry.example.test"
+      },
+      "expected": {
+        "status": "accept",
+        "value": {
+          "passportId": "ec53286e6d2778958f7d935814b86438bc44f6272d669709f99ff9f17a4132f5",
+          "agentId": "agent:first",
+          "principalId": "controller:fixture",
+          "head": "a6768cd47b2f86f4c14f917c6b099d6ae1f9813fadb4327b79a7bbbe4c9b7b96",
+          "status": "active",
+          "current": {
+            "fingerprint": "47dea58ea00fae9417ee19d76755bfef690899021132effb04fe1f9e4f0c8059",
+            "manifestDigest": "cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd"
+          },
+          "fingerprints": [
+            "47dea58ea00fae9417ee19d76755bfef690899021132effb04fe1f9e4f0c8059"
+          ]
+        }
+      }
+    },
+    {
+      "id": "history-rotate-v1",
+      "operation": "passport-history",
+      "inputs": {
+        "history": [
+          {
+            "event": {
+              "schema": "kya.passport-event/v1",
+              "operation": "register",
+              "registry": "https://registry.example.test",
+              "previous": null,
+              "agentId": "agent:first",
+              "principalId": "controller:fixture",
+              "controllerPublicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAiojj3XQJ8ZX9UtstPLpdcspnCb8dlBIb83SIAbQPb1w=\n-----END PUBLIC KEY-----\n",
+              "agentPublicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAgTl3Dqh9F19Wo1Rmw0x+zMuNipG07jeiXfYPW4/Js5Q=\n-----END PUBLIC KEY-----\n",
+              "manifestDigest": "cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd",
+              "passportId": "ec53286e6d2778958f7d935814b86438bc44f6272d669709f99ff9f17a4132f5"
+            },
+            "controllerSignature": "B3sFUznl-8clEpjKJC-gEGsOj6aJ5sGdXyKzmAA6aSPm_BEr-aifLr5Lq7HxqpdZOpXQM8Il16F1wKyyEP4UCw",
+            "agentSignature": "gtSrdKmpBnSgL3w1Fe5d1JDQ6vVMjN_ShhXYKm8_cP9zNuEqOQfAc7UGErubXo67ehclFbn4YBJNCAaU9PG-CQ"
+          },
+          {
+            "event": {
+              "schema": "kya.passport-event/v1",
+              "operation": "rotate",
+              "registry": "https://registry.example.test",
+              "previous": "a6768cd47b2f86f4c14f917c6b099d6ae1f9813fadb4327b79a7bbbe4c9b7b96",
+              "agentId": "agent:first",
+              "principalId": "controller:fixture",
+              "controllerPublicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAiojj3XQJ8ZX9UtstPLpdcspnCb8dlBIb83SIAbQPb1w=\n-----END PUBLIC KEY-----\n",
+              "agentPublicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEA7UkoxijRwsbq6QM4kFmVYSlZJzpcY/k2NsFGFKyHN9E=\n-----END PUBLIC KEY-----\n",
+              "manifestDigest": "cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd",
+              "passportId": "ec53286e6d2778958f7d935814b86438bc44f6272d669709f99ff9f17a4132f5"
+            },
+            "controllerSignature": "kH450KF-7O8Brh3UWDygSAq4tKv5i7FUNc-nHsFWvzP44lEHc-flJQdqG4k8hhFu4iuAcnRILkLSsBN8cEdsCg",
+            "agentSignature": "_kA7dJY8hoS9AHVl6-cxPrGOpK2Xpw048NBpZQTpBgtKllDBg2rJB3OgR7vT0a1RIDJDqI2HBU-fjy-1FLD-Cw"
+          }
+        ],
+        "registry": "https://registry.example.test"
+      },
+      "expected": {
+        "status": "accept",
+        "value": {
+          "passportId": "ec53286e6d2778958f7d935814b86438bc44f6272d669709f99ff9f17a4132f5",
+          "agentId": "agent:first",
+          "principalId": "controller:fixture",
+          "head": "8e5c6c779ce6934fae74d481ffab7dceb9e3f553bf5a9b7321a67418d93e02cf",
+          "status": "active",
+          "current": {
+            "fingerprint": "8cef065b7af83669150b7d32704d3d3e75c3e9aee0d4f6740544c68e81b377aa",
+            "manifestDigest": "cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd"
+          },
+          "fingerprints": [
+            "47dea58ea00fae9417ee19d76755bfef690899021132effb04fe1f9e4f0c8059",
+            "8cef065b7af83669150b7d32704d3d3e75c3e9aee0d4f6740544c68e81b377aa"
+          ]
+        }
+      }
+    },
+    {
+      "id": "history-revoke-v1",
+      "operation": "passport-history",
+      "inputs": {
+        "history": [
+          {
+            "event": {
+              "schema": "kya.passport-event/v1",
+              "operation": "register",
+              "registry": "https://registry.example.test",
+              "previous": null,
+              "agentId": "agent:first",
+              "principalId": "controller:fixture",
+              "controllerPublicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAiojj3XQJ8ZX9UtstPLpdcspnCb8dlBIb83SIAbQPb1w=\n-----END PUBLIC KEY-----\n",
+              "agentPublicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAgTl3Dqh9F19Wo1Rmw0x+zMuNipG07jeiXfYPW4/Js5Q=\n-----END PUBLIC KEY-----\n",
+              "manifestDigest": "cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd",
+              "passportId": "ec53286e6d2778958f7d935814b86438bc44f6272d669709f99ff9f17a4132f5"
+            },
+            "controllerSignature": "B3sFUznl-8clEpjKJC-gEGsOj6aJ5sGdXyKzmAA6aSPm_BEr-aifLr5Lq7HxqpdZOpXQM8Il16F1wKyyEP4UCw",
+            "agentSignature": "gtSrdKmpBnSgL3w1Fe5d1JDQ6vVMjN_ShhXYKm8_cP9zNuEqOQfAc7UGErubXo67ehclFbn4YBJNCAaU9PG-CQ"
+          },
+          {
+            "event": {
+              "schema": "kya.passport-event/v1",
+              "operation": "rotate",
+              "registry": "https://registry.example.test",
+              "previous": "a6768cd47b2f86f4c14f917c6b099d6ae1f9813fadb4327b79a7bbbe4c9b7b96",
+              "agentId": "agent:first",
+              "principalId": "controller:fixture",
+              "controllerPublicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAiojj3XQJ8ZX9UtstPLpdcspnCb8dlBIb83SIAbQPb1w=\n-----END PUBLIC KEY-----\n",
+              "agentPublicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEA7UkoxijRwsbq6QM4kFmVYSlZJzpcY/k2NsFGFKyHN9E=\n-----END PUBLIC KEY-----\n",
+              "manifestDigest": "cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd",
+              "passportId": "ec53286e6d2778958f7d935814b86438bc44f6272d669709f99ff9f17a4132f5"
+            },
+            "controllerSignature": "kH450KF-7O8Brh3UWDygSAq4tKv5i7FUNc-nHsFWvzP44lEHc-flJQdqG4k8hhFu4iuAcnRILkLSsBN8cEdsCg",
+            "agentSignature": "_kA7dJY8hoS9AHVl6-cxPrGOpK2Xpw048NBpZQTpBgtKllDBg2rJB3OgR7vT0a1RIDJDqI2HBU-fjy-1FLD-Cw"
+          },
+          {
+            "event": {
+              "schema": "kya.passport-event/v1",
+              "operation": "revoke",
+              "registry": "https://registry.example.test",
+              "previous": "8e5c6c779ce6934fae74d481ffab7dceb9e3f553bf5a9b7321a67418d93e02cf",
+              "agentId": "agent:first",
+              "principalId": "controller:fixture",
+              "controllerPublicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAiojj3XQJ8ZX9UtstPLpdcspnCb8dlBIb83SIAbQPb1w=\n-----END PUBLIC KEY-----\n",
+              "agentPublicKey": null,
+              "manifestDigest": "cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd",
+              "passportId": "ec53286e6d2778958f7d935814b86438bc44f6272d669709f99ff9f17a4132f5"
+            },
+            "controllerSignature": "MTKZM9Iebxgv8r-kbGCnroEL4Omb0Yxy__iPuDky02GzU6lHNNk4PPhHWh-B9JEoSgiLhB9ulupr8JwlybWSCA",
+            "agentSignature": null
+          }
+        ],
+        "registry": "https://registry.example.test"
+      },
+      "expected": {
+        "status": "accept",
+        "value": {
+          "passportId": "ec53286e6d2778958f7d935814b86438bc44f6272d669709f99ff9f17a4132f5",
+          "agentId": "agent:first",
+          "principalId": "controller:fixture",
+          "head": "d5c137abb14303dfd4adfd0d1ab4c8ef31371e3afc6cb10fb6d281f58fcf1b07",
+          "status": "revoked",
+          "current": null,
+          "fingerprints": [
+            "47dea58ea00fae9417ee19d76755bfef690899021132effb04fe1f9e4f0c8059",
+            "8cef065b7af83669150b7d32704d3d3e75c3e9aee0d4f6740544c68e81b377aa"
+          ]
+        }
+      }
+    },
+    {
+      "id": "history-v2-recovery",
+      "operation": "passport-history",
+      "inputs": {
+        "history": [
+          {
+            "event": {
+              "schema": "kya.passport-event/v2",
+              "operation": "register",
+              "registry": "https://registry.example.test",
+              "previous": null,
+              "agentId": "agent:second",
+              "principalId": "controller:fixture",
+              "controllerPublicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAiojj3XQJ8ZX9UtstPLpdcspnCb8dlBIb83SIAbQPb1w=\n-----END PUBLIC KEY-----\n",
+              "agentPublicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAgTl3Dqh9F19Wo1Rmw0x+zMuNipG07jeiXfYPW4/Js5Q=\n-----END PUBLIC KEY-----\n",
+              "manifestDigest": "cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd",
+              "recoveryPublicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAypOsFwUYcHHWe4PH/w7+gQjo7EUwV113JoeTM9vavnw=\n-----END PUBLIC KEY-----\n",
+              "passportId": "7c96610d78dd7ee9e2f65a4eb525d1ed45e83e53bd68883f4ee9e53aed893d42"
+            },
+            "controllerSignature": "urwrx7de4oFMEL4Ds--HiE_UfcNzYW6YKaSpJnElIHmTDh9YMK6b-BIhgBs4i4FQvMz1biLv4M2SSLdb66YvBw",
+            "agentSignature": "zbD5HcLIGyResxEsctvQ49_ry9KYe3o8khwkul0wD99rj4fDNWNeoMUWMWbuaijbk0PwgmXCcXWIlwzsdz7TCQ",
+            "recoverySignature": "X6Y6cTJk5xTfQuqVqeSTjWUr91ad3_OdssgVfzfQ6V_x9FFVutcuGRn6TqLaeS2Zg3i1PuwLimsAT9lIOgKHBQ"
+          },
+          {
+            "event": {
+              "schema": "kya.passport-event/v2",
+              "operation": "recover",
+              "registry": "https://registry.example.test",
+              "previous": "f8ede478b004e895905e1a2c66d25033f90f3febbbd4d580e222b870ece3e228",
+              "agentId": "agent:second",
+              "principalId": "controller:fixture",
+              "controllerPublicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAbnoc3Smwt4/ROvTFWY/v9O8qlxZuPKby5Pv8zYBQW/E=\n-----END PUBLIC KEY-----\n",
+              "agentPublicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEA7UkoxijRwsbq6QM4kFmVYSlZJzpcY/k2NsFGFKyHN9E=\n-----END PUBLIC KEY-----\n",
+              "manifestDigest": "cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd",
+              "recoveryPublicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAypOsFwUYcHHWe4PH/w7+gQjo7EUwV113JoeTM9vavnw=\n-----END PUBLIC KEY-----\n",
+              "passportId": "7c96610d78dd7ee9e2f65a4eb525d1ed45e83e53bd68883f4ee9e53aed893d42"
+            },
+            "controllerSignature": "WqAtdcdekuCyZ0wIiILAlyUHPA0og2nPnf08hiCGe7cXph1BMSxuv9q_fPJ3v8uYIFuqMcPQ6Y6EDO86vfw3Bg",
+            "agentSignature": "DcRT0wwaGYR_VNm3TDGTxfVy-3Jd5a8Wd-1RTBapY9IMBafirBticoaEY4X6Kjo5kjcRxkPHvf8sgvvNvd7_AA",
+            "recoverySignature": "cE2lg85jzAv3zTC4MihGIa8gdVsSIkpo11nYFq8of1WwYY8IxFSEwUV6L7U7D2XbWv-Htxcs5RT703bQQZQpBQ"
+          }
+        ],
+        "registry": "https://registry.example.test"
+      },
+      "expected": {
+        "status": "accept",
+        "value": {
+          "passportId": "7c96610d78dd7ee9e2f65a4eb525d1ed45e83e53bd68883f4ee9e53aed893d42",
+          "agentId": "agent:second",
+          "principalId": "controller:fixture",
+          "head": "60df7394a06a1aa89a151828fc865330c986e7a6de7d16dbc190b3107f3b0418",
+          "status": "active",
+          "current": {
+            "fingerprint": "8cef065b7af83669150b7d32704d3d3e75c3e9aee0d4f6740544c68e81b377aa",
+            "manifestDigest": "cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd"
+          },
+          "fingerprints": [
+            "47dea58ea00fae9417ee19d76755bfef690899021132effb04fe1f9e4f0c8059",
+            "8cef065b7af83669150b7d32704d3d3e75c3e9aee0d4f6740544c68e81b377aa"
+          ],
+          "controllerFingerprint": "3774845b9147b50cf00771ca20eb29cc3043c078f79ee13ebd0c63062a133b4d",
+          "recoveryEnabled": true
+        }
+      }
+    },
+    {
+      "id": "history-wrong-agent-signer",
+      "operation": "passport-history",
+      "inputs": {
+        "history": [
+          {
+            "event": {
+              "schema": "kya.passport-event/v1",
+              "operation": "register",
+              "registry": "https://registry.example.test",
+              "previous": null,
+              "agentId": "agent:first",
+              "principalId": "controller:fixture",
+              "controllerPublicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAiojj3XQJ8ZX9UtstPLpdcspnCb8dlBIb83SIAbQPb1w=\n-----END PUBLIC KEY-----\n",
+              "agentPublicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAgTl3Dqh9F19Wo1Rmw0x+zMuNipG07jeiXfYPW4/Js5Q=\n-----END PUBLIC KEY-----\n",
+              "manifestDigest": "cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd",
+              "passportId": "ec53286e6d2778958f7d935814b86438bc44f6272d669709f99ff9f17a4132f5"
+            },
+            "controllerSignature": "B3sFUznl-8clEpjKJC-gEGsOj6aJ5sGdXyKzmAA6aSPm_BEr-aifLr5Lq7HxqpdZOpXQM8Il16F1wKyyEP4UCw",
+            "agentSignature": "VxDrxcE9Y3h_eCrypgQQpDDUXDfx0npXxJiWlwLQWx8uJ3n8V0gvrAhQA5UAyYA2X9ibqTp6fltpfrCAp-61AQ"
+          }
+        ],
+        "registry": "https://registry.example.test"
+      },
+      "expected": {
+        "status": "reject"
+      }
+    },
+    {
+      "id": "history-wrong-controller-signer",
+      "operation": "passport-history",
+      "inputs": {
+        "history": [
+          {
+            "event": {
+              "schema": "kya.passport-event/v1",
+              "operation": "register",
+              "registry": "https://registry.example.test",
+              "previous": null,
+              "agentId": "agent:first",
+              "principalId": "controller:fixture",
+              "controllerPublicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAiojj3XQJ8ZX9UtstPLpdcspnCb8dlBIb83SIAbQPb1w=\n-----END PUBLIC KEY-----\n",
+              "agentPublicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAgTl3Dqh9F19Wo1Rmw0x+zMuNipG07jeiXfYPW4/Js5Q=\n-----END PUBLIC KEY-----\n",
+              "manifestDigest": "cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd",
+              "passportId": "ec53286e6d2778958f7d935814b86438bc44f6272d669709f99ff9f17a4132f5"
+            },
+            "controllerSignature": "VxDrxcE9Y3h_eCrypgQQpDDUXDfx0npXxJiWlwLQWx8uJ3n8V0gvrAhQA5UAyYA2X9ibqTp6fltpfrCAp-61AQ",
+            "agentSignature": "gtSrdKmpBnSgL3w1Fe5d1JDQ6vVMjN_ShhXYKm8_cP9zNuEqOQfAc7UGErubXo67ehclFbn4YBJNCAaU9PG-CQ"
+          }
+        ],
+        "registry": "https://registry.example.test"
+      },
+      "expected": {
+        "status": "reject"
+      }
+    },
+    {
+      "id": "history-wrong-recovery-signer",
+      "operation": "passport-history",
+      "inputs": {
+        "history": [
+          {
+            "event": {
+              "schema": "kya.passport-event/v2",
+              "operation": "register",
+              "registry": "https://registry.example.test",
+              "previous": null,
+              "agentId": "agent:second",
+              "principalId": "controller:fixture",
+              "controllerPublicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAiojj3XQJ8ZX9UtstPLpdcspnCb8dlBIb83SIAbQPb1w=\n-----END PUBLIC KEY-----\n",
+              "agentPublicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAgTl3Dqh9F19Wo1Rmw0x+zMuNipG07jeiXfYPW4/Js5Q=\n-----END PUBLIC KEY-----\n",
+              "manifestDigest": "cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd",
+              "recoveryPublicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAypOsFwUYcHHWe4PH/w7+gQjo7EUwV113JoeTM9vavnw=\n-----END PUBLIC KEY-----\n",
+              "passportId": "7c96610d78dd7ee9e2f65a4eb525d1ed45e83e53bd68883f4ee9e53aed893d42"
+            },
+            "controllerSignature": "urwrx7de4oFMEL4Ds--HiE_UfcNzYW6YKaSpJnElIHmTDh9YMK6b-BIhgBs4i4FQvMz1biLv4M2SSLdb66YvBw",
+            "agentSignature": "zbD5HcLIGyResxEsctvQ49_ry9KYe3o8khwkul0wD99rj4fDNWNeoMUWMWbuaijbk0PwgmXCcXWIlwzsdz7TCQ",
+            "recoverySignature": "X6Y6cTJk5xTfQuqVqeSTjWUr91ad3_OdssgVfzfQ6V_x9FFVutcuGRn6TqLaeS2Zg3i1PuwLimsAT9lIOgKHBQ"
+          },
+          {
+            "event": {
+              "schema": "kya.passport-event/v2",
+              "operation": "recover",
+              "registry": "https://registry.example.test",
+              "previous": "f8ede478b004e895905e1a2c66d25033f90f3febbbd4d580e222b870ece3e228",
+              "agentId": "agent:second",
+              "principalId": "controller:fixture",
+              "controllerPublicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAbnoc3Smwt4/ROvTFWY/v9O8qlxZuPKby5Pv8zYBQW/E=\n-----END PUBLIC KEY-----\n",
+              "agentPublicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEA7UkoxijRwsbq6QM4kFmVYSlZJzpcY/k2NsFGFKyHN9E=\n-----END PUBLIC KEY-----\n",
+              "manifestDigest": "cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd",
+              "recoveryPublicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAypOsFwUYcHHWe4PH/w7+gQjo7EUwV113JoeTM9vavnw=\n-----END PUBLIC KEY-----\n",
+              "passportId": "7c96610d78dd7ee9e2f65a4eb525d1ed45e83e53bd68883f4ee9e53aed893d42"
+            },
+            "controllerSignature": "WqAtdcdekuCyZ0wIiILAlyUHPA0og2nPnf08hiCGe7cXph1BMSxuv9q_fPJ3v8uYIFuqMcPQ6Y6EDO86vfw3Bg",
+            "agentSignature": "DcRT0wwaGYR_VNm3TDGTxfVy-3Jd5a8Wd-1RTBapY9IMBafirBticoaEY4X6Kjo5kjcRxkPHvf8sgvvNvd7_AA",
+            "recoverySignature": "jzq96hJBsoeIkQpW7MES99zx6JWs4-EMjbc_tCAnN0JViKcSP-Bda7Pb2dsxljoMUyshivXriohEZ0_3tXjoBw"
+          }
+        ],
+        "registry": "https://registry.example.test"
+      },
+      "expected": {
+        "status": "reject"
+      }
+    },
+    {
+      "id": "history-retired-controller",
+      "operation": "passport-history",
+      "inputs": {
+        "history": [
+          {
+            "event": {
+              "schema": "kya.passport-event/v2",
+              "operation": "register",
+              "registry": "https://registry.example.test",
+              "previous": null,
+              "agentId": "agent:second",
+              "principalId": "controller:fixture",
+              "controllerPublicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAiojj3XQJ8ZX9UtstPLpdcspnCb8dlBIb83SIAbQPb1w=\n-----END PUBLIC KEY-----\n",
+              "agentPublicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAgTl3Dqh9F19Wo1Rmw0x+zMuNipG07jeiXfYPW4/Js5Q=\n-----END PUBLIC KEY-----\n",
+              "manifestDigest": "cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd",
+              "recoveryPublicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAypOsFwUYcHHWe4PH/w7+gQjo7EUwV113JoeTM9vavnw=\n-----END PUBLIC KEY-----\n",
+              "passportId": "7c96610d78dd7ee9e2f65a4eb525d1ed45e83e53bd68883f4ee9e53aed893d42"
+            },
+            "controllerSignature": "urwrx7de4oFMEL4Ds--HiE_UfcNzYW6YKaSpJnElIHmTDh9YMK6b-BIhgBs4i4FQvMz1biLv4M2SSLdb66YvBw",
+            "agentSignature": "zbD5HcLIGyResxEsctvQ49_ry9KYe3o8khwkul0wD99rj4fDNWNeoMUWMWbuaijbk0PwgmXCcXWIlwzsdz7TCQ",
+            "recoverySignature": "X6Y6cTJk5xTfQuqVqeSTjWUr91ad3_OdssgVfzfQ6V_x9FFVutcuGRn6TqLaeS2Zg3i1PuwLimsAT9lIOgKHBQ"
+          },
+          {
+            "event": {
+              "schema": "kya.passport-event/v2",
+              "operation": "recover",
+              "registry": "https://registry.example.test",
+              "previous": "f8ede478b004e895905e1a2c66d25033f90f3febbbd4d580e222b870ece3e228",
+              "agentId": "agent:second",
+              "principalId": "controller:fixture",
+              "controllerPublicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAbnoc3Smwt4/ROvTFWY/v9O8qlxZuPKby5Pv8zYBQW/E=\n-----END PUBLIC KEY-----\n",
+              "agentPublicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEA7UkoxijRwsbq6QM4kFmVYSlZJzpcY/k2NsFGFKyHN9E=\n-----END PUBLIC KEY-----\n",
+              "manifestDigest": "cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd",
+              "recoveryPublicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAypOsFwUYcHHWe4PH/w7+gQjo7EUwV113JoeTM9vavnw=\n-----END PUBLIC KEY-----\n",
+              "passportId": "7c96610d78dd7ee9e2f65a4eb525d1ed45e83e53bd68883f4ee9e53aed893d42"
+            },
+            "controllerSignature": "WqAtdcdekuCyZ0wIiILAlyUHPA0og2nPnf08hiCGe7cXph1BMSxuv9q_fPJ3v8uYIFuqMcPQ6Y6EDO86vfw3Bg",
+            "agentSignature": "DcRT0wwaGYR_VNm3TDGTxfVy-3Jd5a8Wd-1RTBapY9IMBafirBticoaEY4X6Kjo5kjcRxkPHvf8sgvvNvd7_AA",
+            "recoverySignature": "cE2lg85jzAv3zTC4MihGIa8gdVsSIkpo11nYFq8of1WwYY8IxFSEwUV6L7U7D2XbWv-Htxcs5RT703bQQZQpBQ"
+          },
+          {
+            "event": {
+              "schema": "kya.passport-event/v2",
+              "operation": "revise",
+              "registry": "https://registry.example.test",
+              "previous": "60df7394a06a1aa89a151828fc865330c986e7a6de7d16dbc190b3107f3b0418",
+              "agentId": "agent:second",
+              "principalId": "controller:fixture",
+              "controllerPublicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAiojj3XQJ8ZX9UtstPLpdcspnCb8dlBIb83SIAbQPb1w=\n-----END PUBLIC KEY-----\n",
+              "agentPublicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEA7UkoxijRwsbq6QM4kFmVYSlZJzpcY/k2NsFGFKyHN9E=\n-----END PUBLIC KEY-----\n",
+              "manifestDigest": "efefefefefefefefefefefefefefefefefefefefefefefefefefefefefefefef",
+              "recoveryPublicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAypOsFwUYcHHWe4PH/w7+gQjo7EUwV113JoeTM9vavnw=\n-----END PUBLIC KEY-----\n",
+              "passportId": "7c96610d78dd7ee9e2f65a4eb525d1ed45e83e53bd68883f4ee9e53aed893d42"
+            },
+            "controllerSignature": "Lfrpr4-SeXrGSL2TLRsLcE4VvXq4ww2F2saTRtZ47a2US5kExrF6eLGLUGlcelT9rKGhI8KpFPIBMRelldZcBg",
+            "agentSignature": "c5YB9ZTUjvwNVFpIWVMkCIfRPPyQdBLkTERFB805GI2a_rKN9iU4BdstCQxu--X_FeTAnor4gPsvwHv87QYSBw",
+            "recoverySignature": null
+          }
+        ],
+        "registry": "https://registry.example.test"
+      },
+      "expected": {
+        "status": "reject"
+      }
+    },
+    {
+      "id": "history-skipped-predecessor",
+      "operation": "passport-history",
+      "inputs": {
+        "history": [
+          {
+            "event": {
+              "schema": "kya.passport-event/v1",
+              "operation": "register",
+              "registry": "https://registry.example.test",
+              "previous": null,
+              "agentId": "agent:first",
+              "principalId": "controller:fixture",
+              "controllerPublicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAiojj3XQJ8ZX9UtstPLpdcspnCb8dlBIb83SIAbQPb1w=\n-----END PUBLIC KEY-----\n",
+              "agentPublicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAgTl3Dqh9F19Wo1Rmw0x+zMuNipG07jeiXfYPW4/Js5Q=\n-----END PUBLIC KEY-----\n",
+              "manifestDigest": "cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd",
+              "passportId": "ec53286e6d2778958f7d935814b86438bc44f6272d669709f99ff9f17a4132f5"
+            },
+            "controllerSignature": "B3sFUznl-8clEpjKJC-gEGsOj6aJ5sGdXyKzmAA6aSPm_BEr-aifLr5Lq7HxqpdZOpXQM8Il16F1wKyyEP4UCw",
+            "agentSignature": "gtSrdKmpBnSgL3w1Fe5d1JDQ6vVMjN_ShhXYKm8_cP9zNuEqOQfAc7UGErubXo67ehclFbn4YBJNCAaU9PG-CQ"
+          },
+          {
+            "event": {
+              "schema": "kya.passport-event/v1",
+              "operation": "revoke",
+              "registry": "https://registry.example.test",
+              "previous": "8e5c6c779ce6934fae74d481ffab7dceb9e3f553bf5a9b7321a67418d93e02cf",
+              "agentId": "agent:first",
+              "principalId": "controller:fixture",
+              "controllerPublicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAiojj3XQJ8ZX9UtstPLpdcspnCb8dlBIb83SIAbQPb1w=\n-----END PUBLIC KEY-----\n",
+              "agentPublicKey": null,
+              "manifestDigest": "cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd",
+              "passportId": "ec53286e6d2778958f7d935814b86438bc44f6272d669709f99ff9f17a4132f5"
+            },
+            "controllerSignature": "MTKZM9Iebxgv8r-kbGCnroEL4Omb0Yxy__iPuDky02GzU6lHNNk4PPhHWh-B9JEoSgiLhB9ulupr8JwlybWSCA",
+            "agentSignature": null
+          }
+        ],
+        "registry": "https://registry.example.test"
+      },
+      "expected": {
+        "status": "reject"
+      }
+    },
+    {
+      "id": "history-rotate-after-revocation",
+      "operation": "passport-history",
+      "inputs": {
+        "history": [
+          {
+            "event": {
+              "schema": "kya.passport-event/v1",
+              "operation": "register",
+              "registry": "https://registry.example.test",
+              "previous": null,
+              "agentId": "agent:first",
+              "principalId": "controller:fixture",
+              "controllerPublicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAiojj3XQJ8ZX9UtstPLpdcspnCb8dlBIb83SIAbQPb1w=\n-----END PUBLIC KEY-----\n",
+              "agentPublicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAgTl3Dqh9F19Wo1Rmw0x+zMuNipG07jeiXfYPW4/Js5Q=\n-----END PUBLIC KEY-----\n",
+              "manifestDigest": "cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd",
+              "passportId": "ec53286e6d2778958f7d935814b86438bc44f6272d669709f99ff9f17a4132f5"
+            },
+            "controllerSignature": "B3sFUznl-8clEpjKJC-gEGsOj6aJ5sGdXyKzmAA6aSPm_BEr-aifLr5Lq7HxqpdZOpXQM8Il16F1wKyyEP4UCw",
+            "agentSignature": "gtSrdKmpBnSgL3w1Fe5d1JDQ6vVMjN_ShhXYKm8_cP9zNuEqOQfAc7UGErubXo67ehclFbn4YBJNCAaU9PG-CQ"
+          },
+          {
+            "event": {
+              "schema": "kya.passport-event/v1",
+              "operation": "rotate",
+              "registry": "https://registry.example.test",
+              "previous": "a6768cd47b2f86f4c14f917c6b099d6ae1f9813fadb4327b79a7bbbe4c9b7b96",
+              "agentId": "agent:first",
+              "principalId": "controller:fixture",
+              "controllerPublicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAiojj3XQJ8ZX9UtstPLpdcspnCb8dlBIb83SIAbQPb1w=\n-----END PUBLIC KEY-----\n",
+              "agentPublicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEA7UkoxijRwsbq6QM4kFmVYSlZJzpcY/k2NsFGFKyHN9E=\n-----END PUBLIC KEY-----\n",
+              "manifestDigest": "cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd",
+              "passportId": "ec53286e6d2778958f7d935814b86438bc44f6272d669709f99ff9f17a4132f5"
+            },
+            "controllerSignature": "kH450KF-7O8Brh3UWDygSAq4tKv5i7FUNc-nHsFWvzP44lEHc-flJQdqG4k8hhFu4iuAcnRILkLSsBN8cEdsCg",
+            "agentSignature": "_kA7dJY8hoS9AHVl6-cxPrGOpK2Xpw048NBpZQTpBgtKllDBg2rJB3OgR7vT0a1RIDJDqI2HBU-fjy-1FLD-Cw"
+          },
+          {
+            "event": {
+              "schema": "kya.passport-event/v1",
+              "operation": "revoke",
+              "registry": "https://registry.example.test",
+              "previous": "8e5c6c779ce6934fae74d481ffab7dceb9e3f553bf5a9b7321a67418d93e02cf",
+              "agentId": "agent:first",
+              "principalId": "controller:fixture",
+              "controllerPublicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAiojj3XQJ8ZX9UtstPLpdcspnCb8dlBIb83SIAbQPb1w=\n-----END PUBLIC KEY-----\n",
+              "agentPublicKey": null,
+              "manifestDigest": "cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd",
+              "passportId": "ec53286e6d2778958f7d935814b86438bc44f6272d669709f99ff9f17a4132f5"
+            },
+            "controllerSignature": "MTKZM9Iebxgv8r-kbGCnroEL4Omb0Yxy__iPuDky02GzU6lHNNk4PPhHWh-B9JEoSgiLhB9ulupr8JwlybWSCA",
+            "agentSignature": null
+          },
+          {
+            "event": {
+              "schema": "kya.passport-event/v1",
+              "operation": "rotate",
+              "registry": "https://registry.example.test",
+              "previous": "d5c137abb14303dfd4adfd0d1ab4c8ef31371e3afc6cb10fb6d281f58fcf1b07",
+              "agentId": "agent:first",
+              "principalId": "controller:fixture",
+              "controllerPublicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAiojj3XQJ8ZX9UtstPLpdcspnCb8dlBIb83SIAbQPb1w=\n-----END PUBLIC KEY-----\n",
+              "agentPublicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAiodf/x6zhFFXes1a/uQFRWVo3XyJ4JCGOgVXvHr0nxc=\n-----END PUBLIC KEY-----\n",
+              "manifestDigest": "cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd",
+              "passportId": "ec53286e6d2778958f7d935814b86438bc44f6272d669709f99ff9f17a4132f5"
+            },
+            "controllerSignature": "AduiIH2cYr45ClRRyHVUp_6vhd89L9edClYmHnPYGgttUHcVEUtJ036m4elaZeQt1aUlmcz4IeH6XRoGVOJ-Cw",
+            "agentSignature": "wxI1SuA0b_dkx3fAaSVmJHaz_M0nTwTk66LhCdoav1gspDCLycBT1yMKTeJJUX24xe1z4BeJgzgEpcezE0JpCA"
+          }
+        ],
+        "registry": "https://registry.example.test"
+      },
+      "expected": {
+        "status": "reject"
+      }
+    },
+    {
+      "id": "history-other-registry",
+      "operation": "passport-history",
+      "inputs": {
+        "history": [
+          {
+            "event": {
+              "schema": "kya.passport-event/v1",
+              "operation": "register",
+              "registry": "https://registry.example.test",
+              "previous": null,
+              "agentId": "agent:first",
+              "principalId": "controller:fixture",
+              "controllerPublicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAiojj3XQJ8ZX9UtstPLpdcspnCb8dlBIb83SIAbQPb1w=\n-----END PUBLIC KEY-----\n",
+              "agentPublicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAgTl3Dqh9F19Wo1Rmw0x+zMuNipG07jeiXfYPW4/Js5Q=\n-----END PUBLIC KEY-----\n",
+              "manifestDigest": "cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd",
+              "passportId": "ec53286e6d2778958f7d935814b86438bc44f6272d669709f99ff9f17a4132f5"
+            },
+            "controllerSignature": "B3sFUznl-8clEpjKJC-gEGsOj6aJ5sGdXyKzmAA6aSPm_BEr-aifLr5Lq7HxqpdZOpXQM8Il16F1wKyyEP4UCw",
+            "agentSignature": "gtSrdKmpBnSgL3w1Fe5d1JDQ6vVMjN_ShhXYKm8_cP9zNuEqOQfAc7UGErubXo67ehclFbn4YBJNCAaU9PG-CQ"
+          }
+        ],
+        "registry": "https://other.example.test"
+      },
+      "expected": {
+        "status": "reject"
+      }
+    },
+    {
+      "id": "lookup-shared-manifest-complete",
+      "operation": "witnessed-lookup",
+      "inputs": {
+        "query": {
+          "kind": "fingerprint",
+          "digest": "cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd"
+        },
+        "proof": {
+          "member": {
+            "index": 2,
+            "leaf": {
+              "key": "fingerprint:cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd",
+              "value": [
+                "7c96610d78dd7ee9e2f65a4eb525d1ed45e83e53bd68883f4ee9e53aed893d42",
+                "ec53286e6d2778958f7d935814b86438bc44f6272d669709f99ff9f17a4132f5"
+              ]
+            },
+            "siblings": [
+              "70b5d353e19e9beddf4b4e3a1edb5aaed4c1fa1c687c3394382841ef5bb0320a",
+              "88ef77d69c75b6e9e817cc11afe580f79917a7cae2953fa1bb09a1edb2f77961",
+              "17c98c84ab622f54a587158e6f3339bacfceb2974b7fc5d689e48620c44543d8"
+            ]
+          }
+        },
+        "signed": {
+          "checkpoint": {
+            "schema": "kya.registry-checkpoint/v1",
+            "registry": "https://registry.example.test",
+            "epoch": 1,
+            "previous": null,
+            "root": "54504ad675ac74f3602ed4c11e25acc52dd587020633d7b6f3f1a351e01134f8",
+            "count": 5,
+            "issuedAt": "2026-11-16T12:00:00.000Z",
+            "expiresAt": "2026-11-16T12:05:00.000Z"
+          },
+          "signature": "bicw_B-aY8VefqI8zJd7eGCvaMixiySXWi-_SRHo9b68RIVxvLxdlsw7hVjnjXD-bFVnlajHevbl958qVBJvBQ"
+        },
+        "endorsements": [
+          {
+            "witnessId": "324be2dea8bc44461b0233e51fa48902ed6b1cc671e7739af2551e0bfe68f54e",
+            "checkpointDigest": "64f5d6ea2e3aad7ded0712e93fc5aa86c8d0020f64615a8c56be4483fa756e78",
+            "signature": "qu9L5vW2sDfj48FEBCoH8-xUzzaL6nneXS2Ti0p1G27ruI4aZUNT7PZEgnWYuxEM627n7M7E7I5E9hzBBsRyDw"
+          },
+          {
+            "witnessId": "496410a672746eb3070ef5a040cafeb59fada74086efdb778ecc8a2fb90193e9",
+            "checkpointDigest": "64f5d6ea2e3aad7ded0712e93fc5aa86c8d0020f64615a8c56be4483fa756e78",
+            "signature": "fPviC1QcJpcy5s-GfGaCJY5equppt4kFbOVbBSY3X4y472ynY6V7gXeVNSLbdsvdWTIiO5oz5EuEUpi2a8u7CQ"
+          }
+        ],
+        "trust": {
+          "registry": "https://registry.example.test",
+          "originPublicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAiodf/x6zhFFXes1a/uQFRWVo3XyJ4JCGOgVXvHr0nxc=\n-----END PUBLIC KEY-----\n",
+          "witnessPublicKeys": [
+            "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEA6kpsY+KcUgq+9VB7Ey7F+ZVHdq6+vnuSQh7qaRRG0iw=\n-----END PUBLIC KEY-----\n",
+            "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAE5j2LG0aRXxRumpLXz29L2n8qTIWIY3ImX5Ba9F9k8o=\n-----END PUBLIC KEY-----\n"
+          ]
+        },
+        "now": "2026-11-16T12:01:00.000Z"
+      },
+      "expected": {
+        "status": "accept",
+        "value": {
+          "checkpointDigest": "64f5d6ea2e3aad7ded0712e93fc5aa86c8d0020f64615a8c56be4483fa756e78",
+          "epoch": 1,
+          "value": [
+            "7c96610d78dd7ee9e2f65a4eb525d1ed45e83e53bd68883f4ee9e53aed893d42",
+            "ec53286e6d2778958f7d935814b86438bc44f6272d669709f99ff9f17a4132f5"
+          ]
+        }
+      }
+    },
+    {
+      "id": "lookup-historical-key",
+      "operation": "witnessed-lookup",
+      "inputs": {
+        "query": {
+          "kind": "fingerprint",
+          "digest": "47dea58ea00fae9417ee19d76755bfef690899021132effb04fe1f9e4f0c8059"
+        },
+        "proof": {
+          "member": {
+            "index": 0,
+            "leaf": {
+              "key": "fingerprint:47dea58ea00fae9417ee19d76755bfef690899021132effb04fe1f9e4f0c8059",
+              "value": [
+                "7c96610d78dd7ee9e2f65a4eb525d1ed45e83e53bd68883f4ee9e53aed893d42",
+                "ec53286e6d2778958f7d935814b86438bc44f6272d669709f99ff9f17a4132f5"
+              ]
+            },
+            "siblings": [
+              "023ff91c07801d4409b46a8971f61eb04a3bdae4c8257c4f4b2fc661720c224c",
+              "6bfcf59fdb4d0be01c45e82b83c067289675ee5cc4a8b6205d067a4521c42094",
+              "17c98c84ab622f54a587158e6f3339bacfceb2974b7fc5d689e48620c44543d8"
+            ]
+          }
+        },
+        "signed": {
+          "checkpoint": {
+            "schema": "kya.registry-checkpoint/v1",
+            "registry": "https://registry.example.test",
+            "epoch": 1,
+            "previous": null,
+            "root": "54504ad675ac74f3602ed4c11e25acc52dd587020633d7b6f3f1a351e01134f8",
+            "count": 5,
+            "issuedAt": "2026-11-16T12:00:00.000Z",
+            "expiresAt": "2026-11-16T12:05:00.000Z"
+          },
+          "signature": "bicw_B-aY8VefqI8zJd7eGCvaMixiySXWi-_SRHo9b68RIVxvLxdlsw7hVjnjXD-bFVnlajHevbl958qVBJvBQ"
+        },
+        "endorsements": [
+          {
+            "witnessId": "324be2dea8bc44461b0233e51fa48902ed6b1cc671e7739af2551e0bfe68f54e",
+            "checkpointDigest": "64f5d6ea2e3aad7ded0712e93fc5aa86c8d0020f64615a8c56be4483fa756e78",
+            "signature": "qu9L5vW2sDfj48FEBCoH8-xUzzaL6nneXS2Ti0p1G27ruI4aZUNT7PZEgnWYuxEM627n7M7E7I5E9hzBBsRyDw"
+          },
+          {
+            "witnessId": "496410a672746eb3070ef5a040cafeb59fada74086efdb778ecc8a2fb90193e9",
+            "checkpointDigest": "64f5d6ea2e3aad7ded0712e93fc5aa86c8d0020f64615a8c56be4483fa756e78",
+            "signature": "fPviC1QcJpcy5s-GfGaCJY5equppt4kFbOVbBSY3X4y472ynY6V7gXeVNSLbdsvdWTIiO5oz5EuEUpi2a8u7CQ"
+          }
+        ],
+        "trust": {
+          "registry": "https://registry.example.test",
+          "originPublicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAiodf/x6zhFFXes1a/uQFRWVo3XyJ4JCGOgVXvHr0nxc=\n-----END PUBLIC KEY-----\n",
+          "witnessPublicKeys": [
+            "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEA6kpsY+KcUgq+9VB7Ey7F+ZVHdq6+vnuSQh7qaRRG0iw=\n-----END PUBLIC KEY-----\n",
+            "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAE5j2LG0aRXxRumpLXz29L2n8qTIWIY3ImX5Ba9F9k8o=\n-----END PUBLIC KEY-----\n"
+          ]
+        },
+        "now": "2026-11-16T12:01:00.000Z"
+      },
+      "expected": {
+        "status": "accept",
+        "value": {
+          "checkpointDigest": "64f5d6ea2e3aad7ded0712e93fc5aa86c8d0020f64615a8c56be4483fa756e78",
+          "epoch": 1,
+          "value": [
+            "7c96610d78dd7ee9e2f65a4eb525d1ed45e83e53bd68883f4ee9e53aed893d42",
+            "ec53286e6d2778958f7d935814b86438bc44f6272d669709f99ff9f17a4132f5"
+          ]
+        }
+      }
+    },
+    {
+      "id": "lookup-verified-absence",
+      "operation": "witnessed-lookup",
+      "inputs": {
+        "query": {
+          "kind": "fingerprint",
+          "digest": "0000000000000000000000000000000000000000000000000000000000000000"
+        },
+        "proof": {
+          "left": null,
+          "right": {
+            "index": 0,
+            "leaf": {
+              "key": "fingerprint:47dea58ea00fae9417ee19d76755bfef690899021132effb04fe1f9e4f0c8059",
+              "value": [
+                "7c96610d78dd7ee9e2f65a4eb525d1ed45e83e53bd68883f4ee9e53aed893d42",
+                "ec53286e6d2778958f7d935814b86438bc44f6272d669709f99ff9f17a4132f5"
+              ]
+            },
+            "siblings": [
+              "023ff91c07801d4409b46a8971f61eb04a3bdae4c8257c4f4b2fc661720c224c",
+              "6bfcf59fdb4d0be01c45e82b83c067289675ee5cc4a8b6205d067a4521c42094",
+              "17c98c84ab622f54a587158e6f3339bacfceb2974b7fc5d689e48620c44543d8"
+            ]
+          }
+        },
+        "signed": {
+          "checkpoint": {
+            "schema": "kya.registry-checkpoint/v1",
+            "registry": "https://registry.example.test",
+            "epoch": 1,
+            "previous": null,
+            "root": "54504ad675ac74f3602ed4c11e25acc52dd587020633d7b6f3f1a351e01134f8",
+            "count": 5,
+            "issuedAt": "2026-11-16T12:00:00.000Z",
+            "expiresAt": "2026-11-16T12:05:00.000Z"
+          },
+          "signature": "bicw_B-aY8VefqI8zJd7eGCvaMixiySXWi-_SRHo9b68RIVxvLxdlsw7hVjnjXD-bFVnlajHevbl958qVBJvBQ"
+        },
+        "endorsements": [
+          {
+            "witnessId": "324be2dea8bc44461b0233e51fa48902ed6b1cc671e7739af2551e0bfe68f54e",
+            "checkpointDigest": "64f5d6ea2e3aad7ded0712e93fc5aa86c8d0020f64615a8c56be4483fa756e78",
+            "signature": "qu9L5vW2sDfj48FEBCoH8-xUzzaL6nneXS2Ti0p1G27ruI4aZUNT7PZEgnWYuxEM627n7M7E7I5E9hzBBsRyDw"
+          },
+          {
+            "witnessId": "496410a672746eb3070ef5a040cafeb59fada74086efdb778ecc8a2fb90193e9",
+            "checkpointDigest": "64f5d6ea2e3aad7ded0712e93fc5aa86c8d0020f64615a8c56be4483fa756e78",
+            "signature": "fPviC1QcJpcy5s-GfGaCJY5equppt4kFbOVbBSY3X4y472ynY6V7gXeVNSLbdsvdWTIiO5oz5EuEUpi2a8u7CQ"
+          }
+        ],
+        "trust": {
+          "registry": "https://registry.example.test",
+          "originPublicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAiodf/x6zhFFXes1a/uQFRWVo3XyJ4JCGOgVXvHr0nxc=\n-----END PUBLIC KEY-----\n",
+          "witnessPublicKeys": [
+            "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEA6kpsY+KcUgq+9VB7Ey7F+ZVHdq6+vnuSQh7qaRRG0iw=\n-----END PUBLIC KEY-----\n",
+            "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAE5j2LG0aRXxRumpLXz29L2n8qTIWIY3ImX5Ba9F9k8o=\n-----END PUBLIC KEY-----\n"
+          ]
+        },
+        "now": "2026-11-16T12:01:00.000Z"
+      },
+      "expected": {
+        "status": "accept",
+        "value": {
+          "checkpointDigest": "64f5d6ea2e3aad7ded0712e93fc5aa86c8d0020f64615a8c56be4483fa756e78",
+          "epoch": 1,
+          "value": null
+        }
+      }
+    },
+    {
+      "id": "lookup-false-absence",
+      "operation": "witnessed-lookup",
+      "inputs": {
+        "query": {
+          "kind": "fingerprint",
+          "digest": "cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd"
+        },
+        "proof": {
+          "left": null,
+          "right": null
+        },
+        "signed": {
+          "checkpoint": {
+            "schema": "kya.registry-checkpoint/v1",
+            "registry": "https://registry.example.test",
+            "epoch": 1,
+            "previous": null,
+            "root": "54504ad675ac74f3602ed4c11e25acc52dd587020633d7b6f3f1a351e01134f8",
+            "count": 5,
+            "issuedAt": "2026-11-16T12:00:00.000Z",
+            "expiresAt": "2026-11-16T12:05:00.000Z"
+          },
+          "signature": "bicw_B-aY8VefqI8zJd7eGCvaMixiySXWi-_SRHo9b68RIVxvLxdlsw7hVjnjXD-bFVnlajHevbl958qVBJvBQ"
+        },
+        "endorsements": [
+          {
+            "witnessId": "324be2dea8bc44461b0233e51fa48902ed6b1cc671e7739af2551e0bfe68f54e",
+            "checkpointDigest": "64f5d6ea2e3aad7ded0712e93fc5aa86c8d0020f64615a8c56be4483fa756e78",
+            "signature": "qu9L5vW2sDfj48FEBCoH8-xUzzaL6nneXS2Ti0p1G27ruI4aZUNT7PZEgnWYuxEM627n7M7E7I5E9hzBBsRyDw"
+          },
+          {
+            "witnessId": "496410a672746eb3070ef5a040cafeb59fada74086efdb778ecc8a2fb90193e9",
+            "checkpointDigest": "64f5d6ea2e3aad7ded0712e93fc5aa86c8d0020f64615a8c56be4483fa756e78",
+            "signature": "fPviC1QcJpcy5s-GfGaCJY5equppt4kFbOVbBSY3X4y472ynY6V7gXeVNSLbdsvdWTIiO5oz5EuEUpi2a8u7CQ"
+          }
+        ],
+        "trust": {
+          "registry": "https://registry.example.test",
+          "originPublicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAiodf/x6zhFFXes1a/uQFRWVo3XyJ4JCGOgVXvHr0nxc=\n-----END PUBLIC KEY-----\n",
+          "witnessPublicKeys": [
+            "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEA6kpsY+KcUgq+9VB7Ey7F+ZVHdq6+vnuSQh7qaRRG0iw=\n-----END PUBLIC KEY-----\n",
+            "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAE5j2LG0aRXxRumpLXz29L2n8qTIWIY3ImX5Ba9F9k8o=\n-----END PUBLIC KEY-----\n"
+          ]
+        },
+        "now": "2026-11-16T12:01:00.000Z"
+      },
+      "expected": {
+        "status": "reject"
+      }
+    },
+    {
+      "id": "lookup-truncated-result",
+      "operation": "witnessed-lookup",
+      "inputs": {
+        "query": {
+          "kind": "fingerprint",
+          "digest": "cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd"
+        },
+        "proof": {
+          "member": {
+            "index": 2,
+            "leaf": {
+              "key": "fingerprint:cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd",
+              "value": [
+                "7c96610d78dd7ee9e2f65a4eb525d1ed45e83e53bd68883f4ee9e53aed893d42"
+              ]
+            },
+            "siblings": [
+              "70b5d353e19e9beddf4b4e3a1edb5aaed4c1fa1c687c3394382841ef5bb0320a",
+              "88ef77d69c75b6e9e817cc11afe580f79917a7cae2953fa1bb09a1edb2f77961",
+              "17c98c84ab622f54a587158e6f3339bacfceb2974b7fc5d689e48620c44543d8"
+            ]
+          }
+        },
+        "signed": {
+          "checkpoint": {
+            "schema": "kya.registry-checkpoint/v1",
+            "registry": "https://registry.example.test",
+            "epoch": 1,
+            "previous": null,
+            "root": "54504ad675ac74f3602ed4c11e25acc52dd587020633d7b6f3f1a351e01134f8",
+            "count": 5,
+            "issuedAt": "2026-11-16T12:00:00.000Z",
+            "expiresAt": "2026-11-16T12:05:00.000Z"
+          },
+          "signature": "bicw_B-aY8VefqI8zJd7eGCvaMixiySXWi-_SRHo9b68RIVxvLxdlsw7hVjnjXD-bFVnlajHevbl958qVBJvBQ"
+        },
+        "endorsements": [
+          {
+            "witnessId": "324be2dea8bc44461b0233e51fa48902ed6b1cc671e7739af2551e0bfe68f54e",
+            "checkpointDigest": "64f5d6ea2e3aad7ded0712e93fc5aa86c8d0020f64615a8c56be4483fa756e78",
+            "signature": "qu9L5vW2sDfj48FEBCoH8-xUzzaL6nneXS2Ti0p1G27ruI4aZUNT7PZEgnWYuxEM627n7M7E7I5E9hzBBsRyDw"
+          },
+          {
+            "witnessId": "496410a672746eb3070ef5a040cafeb59fada74086efdb778ecc8a2fb90193e9",
+            "checkpointDigest": "64f5d6ea2e3aad7ded0712e93fc5aa86c8d0020f64615a8c56be4483fa756e78",
+            "signature": "fPviC1QcJpcy5s-GfGaCJY5equppt4kFbOVbBSY3X4y472ynY6V7gXeVNSLbdsvdWTIiO5oz5EuEUpi2a8u7CQ"
+          }
+        ],
+        "trust": {
+          "registry": "https://registry.example.test",
+          "originPublicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAiodf/x6zhFFXes1a/uQFRWVo3XyJ4JCGOgVXvHr0nxc=\n-----END PUBLIC KEY-----\n",
+          "witnessPublicKeys": [
+            "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEA6kpsY+KcUgq+9VB7Ey7F+ZVHdq6+vnuSQh7qaRRG0iw=\n-----END PUBLIC KEY-----\n",
+            "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAE5j2LG0aRXxRumpLXz29L2n8qTIWIY3ImX5Ba9F9k8o=\n-----END PUBLIC KEY-----\n"
+          ]
+        },
+        "now": "2026-11-16T12:01:00.000Z"
+      },
+      "expected": {
+        "status": "reject"
+      }
+    },
+    {
+      "id": "lookup-duplicate-witness",
+      "operation": "witnessed-lookup",
+      "inputs": {
+        "query": {
+          "kind": "fingerprint",
+          "digest": "cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd"
+        },
+        "proof": {
+          "member": {
+            "index": 2,
+            "leaf": {
+              "key": "fingerprint:cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd",
+              "value": [
+                "7c96610d78dd7ee9e2f65a4eb525d1ed45e83e53bd68883f4ee9e53aed893d42",
+                "ec53286e6d2778958f7d935814b86438bc44f6272d669709f99ff9f17a4132f5"
+              ]
+            },
+            "siblings": [
+              "70b5d353e19e9beddf4b4e3a1edb5aaed4c1fa1c687c3394382841ef5bb0320a",
+              "88ef77d69c75b6e9e817cc11afe580f79917a7cae2953fa1bb09a1edb2f77961",
+              "17c98c84ab622f54a587158e6f3339bacfceb2974b7fc5d689e48620c44543d8"
+            ]
+          }
+        },
+        "signed": {
+          "checkpoint": {
+            "schema": "kya.registry-checkpoint/v1",
+            "registry": "https://registry.example.test",
+            "epoch": 1,
+            "previous": null,
+            "root": "54504ad675ac74f3602ed4c11e25acc52dd587020633d7b6f3f1a351e01134f8",
+            "count": 5,
+            "issuedAt": "2026-11-16T12:00:00.000Z",
+            "expiresAt": "2026-11-16T12:05:00.000Z"
+          },
+          "signature": "bicw_B-aY8VefqI8zJd7eGCvaMixiySXWi-_SRHo9b68RIVxvLxdlsw7hVjnjXD-bFVnlajHevbl958qVBJvBQ"
+        },
+        "endorsements": [
+          {
+            "witnessId": "324be2dea8bc44461b0233e51fa48902ed6b1cc671e7739af2551e0bfe68f54e",
+            "checkpointDigest": "64f5d6ea2e3aad7ded0712e93fc5aa86c8d0020f64615a8c56be4483fa756e78",
+            "signature": "qu9L5vW2sDfj48FEBCoH8-xUzzaL6nneXS2Ti0p1G27ruI4aZUNT7PZEgnWYuxEM627n7M7E7I5E9hzBBsRyDw"
+          },
+          {
+            "witnessId": "324be2dea8bc44461b0233e51fa48902ed6b1cc671e7739af2551e0bfe68f54e",
+            "checkpointDigest": "64f5d6ea2e3aad7ded0712e93fc5aa86c8d0020f64615a8c56be4483fa756e78",
+            "signature": "qu9L5vW2sDfj48FEBCoH8-xUzzaL6nneXS2Ti0p1G27ruI4aZUNT7PZEgnWYuxEM627n7M7E7I5E9hzBBsRyDw"
+          }
+        ],
+        "trust": {
+          "registry": "https://registry.example.test",
+          "originPublicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAiodf/x6zhFFXes1a/uQFRWVo3XyJ4JCGOgVXvHr0nxc=\n-----END PUBLIC KEY-----\n",
+          "witnessPublicKeys": [
+            "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEA6kpsY+KcUgq+9VB7Ey7F+ZVHdq6+vnuSQh7qaRRG0iw=\n-----END PUBLIC KEY-----\n",
+            "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAE5j2LG0aRXxRumpLXz29L2n8qTIWIY3ImX5Ba9F9k8o=\n-----END PUBLIC KEY-----\n"
+          ]
+        },
+        "now": "2026-11-16T12:01:00.000Z"
+      },
+      "expected": {
+        "status": "reject"
+      }
+    },
+    {
+      "id": "lookup-missing-witness",
+      "operation": "witnessed-lookup",
+      "inputs": {
+        "query": {
+          "kind": "fingerprint",
+          "digest": "cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd"
+        },
+        "proof": {
+          "member": {
+            "index": 2,
+            "leaf": {
+              "key": "fingerprint:cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd",
+              "value": [
+                "7c96610d78dd7ee9e2f65a4eb525d1ed45e83e53bd68883f4ee9e53aed893d42",
+                "ec53286e6d2778958f7d935814b86438bc44f6272d669709f99ff9f17a4132f5"
+              ]
+            },
+            "siblings": [
+              "70b5d353e19e9beddf4b4e3a1edb5aaed4c1fa1c687c3394382841ef5bb0320a",
+              "88ef77d69c75b6e9e817cc11afe580f79917a7cae2953fa1bb09a1edb2f77961",
+              "17c98c84ab622f54a587158e6f3339bacfceb2974b7fc5d689e48620c44543d8"
+            ]
+          }
+        },
+        "signed": {
+          "checkpoint": {
+            "schema": "kya.registry-checkpoint/v1",
+            "registry": "https://registry.example.test",
+            "epoch": 1,
+            "previous": null,
+            "root": "54504ad675ac74f3602ed4c11e25acc52dd587020633d7b6f3f1a351e01134f8",
+            "count": 5,
+            "issuedAt": "2026-11-16T12:00:00.000Z",
+            "expiresAt": "2026-11-16T12:05:00.000Z"
+          },
+          "signature": "bicw_B-aY8VefqI8zJd7eGCvaMixiySXWi-_SRHo9b68RIVxvLxdlsw7hVjnjXD-bFVnlajHevbl958qVBJvBQ"
+        },
+        "endorsements": [
+          {
+            "witnessId": "324be2dea8bc44461b0233e51fa48902ed6b1cc671e7739af2551e0bfe68f54e",
+            "checkpointDigest": "64f5d6ea2e3aad7ded0712e93fc5aa86c8d0020f64615a8c56be4483fa756e78",
+            "signature": "qu9L5vW2sDfj48FEBCoH8-xUzzaL6nneXS2Ti0p1G27ruI4aZUNT7PZEgnWYuxEM627n7M7E7I5E9hzBBsRyDw"
+          }
+        ],
+        "trust": {
+          "registry": "https://registry.example.test",
+          "originPublicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAiodf/x6zhFFXes1a/uQFRWVo3XyJ4JCGOgVXvHr0nxc=\n-----END PUBLIC KEY-----\n",
+          "witnessPublicKeys": [
+            "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEA6kpsY+KcUgq+9VB7Ey7F+ZVHdq6+vnuSQh7qaRRG0iw=\n-----END PUBLIC KEY-----\n",
+            "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAE5j2LG0aRXxRumpLXz29L2n8qTIWIY3ImX5Ba9F9k8o=\n-----END PUBLIC KEY-----\n"
+          ]
+        },
+        "now": "2026-11-16T12:01:00.000Z"
+      },
+      "expected": {
+        "status": "reject"
+      }
+    },
+    {
+      "id": "lookup-wrong-origin-signature",
+      "operation": "witnessed-lookup",
+      "inputs": {
+        "query": {
+          "kind": "fingerprint",
+          "digest": "cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd"
+        },
+        "proof": {
+          "member": {
+            "index": 2,
+            "leaf": {
+              "key": "fingerprint:cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd",
+              "value": [
+                "7c96610d78dd7ee9e2f65a4eb525d1ed45e83e53bd68883f4ee9e53aed893d42",
+                "ec53286e6d2778958f7d935814b86438bc44f6272d669709f99ff9f17a4132f5"
+              ]
+            },
+            "siblings": [
+              "70b5d353e19e9beddf4b4e3a1edb5aaed4c1fa1c687c3394382841ef5bb0320a",
+              "88ef77d69c75b6e9e817cc11afe580f79917a7cae2953fa1bb09a1edb2f77961",
+              "17c98c84ab622f54a587158e6f3339bacfceb2974b7fc5d689e48620c44543d8"
+            ]
+          }
+        },
+        "signed": {
+          "checkpoint": {
+            "schema": "kya.registry-checkpoint/v1",
+            "registry": "https://registry.example.test",
+            "epoch": 1,
+            "previous": null,
+            "root": "54504ad675ac74f3602ed4c11e25acc52dd587020633d7b6f3f1a351e01134f8",
+            "count": 5,
+            "issuedAt": "2026-11-16T12:00:00.000Z",
+            "expiresAt": "2026-11-16T12:05:00.000Z"
+          },
+          "signature": "lhZ1EXVJGtipLE78JhIdDqzayezbMAw6I9E2vNkxVbeT8yNQA4Up3gmJr9GFhmdzoailk6Wsf_OqWSBTvn-4CA"
+        },
+        "endorsements": [
+          {
+            "witnessId": "324be2dea8bc44461b0233e51fa48902ed6b1cc671e7739af2551e0bfe68f54e",
+            "checkpointDigest": "64f5d6ea2e3aad7ded0712e93fc5aa86c8d0020f64615a8c56be4483fa756e78",
+            "signature": "qu9L5vW2sDfj48FEBCoH8-xUzzaL6nneXS2Ti0p1G27ruI4aZUNT7PZEgnWYuxEM627n7M7E7I5E9hzBBsRyDw"
+          },
+          {
+            "witnessId": "496410a672746eb3070ef5a040cafeb59fada74086efdb778ecc8a2fb90193e9",
+            "checkpointDigest": "64f5d6ea2e3aad7ded0712e93fc5aa86c8d0020f64615a8c56be4483fa756e78",
+            "signature": "fPviC1QcJpcy5s-GfGaCJY5equppt4kFbOVbBSY3X4y472ynY6V7gXeVNSLbdsvdWTIiO5oz5EuEUpi2a8u7CQ"
+          }
+        ],
+        "trust": {
+          "registry": "https://registry.example.test",
+          "originPublicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAiodf/x6zhFFXes1a/uQFRWVo3XyJ4JCGOgVXvHr0nxc=\n-----END PUBLIC KEY-----\n",
+          "witnessPublicKeys": [
+            "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEA6kpsY+KcUgq+9VB7Ey7F+ZVHdq6+vnuSQh7qaRRG0iw=\n-----END PUBLIC KEY-----\n",
+            "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAE5j2LG0aRXxRumpLXz29L2n8qTIWIY3ImX5Ba9F9k8o=\n-----END PUBLIC KEY-----\n"
+          ]
+        },
+        "now": "2026-11-16T12:01:00.000Z"
+      },
+      "expected": {
+        "status": "reject"
+      }
+    },
+    {
+      "id": "lookup-expired-checkpoint",
+      "operation": "witnessed-lookup",
+      "inputs": {
+        "query": {
+          "kind": "fingerprint",
+          "digest": "cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd"
+        },
+        "proof": {
+          "member": {
+            "index": 2,
+            "leaf": {
+              "key": "fingerprint:cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd",
+              "value": [
+                "7c96610d78dd7ee9e2f65a4eb525d1ed45e83e53bd68883f4ee9e53aed893d42",
+                "ec53286e6d2778958f7d935814b86438bc44f6272d669709f99ff9f17a4132f5"
+              ]
+            },
+            "siblings": [
+              "70b5d353e19e9beddf4b4e3a1edb5aaed4c1fa1c687c3394382841ef5bb0320a",
+              "88ef77d69c75b6e9e817cc11afe580f79917a7cae2953fa1bb09a1edb2f77961",
+              "17c98c84ab622f54a587158e6f3339bacfceb2974b7fc5d689e48620c44543d8"
+            ]
+          }
+        },
+        "signed": {
+          "checkpoint": {
+            "schema": "kya.registry-checkpoint/v1",
+            "registry": "https://registry.example.test",
+            "epoch": 1,
+            "previous": null,
+            "root": "54504ad675ac74f3602ed4c11e25acc52dd587020633d7b6f3f1a351e01134f8",
+            "count": 5,
+            "issuedAt": "2026-11-16T12:00:00.000Z",
+            "expiresAt": "2026-11-16T12:05:00.000Z"
+          },
+          "signature": "bicw_B-aY8VefqI8zJd7eGCvaMixiySXWi-_SRHo9b68RIVxvLxdlsw7hVjnjXD-bFVnlajHevbl958qVBJvBQ"
+        },
+        "endorsements": [
+          {
+            "witnessId": "324be2dea8bc44461b0233e51fa48902ed6b1cc671e7739af2551e0bfe68f54e",
+            "checkpointDigest": "64f5d6ea2e3aad7ded0712e93fc5aa86c8d0020f64615a8c56be4483fa756e78",
+            "signature": "qu9L5vW2sDfj48FEBCoH8-xUzzaL6nneXS2Ti0p1G27ruI4aZUNT7PZEgnWYuxEM627n7M7E7I5E9hzBBsRyDw"
+          },
+          {
+            "witnessId": "496410a672746eb3070ef5a040cafeb59fada74086efdb778ecc8a2fb90193e9",
+            "checkpointDigest": "64f5d6ea2e3aad7ded0712e93fc5aa86c8d0020f64615a8c56be4483fa756e78",
+            "signature": "fPviC1QcJpcy5s-GfGaCJY5equppt4kFbOVbBSY3X4y472ynY6V7gXeVNSLbdsvdWTIiO5oz5EuEUpi2a8u7CQ"
+          }
+        ],
+        "trust": {
+          "registry": "https://registry.example.test",
+          "originPublicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAiodf/x6zhFFXes1a/uQFRWVo3XyJ4JCGOgVXvHr0nxc=\n-----END PUBLIC KEY-----\n",
+          "witnessPublicKeys": [
+            "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEA6kpsY+KcUgq+9VB7Ey7F+ZVHdq6+vnuSQh7qaRRG0iw=\n-----END PUBLIC KEY-----\n",
+            "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAE5j2LG0aRXxRumpLXz29L2n8qTIWIY3ImX5Ba9F9k8o=\n-----END PUBLIC KEY-----\n"
+          ]
+        },
+        "now": "2026-11-16T12:05:00.000Z"
+      },
+      "expected": {
+        "status": "reject"
+      }
+    },
+    {
+      "id": "lookup-behind-client-pin",
+      "operation": "witnessed-lookup",
+      "inputs": {
+        "query": {
+          "kind": "fingerprint",
+          "digest": "cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd"
+        },
+        "proof": {
+          "member": {
+            "index": 2,
+            "leaf": {
+              "key": "fingerprint:cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd",
+              "value": [
+                "7c96610d78dd7ee9e2f65a4eb525d1ed45e83e53bd68883f4ee9e53aed893d42",
+                "ec53286e6d2778958f7d935814b86438bc44f6272d669709f99ff9f17a4132f5"
+              ]
+            },
+            "siblings": [
+              "70b5d353e19e9beddf4b4e3a1edb5aaed4c1fa1c687c3394382841ef5bb0320a",
+              "88ef77d69c75b6e9e817cc11afe580f79917a7cae2953fa1bb09a1edb2f77961",
+              "17c98c84ab622f54a587158e6f3339bacfceb2974b7fc5d689e48620c44543d8"
+            ]
+          }
+        },
+        "signed": {
+          "checkpoint": {
+            "schema": "kya.registry-checkpoint/v1",
+            "registry": "https://registry.example.test",
+            "epoch": 1,
+            "previous": null,
+            "root": "54504ad675ac74f3602ed4c11e25acc52dd587020633d7b6f3f1a351e01134f8",
+            "count": 5,
+            "issuedAt": "2026-11-16T12:00:00.000Z",
+            "expiresAt": "2026-11-16T12:05:00.000Z"
+          },
+          "signature": "bicw_B-aY8VefqI8zJd7eGCvaMixiySXWi-_SRHo9b68RIVxvLxdlsw7hVjnjXD-bFVnlajHevbl958qVBJvBQ"
+        },
+        "endorsements": [
+          {
+            "witnessId": "324be2dea8bc44461b0233e51fa48902ed6b1cc671e7739af2551e0bfe68f54e",
+            "checkpointDigest": "64f5d6ea2e3aad7ded0712e93fc5aa86c8d0020f64615a8c56be4483fa756e78",
+            "signature": "qu9L5vW2sDfj48FEBCoH8-xUzzaL6nneXS2Ti0p1G27ruI4aZUNT7PZEgnWYuxEM627n7M7E7I5E9hzBBsRyDw"
+          },
+          {
+            "witnessId": "496410a672746eb3070ef5a040cafeb59fada74086efdb778ecc8a2fb90193e9",
+            "checkpointDigest": "64f5d6ea2e3aad7ded0712e93fc5aa86c8d0020f64615a8c56be4483fa756e78",
+            "signature": "fPviC1QcJpcy5s-GfGaCJY5equppt4kFbOVbBSY3X4y472ynY6V7gXeVNSLbdsvdWTIiO5oz5EuEUpi2a8u7CQ"
+          }
+        ],
+        "trust": {
+          "registry": "https://registry.example.test",
+          "originPublicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAiodf/x6zhFFXes1a/uQFRWVo3XyJ4JCGOgVXvHr0nxc=\n-----END PUBLIC KEY-----\n",
+          "witnessPublicKeys": [
+            "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEA6kpsY+KcUgq+9VB7Ey7F+ZVHdq6+vnuSQh7qaRRG0iw=\n-----END PUBLIC KEY-----\n",
+            "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAE5j2LG0aRXxRumpLXz29L2n8qTIWIY3ImX5Ba9F9k8o=\n-----END PUBLIC KEY-----\n"
+          ],
+          "checkpointPin": {
+            "epoch": 2,
+            "checkpointDigest": "1212121212121212121212121212121212121212121212121212121212121212"
+          }
+        },
+        "now": "2026-11-16T12:01:00.000Z"
+      },
+      "expected": {
+        "status": "reject"
+      }
+    },
+    {
+      "id": "receipt-confirmed-applied",
+      "operation": "downstream-receipt",
+      "inputs": {
+        "envelope": {
+          "receipt": {
+            "schema": "kya.mcp-receipt/v1",
+            "operationId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "requestDigest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "routeRevision": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+            "outcome": "confirmed-applied"
+          },
+          "signature": "nw9sMkL72iy2cmupahbqKmD3t3Yq6kCE-E1joV_tImkMCD7MyIDPVOGJOXCVrJF6t7_UOfv2qsFZ9qcnJjaiAw"
+        },
+        "delivery": {
+          "operationId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "requestDigest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "routeRevision": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+        },
+        "publicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEA/RckOFqgx1tk+3jNYC+h2ZH96/drE8WO1wLqyDXp9hg=\n-----END PUBLIC KEY-----\n"
+      },
+      "expected": {
+        "status": "accept",
+        "value": {
+          "operationId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "outcome": "confirmed-applied",
+          "receiptDigest": "9bfb9503fecbf0aa118c4465b85800c4720ce14bd49fea6ed27cf9ec39d4411b"
+        }
+      }
+    },
+    {
+      "id": "receipt-confirmed-not-applied",
+      "operation": "downstream-receipt",
+      "inputs": {
+        "envelope": {
+          "receipt": {
+            "schema": "kya.mcp-receipt/v1",
+            "operationId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "requestDigest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "routeRevision": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+            "outcome": "confirmed-not-applied"
+          },
+          "signature": "k-l2z8Z4n7LJ15M5yYN5OH2cMMM-TegxJYWXPXi2s5lysnFUTDr5kk4MIzRzfc0TbjqkTYC1iFBxNFqOjVmUCg"
+        },
+        "delivery": {
+          "operationId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "requestDigest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "routeRevision": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+        },
+        "publicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEA/RckOFqgx1tk+3jNYC+h2ZH96/drE8WO1wLqyDXp9hg=\n-----END PUBLIC KEY-----\n"
+      },
+      "expected": {
+        "status": "accept",
+        "value": {
+          "operationId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "outcome": "confirmed-not-applied",
+          "receiptDigest": "d0f07b64d0c31fce6959c5c5426a3b09743cadf7ec9b0603243ed5507b5c377d"
+        }
+      }
+    },
+    {
+      "id": "receipt-wrong-signer",
+      "operation": "downstream-receipt",
+      "inputs": {
+        "envelope": {
+          "receipt": {
+            "schema": "kya.mcp-receipt/v1",
+            "operationId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "requestDigest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "routeRevision": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+            "outcome": "confirmed-applied"
+          },
+          "signature": "ZMFCWEj50u9H4TxAR-y2qHYv_bQYYs2qwBr8SuGMw1ayAurduckqZ8Bmm6iwXBRUQMPJvLdTimhzXySl8-T8BQ"
+        },
+        "delivery": {
+          "operationId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "requestDigest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "routeRevision": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+        },
+        "publicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEA/RckOFqgx1tk+3jNYC+h2ZH96/drE8WO1wLqyDXp9hg=\n-----END PUBLIC KEY-----\n"
+      },
+      "expected": {
+        "status": "reject"
+      }
+    },
+    {
+      "id": "receipt-different-operationId",
+      "operation": "downstream-receipt",
+      "inputs": {
+        "envelope": {
+          "receipt": {
+            "schema": "kya.mcp-receipt/v1",
+            "operationId": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+            "requestDigest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "routeRevision": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+            "outcome": "confirmed-applied"
+          },
+          "signature": "uWg6Wu1pYGSFSOn2em8sYa1sONPA_b87k7SSM6Ec2TIkZ67NFuORmlW6VhIWHbs20a99CvLDQeJ3AgtiIqA3AQ"
+        },
+        "delivery": {
+          "operationId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "requestDigest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "routeRevision": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+        },
+        "publicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEA/RckOFqgx1tk+3jNYC+h2ZH96/drE8WO1wLqyDXp9hg=\n-----END PUBLIC KEY-----\n"
+      },
+      "expected": {
+        "status": "reject"
+      }
+    },
+    {
+      "id": "receipt-different-requestDigest",
+      "operation": "downstream-receipt",
+      "inputs": {
+        "envelope": {
+          "receipt": {
+            "schema": "kya.mcp-receipt/v1",
+            "operationId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "requestDigest": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+            "routeRevision": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+            "outcome": "confirmed-applied"
+          },
+          "signature": "dPa7vltsfypa-AQZOi6V95DsEU5mVFyDXUsJ5bpbyLdlqsqwWl6a3COpqfmrEsW9v58fjYPfaVh_92f2ZetlDA"
+        },
+        "delivery": {
+          "operationId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "requestDigest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "routeRevision": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+        },
+        "publicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEA/RckOFqgx1tk+3jNYC+h2ZH96/drE8WO1wLqyDXp9hg=\n-----END PUBLIC KEY-----\n"
+      },
+      "expected": {
+        "status": "reject"
+      }
+    },
+    {
+      "id": "receipt-different-routeRevision",
+      "operation": "downstream-receipt",
+      "inputs": {
+        "envelope": {
+          "receipt": {
+            "schema": "kya.mcp-receipt/v1",
+            "operationId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "requestDigest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "routeRevision": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+            "outcome": "confirmed-applied"
+          },
+          "signature": "mhh_ICHQiyvOO7va0ZKdM_UFM9F2Vt0GI0jUvatZ9j_MN8w6QxPInenxg4I_bwSSS4np8gCWAWXS5-OoSajaDw"
+        },
+        "delivery": {
+          "operationId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "requestDigest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "routeRevision": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+        },
+        "publicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEA/RckOFqgx1tk+3jNYC+h2ZH96/drE8WO1wLqyDXp9hg=\n-----END PUBLIC KEY-----\n"
+      },
+      "expected": {
+        "status": "reject"
+      }
+    },
+    {
+      "id": "receipt-nonterminal",
+      "operation": "downstream-receipt",
+      "inputs": {
+        "envelope": {
+          "receipt": {
+            "schema": "kya.mcp-receipt/v1",
+            "operationId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "requestDigest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "routeRevision": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+            "outcome": "unknown"
+          },
+          "signature": "mTaziobqKpQ4GpG-WSBvZkAe2ol6QPLgw8w6kcUWkfkIbn97dcdNhP6cNHSo-ExKvQ-F3rGCqL-ifggkIk19Bw"
+        },
+        "delivery": {
+          "operationId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "requestDigest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "routeRevision": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+        },
+        "publicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEA/RckOFqgx1tk+3jNYC+h2ZH96/drE8WO1wLqyDXp9hg=\n-----END PUBLIC KEY-----\n"
+      },
+      "expected": {
+        "status": "reject"
+      }
+    }
+  ]
+}
