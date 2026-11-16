@@ -5,11 +5,12 @@ export interface PassportIdentity {
   agentId: string;
   principalId: string;
   controllerPublicKey: string;
+  recoveryPublicKey?: string;
 }
 
 export interface PassportEvent extends PassportIdentity {
-  schema: 'kya.passport-event/v1';
-  operation: 'register' | 'rotate' | 'revise' | 'revoke';
+  schema: 'kya.passport-event/v1' | 'kya.passport-event/v2';
+  operation: 'register' | 'rotate' | 'revise' | 'revoke' | 'recover';
   passportId: string;
   previous: string | null;
   agentPublicKey: string | null;
@@ -20,6 +21,7 @@ export interface PassportRecord {
   event: PassportEvent;
   controllerSignature: string;
   agentSignature: string | null;
+  recoverySignature?: string | null;
 }
 
 export interface PassportState {
@@ -30,6 +32,8 @@ export interface PassportState {
   status: 'active' | 'revoked';
   current: { fingerprint: string; manifestDigest: string } | null;
   fingerprints: string[];
+  controllerFingerprint?: string;
+  recoveryEnabled?: true;
 }
 
 export const maxPassportEvents: number;

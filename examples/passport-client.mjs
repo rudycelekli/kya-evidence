@@ -29,29 +29,35 @@ if (operation === 'verify') {
   if (!/^[a-f0-9]{64}$/.test(args[0])) throw new Error('Expected fingerprint');
   result = await request('/v1/fingerprints/' + args[0]);
 } else {
-  if (!['register', 'rotate', 'revise', 'revoke'].includes(operation)) throw new Error('Unknown passport command');
-  const [idOrManifest, controllerFile, agentFile, revisionFile] = args;
+  if (!['register', 'rotate', 'revise', 'revoke', 'recover'].includes(operation)) throw new Error('Unknown passport command');
+  const [idOrManifest, controllerFile, agentFile, fourth, fifth] = args;
+  const recoveryFile = ['register', 'recover'].includes(operation) ? fourth : undefined;
+  const recovery = recoveryFile ? await readFile(recoveryFile) : null;
   const controller = await readFile(controllerFile);
   const agent = operation === 'revoke' ? null : await readFile(agentFile);
   const prior = operation === 'register' ? null : await getPassport(idOrManifest);
   if (prior?.status === 'revoked') throw new Error('Passport revoked');
-  const manifestFile = operation === 'register' ? idOrManifest : revisionFile;
+  const genesis = prior?.history[0].event;
+  const recoveryPublicKey = genesis?.recoveryPublicKey ?? (recovery && passportPublicKey(recovery));
+  if (operation === 'recover' && (!genesis?.recoveryPublicKey || !recovery)) throw new Error('Recovery unavailable');
+  const manifestFile = operation === 'register' ? idOrManifest : operation === 'recover' ? fifth : fourth;
   const manifest = manifestFile ? validateManifest(parseJson(await readFile(manifestFile, 'utf8'))) : null;
   if (manifest && prior && (manifest.agent.id !== prior.agentId || manifest.principal.id !== prior.principalId)) {
     throw new Error('Manifest identity mismatch');
   }
   const event = {
-    schema: 'kya.passport-event/v1', operation, registry: origin,
+    schema: recoveryPublicKey ? 'kya.passport-event/v2' : 'kya.passport-event/v1',
+    ...(recoveryPublicKey ? { recoveryPublicKey } : {}), operation, registry: origin,
     previous: prior?.head ?? null, agentId: prior?.agentId ?? manifest.agent.id,
     principalId: prior?.principalId ?? manifest.principal.id,
     controllerPublicKey: passportPublicKey(controller), agentPublicKey: agent && passportPublicKey(agent),
     manifestDigest: manifest ? digest(manifest) : prior.current.manifestDigest,
   };
-  event.passportId = passportId(event);
-  if (prior && event.passportId !== prior.passportId) throw new Error('Controller key mismatch');
+  event.passportId = prior?.passportId ?? passportId(event);
   const record = {
     event, controllerSignature: signPassportEvent(event, controller),
     agentSignature: agent ? signPassportEvent(event, agent) : null,
+    ...(recoveryPublicKey ? { recoverySignature: recovery ? signPassportEvent(event, recovery) : null } : {}),
   };
   verifyPassport([...(prior?.history ?? []), record], origin);
   await request('/v1/events', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(record) });

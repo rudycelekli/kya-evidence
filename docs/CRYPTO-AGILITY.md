@@ -17,6 +17,7 @@ KYA-native records sign `DOMAIN + canonical(payload)`, where `DOMAIN` is a fixed
 | `kya.pairing-grant/v1\n` | Principal grant payload (`kya.pairing-grant/v1`) | `src/pairing/index.mjs` |
 | `kya.paired-action/v1\n` | Agent action payload (`kya.paired-action/v1`) | `src/pairing/index.mjs` |
 | `kya.passport-event/v1\n` | Passport lifecycle event | `src/passport/index.mjs` |
+| `kya.passport-event/v2\n` | Recoverable Passport lifecycle event | `src/passport/index.mjs` |
 | `kya.passport-checkpoint/v1\n` | Registry checkpoint statement | `src/passport/checkpoint.mjs` |
 | `kya.oidc-enrollment/v1\n` | OIDC-bound new-key possession statement | `src/pairing/oidc-enrollment.mjs` |
 | `kya.assessor-disclosure/v1\n` | Assessor disclosure, conflict declaration, withdrawal payload (`kya.assessor-disclosure/v1`) | `src/assessor/disclosure.mjs` |

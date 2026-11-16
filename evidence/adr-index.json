@@ -698,8 +698,18 @@
       "related": [
         "ADR-0056"
       ]
+    },
+    {
+      "id": "ADR-0059",
+      "title": "Recover active passports using a committed offline key",
+      "status": "Implemented locally; review pending",
+      "file": "docs/adr/0059-passport-controller-recovery.md",
+      "contentDigest": "4402f20770261cbf81e771a17ba3d1c105e588ebb7c39b5558a2869980d54afc",
+      "related": [
+        "ADR-0055"
+      ]
     }
   ],
-  "digest": "749a7fe9de0c314409f202a96327010cf270c53e7ff59ae17e93d0b4438681a3",
+  "digest": "c179c37ff7775a956d90732659a40f7f4830ee145276127b78b9ff070286eadb",
   "store": "portable local file; not a claim of AgentDB graph persistence"
 }
