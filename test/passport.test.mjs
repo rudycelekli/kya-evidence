@@ -91,3 +91,41 @@ test('reserves the final history slot for revocation', () => {
     agentPublicKey: null, manifestDigest: history.at(-1).event.manifestDigest }, controller, null);
   assert.equal(verifyPassport([...history, revoked], registry).status, 'revoked');
 });
+
+test('competing processes cannot publish two rotations from the same head', async t => {
+  const { execFile } = await import('node:child_process');
+  const { promisify } = await import('node:util');
+  const tmp = mkdtempSync(join(tmpdir(), 'kya-passport-race-'));
+  const filename = join(tmp, 'registry.sqlite');
+  const store = openPassportRegistry(filename, registry);
+  t.after(() => {
+    store.close();
+    rmSync(tmp, { recursive: true, force: true });
+  });
+  store.append(registration);
+  const fork = seal({ ...rotation.event, agentPublicKey: passportPublicKey(impostor) }, controller, impostor);
+  const childCode = `
+    import { openPassportRegistry } from 'kya-evidence/passport/registry';
+    const { filename, registry, record } = JSON.parse(process.argv[1]);
+    const store = openPassportRegistry(filename, registry);
+    try {
+      const passport = store.append(record);
+      process.stdout.write(passport.current.fingerprint);
+    } catch (error) {
+      if (error.message !== 'Passport history mismatch') throw error;
+      process.stdout.write('stale');
+    } finally {
+      store.close();
+    }
+  `;
+  const publish = record => promisify(execFile)(process.execPath,
+    ['--input-type=module', '-e', childCode, JSON.stringify({ filename, registry, record })],
+    { cwd: new URL('..', import.meta.url), timeout: 15_000 });
+  const results = await Promise.all([publish(rotation), publish(fork)]);
+  const current = store.read(genesis.passportId);
+  assert.deepEqual(results.map(result => result.stdout).sort(), [current.current.fingerprint, 'stale']);
+  assert.equal(current.history.length, 2);
+  const candidates = [rotation, fork].map(record => keyId(record.event.agentPublicKey));
+  const rejected = candidates.find(key => key !== current.current.fingerprint);
+  assert.deepEqual(store.lookup(rejected), []);
+});
