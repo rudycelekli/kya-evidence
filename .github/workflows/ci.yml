@@ -26,6 +26,16 @@ jobs:
         run: |
           npm --prefix interop/pairing-gateway ci --ignore-scripts --no-audit --no-fund
           npm --prefix interop/pairing-gateway test
+      - name: Verify frozen Passport conformance vectors across implementations
+        if: matrix.node == 24 && matrix.os == 'ubuntu-latest'
+        run: |
+          node interop/passport-conformance/generate.mjs > "$RUNNER_TEMP/passport-vectors.json"
+          cmp interop/passport-conformance/vectors.json "$RUNNER_TEMP/passport-vectors.json"
+          python3 interop/passport-conformance/test_runner.py
+          python3 interop/passport-conformance/run.py -- node interop/passport-conformance/reference.mjs
+          python3 -m venv "$RUNNER_TEMP/kya-passport-python"
+          "$RUNNER_TEMP/kya-passport-python/bin/pip" install --disable-pip-version-check cryptography==50.0.2
+          python3 interop/passport-conformance/run.py -- "$RUNNER_TEMP/kya-passport-python/bin/python" interop/passport-conformance/python_candidate.py
       - name: Run tests (no test may be skipped on CI)
         shell: bash
         run: |

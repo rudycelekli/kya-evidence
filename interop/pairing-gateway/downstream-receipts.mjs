@@ -28,7 +28,6 @@ export function receiptObserver(input, { server, tool, routeRevision, bearer, ne
   const profile = validateReceiptProfile(JSON.parse(canonical(input)));
   insist(profile.credentialRef === null || (typeof bearer === 'string' && /^[\x21-\x7e]+$/.test(bearer)),
     'Receipt credential missing or invalid');
-  const key = publicKeyObject(profile.publicKey);
   const base = profile.url.replace(/\/$/, '');
   return async delivery => {
     const { operationId, requestDigest } = delivery;
@@ -53,15 +52,26 @@ export function receiptObserver(input, { server, tool, routeRevision, bearer, ne
       chunks.push(chunk);
     }
     const envelope = parseJson(new TextDecoder('utf-8', { fatal: true }).decode(Buffer.concat(chunks)));
-    exactKeys(envelope, ['receipt', 'signature'], 'Receipt envelope');
-    const { receipt, signature } = envelope;
-    exactKeys(receipt, ['schema', 'operationId', 'requestDigest', 'routeRevision', 'outcome'], 'Terminal receipt');
-    insist(receipt.schema === 'kya.mcp-receipt/v1' && receipt.operationId === operationId
-      && receipt.requestDigest === requestDigest && receipt.routeRevision === routeRevision, 'Receipt binding mismatch');
-    insist(receipt.outcome === 'confirmed-applied' || receipt.outcome === 'confirmed-not-applied', 'Invalid receipt outcome');
-    insist(typeof signature === 'string' && /^[A-Za-z0-9_-]{86}$/.test(signature), 'Invalid receipt signature');
-    const bytes = Buffer.from(signature, 'base64url');
-    insist(bytes.toString('base64url') === signature && verify(null, receiptBytes(receipt), key, bytes), 'Invalid receipt signature');
-    return { operationId, outcome: receipt.outcome, receiptDigest: digest(envelope) };
+    return verifyDownstreamReceipt(envelope, delivery, profile.publicKey);
   };
+}
+
+export function verifyDownstreamReceipt(input, delivery, publicKey) {
+  const envelope = JSON.parse(canonical(input));
+  const { operationId, requestDigest, routeRevision } = delivery;
+  for (const [label, value] of [['Operation ID', operationId], ['Request digest', requestDigest], ['Route revision', routeRevision]]) {
+    hash(value, label);
+  }
+  validatePublicPem(publicKey);
+  const key = publicKeyObject(publicKey);
+  exactKeys(envelope, ['receipt', 'signature'], 'Receipt envelope');
+  const { receipt, signature } = envelope;
+  exactKeys(receipt, ['schema', 'operationId', 'requestDigest', 'routeRevision', 'outcome'], 'Terminal receipt');
+  insist(receipt.schema === 'kya.mcp-receipt/v1' && receipt.operationId === operationId
+    && receipt.requestDigest === requestDigest && receipt.routeRevision === routeRevision, 'Receipt binding mismatch');
+  insist(receipt.outcome === 'confirmed-applied' || receipt.outcome === 'confirmed-not-applied', 'Invalid receipt outcome');
+  insist(typeof signature === 'string' && /^[A-Za-z0-9_-]{86}$/.test(signature), 'Invalid receipt signature');
+  const bytes = Buffer.from(signature, 'base64url');
+  insist(bytes.toString('base64url') === signature && verify(null, receiptBytes(receipt), key, bytes), 'Invalid receipt signature');
+  return { operationId, outcome: receipt.outcome, receiptDigest: digest(envelope) };
 }

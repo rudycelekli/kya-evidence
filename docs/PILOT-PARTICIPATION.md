@@ -18,3 +18,5 @@ Use synthetic or expressly approved test data. Share commitment hashes, publishe
 We’re looking for independent operators and implementers to test KYA Passport on a scoped agent workflow. A witness operator would run a separate key and database and rehearse recovery. A relying party would verify one agent and a permitted MCP tool call, then test whether rotation, revocation and an interrupted call behave as expected. An implementer would reproduce the proof checks from the wire rules and share any differences.
 
 If you’re interested, tell us which role fits and what test environment you can use. We’ll agree on a scope and evidence format before connecting anything. The goal is to find and document failures, including any workflow you cannot reproduce.
+
+Independent implementers can use the [Passport conformance kit](../interop/passport-conformance/README.md) before connecting to a pilot. Include the frozen corpus digest and your exact implementation revision with the report.
