@@ -653,12 +653,12 @@
       "title": "Durable pairing, MCP call framing and OIDC enrollment",
       "status": "Implemented locally; review pending",
       "file": "docs/adr/0054-durable-pairing-mcp-enrollment.md",
-      "contentDigest": "3333c81bfc20224471372b70cb5db5531a37edaa9f438cb0d0d38f9bb72cf9c5",
+      "contentDigest": "48bd1401d8f1635575ce9791810f833bf252e56150a960e07f63b5849c3636f3",
       "related": [
         "ADR-0053"
       ]
     }
   ],
-  "digest": "79590072ca3b30c9b2309096c8820f45607f119d919a2e2407838c0c664ecfa6",
+  "digest": "81dbbcc4e3c76807d33785cbd54e04678f2570e8c5c97eb6ac0ff7091ccc6082",
   "store": "portable local file; not a claim of AgentDB graph persistence"
 }

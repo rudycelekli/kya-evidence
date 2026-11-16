@@ -30,6 +30,7 @@ export interface McpAudit extends VerifiedPairing {
   server: string;
   tool: string;
   acceptedAt: string;
+  downstreamResponseObserved?: true;
 }
 
 export interface GatewayDependencies<Session, Result> {

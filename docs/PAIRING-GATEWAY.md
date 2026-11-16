@@ -23,7 +23,7 @@ const gateway = openPairingGateway(databasePath, {
 });
 ```
 
-Keep credentials, connection setup, endpoint identity checks, MCP negotiation, tool input schema enforcement, quotas and output controls in the gateway application and MCP client. The downstream operation can remain unknown if the process stops after durable acceptance or the server fails to respond. Audit reports local acceptance and the gateway refuses replay. An application that retries externally visible work needs downstream idempotency and outcome reconciliation. Keep accepted audit rows according to the operator's retention policy.
+Keep credentials, connection setup, endpoint identity checks, MCP negotiation, tool input schema enforcement, quotas and output controls in the gateway application and MCP client. The downstream operation can remain unknown if the process stops after durable acceptance or the server fails to respond. The gateway records local acceptance before forwarding and sets `downstreamResponseObserved` after the forwarding callback returns. The marker records a returned response, which can carry a tool error. When the marker is absent, including for historical rows, the downstream outcome is unknown. The gateway refuses replay in either case. An application that retries externally visible work needs downstream idempotency and outcome reconciliation. Keep accepted audit rows according to the operator's retention policy.
 
 ## Enroll and rotate through OIDC
 

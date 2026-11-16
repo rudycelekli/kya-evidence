@@ -75,6 +75,7 @@ test('blocks unauthenticated enrollment and keeps identity and replay state acro
     request: { method: 'tools/call', params: { name: call.tool, arguments: call.arguments } },
   }]);
   const audit = gateway.readAudit(challenge);
+  assert.equal(audit.downstreamResponseObserved, true);
   assert.equal(audit.actionDigest, digest(proof.action));
   gateway.close();
   second.close();
@@ -140,7 +141,7 @@ test('commits acceptance before forwarding and refuses automatic retries after a
   const challenge = gateway.issueChallenge(call);
   const proof = f.makeProof(challenge);
   await assert.rejects(gateway.invoke(call, proof), /downstream/i);
-  assert.ok(gateway.readAudit(challenge));
+  assert.equal(gateway.readAudit(challenge).downstreamResponseObserved, undefined);
   await assert.rejects(gateway.invoke(call, proof), /challenge/i);
   assert.equal(attempts, 1);
 });

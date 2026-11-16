@@ -60,6 +60,8 @@ export function openPairingGateway(filename, dependencies) {
   const pending = db.prepare('SELECT * FROM challenge WHERE nonce = ?');
   const consume = db.prepare('UPDATE challenge SET accepted_at = ?, audit = ? WHERE nonce = ? AND accepted_at IS NULL AND issued <= ? AND expires > ?');
 
+  const recordResponse = db.prepare('UPDATE challenge SET audit = ? WHERE nonce = ? AND audit = ?');
+
   function write(operation) {
     db.exec('BEGIN IMMEDIATE');
     try {
@@ -180,7 +182,10 @@ export function openPairingGateway(filename, dependencies) {
       const result = await forward(call.server, route.revision, {
         method: 'tools/call', params: { name: call.tool, arguments: call.arguments },
       });
-      return { audit, result };
+      const completedAudit = { ...audit, downstreamResponseObserved: true };
+      insist(recordResponse.run(canonical(completedAudit), challenge, canonical(audit)).changes === 1,
+        'Audit update failed');
+      return { audit: completedAudit, result };
     },
     readAudit(challenge) {
       hash(challenge, 'Challenge');
