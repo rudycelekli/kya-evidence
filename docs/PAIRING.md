@@ -23,6 +23,8 @@ The gateway supplies the trust binding between the principal ID and the key. Thi
 
 See [ADR-0053](adr/0053-principal-agent-pairing.md) for the interoperable wire rules.
 
+See the [SQLite MCP gateway and OIDC enrollment guide](PAIRING-GATEWAY.md) for the follow-up implementation.
+
 ## HTTP integration example
 
 The [Node HTTP adapter](../examples/pairing-http.mjs) shows one wire binding for an opaque request action. Send a single `kya-pairing-proof` header containing unpadded base64url of UTF-8 proof JSON. The signed request digest is the KYA digest of `{method, target, bodyDigest}`. In the example, the method is `POST`, the target is exactly `/action`, and `bodyDigest` hashes the received body bytes. The handler limits the header to 8,192 characters and the body to 65,536 bytes. The application owns TLS, authentication of enrollment and all action semantics.

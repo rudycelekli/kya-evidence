@@ -647,8 +647,18 @@
       "file": "docs/adr/0053-principal-agent-pairing.md",
       "contentDigest": "2f1cc93dad9e401e9138c98369713670d9effb98d30cd7c155283a8b42432620",
       "related": []
+    },
+    {
+      "id": "ADR-0054",
+      "title": "Durable pairing, MCP call framing and OIDC enrollment",
+      "status": "Implemented locally; review pending",
+      "file": "docs/adr/0054-durable-pairing-mcp-enrollment.md",
+      "contentDigest": "48bd1401d8f1635575ce9791810f833bf252e56150a960e07f63b5849c3636f3",
+      "related": [
+        "ADR-0053"
+      ]
     }
   ],
-  "digest": "3a3b0e2ed9b2f71df3bffcf17301b8136320fcf1a8fe5c8b53116533df30e5dd",
+  "digest": "81dbbcc4e3c76807d33785cbd54e04678f2570e8c5c97eb6ac0ff7091ccc6082",
   "store": "portable local file; not a claim of AgentDB graph persistence"
 }
