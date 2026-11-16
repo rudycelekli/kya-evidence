@@ -736,8 +736,18 @@
       "file": "docs/adr/0062-hosted-oidc-callback-and-mcp-adapter.md",
       "contentDigest": "7ca6e036c4f051f25457ac18f3bb7b8f7430059141bdff579bd4e6139bde0914",
       "related": []
+    },
+    {
+      "id": "ADR-0063",
+      "title": "Verify terminal downstream MCP receipts by operation ID",
+      "status": "Implemented locally; review pending",
+      "file": "docs/adr/0063-hosted-mcp-terminal-receipts.md",
+      "contentDigest": "105af2b7d6e3a3dc8dd0da64e6ae415f86cb5d2ab45c04b7d56379de737b8414",
+      "related": [
+        "ADR-0057"
+      ]
     }
   ],
-  "digest": "67760dc2fc2bbeecdcaa7a8e6257b979bd94d4d825c6fbe13679a9252dd8b008",
+  "digest": "315cc9a5560f046febecaf3dce71c0a8919eb3182488ac94178cfc7417577dd8",
   "store": "portable local file; not a claim of AgentDB graph persistence"
 }

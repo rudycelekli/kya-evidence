@@ -9,6 +9,6 @@
     "openid-client": "6.9.0"
   },
   "scripts": {
-    "test": "node local-interop.mjs && node --test hosted-adapters.test.mjs"
+    "test": "node local-interop.mjs && node --test hosted-adapters.test.mjs delivery-drill.test.mjs"
   }
 }

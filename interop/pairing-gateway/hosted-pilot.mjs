@@ -9,6 +9,7 @@ import { createOidcEnrollmentAuthenticator, oidcEnrollmentMessage } from '../../
 import { passportPublicKey } from '../../src/passport/index.mjs';
 import { openPassportRegistry } from '../../src/passport/registry.mjs';
 import { discoverPilotOidc, openPilotMcp, receivePilotLogin } from './hosted-adapters.mjs';
+import { pilotRouteRevision, receiptObserver, validateReceiptProfile } from './downstream-receipts.mjs';
 import { validatePilotSettings } from './pilot-settings.mjs';
 
 const json = async path => parseJson(await readFile(path, 'utf8'));
@@ -44,6 +45,7 @@ function validateInputs(inputs) {
 
 export async function runPilot(settings, inputs, adapters) {
   const { oidc, mcp } = validatePilotSettings(settings);
+  const receiptProfile = adapters.receiptProfile === undefined ? undefined : validateReceiptProfile(adapters.receiptProfile);
   validateInputs(inputs);
   const manifest = validateManifest(await json(inputs.manifestFile));
   const now = Date.now();
@@ -60,8 +62,7 @@ export async function runPilot(settings, inputs, adapters) {
   const requestDigest = mcpToolCallDigest(call);
   const route = {
     manifest, audience: new URL(settings.gateway.url).origin, permission: inputs.permission, passportId: inputs.passportId,
-    revision: digest({ server: inputs.server, endpoint: mcp.url, tool: mcp.tool, schemaDigest: mcp.schemaDigest,
-      permission: inputs.permission, passportId: inputs.passportId }),
+    revision: pilotRouteRevision(mcp, inputs, receiptProfile),
     revokedKeyIds: [], revokedGrantDigests: [],
   };
   const registry = openPassportRegistry(inputs.registryDatabase, settings.gateway.registry);
@@ -90,7 +91,7 @@ export async function runPilot(settings, inputs, adapters) {
       passports: { registry: settings.gateway.registry, readHistory: id => registry.read(id)?.history ?? null },
       forward: (...args) => downstream.forward(...args),
     });
-    downstream = await adapters.connect(mcp, { server: call.server, revision: route.revision });
+    downstream = await adapters.connect(mcp, { server: call.server, revision: route.revision, receipts: receiptProfile !== undefined });
     const intent = {
       issuer: oidc.issuer, audience: oidc.clientId, challenge: gateway.issueEnrollmentChallenge(),
       publicKey, previousKeyId: inputs.previousPrincipalKeyId,
@@ -130,25 +131,60 @@ export async function runPilot(settings, inputs, adapters) {
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   try {
-    const [settingsPath, inputsPath] = process.argv.slice(2);
+    const [settingsPath, inputsPath, mode, profilePath, operationId] = process.argv.slice(2);
+    insist(mode === undefined || ['--receipts', '--interrupt-after-response', '--reconcile'].includes(mode), 'Invalid pilot mode');
+    insist(mode === undefined || profilePath, 'Receipt profile required');
     const settings = await json(settingsPath);
     const inputs = await json(inputsPath);
-    const result = await runPilot(settings, inputs, {
-      async login(oidc, intent) {
-        const configuration = await discoverPilotOidc(oidc, await clientCredential(oidc.authentication));
-        return receivePilotLogin(configuration, {
-          callback: oidc.callback, port: inputs.callbackPort, intent,
-          onAuthorizationUrl: url => process.stderr.write('Open this URL in your test browser\n' + url + '\n'),
-        });
-      },
-      connect(mcp, route) {
-        const bearer = mcp.credentialRef === null ? undefined : process.env.KYA_PILOT_MCP_BEARER;
-        insist(mcp.credentialRef === null || bearer, 'MCP credential missing');
-        return openPilotMcp(mcp, { ...route, bearer });
-      },
-    });
-    console.log(JSON.stringify(result));
-    if (!result.resultMatched) process.exitCode = 1;
+    const receiptProfile = profilePath ? validateReceiptProfile(await json(profilePath)) : undefined;
+    if (mode === '--reconcile') {
+      validatePilotSettings(settings);
+      validateInputs(inputs);
+      hash(operationId, 'Operation ID');
+      const gateway = openPairingGateway(inputs.gatewayDatabase, {
+        observeDelivery: receiptObserver(receiptProfile, {
+          server: inputs.server, tool: settings.mcp.tool,
+          routeRevision: pilotRouteRevision(settings.mcp, inputs, receiptProfile),
+          bearer: process.env.KYA_PILOT_RECEIPT_BEARER,
+        }),
+      });
+      try {
+        const delivery = await gateway.reconcileDelivery(operationId);
+        console.log(JSON.stringify({ operationId, state: delivery.state, receiptDigest: delivery.receiptDigest }));
+        if (!delivery.state.startsWith('confirmed-')) process.exitCode = 1;
+      } finally {
+        gateway.close();
+      }
+    } else {
+      const result = await runPilot(settings, inputs, {
+        receiptProfile,
+        async login(oidc, intent) {
+          const configuration = await discoverPilotOidc(oidc, await clientCredential(oidc.authentication));
+          return receivePilotLogin(configuration, {
+            callback: oidc.callback, port: inputs.callbackPort, intent,
+            onAuthorizationUrl: url => process.stderr.write('Open this URL in your test browser\n' + url + '\n'),
+          });
+        },
+        async connect(mcp, route) {
+          const bearer = mcp.credentialRef === null ? undefined : process.env.KYA_PILOT_MCP_BEARER;
+          insist(mcp.credentialRef === null || bearer, 'MCP credential missing');
+          const transport = await openPilotMcp(mcp, { ...route, bearer });
+          if (mode !== '--interrupt-after-response') return transport;
+          return {
+            close: transport.close,
+            async forward(server, revision, request, delivery) {
+              await transport.forward(server, revision, request, delivery);
+              // Persisted dispatch exists, but the gateway has not observed this response.
+              process.stdout.write(JSON.stringify({ operationId: delivery.operationId, stage: 'interrupted-before-recording' }) + '\n',
+                () => process.exit(75));
+              return new Promise(() => {});
+            },
+          };
+        },
+      });
+      console.log(JSON.stringify(result));
+      if (!result.resultMatched) process.exitCode = 1;
+    }
   } catch {
     console.error('Hosted pilot stopped. Check private operator logs and gateway delivery state before retrying.');
     process.exitCode = 1;
