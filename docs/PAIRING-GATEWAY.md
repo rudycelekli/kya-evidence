@@ -57,3 +57,11 @@ const gateway = openPairingGateway(databasePath, {
 ```
 
 Invocation verifies the signed history and matches the active key, agent, principal and exact manifest. A changed key or manifest and a terminal revocation block forwarding even when the pairing proof still verifies. The audit records the Passport head observed at acceptance. The gateway persists the newest authenticated head even on a key or manifest denial and rejects older or conflicting histories after restart. Use the authoritative store for readback. A valid older signed prefix can prove history, while freshness from remote replicas requires independent verification. See the [pilot and readiness plan](PASSPORT-ROADMAP.md).
+
+## Recover delivery outcomes
+
+The gateway stores a delivery record with acceptance and passes its stable `operationId` as a fourth forwarding argument. Translate that ID to an idempotency or receipt mechanism supported by the pinned downstream route. Keep the signed MCP arguments intact.
+
+Use `listUnresolvedDeliveries({ after, limit })` to find accepted, dispatching and unknown rows. `readDelivery(operationId)` returns the request digest and pinned route. A dispatching row can indicate a call currently running or a process that stopped before persisting the result. Call `reconcileDelivery(operationId)` with an `observeDelivery` adapter configured. Have the adapter verify the downstream's receipt and return `{operationId, outcome, receiptDigest}`. The outcomes are `confirmed-applied`, `confirmed-not-applied` and `unknown`. Use a null receipt digest for unknown. An absent receipt or temporary failure does not establish a terminal outcome.
+
+The gateway keeps only the receipt digest, and reconciliation never forwards the operation again. A response-observed state indicates the adapter returned a response. Scope the operator API to authorized hosts. See [ADR-0057](adr/0057-mcp-delivery-recovery.md).

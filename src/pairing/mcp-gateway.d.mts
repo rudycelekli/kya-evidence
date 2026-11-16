@@ -32,10 +32,26 @@ export interface McpAudit extends VerifiedPairing {
   server: string;
   tool: string;
   acceptedAt: string;
+  operationId?: string;
   downstreamResponseObserved?: true;
   passportId?: string;
   passportHead?: string;
 }
+
+export interface McpDelivery {
+  operationId: string;
+  state: 'accepted' | 'dispatching' | 'unknown' | 'response-observed' | 'confirmed-applied' | 'confirmed-not-applied';
+  receiptDigest: string | null;
+  challenge: string;
+  server: string;
+  tool: string;
+  routeRevision: string;
+  requestDigest: string;
+}
+
+export type McpDeliveryObservation =
+  | { operationId: string; outcome: 'unknown'; receiptDigest: null }
+  | { operationId: string; outcome: 'confirmed-applied' | 'confirmed-not-applied'; receiptDigest: string };
 
 export interface GatewayDependencies<Session, Result> {
   authenticateIdentity(session: Session, previousKeyId: string | null): EnrollmentAssertion | Promise<EnrollmentAssertion>;
@@ -43,7 +59,8 @@ export interface GatewayDependencies<Session, Result> {
   forward(server: string, revision: string, request: {
     method: 'tools/call';
     params: { name: string; arguments: Record<string, unknown> };
-  }): Result | Promise<Result>;
+  }, delivery: { operationId: string }): Result | Promise<Result>;
+  observeDelivery?(delivery: McpDelivery): McpDeliveryObservation | Promise<McpDeliveryObservation>;
   passports?: {
     registry: string;
     readHistory(passportId: string): PassportRecord[] | null;
@@ -58,6 +75,9 @@ export interface PairingGateway<Session, Result> {
   rotateIdentity(session: Session, previousKeyId: string): Promise<{ principalId: string; keyId: string }>;
   issueChallenge(call: McpCall): string;
   invoke(call: McpCall, proof: PairedActionProof): Promise<{ audit: McpAudit; result: Result }>;
+  readDelivery(operationId: string): McpDelivery | null;
+  listUnresolvedDeliveries(options?: { after?: string; limit?: number }): McpDelivery[];
+  reconcileDelivery(operationId: string): Promise<McpDelivery>;
   readAudit(challenge: string): McpAudit | null;
   close(): void;
 }

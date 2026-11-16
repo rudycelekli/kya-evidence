@@ -678,8 +678,18 @@
         "ADR-0054",
         "ADR-0055"
       ]
+    },
+    {
+      "id": "ADR-0057",
+      "title": "Recover unknown MCP outcomes from durable delivery records",
+      "status": "Implemented locally; review pending",
+      "file": "docs/adr/0057-mcp-delivery-recovery.md",
+      "contentDigest": "294dcd3c159569c8c0ba35ad9d4b8d9c29c47f85e81003153bfcefb083b5d49a",
+      "related": [
+        "ADR-0054"
+      ]
     }
   ],
-  "digest": "af002bfedc138ade07bcf8e1bf6fb39b40026d7b873db825c2158ca7684f1334",
+  "digest": "68a5a6833463491f5775c35b661385887b2844441e22f0157b0a6b269d701913",
   "store": "portable local file; not a claim of AgentDB graph persistence"
 }

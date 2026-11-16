@@ -82,6 +82,7 @@ test('blocks unauthenticated enrollment and keeps identity and replay state acro
   const restarted = f.open();
   try {
     assert.deepEqual(restarted.readAudit(challenge), audit);
+    assert.equal(restarted.readDelivery(audit.operationId).state, 'response-observed');
     await assert.rejects(restarted.invoke(call, proof), /challenge/i);
   } finally {
     restarted.close();
@@ -142,6 +143,7 @@ test('commits acceptance before forwarding and refuses automatic retries after a
   const proof = f.makeProof(challenge);
   await assert.rejects(gateway.invoke(call, proof), /downstream/i);
   assert.equal(gateway.readAudit(challenge).downstreamResponseObserved, undefined);
+  assert.equal(gateway.readDelivery(gateway.readAudit(challenge).operationId).state, 'unknown');
   await assert.rejects(gateway.invoke(call, proof), /challenge/i);
   assert.equal(attempts, 1);
 });
@@ -340,5 +342,57 @@ test('passport enforcement refuses omitted policy, missing history, and a substi
   }];
   await assert.rejects(gateway.invoke(call, proof), /passport identity mismatch/i);
   assert.equal(gateway.readAudit(challenge), null);
+  assert.equal(f.forwarded.length, 0);
+});
+
+test('recovers an unknown delivery after a process dies during forwarding', async t => {
+  const { execFile } = await import('node:child_process');
+  const { promisify } = await import('node:util');
+  const f = fixture(t);
+  const gateway = f.open();
+  t.after(() => gateway.close());
+  await gateway.enrollIdentity('fixture-login');
+  const challenge = gateway.issueChallenge(call);
+  const proof = f.makeProof(challenge);
+  const input = JSON.stringify({ filename: f.filename, call, proof, route: f.route, now: initialTime });
+  const child = `
+    import { writeFileSync } from 'node:fs';
+    import { openPairingGateway } from 'kya-evidence/pairing/mcp-gateway';
+    const { filename, call, proof, route, now } = JSON.parse(process.argv[1]);
+    const gateway = openPairingGateway(filename, {
+      resolveRoute: () => route,
+      clock: () => now,
+      forward(_server, _revision, _request, { operationId }) {
+        writeFileSync(filename + '.downstream', operationId, { flag: 'wx' });
+        process.exit(74);
+      },
+    });
+    await gateway.invoke(call, proof);
+  `;
+  await assert.rejects(promisify(execFile)(process.execPath, ['--input-type=module', '-e', child, input], {
+    cwd: new URL('..', import.meta.url), timeout: 15_000,
+  }), { code: 74 });
+  const operationId = readFileSync(f.filename + '.downstream', 'utf8');
+  assert.equal(gateway.readAudit(challenge).operationId, operationId);
+  assert.equal(gateway.readAudit(challenge).downstreamResponseObserved, undefined);
+
+  let observation = { operationId: digest('another operation'), outcome: 'unknown', receiptDigest: null };
+  f.dependencies.observeDelivery = delivery => {
+    assert.equal(delivery.routeRevision, f.route.revision);
+    assert.equal(delivery.requestDigest, mcpToolCallDigest(call));
+    return observation;
+  };
+  const reopened = f.open();
+  t.after(() => reopened.close());
+  assert.equal(reopened.readDelivery(operationId).state, 'dispatching');
+  assert.deepEqual(reopened.listUnresolvedDeliveries({ limit: 1 }).map(d => d.operationId), [operationId]);
+  await assert.rejects(reopened.reconcileDelivery(operationId), /observation mismatch/i);
+  observation = { operationId, outcome: 'unknown', receiptDigest: null };
+  assert.equal((await reopened.reconcileDelivery(operationId)).state, 'dispatching');
+  observation = { operationId, outcome: 'confirmed-applied', receiptDigest: digest({ operationId }) };
+  assert.equal((await reopened.reconcileDelivery(operationId)).receiptDigest, observation.receiptDigest);
+  assert.equal(reopened.readDelivery(operationId).state, 'confirmed-applied');
+  assert.deepEqual(reopened.listUnresolvedDeliveries(), []);
+  await assert.rejects(reopened.invoke(call, proof), /challenge/i);
   assert.equal(f.forwarded.length, 0);
 });
