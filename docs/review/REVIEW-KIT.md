@@ -183,7 +183,7 @@ Every row is recomputed by `node scripts/review-kit-check.mjs` from the reposito
 | `adrs` | `56` | files `docs/adr/NNNN-*.md`; statuses retain local implementation and external-review boundaries |
 | `coreProfileChecks` | `18` | length of `checks` in `profiles/core-v1.json` |
 | `srcFiles` | `94` | `.mjs` files under `src/` |
-| `srcLines` | `6068` | newline characters in those files. The code is dense: long lines, so line count understates size. |
+| `srcLines` | `6080` | newline characters in those files. The code is dense: long lines, so line count understates size. |
 | `evaluatorDigestPinned` | `d0bc7f7840e5ddf1a71eb3b9ac92e5c4d0be5d156eea2c6f4f909f7066b5e31b` | `evidence/evaluator-identity.json`; the checker also requires it to equal the digest computed from source |
 | `harness.vectorsPass` | `799` | `node scripts/run-vectors.mjs --impl "node interop/impl-contract/js-reference.mjs"`, field `vectors.pass` |
 | `harness.vectorsFail` | `0` | same command, field `vectors.fail` |

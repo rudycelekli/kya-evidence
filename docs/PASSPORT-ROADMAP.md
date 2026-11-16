@@ -4,7 +4,7 @@
 
 ## Baseline and execution order
 
-The Passport registry stores signed lifecycle events and keeps historical fingerprint lookups. The MCP gateway verifies an exact call, avoids replay on one SQLite host, and can require the active Passport. Loopback OIDC and MCP tests use a synthetic identity and tool. This plan treats independent review, external integration and calibration as acceptance evidence to collect.
+The Passport registry stores signed lifecycle events and keeps historical fingerprint lookups. The MCP gateway verifies an exact call, avoids replay on one SQLite host, and can require the active Passport. Each gateway retains a local head pin across restarts. Independent witnesses and first-use freshness remain future work. Loopback OIDC and MCP tests use a synthetic identity and tool. This plan treats independent review, external integration and calibration as acceptance evidence to collect.
 
 ### 1. Prove the trust chain in an approved pilot
 

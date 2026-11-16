@@ -673,13 +673,13 @@
       "title": "Enforce current Passport state at MCP acceptance",
       "status": "Implemented locally; review pending",
       "file": "docs/adr/0056-enforce-active-passport-at-gateway.md",
-      "contentDigest": "01435bfc2fa54673b1810a41a20f4b3054595f755a17e933c53cb654a855ade4",
+      "contentDigest": "07d5ea30dbbfdd22f92d901d7b01db959fdd722d686fb3ec09cee778d2bad3f2",
       "related": [
         "ADR-0054",
         "ADR-0055"
       ]
     }
   ],
-  "digest": "3b282a05bc4fc6217a5a925aab40ed618be23ea483ef71aa31ae1cb36875744b",
+  "digest": "af002bfedc138ade07bcf8e1bf6fb39b40026d7b873db825c2158ca7684f1334",
   "store": "portable local file; not a claim of AgentDB graph persistence"
 }

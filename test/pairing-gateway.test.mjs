@@ -303,6 +303,15 @@ test('requires the currently registered passport key and manifest before consumi
     agentPublicKey: null,
   }, null));
   await assertRefused(afterRevocation, f.makeProof(afterRevocation, principal, call, next));
+
+  // This prefix was the active history before the manifest revision and revocation.
+  const staleHistory = state.history.slice(0, 2);
+  f.dependencies.passports.readHistory = () => staleHistory;
+  const reopened = f.open();
+  t.after(() => reopened.close());
+  await assert.rejects(reopened.invoke(call, f.makeProof(afterRevocation, principal, call, next)), /rolled back/i);
+  assert.equal(reopened.readAudit(afterRevocation), null);
+  assert.equal(f.forwarded.length, 2);
 });
 
 test('passport enforcement refuses omitted policy, missing history, and a substituted passport ID', async t => {
