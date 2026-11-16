@@ -3,6 +3,8 @@ import * as oidc from 'openid-client';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js';
 import { digest, insist } from '../../src/shared/canonical.mjs';
+import { hash } from '../../src/identity/domain/services/validation.mjs';
+import { mcpToolCallDigest } from '../../src/pairing/mcp-gateway.mjs';
 import { oidcEnrollmentNonce } from '../../src/pairing/oidc-enrollment.mjs';
 
 export async function discoverPilotOidc(settings, credential) {
@@ -93,7 +95,7 @@ export async function receivePilotLogin(configuration, { callback, port, intent,
 }
 
 export async function openPilotMcp(settings, {
-  bearer, server, revision, networkFetch = fetch,
+  bearer, server, revision, receipts = false, networkFetch = fetch,
 }) {
   const endpoint = new URL(settings.url);
   insist(endpoint.protocol === 'https:' && !endpoint.username && !endpoint.password && !endpoint.hash,
@@ -139,11 +141,19 @@ export async function openPilotMcp(settings, {
     throw error;
   }
   return {
-    async forward(serverId, routeRevision, request) {
+    async forward(serverId, routeRevision, request, delivery) {
       insist(serverId === server && routeRevision === revision && request.method === 'tools/call'
         && request.params.name === settings.tool, 'MCP route differs from approved pilot route');
       await checkTool();
-      return client.callTool(request.params, undefined, { timeout: 30_000 });
+      const params = { name: request.params.name, arguments: request.params.arguments };
+      if (receipts) {
+        hash(delivery?.operationId, 'Operation ID');
+        params._meta = { 'kya-evidence/delivery': {
+          operationId: delivery.operationId, routeRevision,
+          requestDigest: mcpToolCallDigest({ server, tool: params.name, arguments: params.arguments }),
+        } };
+      }
+      return client.callTool(params, undefined, { timeout: 30_000 });
     },
     close: () => client.close(),
   };

@@ -72,3 +72,33 @@ node interop/pairing-gateway/hosted-pilot.mjs /private/pilot/settings.json /priv
 ```
 
 Open the authorization URL from the private operator console and sign in as the pinned subject. On success the runner enrolls the principal, verifies the active Passport, and sends the one signed call. The outcome contains its operation ID, Passport head, request and result digests, and whether the result matched. For a principal rotation run, supply the previous enrolled fingerprint and point the principal key file to the replacement. Review persisted delivery state before any rerun following an ambiguous outcome. Supply a trusted downstream receipt adapter for the separate interruption qualification.
+
+## Exercise downstream recovery after a controlled interruption
+
+Use a read-only or idempotent test tool with a cooperating receipt service. Provide the scoped receipt endpoint and signer public key in a private profile file.
+
+```json
+{
+  "url": "https://receipts.example.test/status",
+  "publicKey": "<canonical Ed25519 SPKI PEM>",
+  "credentialRef": "vault://pilot/receipts"
+}
+```
+
+Set `KYA_PILOT_RECEIPT_BEARER` from the approved receipt credential reference. Use null for a test receipt endpoint that does not require a bearer. The configured MCP server must accept the operation binding in `_meta["kya-evidence/delivery"]`, check the route and actual request, and serve the terminal signed envelope at `GET <url>/<operationId>`. Agree on how it records the authoritative effect and terminal outcome before starting.
+
+First run a normal hosted call. For the recovery drill use a separate authorized test run with fresh enrollment or an explicit principal rotation, and enough scope to exercise the approved operation once.
+
+```sh
+node interop/pairing-gateway/hosted-pilot.mjs /private/pilot/settings.json /private/pilot/inputs.json \
+  --interrupt-after-response /private/pilot/receipt-profile.json
+```
+
+The controlled run prints the operation ID and exits with status 75 after the tool responds. Then use the same gateway database, route configuration and receipt profile. This second command does not need OIDC or the tool credential.
+
+```sh
+node interop/pairing-gateway/hosted-pilot.mjs /private/pilot/settings.json /private/pilot/inputs.json \
+  --reconcile /private/pilot/receipt-profile.json <operation-id>
+```
+
+Capture the terminal delivery state and receipt digest, and ask the downstream operator to confirm the invocation count remained one. A pending receipt leaves the outcome unresolved. Repeat the receipt lookup when authorized. See [ADR-0063](adr/0063-hosted-mcp-terminal-receipts.md).
